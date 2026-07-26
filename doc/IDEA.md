@@ -1,69 +1,97 @@
 # Quadrim
 
-Quadrim is een spel waar gebruikers om de beurt een 'pion' in eigen kleur zetten in een leeg veld in een kubus van 4 bij 4 bij 4.
-Doel van het spel is om als eerste 4 pionnen van eigen kleur op een rij te hebben. 
-Dit mag horizontaal, vertikaal maar ook diagonaal door alle lagen in de kubus.
+Quadrim is a game in which players take turns placing a colored piece on an empty position in a 4x4x4 cube.
 
-## Beschikbaarheid
+The objective is to be the first player to get four pieces of their own color in a row.
 
-Het is gewenst om het spel op zoveel mogelijk platformen beschikbaar te maken en in ieder geval voor iOS en Android.
+Rows may be horizontal, vertical, or diagonal, including diagonals that span multiple layers of the cube.
 
-Een eerste idee is om de software stack te baseren op:
-Flutter App
-Firestore
-Cloud Function (trigger)
-Firebase Cloud Messaging
-Android + iOS devices (en web + win en osx apps)
+## Availability
 
-## Visueel
+The game should be available on as many platforms as possible, including at least iOS and Android.
 
-### Het hoofdscherm
+An initial idea is to base the software stack on:
 
-Bij opstarten ziet de speler de volgende onderdelen op het scherm:
-- een statistieken overzicht van de gespeelde spellen (aantal gewonnen, verloren en gelijkspel, ELO rating)
-- een lijst met actieve spelen
-- een grote knop aanwezig om een nieuw spel te starten. 
-- een knop om de tutorial te starten.
-- een lijst met gespeelde spelen. 
+- Flutter App
+- Firestore
+- Cloud Functions (triggers)
+- Firebase Cloud Messaging
+- Android and iOS devices (and optionally Web, Windows, and macOS apps)
 
-Bij het starten van een nieuw spel kan de speler kiezen of hij tegen een andere speler of tegen de computer wil spelen.
+## User Interface
+
+### Main Screen
+
+When the player launches the game, the following elements should be displayed:
+
+- A statistics overview of completed games (wins, losses, draws, and ELO rating)
+- A list of active games
+- A large button to start a new game
+- A button to launch the tutorial
+- A list of completed games
+
+When starting a new game, the player can choose whether to play against another player or against the computer.
 
 ### Tutorial
 
-Een eerste keer dat een speler het spel start, zal er een korte tutorial worden getoond waarin de spelregels en de bediening van het spel wordt uitgelegd. De tutorial kan op elk moment opnieuw worden gestart vanuit het hoofdscherm.
+The first time a player starts the game, a short tutorial will be shown explaining the game rules and controls.
 
-### Het actieve spel
+The tutorial can be restarted at any time from the main screen.
 
-Afhankelijk van de scherm grootte en de oriëntatie van het apparaat, zal het actieve spel op een andere manier worden weergegeven.
+### Active Game
 
-### kleine schermen (telefoonts)
-- weergave altijd in portret modus.
-- Naam van tegenstander is zichtbaar boven het speelbord en bij klikken op die naam zie je details van die speler.
+Depending on the screen size and device orientation, the active game will be displayed differently.
 
-### Grote schermen (tablets en laptops)
-- weergave altijd in landschap modus.
-- Links zie je het speelbord en rechts zie je details van je eigen profiel en de tegenstander. (algemene details plus details van spelen tegen elkaar)
+### Small Screens (Phones)
 
-### Het speelbord
+- Displayed only in portrait mode
+- The opponent's name is visible above the game board
+- Tapping the opponent's name shows details about that player
 
-Het speelbord moet duidelijk en overzichtelijk zijn. Het moet duidelijk zijn welke velden al bezet zijn en welke nog vrij zijn.
-Voor de visualisatie van de kubus kan gebruik gemaakt worden van een 3D visualisatie waarbij de 4 lagen van de kubus zichtbaar zijn als 4 aparte 2D vlakken (paralelogram om de diepte aan te geven). De gebruiker ziet dat een visualisatie van de gehele kubus.
+### Large Screens (Tablets and Laptops)
 
+- Displayed only in landscape mode
+- The game board is shown on the left
+- On the right, details of both the player's own profile and the opponent are displayed (general information plus head-to-head statistics)
 
-## De Computer game engine
+### Game Board
 
-De Computer game engine zal de volgende evaluaties op deze volgorde uitvoeren. Eerst zal naar afgedwongen zetten worden gekeken en daarna naar berekende zetten.
-Onderstaande regels zijn opgesteld op basis van ervaring met het spel en zijn bedoeld om de computer een zo goed mogelijke tegenstander te maken.
-Voor de berekende zetten kan het misschien haalbaar zijn om alle mogelijke zetten te evalueren en de beste te kiezen, maar dat is nog niet onderzocht.
+The game board should be clear and easy to understand. It must be obvious which positions are occupied and which are still available.
 
-### Strategische win/lose zetten
-Ga de volgen regels op volgorde af en als aan een regel voldaan wordt, zet de pion daar, als er meer posities zijn voor die regel, bepaal de beste plek op basis van 'Berekende zetten'
-- zijn er velden waardoor zelf 4 op een rij verkregen worden. 
-- Is er ergens een leeg veld waardoor de ander 4 op een rij verkregen kan worden. 
-- Is er ergens een leeg veld waardoor er 2 maal 3 op een rij ontstaat waarbij op die rij het overgebleven veld nog leeg is. 
-- Is er ergens een leeg veld waardoor de ander 2 maal 3 op een rij zou kunnen krijgen waarbij op die rij het overgebleven veld nog leeg is. 
+The cube may be visualized in 3D by displaying its four layers as separate 2D planes (parallelograms to suggest depth). This allows the user to see a representation of the entire cube at once.
 
-### Berekende beste positie zetten
-Ga de volgende regels op volgorde af en als aan een regel voldaan wordt, zet de pion daar, als er meerdere posities zijn voor die regel, neem dan de plek waar de meeste 2 of meer op een rij ontstaan. Als daar meerdere van zijn, kies dan willekeurig
-- Is er een plek leeg in de 2 bij 2 bij 2 kubus in het midden van de grote kubus. 
-- Is er een plek op een van de hoeken van de kubus beschikbaar.
+---
+
+## Computer Game Engine
+
+The computer game engine should evaluate moves in the following order. First, it should look for forced moves and then evaluate calculated moves.
+
+The rules below are based on experience with the game and are intended to make the computer as strong an opponent as possible.
+
+For calculated moves, it may be feasible to evaluate all possible positions and choose the best one, although this has not yet been investigated.
+
+### Strategic Win/Loss Moves
+
+Evaluate the following rules in order. As soon as a rule applies, place the piece there. If multiple positions satisfy the same rule, determine the best location using the "Calculated Moves" logic.
+
+- Is there a position that gives the computer four in a row immediately?
+- Is there an empty position where the opponent could get four in a row on their next move?
+- Is there an empty position that creates two separate lines of three in a row, where the fourth position in each line remains empty?
+- Is there an empty position that would allow the opponent to create two separate lines of three in a row, where the fourth position in each line remains empty?
+
+### Calculated Best-Position Moves
+
+Evaluate the following rules in order. As soon as a rule applies, place the piece there. If multiple positions satisfy the same rule, choose the position that creates the largest number of lines containing two or more pieces. If there is still a tie, select randomly.
+
+- Is there an available position inside the central 2x2x2 cube of the larger cube?
+- Is there an available position on one of the cube's corners?
+
+### Multiple computer players 
+
+There should be multiple computer players with different levels of difficulty. The easiest level should make random moves, while the hardest level should use the above logic to play optimally.
+I would like to have about 20 different computer players, each with a different strategy and level of difficulty. This will allow players to choose an opponent that matches their skill level and provides a challenging experience.
+The different computer players can be designed to have unique personalities and play styles, making the game more engaging and enjoyable for players of all skill levels.
+This can be achieved by varying the decision-making process, the evaluation of moves, and the overall strategy used by each computer player.
+Like all regular players these computer players should also have an ELO rating, which will be updated after each game they play. This will allow players to see how they compare to the different computer players and track their progress over time.
+Computer players can also be designed to have different strengths and weaknesses, such as being more aggressive or defensive, which will add an extra layer of strategy to the game.
+Computer players also have a name and avatar so that players can easily identify them and choose their preferred opponent. This will also help to create a more immersive and engaging experience for players, as they can feel like they are playing against a real opponent rather than just a computer program.
