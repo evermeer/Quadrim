@@ -8,10 +8,9 @@ Rows may be horizontal, vertical, or diagonal, including diagonals that span mul
 
 ## Availability
 
-The game should be available on as many platforms as possible, including at least iOS and Android.
+The game should be available on as many platforms as possible, including at least iOS and Android but it should use a shared codebase for that.
 
 An initial idea is to base the software stack on:
-
 - Flutter App
 - Firestore
 - Cloud Functions (triggers)
@@ -46,19 +45,23 @@ Depending on the screen size and device orientation, the active game will be dis
 
 - Displayed only in portrait mode
 - The opponent's name is visible above the game board
-- Tapping the opponent's name shows details about that player
+- Tapping the opponent's name shows details about that player.
+- When playing an actual user, then there is also a button to go to a chat screen to send messages to the opponent.
 
 ### Large Screens (Tablets and Laptops)
 
 - Displayed only in landscape mode
 - The game board is shown on the left
 - On the right, details of both the player's own profile and the opponent are displayed (general information plus head-to-head statistics)
+- It will also show a chat screen to send messages to the opponent.
 
 ### Game Board
 
 The game board should be clear and easy to understand. It must be obvious which positions are occupied and which are still available.
 
 The cube may be visualized in 3D by displaying its four layers as separate 2D planes (parallelograms to suggest depth). This allows the user to see a representation of the entire cube at once.
+
+For the current game and old past games, the user should be able to go back (and forward) to see the order of past moves.
 
 ---
 
