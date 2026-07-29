@@ -56,3 +56,13 @@ description of the ticket. For example, 001-setup-project.md. Put the result in
 the ./doc/tickets folder.
 ```
 
+The result is 22 markdown tickets files in the [tickets folder](doc/tickets) folder.
+
+**Prompt**
+```
+Review the doc/Idea-final-spec.md and the tickets in the ./doc/tickets folder with the Agency Agents
+backend-architect, security-engineer, and product-manager. Have each agent ask
+clarifying questions where context is missing before giving their concerns.
+Return each agent's concerns and recommendations so I can fold them back into
+the spec and tickets. write the concerns and recommendations in the file doc/Idea-final-spec-review.md
+```

@@ -415,9 +415,15 @@ ARB resource files from commit one; no user-facing string is ever hard-coded. En
 
 The tutorial's guided opponent is a `BotConfig` with a fixed seed and a scripted opening, not a separate code path. Hints reuse `threats()`.
 
-### 9.11 The first store upload is decoupled from 0.1 being complete
+### 9.11 Store accounts start immediately; the first upload waits for a complete game
 
-Google Play's 14-day / 12-tester closed-testing requirement runs against **any** uploaded build. The first upload happens as soon as a game is playable end to end — before the tutorial, before Dutch, before the tablet layout — and 0.1 continues shipping into the same track. The clock is the point; the feature set is not.
+Two separable things, deliberately sequenced apart.
+
+**Store accounts start on day one.** Apple Developer enrolment involves identity verification that can take days to weeks, and Google Play Console setup gates everything downstream. Neither has any code dependency. Both are waiting time rather than effort, and both sit on the critical path to this project's definition of success.
+
+**The first closed-test upload waits until the game is worth showing.** Google Play's 14-day / 12-tester closed-testing requirement runs against any uploaded build, so an earlier upload would start the clock sooner. That option was considered and declined: testers get one first impression, and a build with one random opponent and no result screen spends that impression badly. The upload therefore happens once all six opponents, the result screen, the main screen, and history are in place.
+
+**The cost, recorded plainly:** the 14-day clock starts later than it needed to, and that time is not recoverable. This is an accepted trade of schedule for first-impression quality, not an oversight. It is the one respect in which the plan departs from Strategy A's original reasoning.
 
 ### 9.12 Application identity is a placeholder until first upload
 
@@ -554,7 +560,16 @@ Exhaustive on Seam A. Every flow in §6's 0.1 user stories covered at Seam B. Se
 
 ### 12.1 Honest tension in 0.1's scope
 
-0.1 was originally the minimum shippable slice. It now carries the full four-part tutorial, both layouts, and both languages — a materially better first release, but a slower one. §9.11 is the resolution: upload early and incomplete into closed testing so the 14-day clock runs concurrently with the remaining work. If that mitigation is dropped, the clock starts late and Strategy A's main advantage is lost.
+0.1 was originally the minimum shippable slice. It now carries the full four-part tutorial, both layouts, both languages, and — by the sequencing decision in §9.11 — an upload that waits for all six opponents and a finished main screen. Each addition made 0.1 better and slower.
+
+The compounding effect is worth naming: Strategy A was chosen in [Idea-final-brainstorming.md](Idea-final-brainstorming.md) specifically because it started the store clocks soonest, and 0.1 has since grown in every dimension that delays them. The strategy still holds — offline-first still means no compliance surface, no backend learning curve, and a playable game early — but its schedule advantage is materially reduced.
+
+Two mitigations preserve most of it, and both are load-bearing:
+
+1. **Store accounts start on day one**, not when the upload is due (§9.11). This is the larger of the two, because enrolment lead time is pure waiting and can run under everything else.
+2. **The 0.1 branches are genuinely parallel.** After a playable board exists, persistence, the opponent ladder, the result screen, and the tutorial are independent. Nothing forces them into a single queue, so the path to upload is the longest branch rather than the sum of all four.
+
+If 0.1 grows again, the thing to protect is the upload date, not the feature list — anything added after the main screen is complete can just as well ship as 0.2 into the same testing track.
 
 ### 12.2 Things 0.1 promises that only 0.3 can keep
 
