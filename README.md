@@ -22,6 +22,7 @@ Use the Superpowers brainstorming skill on the created file doc/Idea-final.md.
 Propose several approaches. Ask clarifying questions about the setup, functionality, design and
 constraints before proposing options if anything is unclear.
 Put the results in the file doc/Idea-final-brainstorming.md
+Add all decisions to the file doc/idea-decisions.md
 ```	
 
 The result of that prompt was a [brainstorming](doc/Idea-final-brainstorming.md) document.
@@ -37,6 +38,7 @@ acceptance criteria. Ask clarifying questions and don't finalize the spec until
 any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
 Use the sugested bots Pebble, Mote, Bramble, Ember, Basalt and Onyx.
 Put the result in the file doc/Idea-final-spec.md
+Add all decisions to the file doc/idea-decisions.md
 ```
 
 The result of that prompt was a [spec](doc/Idea-final-spec.md) document.
@@ -54,6 +56,7 @@ breakdown. Store all tickets as a markdown file in the ./doc/tickets folder,
 with a name that starts with the ticket number and a dash, followed by a short 
 description of the ticket. For example, 001-setup-project.md. Put the result in 
 the ./doc/tickets folder.
+Add all decisions to the file doc/idea-decisions.md
 ```
 
 The result is 22 markdown tickets files in the [tickets folder](doc/tickets) folder.
@@ -65,4 +68,5 @@ backend-architect, security-engineer, and product-manager. Have each agent ask
 clarifying questions where context is missing before giving their concerns.
 Return each agent's concerns and recommendations so I can fold them back into
 the spec and tickets. write the concerns and recommendations in the file doc/Idea-final-spec-review.md
+Add all decisions to the file doc/idea-decisions.md
 ```

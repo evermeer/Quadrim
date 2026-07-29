@@ -1,12 +1,30 @@
 # Quadrim — Decision Log
 
-Every decision taken while turning [IDEA.md](IDEA.md) into [Idea-final.md](Idea-final.md).
+Every decision taken while turning [IDEA.md](IDEA.md) into a specification, a build approach, and a set of tickets.
 Each entry records the question, the decision, and what it costs or buys.
 
 Date: 2026-07-27
 Status: agreed, pre-implementation. No code written.
 
+## Steps
+
+The project was planned in five steps, each producing one document. Decisions are numbered continuously and grouped by the step that produced them.
+
+| Step | What it did | Produced | Decisions |
+|---|---|---|---|
+| 1 | Turned the rough idea into an unambiguous specification | [Idea-final.md](Idea-final.md) | D01–D35 |
+| 2 | Chose a build approach and release staging | [Idea-final-brainstorming.md](Idea-final-brainstorming.md) | D36–D46 |
+| 3 | Wrote the implementable specification | [Idea-final-spec.md](Idea-final-spec.md) | D47–D58 |
+| 4 | Broke release 0.1 into tickets | [tickets/](tickets/) | D59–D64 |
+| 5 | Reconciled the spec with a decision reversed in step 4 | [Idea-final-spec.md](Idea-final-spec.md) | D65 |
+
+Open items carried across all steps are listed at the end.
+
 ---
+
+# Step 1 — From idea to specification
+
+Decisions D01–D35. Established what Quadrim *is*, without regard to how or in what order it would be built.
 
 ## 1. Scope and platforms
 
@@ -258,9 +276,232 @@ Status: agreed, pre-implementation. No code written.
 
 ---
 
-## Open items
+---
 
-Decisions are complete. These are unresolved facts that need discovery work, not further product decisions.
+# Step 2 — Build approach and staging
+
+Decisions D36–D46. Produced [Idea-final-brainstorming.md](Idea-final-brainstorming.md). Where step 1 asked *what*, this step asked *by whom, in what order, and with what constraints* — and the answers reshaped the plan considerably.
+
+## 11. Who is building it
+
+### D36 — Team and cadence
+**Question:** Who is building this, and at what capacity?
+**Decision:** Solo, with Claude Code, evenings and weekends.
+**Rationale:** Stated constraint.
+**Consequence:** The dominant scarce resource is motivation, not skill or money. Any plan that produces nothing playable for months is disqualified regardless of its technical merits. This single fact drove the entire staging strategy.
+
+### D37 — Experience level
+**Question:** How familiar is the developer with Flutter and Firebase?
+**Decision:** New to both.
+**Rationale:** Stated constraint.
+**Consequence:** Two unfamiliar stacks cannot be learned productively at once with no working system to validate against. Favours deferring the backend until the client is understood, and favours proving each new layer end to end on a trivial case before building breadth on it.
+
+### D38 — Store accounts and hardware
+**Question:** Do developer accounts already exist?
+**Decision:** Neither Apple nor Google account exists yet. A Mac is available for iOS builds.
+**Rationale:** Stated constraint.
+**Consequence:** Two long lead times sit outside the developer's control and outside the code: Apple enrolment identity verification, and Google Play's closed-testing requirement. Both became critical-path items. See [D45](#d45--definition-of-first-success) and [D60](#d60--when-the-first-store-upload-happens).
+
+## 12. Technical approach
+
+### D39 — Server-side rules language
+**Question:** The spec requires rules logic on both client and server, but Firebase Cloud Functions does not run Dart — only Node/TypeScript and Python. How should the server validate moves?
+**Decision:** TypeScript Cloud Functions, with the 76-line table and a corpus of full games generated from one source and shared by both implementations.
+**Rationale:** Keeps the standard Firebase path with its lowest operational cost. Running Dart on Cloud Run would remove the duplication entirely but adds a container, cold starts, and a step outside plain Firebase.
+**Consequence:** Rules logic exists twice, in two languages. Drift is prevented not by discipline but by construction: neither implementation authors the line table, and both must pass the same generated corpus. Drift becomes a CI failure rather than a production bug. This is the origin of [D53](#d53--the-76-lines-have-exactly-one-definition) and of ticket 002.
+
+### D40 — Solver language and host
+**Question:** Where should the perfect-play solver live?
+**Decision:** A separate offline tool in Rust or C. It runs once on a desktop; the app consumes only its output.
+**Rationale:** The solver never runs on a phone, so raw speed matters more than language consistency with the app.
+**Consequence:** The solver is not app code and not on the app's critical path. Reinforces deferring it to 1.0 with the fallback ladder of [D24](#d24--how-the-perfect-bot-achieves-perfect-play) as the answer if it proves impractical.
+
+### D41 — Client architecture
+**Question:** How opinionated should the Flutter client architecture be for someone new to Flutter?
+**Decision:** Riverpod, layered into pure domain, data, and presentation, and testable throughout.
+**Rationale:** One well-supported state solution with clear boundaries. More concepts to learn up front, but the structure holds at the size this app reaches — real-time streams, async games, and chat all touching the same screens is exactly where minimal state management tangles.
+**Consequence:** A learning curve at the start, in exchange for not restructuring the app at 0.3.
+
+### D42 — Testing discipline
+**Question:** How much testing discipline?
+**Decision:** Strict TDD on the engine, the rules, the rating maths, and bot behaviour. Pragmatic coverage elsewhere.
+**Rationale:** These are pure logic with exactly correct answers, which is where TDD pays for itself. UI and Firebase wiring are not.
+**Consequence:** Directly produced the seam structure of [D56](#d56--test-seams).
+
+## 13. Staging
+
+### D43 — Scope is stageable
+**Question:** Must everything in the specification land in one release?
+**Decision:** No. [Idea-final.md](Idea-final.md) becomes the **1.0 target**, delivered across releases 0.1 through 1.0. Nothing is cut; things are ordered.
+**Rationale:** The specification as written is five projects — engine, solver, client, backend, content — and planning them as one unit is how projects stall at 70%.
+**Consequence:** Every subsequent document addresses a release rather than the whole product. Created the release ladder.
+
+### D44 — Build approach
+**Question:** Which of the four proposed approaches — store-first offline slice, foundation-first, walking skeleton, or engine-first — should the project follow?
+**Decision:** **Approach A, store-first offline slice**, adopting the layer-proving discipline of the walking skeleton and the standalone-engine rigour of the engine-first approach.
+**Rationale:** It is the only approach that starts the uncontrollable store clocks early, defers the entire compliance surface until the release pipeline is understood, and produces something playable while motivation is still available. Foundation-first is right for a funded team with a deadline and wrong for evenings and weekends.
+**Consequence:** Release 0.1 is a complete offline game with no accounts and no network. Confirmed by the user at the start of step 3.
+
+### D45 — Definition of first success
+**Question:** What is the first moment this project stops feeling theoretical?
+**Decision:** An app live in the App Store and Play Store.
+**Rationale:** Stated preference.
+**Consequence:** Consequential and easy to underestimate. It makes **store logistics a critical path item rather than a closing formality**: Apple enrolment verification, and Google Play's requirement that personal accounts created after November 2023 run a closed test with at least twelve testers for fourteen continuous days before production access. Neither is a programming task; both gate the stated definition of success.
+
+### D46 — First platform
+**Question:** Which platform ships first?
+**Decision:** Android first, iOS shortly after.
+**Rationale:** Cheaper, faster review, no Mac dependency in the loop, and the fourteen-day closed test can begin as soon as any build exists.
+**Consequence:** Release 0.1 is Android-only. iOS moves to 0.2.
+
+---
+
+# Step 3 — Specification
+
+Decisions D47–D58. Produced [Idea-final-spec.md](Idea-final-spec.md), covering the whole 1.0 roadmap with release 0.1 at implementation depth.
+
+## 14. Spec scope and shape
+
+### D47 — What the specification covers
+**Question:** Does the spec cover release 0.1 only, or the whole roadmap?
+**Decision:** The whole 1.0 roadmap, with only 0.1 at implementation depth. Later releases are scoped, not detailed.
+**Rationale:** The roadmap needs to be visible in one place, but specifying chat moderation before the board exists produces detail that is stale before it is read.
+**Consequence:** Each later release gets its own spec when its turn comes.
+
+### D48 — Meaning of "exposed endpoints"
+**Question:** Release 0.1 is offline with no API. What does an endpoints section describe?
+**Decision:** The public module APIs — the engine package, the rating package, and the `GameRepository` contract.
+**Rationale:** These are the real contracts in 0.1 and the surfaces every later release builds against.
+**Consequence:** The spec documents module boundaries with the same rigour it would give a network API.
+
+### D49 — Release 0.1 feature set
+**Question:** Which parts of the full experience are in 0.1?
+**Decision:** Move-history scrubber, result screen with rematch, local statistics and a replayable completed-games list, and the tutorial.
+**Rationale:** Requested. Each is cheap given an append-only move list, except the tutorial.
+**Consequence:** 0.1 is a complete-feeling game rather than a demo, at the cost of being a larger first release.
+
+### D50 — Tutorial depth in 0.1
+**Question:** How much of the four-part tutorial ships in 0.1?
+**Decision:** All four parts, including the interactive guided practice game with hints.
+**Rationale:** Requested. A closed tester meeting a 4×4×4 board for the first time needs it.
+**Consequence:** Significant. The scripted opponent and the hint overlay are genuine features, not content, and they delay the first upload. Mitigated by deriving hints from existing threat detection rather than scripting them ([D57](#d57--the-scripted-tutorial-opponent-is-a-bot-configuration)).
+
+### D51 — Layouts in 0.1
+**Question:** Phone only, or both layouts?
+**Decision:** Both phone portrait and large-screen landscape.
+**Rationale:** Requested. Play Console surfaces tablet quality warnings.
+**Consequence:** Roughly doubles the layout and test surface of 0.1. Mitigated by one board component serving both, differing in size and chrome rather than structure.
+
+### D52 — Languages in 0.1
+**Question:** English only, or both from the start?
+**Decision:** English and Dutch, both complete, from 0.1.
+**Rationale:** The string count is at its smallest now, and translating as you go is far cheaper than a retrofit sweep.
+**Consequence:** Every ticket from 004 onward carries "strings present in both languages" as acceptance criteria rather than there being a translation ticket. See [D62](#d62--localisation-and-accessibility-are-per-ticket-criteria).
+
+## 15. Data and technical decisions
+
+### D53 — Local persistence format
+**Question:** How does 0.1 store games, given it must migrate to Firestore in 0.3 without a rewrite?
+**Decision:** JSON documents keyed by id, shaped exactly as the Firestore documents will be.
+**Rationale:** Makes the 0.3 migration a transport swap behind `GameRepository` rather than a data redesign.
+**Consequence:** Drove the participant identity scheme ([D54](#d54--participant-identity-scheme)), the presence of an always-false `rated` field in 0.1, and the deliberate absence of fields 0.3 will add.
+
+### D54 — Participant identity scheme
+**Question:** How are players identified before accounts exist?
+**Decision:** Tagged string identities — `local:<deviceId>`, `guest:<n>`, `bot:<botId>`, and later `user:<uid>`. A stable local identity is generated on first launch, and 0.3's anonymous auth **adopts** it rather than replacing it.
+**Rationale:** Not asked directly; derived from [D53](#d53--local-persistence-format) and the requirement that early play not be wasted.
+**Consequence:** Small now, unfixable later. Without it, every game and statistic accumulated in 0.1 and 0.2 is orphaned the moment accounts arrive.
+
+### D55 — Bot difficulty presentation in 0.1
+**Question:** 0.1 has no accounts and therefore no rating. How do the six opponents present their difficulty?
+**Decision:** A named tier plus an indicative strength number, with the screen stating plainly that computer games are unrated practice for now.
+**Rationale:** Sets honest expectations and lets the same UI carry live ratings from 0.3 without changing.
+**Consequence:** The specification promises rated bot games ([D18](#d18--do-bot-games-affect-human-elo)); 0.1 cannot keep that promise and must say so rather than implying a rating system that does not exist.
+
+### D56 — Test seams
+**Question:** Where is the feature tested?
+**Decision:** Three seams. **A:** the engine package's public API, under strict TDD, with win detection verified exhaustively rather than sampled. **B:** the game controller against an in-memory fake `GameRepository`, covering full user flows without widgets. **C:** a thin set of board golden tests across both layouts and both themes. Bots, the line table, and layout internals are tested *through* A and B, never directly.
+**Rationale:** Tests assert external behaviour at module boundaries. A test that breaks on a refactor with no behaviour change is a defect in the test.
+**Consequence:** Seam B's flow tests become the shared contract that both the local and the Firestore repository implementations must satisfy in 0.3.
+
+### D57 — The scripted tutorial opponent is a bot configuration
+**Question:** How is the tutorial's guided opponent built?
+**Decision:** As an opponent configuration with a fixed seed, not a separate code path. Hints reuse the engine's threat detection.
+**Rationale:** Not asked directly; derived from [D23](#d23--number-and-design-of-computer-players) and [D50](#d50--tutorial-depth-in-01).
+**Consequence:** What the tutorial teaches is what the game actually rewards, because both read the same threat primitives.
+
+### D58 — Application identity
+**Question:** What is the application id?
+**Decision:** A clearly marked placeholder, to be chosen before the first upload.
+**Rationale:** No name decided yet, and the decision is not needed until upload.
+**Consequence:** Recorded as a release gate, with the warning that **an application id is permanent once published and can never be changed**.
+
+---
+
+# Step 4 — Ticket breakdown
+
+Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
+
+### D59 — Ticket granularity
+**Question:** How finely should release 0.1 be broken down?
+**Decision:** 22 tickets, each a vertical slice sized to a single fresh context window.
+**Rationale:** Each is demoable or verifiable on its own, roughly one to three evening sessions.
+**Consequence:** After ticket 004 the graph fans out into four independent branches — persistence, the opponent ladder, the result screen, and the tutorial — so the path to upload is the longest branch rather than the sum.
+
+### D60 — When the first store upload happens
+**Question:** Should the first closed-test upload happen as early as possible, or wait for a more complete game?
+**Decision:** **Wait.** The upload happens at ticket 016, after all six opponents, the result screen, the main screen, and history are in place.
+**Rationale:** Testers get one first impression, and a build with one random opponent and no result screen spends it badly.
+**Consequence:** This **reverses the position originally written into the spec**, which had decoupled the upload from 0.1 being complete specifically to start Google Play's fourteen-day clock sooner. The cost is real and unrecoverable: the clock starts later than it needed to. Accepted as a trade of schedule for first-impression quality. Reconciled in [D65](#d65--spec-reconciled-with-the-upload-timing-decision).
+
+### D61 — Store accounts are separated from the upload
+**Question:** Does deferring the upload also defer the store accounts?
+**Decision:** No. Account creation is its own ticket, marked as having no blockers and startable on day one, despite being numbered 015.
+**Rationale:** Not asked; derived. Apple enrolment verification takes days to weeks and has no code dependency whatsoever. Letting it inherit the upload's delay would compound [D60](#d60--when-the-first-store-upload-happens)'s cost for no benefit.
+**Consequence:** Preserves most of what [D60](#d60--when-the-first-store-upload-happens) gave away.
+
+### D62 — Localisation and accessibility are per-ticket criteria
+**Question:** Dedicated tickets, or criteria carried by every ticket?
+**Decision:** Plumbing lands in ticket 001; every subsequent ticket must add its own strings in both languages and its own screen-reader semantics. One final audit ticket sweeps for what slipped through.
+**Rationale:** A retrofit sweep for either is expensive and error-prone; piece rendering that distinguishes players by colour alone is especially painful to unpick later.
+**Consequence:** No localisation ticket exists. The audit ticket verifies cross-screen flows, which is precisely what per-ticket checks miss.
+
+### D63 — Ticket scope
+**Question:** Write tickets beyond release 0.1?
+**Decision:** 0.1 only.
+**Rationale:** Only 0.1 is specified in detail. Tickets for 0.3's backend would be guesses that go stale before they are reached.
+**Consequence:** Later releases get their own breakdown after their own spec.
+
+### D64 — Ticket storage and format
+**Question:** Where do tickets live?
+**Decision:** One markdown file per ticket in `doc/tickets/`, named with a three-digit number, a dash, and a short slug. Each file states what to build, what blocks it, and its acceptance criteria.
+**Rationale:** Requested. No issue tracker is configured for this repository.
+**Consequence:** Blocking edges are text rather than native tracker links, so renumbering means editing referenced files.
+
+---
+
+# Step 5 — Reconciliation
+
+### D65 — Spec reconciled with the upload-timing decision
+**Question:** [D60](#d60--when-the-first-store-upload-happens) contradicted §9.11 of the specification, which stated the opposite. Which wins?
+**Decision:** The step 4 decision wins. §9.11 and §12.1 of [Idea-final-spec.md](Idea-final-spec.md) were rewritten to separate store account creation (day one) from the first upload (after the game is complete), and to record the schedule cost explicitly.
+**Rationale:** Two planning documents disagreeing on a critical-path item reads as an oversight weeks later, when nobody remembers which was deliberate.
+**Consequence:** Spec and tickets now agree. §12.1 also records the rule for next time: **if 0.1 grows again, protect the upload date rather than the feature list** — anything added after the main screen is complete can ship as 0.2 into the same testing track.
+
+---
+
+## Appendix — session tooling
+
+Not product decisions, recorded so the session is complete.
+
+- **MemPalace was broken and was repaired.** The plugin (3.4.1) launched its MCP server via a `mempalace-mcp` command that the installed package (3.3.2) never shipped, so the server failed to start every session. The package was upgraded to 3.6.0, which installs the launcher and also fixes a crash in `mempalace status` caused by a chromadb SQL-variable limit when fetching all drawer metadata in one query. Two stale directories, `palace.bak-2026-07-22` and `palace.corrupt-2026-07-22`, remain at roughly 263 MB each and were left for the user to decide on.
+- **The `to-spec` and `to-tickets` skills are marked user-invocation-only** and could not be loaded through the skill mechanism; their instructions were read directly. Both were followed with two deliberate deviations, in each case on explicit instruction: clarifying questions *were* asked (both skills say not to), and output went to files rather than to an issue tracker (none is configured).
+
+---
+
+## Open items — all steps
+
+These are unresolved facts that need discovery work, not further product decisions.
 
 ### OI-01 — Push notifications on desktop and web
 Firebase Cloud Messaging does not support Flutter Windows or macOS. Web push works only in browsers that support it and requires an explicit permission grant; on iOS Safari it requires the site to be installed to the home screen. **Position:** push is a mobile feature. Web and desktop degrade to in-app notifications and a badge on the active-games list while the app is open. This must be stated in the UI so a desktop-only player is not silently timed out by D16.
