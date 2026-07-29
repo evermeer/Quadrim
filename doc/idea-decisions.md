@@ -496,7 +496,9 @@ Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
 
 Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [Idea-final-spec-review.md](Idea-final-spec-review.md).
 
-**These eighteen are settled. The reviewers' recommendations arising from them are not yet accepted and remain proposals until folded into the spec and tickets.**
+**These eighteen were settled at the time. Several were then superseded by [Step 7](#step-7--private-early-releases-and-a-clean-start)** — read this section together with [§19](#19-review-findings-against-these-decisions), which records what survived.
+
+The review document has since been updated: 27 of its 43 concerns are resolved and have been removed from it, leaving 16 open. Resolved findings are listed there in summary so the record survives without the detail.
 
 ## 16. Data shapes (backend review)
 
