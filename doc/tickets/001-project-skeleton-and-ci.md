@@ -17,3 +17,5 @@ This ticket exists to make every later ticket cheap. Nothing here is user-visibl
 - [ ] A check fails the build when a user-facing literal string is introduced
 - [ ] Light and dark themes are defined and follow the system setting
 - [ ] The application id is a clearly marked placeholder, with a recorded note that it is permanent once published and must be decided before the first upload
+- [ ] An explicit backup allowlist is committed rather than relying on the platform default of backing up everything — it covers the app's own stored documents and nothing else. Backup stays enabled deliberately, so a player replacing a device keeps their history
+- [ ] Whether to allow device-to-device transfer while excluding cloud backup has been considered and the choice recorded, since Android 12 and later distinguish the two

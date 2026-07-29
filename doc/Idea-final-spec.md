@@ -14,19 +14,25 @@ Status: ready for implementation planning. No code written.
 
 Quadrim — four in a row inside a 4×4×4 cube — is a genuinely good game that is hard to play. Physical sets are rare, and the digital versions that exist render the cube badly enough that players cannot see the diagonals that make the game interesting. Someone who wants to play it against a decent opponent, on a phone, without organising a second human, currently cannot.
 
+**This premise is currently an assertion, not evidence.** Before the board design is fixed, the one-star reviews of the leading Qubic apps must be read and their specific legibility complaints recorded here. It is an afternoon's work, and it either confirms the premise or reshapes the single most important screen in the game at the only moment when reshaping it is free.
+
 Secondarily: the developer is solo, working evenings, new to Flutter and Firebase, and has no store presence. A plan that produces nothing playable for months will not survive contact with real life.
 
 ## 2. Solution
 
 A cross-platform Quadrim implementation whose board makes all 64 cells and all 76 winning lines legible at a glance, with a ladder of computer opponents from trivial to unbeatable, and — eventually — rated online play against other humans.
 
-Built and released in stages. Release 0.1 is a complete, polished, **offline** game: the board, six computer opponents, pass-and-play, a full tutorial, local history and statistics, in English and Dutch, on Android. It has no accounts, no network, and therefore no compliance surface. Later releases add identity, online play, chat, real-time mode, the remaining platforms, and finally the perfect-play solver.
+Built and released in stages. Release 0.1 is a complete, polished, **offline** game: the board, six computer opponents, pass-and-play, a full tutorial, local history and statistics, in English and Dutch, on Android.
+
+**0.1 and 0.2 are not public.** They go to friends and family through Google Play closed testing and TestFlight, and are never promoted to production. The first public release is 0.3b. This keeps the early releases free of a public listing and a public-facing privacy exposure — though not of Play's declaration obligations, which apply to every track including closed testing.
+
+Because the early releases are private and their audience is small, **0.3 starts with an empty database.** Offline history is never uploaded. Later releases add identity, online play, chat, real-time mode, the remaining platforms, and finally the perfect-play solver.
 
 ---
 
 ## 3. Goal
 
-**For 0.1:** a store-shippable offline Quadrim that a stranger can install, understand without help, and enjoy against an opponent matched to their skill — while proving the release pipeline and starting the Google Play closed-testing clock.
+**For 0.1:** an offline Quadrim good enough that twelve real people install it, understand it without help, and enjoy it against an opponent matched to their skill — while proving the release pipeline end to end and unlocking production access before it is needed.
 
 **For 1.0:** everything in Idea-final.md.
 
@@ -34,11 +40,13 @@ Built and released in stages. Release 0.1 is a complete, polished, **offline** g
 
 | # | Criterion |
 |---|---|
-| G1 | A build is uploaded to Google Play closed testing, starting the 14-day / 12-tester clock |
+| G1 | Twelve friends-and-family testers have 0.1 installed on their own devices and have opened it |
 | G2 | A tester who has never seen Quadrim can complete the tutorial and win a game against Pebble without assistance |
 | G3 | Onyx beats a competent human more often than not |
 | G4 | The engine's win detection is exhaustively verified, not spot-checked |
-| G5 | Nothing in 0.1's data shapes forces a rewrite when accounts and Firestore arrive in 0.3 |
+| G5 | The release pipeline is proven: signed builds, closed testing on Play, TestFlight on iOS, and Play production access unlocked |
+
+G5 replaces an earlier criterion about 0.1's data shapes surviving into Firestore. With a clean start at 0.3 there is nothing to survive, so the criterion measured nothing.
 
 ---
 
@@ -46,16 +54,22 @@ Built and released in stages. Release 0.1 is a complete, polished, **offline** g
 
 ### 4.1 The release ladder
 
-| Release | Contents | Platforms |
-|---|---|---|
-| **0.1** | Engine, board, 6 bots, pass-and-play, full tutorial, local history and stats, both layouts, English + Dutch | Android |
-| 0.2 | iOS build, remaining 14 bots, visual identity, polish | Android, iOS |
-| 0.3 | Anonymous auth, profiles, async online, invite links, ELO becomes live, push, account deletion, privacy policy | Android, iOS |
-| 0.4 | Chat with block/report/filter, friends, open challenges, ELO auto-match | Android, iOS |
-| 0.5 | Real-time mode with 60s move clocks, Web, Windows, macOS | all five |
-| 1.0 | Rust solver, Quadrim Prime, rating recalibration | all five |
+| Release | Contents | Platforms | Audience |
+|---|---|---|---|
+| **0.1** | Engine, board, 6 bots, pass-and-play, full tutorial, local history and stats, both layouts, English + Dutch | Android | **Private** — 12 friends and family, Play closed testing |
+| 0.2 | iOS build, App Store submission, fixes the closed test demanded | Android, iOS | **Private** — closed testing + TestFlight |
+| 0.3a | Anonymous auth, a Firestore repository passing the same flow tests as the local one, one async game between two owned devices | Android, iOS | **Private** |
+| 0.3b | Invite links, ELO live, push, account deletion, privacy policy | Android, iOS | **First public release** |
+| 0.4 | Chat with block/report/filter, friends, open challenges, ELO auto-match, server-side move validation | Android, iOS | Public |
+| 0.5 | Real-time mode with 60s move clocks, Web, Windows, macOS | all five | Public |
+| 0.6 | The remaining 14 computer opponents | all five | Public |
+| 1.0 | Rust solver, Quadrim Prime, rating recalibration | all five | Public |
 
 Only 0.1 is specified below. Later rows are commitments of intent, not of detail.
+
+**Why 0.3 is split.** Making the first public release also the first release in an entirely unfamiliar stack — auth, Firestore, security rules, push, and a published privacy policy at once — puts every risk on one release with no prior public exposure to learn from. 0.3a is the layer-proving step: one thin slice through auth and Firestore, verified against the identical flow tests the local implementation already passes, before any of it is exposed to a stranger.
+
+**Why the 14 remaining opponents moved to 0.6.** They unlock no new capability, and computer ratings are fixed permanently once published. Introducing 14 new anchors is easier after the rating scale exists and can be measured against, not harder.
 
 ### 4.2 Release 0.1 — in scope
 
@@ -99,17 +113,20 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 
 | Item | Arrives |
 |---|---|
-| Accounts, authentication, cloud sync | 0.3 |
-| Any network call whatsoever | 0.3 |
-| Live ELO ratings; 0.1 bot games are **unrated practice** | 0.3 |
-| Push notifications | 0.3 |
-| In-app account deletion and privacy policy | 0.3 (mandatory then, not before) |
+| Accounts and authentication | 0.3a |
+| Any network call whatsoever | 0.3a |
+| Live ELO ratings; 0.1 bot games are **unrated practice** | 0.3b |
+| Push notifications | 0.3b |
+| In-app account deletion and privacy policy | 0.3b (mandatory then, not before) |
+| A public release of any kind | 0.3b |
 | Chat, blocking, reporting, profanity filtering | 0.4 |
-| Friends, invites, open challenges, auto-match | 0.3–0.4 |
+| Friends, invites, open challenges, auto-match | 0.3b–0.4 |
 | Real-time play and move clocks | 0.5 |
 | iOS, Web, Windows, macOS builds | 0.2 / 0.5 |
-| The other 14 computer players | 0.2 |
+| The other 14 computer players | 0.6 |
 | Quadrim Prime and the Rust solver | 1.0 |
+
+**Permanently out of scope, not deferred:** uploading offline history to the cloud. Games played in 0.1 and 0.2 stay on the device for the life of the app. 0.3 starts with an empty database and never imports.
 
 ### 5.2 Out of scope permanently
 
@@ -160,7 +177,7 @@ Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any m
 28. As a player, I want to replay any completed game move by move, so that I can learn from my mistakes.
 29. As a player, I want my history to persist across app restarts, so that it is not lost.
 30. As a player, I want statistics broken down by opponent, so that I can see which bots I beat.
-31. As a player, I want my local history to carry over when accounts arrive, so that early play is not wasted.
+31. As a player, I want my history to survive replacing my phone, so that early play is not wasted. *(Delivered by device backup, not by the cloud — offline history stays on the device permanently and never syncs.)*
 
 ### Learning (0.1)
 
@@ -186,7 +203,7 @@ Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any m
 
 ### Later releases
 
-48. As a player, I want to sign in so that my rating and history follow me across devices. *(0.3)*
+48. As a player, I want to sign in so that my rating and my online games follow me across devices. *(0.3a — offline history is not included and stays on the device where it was played)*
 49. As a player, I want to play a friend asynchronously over days, so that we do not need to be online together. *(0.3)*
 50. As a player, I want a notification when it is my turn, so that I do not have to keep checking. *(0.3)*
 51. As a player, I want an ELO rating that reflects my strength, so that I can measure improvement. *(0.3)*
@@ -235,9 +252,11 @@ Built in 0.1 though unused by the UI until 0.3, because bot calibration needs it
 | `kFactor(gamesPlayed)` | 32 below 20 games, 16 at or above |
 | `updatedRating(current, k, score, expected)` | Rounded, floored at 100 |
 
-### 7.3 `GameRepository` — the staging seam
+### 7.3 `GameRepository` — the testing seam
 
-The single interface separating the app from where games live. **Release 0.1 implements it locally. Release 0.3 adds a Firestore implementation and the UI does not change.** This is the most important contract in the project.
+The single interface separating the app from where games live.
+
+Its original justification was migration: 0.1 implements it locally, 0.3 swaps in Firestore, the UI never changes. **That justification is gone** — with a clean start at 0.3, local games stay local forever and online games are a separate store. The interface survives for a different and still sufficient reason: it is the boundary Seam B tests against, and 0.3's Firestore implementation must pass the *same* flow tests the local one does. That equivalence is what proves the online layer works before anything is exposed publicly.
 
 | Member | Contract |
 |---|---|
@@ -246,17 +265,14 @@ The single interface separating the app from where games live. **Release 0.1 imp
 | `completedGames()` | Stream of finished games, most recent first |
 | `create(GameSetup)` | Creates and returns a new game |
 | `appendMove(gameId, cell)` | Appends a move; rejects illegal moves and out-of-turn moves |
-| `resign(gameId, participant)` | Ends the game as a loss for that participant |
+| `resign(gameId)` | Ends the game as a loss for the resigning seat |
 | `delete(gameId)` | Removes a game |
 
-Streams, not futures, even locally — because 0.3's Firestore implementation is push-based, and a future-shaped interface would force a UI rewrite.
+Streams, not futures, even locally — because 0.3's implementation is push-based, and a future-shaped interface would force a UI rewrite.
 
-### 7.4 `ProfileRepository`
+Statistics are derived by folding `completedGames()`, not stored. This is safe precisely because offline history stays local and small: there is no growing cloud collection behind it, and therefore no pagination requirement.
 
-| Member | Contract |
-|---|---|
-| `watchProfile()` | The local player's identity and aggregate statistics |
-| `recordResult(GameResult)` | Updates win/loss/draw totals and per-opponent breakdown |
+There is no profile repository. See §8.4.
 
 ### 7.5 `tools/linegen` — build-time generator
 
@@ -273,20 +289,28 @@ Generated files are committed and marked do-not-edit. CI fails if they are stale
 
 ### 8.1 Design rule
 
-Every persisted shape in 0.1 is written **as if it were already a Firestore document**: a flat-ish JSON document with a string id, no local-only primary keys, no relational joins, timestamps in ISO-8601 UTC, and a `schemaVersion`. Migration in 0.3 becomes a transport swap behind `GameRepository`, not a data redesign.
+**Store the simplest correct thing.** 0.1's data is never uploaded, never queried by a server, and never authorised against — so it is designed for what 0.1 actually does, not for what 0.3 might want.
 
-### 8.2 Participant identity
+This reverses an earlier rule that shaped every 0.1 document as a future Firestore document. That rule bought forward-compatibility with a cloud that will now never see this data, and it was buying it with real complexity: a device identifier to generate and protect, a participant array to keep queryable, per-move authorship, ids and timestamps. All of it is removed.
 
-The scheme that makes migration work. A participant is a tagged string:
+0.3 designs its Firestore schema natively, around `request.auth.uid`, with no compatibility debt.
 
-| Form | Meaning | From |
-|---|---|---|
-| `local:<deviceId>` | The device owner, pre-account | 0.1 |
-| `guest:<n>` | The second seat in pass-and-play | 0.1 |
-| `bot:<botId>` | A computer opponent, e.g. `bot:onyx` | 0.1 |
-| `user:<uid>` | An authenticated account | 0.3 |
+What survives from the old rule, because it is good practice regardless: a string id per document, a `schemaVersion`, and ISO-8601 UTC timestamps.
 
-A stable `local:<deviceId>` is generated on first launch and persisted. **In 0.3, anonymous auth adopts this identity rather than replacing it**, so 0.1 history and statistics survive into the account.
+### 8.2 Identity in 0.1
+
+**There is no device identity.** No uuid is generated, stored, claimed, backed up or cloned. 0.1 has one player — whoever holds the phone — and they need no name to play a bot or hand the device to someone else.
+
+A game records only who its opponent was:
+
+| Value | Meaning |
+|---|---|
+| `bot:<botId>` | A computer opponent, e.g. `bot:onyx` |
+| `guest` | The second seat in pass-and-play |
+
+Seats are positional: seat 0 and seat 1. Which seat the device owner holds is recorded per game, because the starting player alternates.
+
+Removing the device identifier also shrinks what the Android backup carries (§8.7): game history, and nothing that identifies anyone.
 
 ### 8.3 Game document
 
@@ -294,18 +318,18 @@ A stable `local:<deviceId>` is generated on first launch and persisted. **In 0.3
 {
   "id": "string",
   "schemaVersion": 1,
-  "mode": "vsComputer | passAndPlay | asyncOnline | realtimeOnline",
-  "participants": ["local:abc123", "bot:onyx"],
-  "startingParticipant": 0,
+  "mode": "vsComputer | passAndPlay",
+  "opponent": "bot:onyx | guest",
+  "playerSeat": 0,
+  "startingSeat": 0,
   "startReason": "random | rematchAlternation",
-  "moves": [{ "cell": 27, "by": 0, "at": "2026-07-27T18:04:11Z" }],
+  "moves": [27, 14, 3, 61],
   "state": "active | complete",
   "result": {
     "outcome": "win | draw | resign",
-    "winner": 0,
+    "winnerSeat": 0,
     "line": [3, 18, 33, 48]
   },
-  "rated": false,
   "rematchOf": "string | null",
   "createdAt": "2026-07-27T18:03:02Z",
   "updatedAt": "2026-07-27T18:09:44Z"
@@ -313,29 +337,18 @@ A stable `local:<deviceId>` is generated on first launch and persisted. **In 0.3
 ```
 
 Notes:
-- `moves` is append-only and complete, which is what makes replay a pure function rather than a stored artefact.
-- `cell` is the canonical `0..63` index.
+
+- **`moves` is a plain ordered list of cell indices, `0..63`.** Whose move it was derives from position in the list and `startingSeat` — turns strictly alternate, so storing an author per move would be storing a derivable fact. No per-move id, index, or timestamp is stored either: the array position *is* the index, there is no network to retry over, and no clock decides anything in 0.1.
+- The list is append-only and complete, which is what makes replay a pure fold rather than a stored artefact.
 - `result.line` holds the four cell indices of the completed line, so highlighting needs no recomputation.
-- `rated` is present and always `false` in 0.1. It exists now so 0.3 adds no field.
-- Fields 0.3 will add — `clock`, `expiresAt`, `drawOffer`, `ratingDelta` — are deliberately absent rather than stubbed.
+- There is no `rated` field. Nothing in 0.1 or 0.2 is rated, and 0.3's ratings start clean, so a permanently-false flag would be decoration.
+- There is no `participants` array. It existed to be queryable by Firestore security rules, which will never see this document.
 
-### 8.4 Profile document
+### 8.4 No profile document
 
-```json
-{
-  "id": "local:abc123",
-  "schemaVersion": 1,
-  "displayName": null,
-  "avatarId": "avatar_07",
-  "rating": null,
-  "provisionalGamesPlayed": 0,
-  "totals": { "wins": 0, "losses": 0, "draws": 0 },
-  "perOpponent": { "bot:onyx": { "wins": 0, "losses": 2, "draws": 1 } },
-  "createdAt": "2026-07-27T17:59:00Z"
-}
-```
+Deleted. It held a device identity that no longer exists (§8.2), stored statistics that are now derived by folding completed games (§9.5), and a display name and rating that belong to 0.3's accounts.
 
-`displayName` and `rating` are null in 0.1 and populated in 0.3.
+Settings (§8.6) is therefore the only local document besides games.
 
 ### 8.5 Bot catalogue — 0.1
 
@@ -358,9 +371,15 @@ Chosen to exercise every engine feature except deep search and the strategy book
 { "schemaVersion": 1, "locale": "en | nl | system", "theme": "light | dark | system", "tutorialCompleted": false }
 ```
 
+The only local document besides games, and the home for anything that is neither a game nor derivable from one. `tutorialCompleted` lives here — without it, acceptance criterion T7 in §11.4 cannot pass and testers are re-offered the tutorial on every launch.
+
 ### 8.7 Storage
 
-One JSON document per record, keyed by id, in the platform application-support directory. Writes are atomic — write to a temporary file, then rename — so a kill mid-write cannot corrupt a game. Reads tolerate an unknown `schemaVersion` by refusing to load that record rather than crashing the app.
+One JSON document per record, keyed by id, in the platform application-support directory. Writes are atomic — write to a temporary file, then rename — so a kill mid-write cannot corrupt a game.
+
+Version handling: a record whose `schemaVersion` is **greater than** the reader understands is skipped; equal or lower is read and upgraded. Skipping anything unrecognised would mean a newer build could not read the records an older one wrote.
+
+**Backup.** Android's system backup is deliberately left enabled so a player replacing a device keeps their history (see §9.12). The backed-up set is games and settings — with §8.2 removing the device identifier, nothing in it identifies anyone. An explicit allowlist is committed rather than relying on the platform default of including everything, because at 0.3 this same directory gains Firebase authentication material that must never be restored onto a second device.
 
 ---
 
@@ -391,13 +410,17 @@ This purity is what allows the identical code to run in a unit test, in the app,
 
 One `chooseMove`, six configurations in 0.1 and twenty by 0.2. Adding an opponent is a catalogue entry. Calibration is a matter of running self-play across configurations rather than across code paths.
 
-### 9.5 Persistence sits behind `GameRepository` from the first commit
+### 9.5 Persistence sits behind `GameRepository`, and statistics are derived
 
-Even though 0.1 has exactly one implementation. The interface is the entire staging strategy; introducing it later would mean touching every screen.
+The interface exists from the first commit even though 0.1 has one implementation. Its purpose is no longer migration — it is the boundary Seam B tests against, and the contract 0.3a's Firestore implementation must satisfy by passing the *same* flow tests.
+
+Statistics are computed by folding completed games at read time, never stored. A stored aggregate is a second write that can silently drift from the games it summarises, and there is no scale here to justify it: offline history stays local, stays small, and is never behind a network.
+
+The tutorial's practice game follows directly from this. Because statistics are derived from stored games, a stored practice game would count. **It is therefore never stored at all** — it lives in memory for the tutorial's duration and never reaches the repository. That is strictly cheaper than adding a mode value every future reader would have to filter out.
 
 ### 9.6 Streams, not futures
 
-`GameRepository` is stream-based even for local storage, because Firestore is push-based and a future-shaped API would force a UI rewrite at 0.3.
+`GameRepository` is stream-based even for local storage, because 0.3's implementation is push-based and a future-shaped API would force a UI rewrite.
 
 ### 9.7 Riverpod, layered
 
@@ -415,19 +438,40 @@ ARB resource files from commit one; no user-facing string is ever hard-coded. En
 
 The tutorial's guided opponent is a `BotConfig` with a fixed seed and a scripted opening, not a separate code path. Hints reuse `threats()`.
 
-### 9.11 Store accounts start immediately; the first upload waits for a complete game
+### 9.11 Store accounts start immediately; the closed test runs during 0.1
 
-Two separable things, deliberately sequenced apart.
+**Store accounts start on day one.** Apple Developer enrolment involves identity verification that can take days to weeks, and Google Play Console setup gates everything downstream. Neither has any code dependency; both are waiting time rather than effort.
 
-**Store accounts start on day one.** Apple Developer enrolment involves identity verification that can take days to weeks, and Google Play Console setup gates everything downstream. Neither has any code dependency. Both are waiting time rather than effort, and both sit on the critical path to this project's definition of success.
+**The closed test is the distribution channel, not a public launch.** Google Play requires personal developer accounts to run a closed test with at least twelve testers for fourteen continuous days before production access is granted. Those twelve testers are the friends and family who are 0.1's entire audience, so the requirement costs nothing extra to satisfy — and satisfying it during 0.1 means production access is already unlocked long before 0.3b needs it. Relocating that clock to 0.3b would have put it on the hardest release at the worst moment.
 
-**The first closed-test upload waits until the game is worth showing.** Google Play's 14-day / 12-tester closed-testing requirement runs against any uploaded build, so an earlier upload would start the clock sooner. That option was considered and declined: testers get one first impression, and a build with one random opponent and no result screen spends that impression badly. The upload therefore happens once all six opponents, the result screen, the main screen, and history are in place.
+**The first upload waits until the game is worth showing, and now includes the tutorial.** Testers get one first impression, and a build with one random opponent and no result screen spends it badly. A build with no onboarding at all spends it worse: a stranger meeting a 4×4×4 board with 76 winning lines and no explanation cannot satisfy success criterion G2. The tutorial's rules-and-controls part therefore ships before the first upload; strategy and the practice game follow as updates during the fourteen days.
 
-**The cost, recorded plainly:** the 14-day clock starts later than it needed to, and that time is not recoverable. This is an accepted trade of schedule for first-impression quality, not an oversight. It is the one respect in which the plan departs from Strategy A's original reasoning.
+**What is not deferred by staying private.** Play requires the Data Safety declaration, the content rating questionnaire, and the target-audience declaration before publishing to *any* track, closed testing included. Being private removes the public listing and public discoverability. It does not remove those obligations, and the target-audience answer given here silently constrains what chat is permissible at 0.4.
 
-### 9.12 Application identity is a placeholder until first upload
+### 9.12 Android backup is enabled deliberately
 
-The application id is recorded as `PLACEHOLDER_APPLICATION_ID` and must be chosen before the first upload. **It is permanent once published and can never be changed.**
+The platform default would back up everything in the application directory. That default is not accepted; an explicit allowlist is committed from the first commit, covering games and settings.
+
+Backup stays **on** so a player replacing a device keeps their history. With §8.2 removing the device identifier, what travels is game history containing nothing that identifies anyone, into the user's own Google account, which the developer cannot read.
+
+Two consequences follow, and both are load-bearing:
+
+1. **"No data leaves the device" is not a true statement** and must not appear in any privacy text. Data does leave the device — to the user's own account, under Google's terms, outside the developer's control. That is a defensible position, but only if it is stated accurately.
+2. **At 0.3 this same directory gains Firebase authentication material.** Restored onto a second device it would arrive already signed in. The allowlist must exclude it, and the exclusion is easier to write now, while the list is two entries long, than to remember later.
+
+Android 12 and later distinguish device-to-device transfer from cloud backup. Allowing transfer while excluding cloud backup would deliver the same benefit with a smaller disclosure, and is worth evaluating when the allowlist is written.
+
+### 9.13 The three irreversible decisions
+
+Everything else in this plan can be changed later. These cannot.
+
+| Decision | When | Why it is final |
+|---|---|---|
+| **Application id** | Before the first upload | Permanent once published to any track. Currently recorded as `PLACEHOLDER_APPLICATION_ID` |
+| **App signing key** | At Play App Signing enrolment | Google holds it and it cannot be replaced for an existing app |
+| **Firestore database location** | Before the first write at 0.3a | Fixed at creation. Cloud Functions must be pinned to a compatible region separately, and Firebase Auth cannot be region-pinned at all — user records are processed in the US regardless, which the privacy policy must state rather than claiming EU-only |
+
+**A correction worth making explicitly:** an earlier version of this document stated that a lost keystore can never be recovered. That is half wrong. With Play App Signing — mandatory for new applications — Google holds the app signing key, and a lost *upload* key can be reset through support. The upload keystore should still be backed up and the backup verified; it is simply not the catastrophe it was described as. The genuinely unrecoverable items are the three above.
 
 ---
 
@@ -530,61 +574,90 @@ Exhaustive on Seam A. Every flow in §6's 0.1 user stories covered at Seam B. Se
 | T6 | The practice game gives hints derived from real threat detection, not scripted text |
 | T7 | Completion is persisted so it is not re-offered |
 
-### 11.5 Data and migration
+### 11.5 Data
 
 | # | Criterion |
 |---|---|
 | D1 | Every persisted document carries a `schemaVersion` |
-| D2 | Participants use the tagged-id scheme throughout; no bare device ids |
-| D3 | Game documents match §8.3 exactly, including `rated: false` |
+| D2 | No device identifier is generated, stored, or transmitted anywhere |
+| D3 | Game documents match §8.3 exactly |
 | D4 | A kill during a write leaves no corrupted record |
-| D5 | An unknown `schemaVersion` causes that record to be skipped, not a crash |
-| D6 | The local player identity is stable across restarts |
+| D5 | A `schemaVersion` **greater than** the reader understands causes that record to be skipped; equal or lower is read and upgraded |
+| D6 | Every game id is unique and stable across restarts |
+| D7 | Whose move each move was is derivable from list position and `startingSeat`, and matches what the board displays during replay |
+| D8 | The tutorial's practice game never reaches storage and never appears in statistics or the completed-games list |
+| D9 | Only games and settings are backup-eligible, by explicit allowlist rather than platform default |
 
 ### 11.6 Release gates for 0.1
 
+0.1 is a **private** release. There is no production listing and no public availability.
+
 | # | Gate |
 |---|---|
-| R1 | Google Play Console account created and the application id chosen — **permanent once published** |
-| R2 | Apple Developer enrolment started (not blocking 0.1, but its clock runs long) |
-| R3 | A build uploaded to closed testing, with the 12-tester / 14-day clock started |
-| R4 | 12 testers recruited — tracked as a real task, not a formality |
-| R5 | Play Data Safety declaration completed. With no accounts, no network, and no analytics, it declares no data collection — this is the easiest it will ever be |
-| R6 | Store listing, icon, screenshots, and description in English and Dutch |
-| R7 | Release signing configured and the keystore backed up — **a lost keystore cannot be recovered** |
-| R8 | Every acceptance criterion in §11.1 to §11.5 passing |
+| R1 | Google Play Console account created and the application id chosen — **permanent once published to any track** |
+| R2 | Apple Developer enrolment started — no code depends on it, and its clock runs long |
+| R3 | Release signing configured, upload keystore backed up and the backup **verified by restoring it** |
+| R4 | 12 friends-and-family testers recruited and opted into the closed test — a real task with a real lead time, not a formality |
+| R5 | Play Data Safety declaration completed. **This is a task, not a foregone conclusion:** determine the correct answers given that Android backup is enabled, by checking current Play guidance on backup and on end-to-end-encrypted data, and record the reasoning and the date checked |
+| R6 | Content rating questionnaire and target-audience declaration completed. **The audience answer silently constrains 0.4:** a declared band including under-13s makes free-text chat with strangers effectively unshippable |
+| R7 | Closed-testing listing sufficient for testers to install, in English and Dutch |
+| R8 | A build published to closed testing, all 12 testers installed and opened it, and the 14-day continuous clock started — with its start date recorded |
+| R9 | The tester survey instrument exists and was given to testers **at install**, with its pass thresholds committed in advance |
+| R10 | Every acceptance criterion in §11.1 to §11.5 passing |
+| R11 | Production access unlocked at the end of the 14 days — banked for 0.3b, not used |
+
+Gate R5 was previously written as an assertion that the declaration would say "no data collected". With backup enabled that is no longer safe to assume, and misdeclaring Data Safety is a policy-violation removal rather than a warning — so it is now a verification task with a recorded answer.
 
 ---
 
 ## 12. Further Notes
 
-### 12.1 Honest tension in 0.1's scope
+### 12.1 What going private changed, and what it did not
 
-0.1 was originally the minimum shippable slice. It now carries the full four-part tutorial, both layouts, both languages, and — by the sequencing decision in §9.11 — an upload that waits for all six opponents and a finished main screen. Each addition made 0.1 better and slower.
+Strategy A was chosen in [Idea-final-brainstorming.md](Idea-final-brainstorming.md) largely because it reached the stores soonest. Making 0.1 and 0.2 private removes that argument, so it needs replacing rather than quietly dropping.
 
-The compounding effect is worth naming: Strategy A was chosen in [Idea-final-brainstorming.md](Idea-final-brainstorming.md) specifically because it started the store clocks soonest, and 0.1 has since grown in every dimension that delays them. The strategy still holds — offline-first still means no compliance surface, no backend learning curve, and a playable game early — but its schedule advantage is materially reduced.
+**The sequencing still holds, on different grounds.** Offline-first still means the entire backend learning curve is deferred until Flutter is familiar, still means something is playable within weeks, and still means the first release carries no public listing and no public privacy exposure. Those were always the stronger reasons; the store-clock argument was the one most sensitive to scope growth, and it is now simply not needed — §9.11 satisfies the fourteen-day requirement using the same twelve people who are the audience anyway.
 
-Two mitigations preserve most of it, and both are load-bearing:
+**What it genuinely solved.** The clean start at 0.3 removed an entire category of risk: no import endpoint, no migration to make resumable, no client-authored data crossing a trust boundary, no device identity to generate, protect, claim or clone, and no cost burst on launch day. Roughly a third of the expert review's findings ceased to exist rather than being fixed.
 
-1. **Store accounts start on day one**, not when the upload is due (§9.11). This is the larger of the two, because enrolment lead time is pure waiting and can run under everything else.
-2. **The 0.1 branches are genuinely parallel.** After a playable board exists, persistence, the opponent ladder, the result screen, and the tutorial are independent. Nothing forces them into a single queue, so the path to upload is the longest branch rather than the sum of all four.
+**What it did not solve, and made slightly worse.** There is now no shipped artefact of any kind — private or otherwise — before 0.3, which was already the release most likely to stall. §4.1's split into 0.3a and 0.3b exists specifically to address that, and it is the mitigation to protect if anything else slips.
 
-If 0.1 grows again, the thing to protect is the upload date, not the feature list — anything added after the main screen is complete can just as well ship as 0.2 into the same testing track.
+**The rule for future scope growth is unchanged in spirit:** what is worth protecting is the date twelve people first play the game. Anything added after the main screen is complete can ship as an update into the same closed track.
 
 ### 12.2 Things 0.1 promises that only 0.3 can keep
 
-Idea-final.md §5 rates games against computer opponents. 0.1 has no accounts and therefore no rating. Bot games must be presented as **unrated practice** with indicative strength numbers, and the numbers become live ratings in 0.3. Presenting them as ratings before then would be a lie the data cannot back up.
+Idea-final.md §5 rates games against computer opponents. 0.1 has no accounts and therefore no rating. Bot games must be presented as **unrated practice** with indicative strength numbers, and the numbers become live ratings in 0.3b. Presenting them as ratings before then would be a lie the data cannot back up.
 
-### 12.3 Bot calibration starts now, lands in 0.3
+A second promise moves rather than breaks: Idea-final.md's stats and history follow the player across devices. In 0.1 and 0.2 they follow the *device*, via Android backup, and they never reach the cloud at all. A player who starts fresh at 0.3b keeps their offline history locally and begins their online record empty. That is a deliberate simplification, not an oversight, and the app should say so plainly rather than implying a carry-over that will not happen.
 
-The indicative ratings in §8.5 are estimates (open item OI-03). The self-play harness built on top of the pure engine is the tool that turns them into calibrated anchors. Worth running well before 0.3, because once published as live ratings they are effectively frozen — correcting an anchor later invalidates every human rating derived from it.
+### 12.3 Bot calibration starts now, lands in 0.3b
 
-### 12.4 Inherited open items
+The indicative ratings in §8.5 are estimates (open item OI-03). The self-play harness built on the pure engine turns them into an ordering; only humans can turn them into a scale.
+
+**Anchor from the bottom and chain upward.** Twelve friends-and-family testers will generate many results against Pebble and Mote and almost none against Basalt and Onyx — which is exactly where a wrong anchor does damage, since G3 claims Onyx beats a competent human and four-ply search is shallow relative to Qubic's forcing sequences. So: human-anchor the lower opponents from tester results, then set the upper ones from the rating differences the round-robin already measures, and record the chain. Where the chain is weak, publish the tier label without a number — §7.10's opponent list renders both, so showing one is a data change.
+
+This must be finished before 0.3b, because once published as live ratings the anchors are effectively frozen; correcting one afterwards invalidates every human rating derived from it. Moving the remaining fourteen opponents to 0.6 means they will be introduced *into* a live scale and can only be calibrated relative to the frozen six — a constraint the harness must support.
+
+### 12.4 Open items
+
+None of these block starting.
+
+**Inherited:**
 
 - **OI-01** — push unsupported on Flutter desktop; first matters at 0.5
 - **OI-02** — solver effort and asset size unknown; deliberately deferred to 1.0, with §6.5's fallback ladder as the answer if it proves impractical
+- **OI-03** — bot calibration; method and deadline now defined in §12.3
 - **OI-04** — auto-match cold start; first matters at 0.4
-- **OI-05** — Firebase cost model unestimated; first matters at 0.3
+- **OI-05** — **largely answered.** The expert review sized it: steady state is negligible, roughly 250 games a day inside the free tier. The real exposure was the migration burst — one user with 500 local games costing about 1,000 writes at once — and the clean start removed it entirely. What remains is ordinary steady-state sizing before 0.3b
+
+**Raised by the expert review and still open:**
+
+- **OI-06** — Play's Data Safety treatment of Android backup, and whether a privacy policy is required for every app regardless of declared collection. Must be checked against current Play guidance, not reasoned about. Gates R5
+- **OI-07** — Play's public address requirement for individual developer accounts, and whether a Dutch KvK registration with address shielding satisfies it. Shape of the problem is certain; today's rules are not. Gates 0.3b
+- **OI-08** — anti-abuse for rated play at 0.3b. Per-pair caps do nothing against throwaway anonymous accounts without an attestation mechanism, and a repeat-matchup cap penalises the rematch loop §7.8 calls the app's cheapest retention mechanism. The control and the product's main engagement pattern are the same behaviour
+- **OI-09** — account deletion residues at 0.3b: head-to-head aggregates, reports authored *about* a deleted user, and the auth record itself are not covered by replacing an identity in a game document
+- **OI-10** — whether server-side move validation belongs at 0.3b or 0.4. The review split on it: deferring it removes a second language from the critical path to first online play, at the cost of a trustable rating in a product that has nothing to spend a rating on. §4.1 currently places it at 0.4
+- **OI-11** — who the twelve testers are. Gates R4 and, through it, everything
 
 ### 12.5 Deviations from the to-spec skill
 

@@ -17,6 +17,6 @@ This is the part that makes the tutorial stick, and the part that costs real eng
 - [ ] Playing a move the hint discouraged is allowed, and the game continues
 - [ ] The practice game can be abandoned at any point without blocking tutorial completion
 - [ ] Completing it marks the tutorial as finished
-- [ ] The practice game does not appear in the player's statistics or completed games
+- [ ] The practice game **never reaches the repository** — it lives in memory for the tutorial's duration and is never stored, which is what keeps it out of statistics and the completed-games list without adding a mode every future reader would have to filter
 - [ ] Hints are announced by screen reader
 - [ ] All new strings are present in English and Dutch

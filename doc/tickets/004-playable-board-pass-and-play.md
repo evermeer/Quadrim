@@ -8,6 +8,7 @@ This is the project's first tracer bullet and the first moment it stops being do
 
 **Status:** ready-for-agent
 
+- [ ] Before the board design is fixed: the one-star reviews of the leading Qubic apps have been read, and their specific board-legibility complaints recorded in the specification's problem statement — which currently asserts this weakness without evidence
 - [ ] All four layers and all 64 cells are visible at once, without scrolling, on a phone in portrait
 - [ ] Layers are drawn so that the cube's depth is legible
 - [ ] Occupied and empty cells are unmistakably distinguishable at a glance

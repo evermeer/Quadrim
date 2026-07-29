@@ -16,6 +16,6 @@ This is where the app stops being a board and becomes a product.
 - [ ] A separate button opens the tutorial
 - [ ] Statistics and lists update when a game finishes, without needing a restart
 - [ ] Where a rating would eventually appear, the screen shows nothing rather than a placeholder number
-- [ ] Statistics are recorded against the local player identity so that release 0.3 can adopt them
+- [ ] Statistics are derived from stored games at read time and are never stored separately, so they cannot drift from the games they summarise
 - [ ] The screen is navigable by screen reader, and readable at the largest system font scale
 - [ ] All new strings are present in English and Dutch

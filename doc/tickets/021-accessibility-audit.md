@@ -4,7 +4,7 @@
 
 Every previous ticket carried its own accessibility criteria, so this is a verification pass rather than a build — but it is kept as a separate ticket because cross-screen flows are exactly what per-ticket checks miss.
 
-**Blocked by:** 017 — Large-screen landscape layout; 020 — Tutorial: interactive practice game
+**Blocked by:** 017 — Large-screen landscape layout; 020 — Tutorial: interactive practice game; 023 — Per-opponent milestones
 
 **Status:** ready-for-agent
 

@@ -18,4 +18,6 @@ Nothing here is visible to a player in release 0.1 — rating only becomes live 
 - [ ] The tool reports win, loss and draw counts and an implied rating difference
 - [ ] A full round-robin across all six opponents can be run in one command
 - [ ] Results confirm the intended strength ordering: Pebble, Mote, Bramble, Ember, Basalt, Onyx
-- [ ] Measured relative strengths are recorded so that the indicative numbers can be corrected before 0.3 makes them live
+- [ ] Measured relative strengths are recorded so that the indicative numbers can be corrected before 0.3b makes them live
+- [ ] The harness can calibrate a new opponent against opponents whose ratings are already fixed, not only run a free-floating round robin — the fourteen remaining opponents arrive in 0.6, after the scale is live and the first six are frozen
+- [ ] The published indicative numbers are derived by human-anchoring the weaker opponents from closed-test results and chaining the stronger ones from measured gaps, and the chain is recorded so a later correction can be reasoned about

@@ -2,9 +2,9 @@
 
 **What to build:** The project can produce a signed release build that Google Play will accept, and both store accounts exist.
 
-**This ticket is numbered here but has no code dependencies and should be started on day one.** Apple's enrolment involves identity verification that can take days to weeks, and Google Play account setup is a prerequisite for everything downstream. Both are waiting time rather than effort, and both sit on the critical path to the project's stated definition of success. Starting them late delays the release regardless of how fast the code goes.
+**This ticket is numbered here but has no code dependencies and should be started on day one.** Apple's enrolment involves identity verification that can take days to weeks, and Google Play account setup is a prerequisite for everything downstream. Both are waiting time rather than effort.
 
-Two decisions made here are irreversible. The application id can never be changed once published. A lost upload keystore can never be recovered.
+**One decision here is genuinely irreversible: the application id.** It can never be changed once published to any track, including closed testing. Note that a lost *upload* key is not the catastrophe it is often described as — with Play App Signing, mandatory for new applications, Google holds the app signing key and an upload key can be reset through support. Back it up and verify the backup anyway; just do not let that fear crowd out the decision that actually cannot be undone.
 
 **Blocked by:** None — can start immediately, and should.
 
@@ -19,3 +19,4 @@ Two decisions made here are irreversible. The application id can never be change
 - [ ] Keystore credentials are kept out of version control, and a check enforces this
 - [ ] A signed release build installs and runs correctly on a physical Android device
 - [ ] The app version and build number scheme is defined and applied
+- [ ] What Play requires of an individual developer account regarding a publicly displayed contact address is checked and recorded, since it will apply by 0.3b

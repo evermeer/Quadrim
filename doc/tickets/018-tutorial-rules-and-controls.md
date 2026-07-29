@@ -11,7 +11,7 @@ It is offered automatically on first launch, can be restarted from the main scre
 - [ ] The tutorial is offered automatically on first launch
 - [ ] It can be restarted at any time from the main screen
 - [ ] It can be exited at any point without completing it
-- [ ] Completion is remembered, so it is not offered again
+- [ ] Completion is persisted in the settings document and survives a restart, so it is not offered again
 - [ ] The objective is explained in a single screen
 - [ ] At least one example is shown from each of the four winning-line families: along an axis, diagonally within a layer, diagonally through a vertical slice, and corner to corner through the cube
 - [ ] Examples are drawn on the real board component rather than as static pictures

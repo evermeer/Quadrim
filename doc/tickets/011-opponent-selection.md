@@ -14,6 +14,7 @@ The honesty requirement matters here: release 0.1 has no accounts and therefore 
 - [ ] Opponents are ordered by strength
 - [ ] The screen states plainly that games against computer opponents are unrated practice for now
 - [ ] Selecting an opponent starts a game against it
-- [ ] The list is driven by the opponent catalogue, so adding the remaining fourteen in release 0.2 needs no change to this screen
+- [ ] The list is driven by the opponent catalogue, so adding the remaining fourteen in release 0.6 needs no change to this screen
+- [ ] Tier and indicative strength are rendered independently, so an opponent whose number is not yet trustworthy can show its tier alone — a data change, not a code change
 - [ ] The screen is navigable by screen reader, with each opponent's name, tier and strength announced
 - [ ] All new strings are present in English and Dutch

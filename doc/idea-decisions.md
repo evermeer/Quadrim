@@ -17,6 +17,8 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 3 | Wrote the implementable specification | [Idea-final-spec.md](Idea-final-spec.md) | D47–D58 |
 | 4 | Broke release 0.1 into tickets | [tickets/](tickets/) | D59–D64 |
 | 5 | Reconciled the spec with a decision reversed in step 4 | [Idea-final-spec.md](Idea-final-spec.md) | D65 |
+| 6 | Expert review by backend, security and product reviewers | [Idea-final-spec-review.md](Idea-final-spec-review.md) | D66–D83 |
+| 7 | Private early releases and a clean start at 0.3 | [Idea-final-spec.md](Idea-final-spec.md) | D84–D91 |
 
 Open items carried across all steps are listed at the end.
 
@@ -487,6 +489,223 @@ Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
 **Decision:** The step 4 decision wins. §9.11 and §12.1 of [Idea-final-spec.md](Idea-final-spec.md) were rewritten to separate store account creation (day one) from the first upload (after the game is complete), and to record the schedule cost explicitly.
 **Rationale:** Two planning documents disagreeing on a critical-path item reads as an oversight weeks later, when nobody remembers which was deliberate.
 **Consequence:** Spec and tickets now agree. §12.1 also records the rule for next time: **if 0.1 grows again, protect the upload date rather than the feature list** — anything added after the main screen is complete can ship as 0.2 into the same testing track.
+
+---
+
+# Step 6 — Expert review
+
+Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [Idea-final-spec-review.md](Idea-final-spec-review.md).
+
+**These eighteen are settled. The reviewers' recommendations arising from them are not yet accepted and remain proposals until folded into the spec and tickets.**
+
+## 16. Data shapes (backend review)
+
+Every decision in this section changes a shape that release 0.1 writes to disk before any backend exists. All were adopted specifically because they are cheap now and expensive after 0.1 ships.
+
+### D66 — Participant identity is a neutral uuid
+**Question:** Firebase mints a uid the app does not control, so 0.3's anonymous auth "adopting" the 0.1 identity ([D54](#d54--participant-identity-scheme)) cannot mean the two are equal. What happens to the `local:<deviceId>` string baked into every participants array and per-opponent key?
+**Decision:** 0.1 emits a neutral `player:<uuid>` for human seats. `user:<uid>` never appears in any document. The Firebase uid becomes a login credential mapped on the profile only.
+**Rationale:** No document is ever rewritten, and the `local:` prefix stops being a lie the moment those games reach the cloud.
+**Consequence:** Supersedes the identity scheme in [D54](#d54--participant-identity-scheme) and §8.2. The `guest:` and `bot:` tags are unaffected.
+
+### D67 — Local history uploads once, then local storage is retired
+**Question:** At 0.3, do offline games — including bot and pass-and-play games, which have no counterparty — go into Firestore?
+**Decision:** A one-time opt-in upload of local history at 0.3, after which local storage is retired.
+**Rationale:** The player chooses whether their offline history follows them. Avoids a permanent two-source repository.
+**Consequence:** Creates a migration that must be resumable and idempotent — a half-finished upload must not duplicate or lose games. It also makes client-authored data cross the trust boundary, which is why [D73](#d73--imported-history-is-untrusted-input) exists.
+
+### D68 — Games carry a queryable participant array from 0.1
+**Question:** Firestore cannot filter or authorise on positional array indices, but the 0.1 game document has no queryable owner field. Should 0.1 write one anyway?
+**Decision:** Yes. Top-level games with a `participantIds` array, written from 0.1 onward. Firestore rules will authorise with array-contains.
+**Rationale:** Adding it later means backfilling every migrated document.
+**Consequence:** One apparently redundant field in 0.1, in exchange for no backfill and no rule rewrite at 0.3.
+
+### D69 — Moves carry an index and an id
+**Question:** The 0.1 move record has no move number and no client-generated id, so any at-least-once retry over a network appends a duplicate.
+**Decision:** Add both an explicit move index and a client-generated move id to the 0.1 shape now.
+**Rationale:** The index makes ordering independent of clocks; the id makes a duplicate append detectable regardless of which write path 0.3 chooses.
+**Consequence:** Changes §8.3 and ticket 005. The problem genuinely does not exist in offline 0.1 — this is paid entirely for 0.3's benefit.
+
+### D70 — Ordering never depends on a clock
+**Question:** Completed games are ordered most recent first using client-authored timestamps. A wrong or manipulated device clock misorders history and, later, rating-relevant sequencing.
+**Decision:** Order by a monotonic sequence. Timestamps are display-only. 0.3 adds server timestamps alongside without converting anything.
+**Rationale:** Removes the device clock from anything that determines an outcome or an order.
+**Consequence:** Reinforced by [D75](#d75--move-validation-is-a-full-replay), which overwrites move timestamps server-side.
+
+### D71 — Statistics are derived, not stored
+**Question:** The profile stores totals and a per-opponent breakdown, duplicating what the games already contain — a second write that can silently drift.
+**Decision:** Derive them at read time by folding the completed-games stream. The stored aggregate and the repository's record-result method are dropped.
+**Rationale:** At a few hundred games of at most 64 moves, folding is free, and drift becomes impossible by construction rather than by discipline.
+**Consequence:** Removes fields from §8.4 and simplifies §7.4 and ticket 013. Avoids turning a counter into a distributed-counter problem at 0.3.
+
+## 17. Security and privacy (security review)
+
+### D72 — Device identity is a random uuid; auto-backup stays on
+**Question:** What is the device identity derived from, and does Android auto-backup — which is on by default — copy the identity and full game history to the user's Google Drive?
+**Decision:** A random v4 UUID generated in-app, never a platform identifier. Auto-backup is **deliberately left on** so players do not lose history when they replace a device.
+**Rationale:** A platform identifier such as ANDROID_ID is a persistent cross-app tracker and was rejected outright. Keeping backup on trades a disclosure obligation for genuine user benefit.
+**Consequence:** Significant and easy to miss. Ticket 022 currently claims "no data leaves the device" — **that claim is now false and must be reworded.** Whether the Play Data Safety declaration must also change is genuinely uncertain, since platform backup to the user's own encrypted Drive is arguably outside its scope; this is recorded as a verify-before-submission item, not as a settled position.
+
+### D73 — Imported history is untrusted input
+**Question:** When local history is uploaded at 0.3, what proves the client owns that identity, and is the uploaded history trusted?
+**Decision:** Every imported game is re-validated server-side, move by move, by the same function that validates live moves. Statistics are recomputed from validated games; client-supplied totals are never copied.
+**Rationale:** The local JSON is entirely client-authored. Without this, a client could upload fabricated games and statistics that other players then see on a profile and head-to-head record inside a rated system.
+**Consequence:** Makes [D67](#d67--local-history-uploads-once-then-local-storage-is-retired) safe. Import becomes a validation pipeline rather than a copy.
+
+### D74 — Rated play is capped, not gated
+**Question:** Firebase anonymous auth allows unlimited free accounts. Move-level validation proves each move was legal but says nothing about two accounts colluding.
+**Decision:** Anonymous accounts may play rated, subject to per-account caps: new-account rate limits, capped rating gain per opponent pair, and no rating change for repeat matchups beyond a threshold per week.
+**Rationale:** Requiring an upgraded account would add sign-in friction to the feature most likely to drive retention. Caps make farming not pay rather than making it impossible.
+**Consequence:** Interacts with the day-7 auto-forfeit of [D16](#d16--abandonment-outcome), which would otherwise give collusion a fully automated form.
+
+### D75 — Move validation is a full replay
+**Question:** Does the validating function replay the whole game or trust the existing prefix?
+**Decision:** Full replay from the empty board on every trigger. Move timestamps are overwritten with the server timestamp, participant and turn ownership are checked, and a failed validation rolls back and records an integrity event.
+**Rationale:** A 64-move replay is trivially cheap. Trusting the prefix would let a modified client rewrite history, and client-set timestamps would let it manipulate the deadlines and clocks that decide outcomes.
+**Consequence:** Sharpens [D34](#d34--rules-authority). Integrity events give visibility into attempted abuse rather than silently discarding it.
+
+### D76 — Chat is written only by the server
+**Question:** Profanity filtering is promised "before delivery", but the natural pattern — client writes, function cleans afterwards — lets the recipient read raw text before the function fires.
+**Decision:** Clients cannot write to the messages collection at all. They call a function that filters and then writes, so unfiltered text never exists in a readable document.
+**Rationale:** Removes the race rather than narrowing it.
+**Consequence:** Costs a round trip per message and makes offline composition an explicit design problem. Sharpens [D32](#d32--safety-features).
+
+### D77 — Deletion replaces the identity with a tombstone
+**Question:** Account deletion promises "anonymised game records", but a record still keyed by the uid is pseudonymised, not anonymised — still personal data, so the erasure is incomplete under GDPR.
+**Decision:** The identity is replaced with an opaque per-game tombstone token with no link back to the account.
+**Rationale:** Opponents' rating histories stay coherent because only the rating delta is needed, not the identity. A hash with a held pepper was rejected: a key you hold is a key you can be compelled to use, so regulators treat it as pseudonymisation.
+**Consequence:** Makes [D33](#d33--account-deletion) actually deliverable rather than merely stated.
+
+## 18. Product (product review)
+
+### D78 — 0.1 gets a progression loop
+**Question:** What is a stranger's reason to open the app again on day 7, when ratings are null, bot games are unrated practice, and every designed return hook is in 0.3?
+**Decision:** Add per-opponent milestones to the main screen — first win against each opponent, and beating Onyx — built from data already stored.
+**Rationale:** One ticket, no new systems, gives the six-rung ladder a visible spine. A daily puzzle was rejected as a new feature with its own content burden; pulling online play into 0.1 was rejected as dragging the entire backend and compliance surface forward.
+**Consequence:** Requires a new ticket and a change to ticket 013.
+
+### D79 — The tutorial ships before the first upload
+**Question:** The upload was delayed specifically to protect testers' first impression ([D60](#d60--when-the-first-store-upload-happens)), yet the entire tutorial is numbered after it and is not among its blockers.
+**Decision:** Ticket 018, tutorial rules and controls, becomes a blocker of ticket 016. Strategy and the interactive practice game follow in later builds during the fourteen days.
+**Rationale:** Otherwise the first twelve testers meet a 4×4×4 board with 76 winning lines and no onboarding, which contradicts both the reason for the delay and success criterion G2.
+**Consequence:** One more ticket before the upload. Directly caught by review — the inconsistency was invisible in both documents.
+
+### D80 — 0.1 success is measured against pre-committed thresholds
+**Question:** With no analytics by design, what evidence tells you 0.1 worked? Every current criterion measures build completion, not user outcome, so the release cannot fail — and therefore cannot teach anything.
+**Decision:** A structured tester survey with thresholds committed **before** the test runs, of the form "at least 8 of 12 finish the tutorial and beat Pebble unaided, at least 6 play a second session unprompted".
+**Rationale:** Makes 0.1 falsifiable at no cost, before 0.2, 0.3 and 0.4 are built on top of it.
+**Consequence:** Needs a new ticket. Also carries [D83](#d83--bot-difficulty-is-anchored-to-real-humans).
+
+### D81 — 0.2 is compressed so online arrives sooner
+**Question:** 0.2 adds fourteen bots, iOS and visual identity, none of which unlock new value, before the release containing the thing most of the roadmap's value depends on.
+**Decision:** Compress 0.2 — ship iOS, defer the fourteen remaining bots until after 0.3.
+**Rationale:** Reaches the highest-value release one increment earlier, while motivation is still available. The riskiest stretch of a solo hobby plan should not be spent on breadth.
+**Consequence:** Changes the release ladder in §4.1.
+
+### D82 — The competitive premise is validated before the board is designed
+**Question:** The differentiation rests on the claim that existing Qubic apps render the cube too badly to see the diagonals, with no evidence cited anywhere.
+**Decision:** Validate cheaply — read the one-star reviews of the leading Qubic apps before ticket 004 fixes the board design.
+**Rationale:** An afternoon's work that either confirms the premise or reshapes the single most important screen in the game, at the only moment when reshaping it is free.
+**Consequence:** Becomes a task blocking ticket 004.
+
+### D83 — Bot difficulty is anchored to real humans
+**Question:** Self-play proves relative ordering but says nothing about absolute human difficulty — whether Onyx really beats a competent human, or whether a dead zone exists between Ember and Basalt.
+**Decision:** Anchor to humans using the closed testers, folded into the survey from [D80](#d80--01-success-is-measured-against-pre-committed-thresholds), and adjust the published indicative numbers before 0.3 freezes them into live ratings.
+**Rationale:** The self-play harness in ticket 014 pins relative ordering; only humans can pin the absolute scale.
+**Consequence:** Closes open item OI-03 with a concrete method and a deadline.
+
+## 19. Review findings against these decisions
+
+The reviewers examined D66–D83 and found several of them defective or incomplete. **These are recorded as open, not resolved.** The full findings are in [Idea-final-spec-review.md](Idea-final-spec-review.md); nothing there has been accepted.
+
+| Decision | Status after review |
+|---|---|
+| [D66](#d66--participant-identity-is-a-neutral-uuid) + [D68](#d68--games-carry-a-queryable-participant-array-from-01) | **Contradictory.** Firestore rules only see `request.auth.uid`, so they cannot match it against an array of `player:<uuid>` without a billed profile read per rule evaluation. Proposed fix keeps both: a server-populated `memberUids` array added at 0.3 for rules and queries, with `participantIds` remaining the domain identity |
+| [D67](#d67--local-history-uploads-once-then-local-storage-is-retired) | **Incomplete and dangerous.** Anonymous auth is not a durable credential, so retiring local storage makes 0.3 *less* durable than 0.1. The decline path is undefined. Proposed fix: delete local files only after per-game server acknowledgement and only once a durable credential exists |
+| [D69](#d69--moves-carry-an-index-and-an-id) | **Partly redundant.** Under a transaction asserting `moves.size() == index`, the index is already the idempotency key; the separate move id earns its place only if 0.3 uses a callable with retries outside a transaction |
+| [D70](#d70--ordering-never-depends-on-a-clock) | **Insufficient.** The sequence is per-move and says nothing about ordering games relative to each other; server timestamps stamped at import would collapse all imported history into one block |
+| [D71](#d71--statistics-are-derived-not-stored) | **Creates an unbounded read.** Folding every completed game is free locally and a growing full-collection listener at 0.3. Proposed fix: paginate `completedGames()` and add a separate `stats()` stream now |
+| [D72](#d72--device-identity-is-a-random-uuid-auto-backup-stays-on) | **Falsifies four shipped statements** — §2, §11.6 R5, ticket 016 and ticket 022. Also carries three consequences not previously seen: Firebase auth tokens would enter the backup at 0.3, a restore clones the player uuid onto two devices, and the ePrivacy position is weaker for cloud backup than for local storage |
+| [D73](#d73--imported-history-is-untrusted-input) | **Does not achieve its goal.** Re-validation proves legality, not authenticity — a fabricated but legal game passes. Proposed fix: a server-set `origin` field with `rated` permanently false for imported games |
+| [D74](#d74--rated-play-is-capped-not-gated) | **Has no stable subject and collides with the product.** Per-pair caps do nothing against throwaway accounts without App Check; and the repeat-matchup cap penalises the rematch loop that ticket 007 calls the app's cheapest retention mechanism |
+| [D77](#d77--deletion-replaces-the-identity-with-a-tombstone) | **Misses three residues:** head-to-head pair aggregates, reports authored about the deleted user, and the Firebase Auth user record. The tombstone must also be randomly generated per game, not derived |
+| [D79](#d79--the-tutorial-ships-before-the-first-upload) | **Cannot be satisfied as written** — no ticket owns the settings document, so "tutorial completion is remembered" has nothing to store it in and criterion T7 fails |
+| [D80](#d80--01-success-is-measured-against-pre-committed-thresholds) | **One threshold is unobservable.** "Plays a second session unprompted" cannot be measured without analytics; proposed substitute is a tester-supplied screenshot of the statistics screen at day 3 and day 10 |
+| [D81](#d81--02-is-compressed-so-online-arrives-sooner) | **Removes 0.2's only bounded work**, leaving "visual identity, polish" — no acceptance criteria, no definition of done — on the critical path. Also defers 14 rating anchors past the point where the scale freezes |
+
+**Most of the above was resolved by [Step 7](#step-7--private-early-releases-and-a-clean-start), not by patching individual decisions.** D66, D67, D68, D69 and D73 are superseded outright; the contradiction between D66 and D68 cannot arise once no 0.1 document reaches Firestore. D70 survives only in its display-ordering half, D71 stands, and D72's surface shrinks because there is no longer a device identifier to back up. What Step 7 does **not** resolve, and which remains open: D74's caps having no stable subject and colliding with the rematch loop, D77's deletion residues, D80's unobservable threshold, D81's unbounded 0.2 scope, and the remaining Medium findings against the original documents.
+
+### Correction to an earlier decision
+
+[D58](#d58--application-identity) and §9.12 state that a lost keystore cannot be recovered. **That is half wrong.** With Play App Signing, mandatory for new applications, Google holds the app signing key and a lost *upload* key can be reset through support. The genuinely irreversible items are the application id and, once enrolled, the app signing key. The backup-and-verify requirement in gate R7 still stands — the reasoning behind it does not.
+
+A third irreversible decision is missing from §9.12 entirely: **the Firestore database location**, fixed at creation, with Cloud Functions needing separate region pinning and Firebase Auth not region-pinnable at all.
+
+---
+
+# Step 7 — Private early releases and a clean start
+
+Decisions D84–D91. Taken in response to the expert review. This is the single largest simplification in the project's planning, and it supersedes or reduces eight earlier decisions.
+
+## 20. The change
+
+### D84 — Releases 0.1 and 0.2 are not public
+**Question:** Must the early releases be publicly available?
+**Decision:** No. 0.1 and 0.2 are distributed only to friends and family, through Google Play **closed testing** on Android and TestFlight on iOS. Neither is promoted to production. The first public release is 0.3b.
+**Rationale:** Nothing in 0.1 or 0.2 requires a stranger to find it. Closed testing is a real distribution channel with real installs, and it removes the public listing, discoverability, and public-facing privacy exposure from the early releases.
+**Consequence:** Supersedes [D45](#d45--definition-of-first-success). See [D86](#d86--definition-of-first-success-replaced). Note the limit of this: Play still requires the Data Safety declaration, the content rating questionnaire, and the target-audience declaration **before publishing to any track, including closed testing** — so those obligations are not deferred, only the public listing is.
+
+### D85 — 0.3 starts with a clean history
+**Question:** Given 0.1 and 0.2 are private, must their local game history migrate into the cloud?
+**Decision:** No. 0.3 starts with an empty database. There is no import path, ever. Local 0.1/0.2 games stay on the device and are never uploaded.
+**Rationale:** The friends-and-family population is small and their offline history has no value worth the machinery. Import was the single largest source of complexity and risk in the entire plan.
+**Consequence:** The largest simplification available. It closes eight review findings outright — see [§19](#19-review-findings-against-these-decisions). Supersedes [D67](#d67--local-history-uploads-once-then-local-storage-is-retired) and [D73](#d73--imported-history-is-untrusted-input) entirely, and removes the reason [D66](#d66--participant-identity-is-a-neutral-uuid), [D68](#d68--games-carry-a-queryable-participant-array-from-01) and [D69](#d69--moves-carry-an-index-and-an-id) existed.
+
+### D86 — Definition of first success replaced
+**Question:** [D45](#d45--definition-of-first-success) defined first success as "an app live in the App Store and Play Store". [D84](#d84--releases-01-and-02-are-not-public) abandons that. What replaces it?
+**Decision:** First success is **twelve real people playing 0.1 on their own devices, and the release pipeline proven end to end** — signed builds, both stores' testing channels, and production access unlocked. Public availability moves to 0.3b and is no longer the first milestone.
+**Rationale:** Leaving D45 in place unamended would leave the entire release strategy without a rationale. Strategy A was chosen in [D44](#d44--build-approach) specifically because it started the store clocks earliest; that argument has to be restated, not quietly dropped.
+**Consequence:** The offline-first sequencing is retained on its own merits — no compliance surface early, no backend learning curve while learning Flutter, something playable soon — rather than on the store-clock argument.
+
+### D87 — The 14-day clock is burned during 0.1
+**Question:** Google Play requires personal accounts to run a closed test with twelve testers for fourteen continuous days before production access is granted. If nothing goes public until 0.3b, does that requirement simply move to 0.3?
+**Decision:** No. The closed test runs during 0.1 with the twelve friends-and-family testers. The requirement is satisfied, and production access is unlocked, long before it is needed.
+**Rationale:** Relocating the clock to 0.3b would place it on the hardest release, at the worst moment. Running it during 0.1 costs nothing extra — the testers are the distribution channel anyway.
+**Consequence:** Preserves the one genuine benefit of [D60](#d60--when-the-first-store-upload-happens)'s original reasoning while removing its pressure. Whether an *internal* testing track would also satisfy the requirement is unverified and deliberately not relied on — closed testing is known to.
+
+### D88 — 0.3 splits into a private and a public release
+**Question:** [D84](#d84--releases-01-and-02-are-not-public) makes 0.3 both the first public release and the release that lands every unfamiliar technology at once — the "cliff" the review flagged as the most likely place the project stops.
+**Decision:** Split it. **0.3a** is private: anonymous auth, a Firestore implementation of the repository that passes the identical flow tests as the local one, and one async game playable between two of the developer's own devices. No push, no rating, no functions. **0.3b** adds invite links, live rating, push, account deletion, the privacy policy, and is the **first public release**.
+**Rationale:** Adopted because [D84](#d84--releases-01-and-02-are-not-public) made it necessary rather than merely advisable. Without it, the first public release is also the first release in an unfamiliar stack, with no prior public exposure to learn from. It is also the layer-proving step [D44](#d44--build-approach) claimed the plan had and never scheduled.
+**Consequence:** Changes the release ladder. Reversible if the split proves unnecessary, but the reasoning for it strengthens rather than weakens under [D84](#d84--releases-01-and-02-are-not-public).
+
+## 21. What the clean start simplifies
+
+Every decision in this section removes work that existed solely to keep 0.1's data compatible with a cloud that will now never see it.
+
+### D89 — Local storage is never retired
+**Question:** With no import, what happens to local storage at 0.3?
+**Decision:** Nothing. It stays. Offline games — against computer opponents and pass-and-play — remain local for the life of the app. Online games live in Firestore. The repository has two implementations serving two different kinds of game, not one replacing the other.
+**Rationale:** There is nothing to migrate and nothing to retire.
+**Consequence:** Supersedes [D67](#d67--local-history-uploads-once-then-local-storage-is-retired) and resolves the review's Critical durability finding: 0.3 can no longer be less durable than 0.1, because 0.1's data is never touched.
+
+### D90 — 0.1 data shapes are simplified, not future-proofed
+**Question:** [D66](#d66--participant-identity-is-a-neutral-uuid), [D68](#d68--games-carry-a-queryable-participant-array-from-01), [D69](#d69--moves-carry-an-index-and-an-id) and [D70](#d70--ordering-never-depends-on-a-clock) were adopted entirely to keep 0.1 documents usable in Firestore. That requirement is gone. Carry them anyway, or remove them?
+**Decision:** Remove them. 0.1 stores the simplest correct thing:
+- **No device identity at all.** There is no uuid to generate, store, claim or clone. A game records only its opponent.
+- **No participants array and no participantIds.** A game has a seat that is the player and a named opponent — a computer opponent or the second pass-and-play seat.
+- **Moves are a plain ordered list of cell indices.** Whose move it is derives from the position in the list and the recorded starting seat, so no per-move author, id, index or timestamp is stored.
+- **No `rated` field.** Nothing in 0.1 or 0.2 is rated, and 0.3 starts clean.
+
+0.3 designs its Firestore schema natively around `request.auth.uid` with no compatibility debt.
+**Rationale:** These fields were bought entirely with forward-compatibility currency that no longer exists. Carrying them would be complexity paid for nothing.
+**Consequence:** Supersedes [D54](#d54--participant-identity-scheme), [D66](#d66--participant-identity-is-a-neutral-uuid), [D68](#d68--games-carry-a-queryable-participant-array-from-01), [D69](#d69--moves-carry-an-index-and-an-id) and the forward-looking half of [D70](#d70--ordering-never-depends-on-a-clock). It also dissolves the review's other Critical finding — the identity-versus-rules contradiction cannot arise if no 0.1 document ever reaches Firestore. Removing the device uuid additionally shrinks the privacy surface of [D72](#d72--device-identity-is-a-random-uuid-auto-backup-stays-on): the backup now carries game history only, with no identifier in it.
+
+### D91 — Settings own what the profile used to
+**Question:** [D71](#d71--statistics-are-derived-not-stored) removed the stored statistics and [D90](#d90--01-data-shapes-are-simplified-not-future-proofed) removes the device identity, so the profile document has nothing left in it. But the review found that no ticket owns the settings document, which means tutorial completion has nowhere to be remembered and criterion T7 cannot pass.
+**Decision:** Delete the profile document. Settings — locale, theme, tutorial completion — become the only local document besides games, and are owned by the same ticket that builds local storage. Statistics are derived from stored games at read time.
+**Rationale:** Closes a real gap the review found, in the same place the change already lands.
+**Consequence:** Also forces the fix for the tutorial practice game: since statistics are derived from stored games, the practice game must never be stored at all. It lives in memory for the tutorial's duration and never reaches the repository.
 
 ---
 
