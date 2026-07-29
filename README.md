@@ -25,3 +25,18 @@ Put the results in the file doc/Idea-final-brainstorming.md
 ```	
 
 The result of that prompt was a [brainstorming](doc/Idea-final-brainstorming.md) document.
+
+This next prompt overrides the write to tickets instructiions of the to-spec skill and instead asks to write a spec document.
+It also answers 2 questions from the brainstorming document.
+
+**Prompt**
+```
+Use the Matt Skills to-spec skill to turn the doc/Idea-final.md plus the doc/Idea-final-brainstorming.md
+into a spec for the game: goal, scope, non-goals, exposed endpoints, data and
+acceptance criteria. Ask clarifying questions and don't finalize the spec until
+any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
+Use the sugested bots Pebble, Mote, Bramble, Ember, Basalt and Onyx.
+Put the result in the file doc/Idea-final-spec.md
+```
+
+The result of that prompt was a [spec](doc/Idea-final-spec.md) document.
