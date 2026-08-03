@@ -98,6 +98,7 @@ Cleanup of historical document so we can start another round of reviews.
 i would like to move the documents that are only a record and which do not contribure to the implemantation into a doc/history folder.  I think that's the case for idea-final-brainstorming.md, idea-final-spec-review.md and the original idea.md please evaluate before moving.
 ```
 
+Ask for another review that would also update the spec and tickets with the new information.
 
 **Prompt**
 ```
@@ -109,3 +110,15 @@ each agent's concerns and recommendations and ask clarifying questions before yo
 them back into the spec and tickets. 
 Add all decisions to the file doc/idea-decisions.md
 ```
+
+Found an existing game called Qubic that is similar to Quadrim and has a known first move wins strategy.
+Ask for an evaluation if that strategy can be used to create a perfect computer player and if so, add that information to the spec.
+
+**Prompt**
+```
+I just found out that the game existed earlier and was called Qubic. 
+There is even a known first move wins strategy. Documentation including the strategy can be found at https://en.wikipedia.org/wiki/3D_tic-tac-toe 
+The complete strategy can be found at https://ranger.uta.edu/~weems/NOTES6319/PAPERSONE/patashnik.pdf
+Could that help for creating the perfect computer player? If so, can you add information about that to the specs?
+```
+

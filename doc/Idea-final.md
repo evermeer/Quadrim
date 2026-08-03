@@ -303,7 +303,11 @@ Three details change this project's estimate materially:
 
 **Most of the work is forcing-move search, which the engine already needs.** If only ~2,929 positions require a stored choice, the runtime job is largely threat and forcing-sequence search — precisely the threat-space search the Club tier already builds. The book covers the hard branch points; the engine plays the rest.
 
-**The positions were reportedly published online.** If they can be obtained, verified and licensed, the build-time "solver" becomes an *acquire-verify-encode* task rather than 1,500 hours of original computation. If they cannot, Allis's proof-number search is the documented reproducible route.
+**The positions were reportedly published online.** If they can be obtained, verified and licensed, the build-time "solver" becomes an *acquire-verify-encode* task rather than 1,500 hours of original computation.
+
+**The 1980 paper is not that source.** It runs to fifteen pages (Math. Mag. 53(4), 202–216) and contains the method, the proof and the categorisation — not a dataset of thousands of positions, which could not fit. It is also a copyrighted article distributed under JSTOR terms: reading it to understand the method is fine, shipping content from it is not. Read it for the forcing-move machinery, which is the shape of the runtime engine, and as a reference to verify against.
+
+**Preferred route: re-derive it.** Proof-number search is documented and reproducible, what took 1,500 hours in 1980 is a modest run on a modern desktop, and the symmetry reduction in §2.3 shrinks it further. Decisive advantage: **data derived in-house carries no licence question** — it can be shipped outright, and the published result becomes an independent cross-check rather than a dependency.
 
 **What this does not solve.** Patashnik's strategy is for the **first player**. Moving second, Prime has no book to follow — its optimal defence still comes from search. And "weakly solved" means the strategy wins, not that every position carries a stored evaluation.
 
@@ -579,7 +583,7 @@ The game is public, old, and thoroughly analysed. Nothing about its mathematics 
 - **Wikipedia, "3D tic-tac-toe"** — https://en.wikipedia.org/wiki/3D_tic-tac-toe — the entry point, and the source of the line counts, cell degrees, automorphism count and solution history cited above.
 - **R. Silver (1967)** — established the group of 192 automorphisms.
 - **Eugene Mahalko (1976)** — weak solution: a first-player win exists.
-- **Oren Patashnik (1980)** — complete first-player-win strategy, computer-assisted, ~1,500 hours, ~2,929 stored strategic positions. Independently verified.
+- **Oren Patashnik (1980)** — "Qubic: 4 × 4 × 4 Tic-Tac-Toe", *Mathematics Magazine* 53(4), pp. 202–216. Complete first-player-win strategy, computer-assisted, ~1,500 hours, ~2,929 stored strategic positions. Independently verified. **Method and proof, not the dataset** — and copyrighted, distributed under JSTOR terms.
 - **Victor Allis** — independent solution by proof-number search.
 
 Two cautions before anything here is depended on. The published strategy data must be **located, verified against an independent implementation, and checked for licence** before it is shipped inside an application — Wikipedia reports it was made available online, which is not the same as confirming it is obtainable and redistributable today. And the game's commercial name **Qubic** was a Parker Brothers trade name; this product is called Quadrim, and the older name should be used descriptively, never as branding.
