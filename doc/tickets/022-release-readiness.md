@@ -22,5 +22,7 @@
 - [ ] Any privacy text shown in the app is accurate: gameplay data is stored on the device, and Android's system backup may copy it to the user's own Google account under Google's terms, where the developer cannot read it. **The phrase "no data leaves the device" must not appear anywhere** — it is not true
 - [ ] The final build is signed with the backed-up upload key, and the backup is verified once more
 - [ ] A fresh install on a device that has never run the app works correctly from first launch through the tutorial to a completed game
-- [ ] Known limitations of 0.1 are recorded: no accounts, no online play, unrated practice only, offline history stays on this device permanently, fourteen opponents still to come
+- [ ] All twenty opponents are present, distinguishable in play, and calibrated on one scale
+- [ ] Quadrim Prime's description matches what it actually delivers — extremely strong, not perfect, until the solver lands at 1.0
+- [ ] Known limitations of 0.1 are recorded: no accounts, no online play, the computer rating is local to this device and does not follow the player to another platform, and playing real opponents will require a subscription from 0.3b
 - [ ] The release is tagged in version control

@@ -1,9 +1,11 @@
 # Quadrim — Expert Review of the Specification and Tickets
 
-Review of [Idea-final-spec.md](Idea-final-spec.md) and the tickets in [tickets/](tickets/), by three specialist reviewers.
+> **Archived record.** Every finding that was still open when this was archived has been folded into [Idea-final-spec.md](../Idea-final-spec.md) §12.4 as open items OI-06 through OI-20. Nothing actionable is left only here. Kept for the reasoning behind those items and for the record of what was found and closed.
+
+Review of [Idea-final-spec.md](../Idea-final-spec.md) and the tickets in [tickets/](../tickets/), by three specialist reviewers.
 
 Original review: 2026-07-29 — 43 concerns, 54 recommendations.
-**Updated 2026-07-29** after the private-release and clean-start change ([idea-decisions.md](idea-decisions.md) Step 7, D84–D91).
+**Updated 2026-07-29** after the private-release and clean-start change ([idea-decisions.md](../idea-decisions.md) Step 7, D84–D91).
 
 **Status: 27 of 43 concerns resolved. 16 remain open and are the substance of this document.**
 

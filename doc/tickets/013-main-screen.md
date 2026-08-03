@@ -15,7 +15,8 @@ This is where the app stops being a board and becomes a product.
 - [ ] A large, obviously primary button starts a new game
 - [ ] A separate button opens the tutorial
 - [ ] Statistics and lists update when a game finishes, without needing a restart
-- [ ] Where a rating would eventually appear, the screen shows nothing rather than a placeholder number
+- [ ] The player's computer rating is shown prominently, labelled so it reads as a rating against the computer rather than a universal one
+- [ ] There is room in the layout for the separate human rating arriving at 0.3b, without the two ever reading as one number
 - [ ] Statistics are derived from stored games at read time and are never stored separately, so they cannot drift from the games they summarise
 - [ ] The screen is navigable by screen reader, and readable at the largest system font scale
 - [ ] All new strings are present in English and Dutch

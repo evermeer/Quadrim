@@ -1,3 +1,5 @@
+> **Archived record.** The original idea, kept as written. Everything here is superseded by [Idea-final.md](../Idea-final.md), which is the current product definition.
+
 # Quadrim
 
 Quadrim is a game in which players take turns placing a colored piece on an empty position in a 4x4x4 cube.

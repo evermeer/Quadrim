@@ -10,7 +10,8 @@ Rematch is the cheapest retention mechanism the game has, and the alternating st
 
 - [ ] When a game is won, the four cells of the completed line are highlighted on the board
 - [ ] The result screen states who won, or that the game was drawn
-- [ ] The result screen states clearly that the game was unrated practice when played against a computer opponent
+- [ ] Against a computer opponent, the result screen shows the change to the player's computer rating, labelled so it is not mistaken for a universal rating
+- [ ] A pass-and-play result makes clear that no rating changed
 - [ ] A rematch can be started with one tap
 - [ ] In a rematch, the player who did not start the previous game starts this one
 - [ ] A rematch records which game it followed

@@ -1,6 +1,8 @@
 # Quadrim — Build Approach Brainstorming
 
-How to build what [Idea-final.md](Idea-final.md) specifies.
+> **Archived record.** This document captured the choice of build approach. It is superseded in places — the roster, the rating model and the store-clock rationale have all changed since. Nothing here is load-bearing; the current position is in [Idea-final-spec.md](../Idea-final-spec.md), and the reasoning in [idea-decisions.md](../idea-decisions.md).
+
+How to build what [Idea-final.md](../Idea-final.md) specifies.
 The spec says *what*. This says *in what order, in what shape, and why*.
 
 Date: 2026-07-27

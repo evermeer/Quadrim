@@ -1,6 +1,6 @@
 # Quadrim — Specification
 
-Derived from [Idea-final.md](Idea-final.md) (what to build), [idea-decisions.md](idea-decisions.md) (why), and [Idea-final-brainstorming.md](Idea-final-brainstorming.md) (in what order).
+Derived from [Idea-final.md](Idea-final.md) (what to build) and [idea-decisions.md](idea-decisions.md) (why). The build approach was chosen in [history/Idea-final-brainstorming.md](history/Idea-final-brainstorming.md).
 
 Follows **Strategy A — Store-First Offline Slice**.
 Release 0.1 is specified at implementation depth. Releases 0.2 through 1.0 are scoped but not detailed; each gets its own spec when its turn comes.
@@ -22,7 +22,9 @@ Secondarily: the developer is solo, working evenings, new to Flutter and Firebas
 
 A cross-platform Quadrim implementation whose board makes all 64 cells and all 76 winning lines legible at a glance, with a ladder of computer opponents from trivial to unbeatable, and — eventually — rated online play against other humans.
 
-Built and released in stages. Release 0.1 is a complete, polished, **offline** game: the board, six computer opponents, pass-and-play, a full tutorial, local history and statistics, in English and Dutch, on Android.
+Built and released in stages. Release 0.1 is a complete, polished, **offline** game: the board, all twenty computer opponents, pass-and-play, a full tutorial, local history and statistics, a live rating earned against the opponents, in English and Dutch, on Android.
+
+**The offline game is free forever.** Playing against real opponents requires an annual subscription, arriving with online play at 0.3b. That is the only payment path in the product, and everything on the free side of the line is a complete game rather than a demonstration.
 
 **0.1 and 0.2 are not public.** They go to friends and family through Google Play closed testing and TestFlight, and are never promoted to production. The first public release is 0.3b. This keeps the early releases free of a public listing and a public-facing privacy exposure — though not of Play's declaration obligations, which apply to every track including closed testing.
 
@@ -45,8 +47,12 @@ Because the early releases are private and their audience is small, **0.3 starts
 | G3 | Onyx beats a competent human more often than not |
 | G4 | The engine's win detection is exhaustively verified, not spot-checked |
 | G5 | The release pipeline is proven: signed builds, closed testing on Play, TestFlight on iOS, and Play production access unlocked |
+| G6 | All twenty opponents exist, are distinguishable in play, and are calibrated against each other and against real testers on one scale |
+| G7 | A player has a real computer rating that moves as they play, computed and stored entirely on their own device |
 
 G5 replaces an earlier criterion about 0.1's data shapes surviving into Firestore. With a clean start at 0.3 there is nothing to survive, so the criterion measured nothing.
+
+G7 replaces the previous position that 0.1 could only offer "unrated practice" with indicative numbers. With ratings split in two, the computer ladder is real from the first release.
 
 ---
 
@@ -56,20 +62,23 @@ G5 replaces an earlier criterion about 0.1's data shapes surviving into Firestor
 
 | Release | Contents | Platforms | Audience |
 |---|---|---|---|
-| **0.1** | Engine, board, 6 bots, pass-and-play, full tutorial, local history and stats, both layouts, English + Dutch | Android | **Private** — 12 friends and family, Play closed testing |
+| **0.1** | Engine, board, **all 20 opponents**, live computer rating, pass-and-play, full tutorial, local history and stats, both layouts, English + Dutch | Android | **Private** — 12 friends and family, Play closed testing |
 | 0.2 | iOS build, App Store submission, fixes the closed test demanded | Android, iOS | **Private** — closed testing + TestFlight |
 | 0.3a | Anonymous auth, a Firestore repository passing the same flow tests as the local one, one async game between two owned devices | Android, iOS | **Private** |
-| 0.3b | Invite links, ELO live, push, account deletion, privacy policy | Android, iOS | **First public release** |
-| 0.4 | Chat with block/report/filter, friends, open challenges, ELO auto-match, server-side move validation | Android, iOS | Public |
+| 0.3b | **Subscription**, invite links, human rating live, push, account deletion, privacy policy | Android, iOS | **First public release** |
+| 0.4 | Chat with preferences, block/report/filter, friends, open challenges, auto-match, server-side move validation | Android, iOS | Public |
 | 0.5 | Real-time mode with 60s move clocks, Web, Windows, macOS | all five | Public |
-| 0.6 | The remaining 14 computer opponents | all five | Public |
-| 1.0 | Rust solver, Quadrim Prime, rating recalibration | all five | Public |
+| 1.0 | Rust solver, Quadrim Prime upgraded to true perfection, computer-ladder recalibration | all five | Public |
 
 Only 0.1 is specified below. Later rows are commitments of intent, not of detail.
 
-**Why 0.3 is split.** Making the first public release also the first release in an entirely unfamiliar stack — auth, Firestore, security rules, push, and a published privacy policy at once — puts every risk on one release with no prior public exposure to learn from. 0.3a is the layer-proving step: one thin slice through auth and Firestore, verified against the identical flow tests the local implementation already passes, before any of it is exposed to a stranger.
+**Why 0.3 is split.** Making the first public release also the first release in an entirely unfamiliar stack — auth, Firestore, security rules, push, billing, and a published privacy policy at once — puts every risk on one release with no prior public exposure to learn from. 0.3a is the layer-proving step: one thin slice through auth and Firestore, verified against the identical flow tests the local implementation already passes, before any of it is exposed to a stranger.
 
-**Why the 14 remaining opponents moved to 0.6.** They unlock no new capability, and computer ratings are fixed permanently once published. Introducing 14 new anchors is easier after the rating scale exists and can be measured against, not harder.
+**Why all twenty opponents ship in 0.1.** Calibration. Twenty opponents measured together, against each other and against the closed testers, on one scale, before anything is published — rather than six now and fourteen later against anchors that can no longer move. An earlier plan deferred fourteen of them past the point where the scale froze; that created a permanent constraint for no gain.
+
+**What that costs.** This is a real scope increase to a release that was already growing. Most of it is cheap: opponents are configurations of one engine, so fourteen more is largely fourteen more catalogue entries. What is genuinely new is the machinery the upper tiers need — threat-space search, a transposition table, iterative deepening, and exact endgame solving. That is two additional tickets of engine work, not a data change.
+
+**Quadrim Prime is present but not yet perfect.** It ships on rung 2 of Idea-final.md §6.5's fallback ladder — exact endgame plus the deepest achievable search — and is advertised as extremely strong rather than perfect until the solver lands at 1.0. Its rating is recalibrated then, which is cheap because computer ratings are device-local.
 
 ### 4.2 Release 0.1 — in scope
 
@@ -80,8 +89,14 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 - Append-only move history; no undo, no takeback, in any mode
 
 **Modes**
-- Versus computer: Pebble, Mote, Bramble, Ember, Basalt, Onyx
+- Versus computer: **all twenty opponents**, from Pebble to Quadrim Prime (Idea-final.md §6.4)
 - Local pass-and-play, two humans on one device
+
+**Rating**
+- A live **computer rating**, seeded at 1200, moving after every game against a computer opponent
+- Computed and stored entirely on the device; it never leaves it and nobody else can see it
+- Derived by folding completed computer games in order against the fixed opponent anchors, so it cannot drift from the games that produced it
+- Pass-and-play affects no rating
 
 **Interface**
 - Four-layer parallelogram board, single tap to place
@@ -115,22 +130,22 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 |---|---|
 | Accounts and authentication | 0.3a |
 | Any network call whatsoever | 0.3a |
-| Live ELO ratings; 0.1 bot games are **unrated practice** | 0.3b |
+| **The subscription, and all play against real opponents** | 0.3b |
+| The **human** rating | 0.3b |
 | Push notifications | 0.3b |
 | In-app account deletion and privacy policy | 0.3b (mandatory then, not before) |
 | A public release of any kind | 0.3b |
-| Chat, blocking, reporting, profanity filtering | 0.4 |
+| Chat, chat preferences, blocking, reporting, profanity filtering | 0.4 |
 | Friends, invites, open challenges, auto-match | 0.3b–0.4 |
 | Real-time play and move clocks | 0.5 |
 | iOS, Web, Windows, macOS builds | 0.2 / 0.5 |
-| The other 14 computer players | 0.6 |
-| Quadrim Prime and the Rust solver | 1.0 |
+| The Rust solver, and Quadrim Prime becoming genuinely perfect | 1.0 |
 
 **Permanently out of scope, not deferred:** uploading offline history to the cloud. Games played in 0.1 and 0.2 stay on the device for the life of the app. 0.3 starts with an empty database and never imports.
 
 ### 5.2 Out of scope permanently
 
-Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any mode; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; bot ratings never float.
+Per Idea-final.md §12: **no ads ever**, and no payment path other than the subscription — no consumables, no cosmetics, nothing pay-to-win; no paywall on anything offline; no undo or takeback in any mode; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; computer opponent ratings never float; the computer rating and offline games never sync.
 
 ---
 
@@ -158,11 +173,11 @@ Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any m
 
 16. As a player, I want to choose between a computer opponent and a friend beside me, so that I can play in either situation.
 17. As a player, I want to see each computer opponent's name, avatar, and difficulty tier, so that I can pick a fair match.
-18. As a player, I want an indicative strength number for each opponent, so that I can track my improvement against them.
+18. As a player, I want a rating for each opponent and one for myself, so that I can see who is a fair match and track my improvement against them.
 19. As a beginner, I want an opponent I can actually beat, so that my first game is not discouraging.
 20. As an experienced player, I want an opponent that genuinely challenges me, so that the game stays interesting.
 21. As a player, I want each computer opponent to feel recognisably different at the board, so that the roster is more than a difficulty slider.
-22. As a player, I want to be told clearly that computer games are unrated practice for now, so that I am not misled about a rating that does not exist yet.
+22. As a player, I want it made clear that my computer rating is separate from the rating I will earn against real people, so that I do not mistake one for the other.
 
 ### Two humans on one device (0.1)
 
@@ -172,6 +187,10 @@ Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any m
 
 ### History and progress (0.1)
 
+25a. As a player, I want a rating that goes up when I beat a stronger opponent, so that improvement is measurable rather than remembered.
+25b. As a player, I want twenty opponents rather than a handful, so that there is always a next rung rather than a ceiling.
+25c. As a player, I want my rating against the computer to be mine alone and never published, so that experimenting and losing costs me nothing socially.
+25d. As a player, I want everything I can do offline to be free, so that the game is worth having even if I never pay.
 26. As a player, I want to see how many games I have won, lost, and drawn, so that I can see progress.
 27. As a player, I want a list of completed games, so that I can revisit them.
 28. As a player, I want to replay any completed game move by move, so that I can learn from my mistakes.
@@ -209,7 +228,14 @@ Per Idea-final.md §11: no ads or in-app purchases; no undo or takeback in any m
 51. As a player, I want an ELO rating that reflects my strength, so that I can measure improvement. *(0.3)*
 52. As a player, I want to invite someone by sharing a link, so that starting a game is frictionless. *(0.3)*
 53. As a player, I want to delete my account and data from within the app, so that I stay in control. *(0.3)*
+53a. As a player, I want to subscribe for a year to unlock playing real people, so that the cost is one predictable decision rather than a recurring surprise. *(0.3b)*
+53b. As a player, I want the option to buy a single year that does not auto-renew, so that I am not signing up to an ongoing charge. *(0.3b)*
+53c. As a player whose subscription has lapsed, I want to finish the games I am already in, so that a billing date does not cost me a game I was winning. *(0.3b)*
+53d. As a returning player, I want my human rating to be where I left it rather than reset, so that resubscribing resumes rather than restarts. *(0.3b)*
 54. As a player, I want to chat with my opponent, so that a long async game feels social. *(0.4)*
+54a. As a player, I want to choose whether games come with a chat at all — always, only with friends, or never — so that playing a stranger does not open a channel to me. *(0.4)*
+54b. As a player, I want to change that decision for one specific game as I start it, so that the setting is a default rather than a cage. *(0.4)*
+54c. As a player who chose never, I want that respected even when my opponent chose always, so that the setting means what it says. *(0.4)*
 55. As a player, I want to block and report someone, so that I can protect myself. *(0.4)*
 56. As a player, I want to be matched automatically with someone near my rating, so that games are competitive. *(0.4)*
 57. As a player, I want a live game with a move clock, so that I can play a quick game start to finish. *(0.5)*
@@ -244,13 +270,16 @@ The whole of the game's logic. Every function is deterministic given its inputs;
 
 ### 7.2 `quadrim_rating` — pure Dart
 
-Built in 0.1 though unused by the UI until 0.3, because bot calibration needs it immediately.
+Used from 0.1 for real: it computes the live computer rating on the device, and it is the tool that calibrates the twenty opponents. The same maths serves the human rating on the server from 0.3b.
 
 | Export | Contract |
 |---|---|
 | `expectedScore(own, opponent)` | `1 / (1 + 10^((opponent − own) / 400))` |
-| `kFactor(gamesPlayed)` | 32 below 20 games, 16 at or above |
+| `kFactor(gamesPlayed)` | 32 below 20 games on that ladder, 16 at or above |
 | `updatedRating(current, k, score, expected)` | Rounded, floored at 100 |
+| `ratingFrom(Iterable<CompletedGame>)` | Folds games in chronological order from the 1200 seed and returns the current rating |
+
+The last export is what makes the computer rating derived rather than stored: it is a pure function of the games already on disk, so it cannot drift from them, and it needs no separate persistence. The two ladders are computed by the same functions over different game sets and never mix.
 
 ### 7.3 `GameRepository` — the testing seam
 
@@ -350,20 +379,25 @@ Deleted. It held a device identity that no longer exists (§8.2), stored statist
 
 Settings (§8.6) is therefore the only local document besides games.
 
-### 8.5 Bot catalogue — 0.1
+### 8.5 Opponent catalogue — all twenty
 
-Code-side constants, not persisted. From Idea-final.md §6.4.
+Code-side constants, not persisted. The roster, ratings and personalities are defined once in Idea-final.md §6.4 and are not duplicated here.
 
-| Id | Name | Tier | Indicative | Configuration |
-|---|---|---|---|---|
-| `pebble` | Pebble | Novice | ~600 | Purely random legal moves |
-| `mote` | Mote | Novice | ~800 | Win and block when seen; misses them 40% of the time; otherwise random |
-| `bramble` | Bramble | Casual | ~1000 | All four strategic rules, 15% blunder rate, no positional sense |
-| `ember` | Ember | Casual | ~1300 | All four strategic rules cleanly applied, 8% blunder rate |
-| `basalt` | Basalt | Club | ~1400 | Strategic plus full positional rules, 6% blunder rate |
-| `onyx` | Onyx | Club | ~1650 | 4-ply alpha-beta over the heuristic evaluation, 3% blunder rate |
+What matters to implementation is which engine capability each tier requires, because that — not the count — is what the work actually is:
 
-Chosen to exercise every engine feature except deep search and the strategy book: random, partial rules, full rules, rules plus positional heuristics, and search.
+| Tier | Opponents | Engine capability required |
+|---|---|---|
+| Novice | Pebble, Twig, Mote, Clover | Random selection; immediate win and block detection; blunder rate; corner preference |
+| Casual | Bramble, Finch, Kestrel, Willow, Ember | All four strategic rules; centre preference; aggression-versus-defence weighting |
+| Club | Basalt, Marlin, Vireo, Onyx, Sable | Full positional rules; 2-ply and 4-ply alpha-beta; threat-space search for double threats |
+| Expert | Quartz, Corvus, Lyra, Titan | Transposition table; iterative deepening to 6–8 ply; exact endgame solving |
+| Master | Oracle, Quadrim Prime | Full-strength search with exact endgame; varied opening choice among proven-strong moves |
+
+Fourteen of the twenty are catalogue entries over capabilities the lower tiers already establish. The genuinely new engine work sits in the Club, Expert and Master rows.
+
+**Quadrim Prime ships without the strategy book** and is therefore not yet perfect — see §4.1. Its catalogue entry must describe what it currently is, not what it becomes at 1.0.
+
+All twenty are calibrated together before release, which is the reason they all ship at once.
 
 ### 8.6 Settings
 
@@ -372,6 +406,10 @@ Chosen to exercise every engine feature except deep search and the strategy book
 ```
 
 The only local document besides games, and the home for anything that is neither a game nor derivable from one. `tutorialCompleted` lives here — without it, acceptance criterion T7 in §11.4 cannot pass and testers are re-offered the tutorial on every launch.
+
+The computer rating is deliberately **not** here: it is derived from completed games (§7.2), so storing it would create a second copy that can drift.
+
+Release 0.4 adds `chatAvailability` with values `everyGame`, `friendsOnly` and `never`, **defaulting to `friendsOnly`**. The default matters more than the setting — a preference whose permissive value is the one nobody changes is not a preference. The chosen value can be overridden for a single game in the start-a-game flow, and the effective availability is recorded on that game rather than resolved when a message is sent, because the two players' preferences have to be combined once and then honoured.
 
 ### 8.7 Storage
 
@@ -544,7 +582,12 @@ Exhaustive on Seam A. Every flow in §6's 0.1 user stories covered at Seam B. Se
 | F5 | A game against a bot | it completes | it is recorded as unrated |
 | F6 | Any completed game | the app restarts | the game is still present and replayable |
 | F7 | A pass-and-play game | it is in progress | the current player is unambiguous on screen |
-| F8 | A game | resign is chosen | the game ends as a loss for the resigning participant |
+| F8 | A game | resign is chosen | the game ends as a loss for the resigning seat |
+| F9 | A new player with no history | the computer rating is read | it is 1200 |
+| F10 | A completed game against a computer opponent | the computer rating is recomputed | it moves by the ELO update against that opponent's fixed anchor, using K=32 for the first 20 such games and K=16 after |
+| F11 | The same set of completed games | the rating is computed twice | both results are identical, because it is a fold and not a stored counter |
+| F12 | A pass-and-play game completing | any rating is read | nothing has changed |
+| F13 | Any game against a computer opponent | it is played from first move to result | no network call is made at any point |
 
 ### 11.3 Interface
 
@@ -614,7 +657,7 @@ Gate R5 was previously written as an assertion that the declaration would say "n
 
 ### 12.1 What going private changed, and what it did not
 
-Strategy A was chosen in [Idea-final-brainstorming.md](Idea-final-brainstorming.md) largely because it reached the stores soonest. Making 0.1 and 0.2 private removes that argument, so it needs replacing rather than quietly dropping.
+Strategy A was chosen in [history/Idea-final-brainstorming.md](history/Idea-final-brainstorming.md) largely because it reached the stores soonest. Making 0.1 and 0.2 private removes that argument, so it needs replacing rather than quietly dropping.
 
 **The sequencing still holds, on different grounds.** Offline-first still means the entire backend learning curve is deferred until Flutter is familiar, still means something is playable within weeks, and still means the first release carries no public listing and no public privacy exposure. Those were always the stronger reasons; the store-clock argument was the one most sensitive to scope growth, and it is now simply not needed — §9.11 satisfies the fourteen-day requirement using the same twelve people who are the audience anyway.
 
@@ -626,17 +669,23 @@ Strategy A was chosen in [Idea-final-brainstorming.md](Idea-final-brainstorming.
 
 ### 12.2 Things 0.1 promises that only 0.3 can keep
 
-Idea-final.md §5 rates games against computer opponents. 0.1 has no accounts and therefore no rating. Bot games must be presented as **unrated practice** with indicative strength numbers, and the numbers become live ratings in 0.3b. Presenting them as ratings before then would be a lie the data cannot back up.
+**This section used to be longer.** Splitting the rating in two removed its main entry: 0.1 no longer has to present computer games as "unrated practice" with numbers that were not ratings, because the computer ladder is real, live, and complete from the first release. That was the most awkward compromise in the plan and it is simply gone.
 
-A second promise moves rather than breaks: Idea-final.md's stats and history follow the player across devices. In 0.1 and 0.2 they follow the *device*, via Android backup, and they never reach the cloud at all. A player who starts fresh at 0.3b keeps their offline history locally and begins their online record empty. That is a deliberate simplification, not an oversight, and the app should say so plainly rather than implying a carry-over that will not happen.
+What remains is smaller and still worth stating plainly in the app rather than discovering later:
 
-### 12.3 Bot calibration starts now, lands in 0.3b
+- **Nothing offline ever syncs.** Statistics, history and the computer rating follow the *device*, via Android backup, not the account. A player moving to a different platform starts that ladder again. A player who subscribes at 0.3b keeps their offline history locally and begins their human record empty.
+- **The two ratings never mix.** Beating Quadrim Prime says nothing about a player's human rating, and the interface must not imply otherwise by placing them where they read as one number.
+- **Quadrim Prime is not yet perfect** and must not be described as though it were until the solver lands.
 
-The indicative ratings in §8.5 are estimates (open item OI-03). The self-play harness built on the pure engine turns them into an ordering; only humans can turn them into a scale.
+### 12.3 Calibrating twenty opponents at once
 
-**Anchor from the bottom and chain upward.** Twelve friends-and-family testers will generate many results against Pebble and Mote and almost none against Basalt and Onyx — which is exactly where a wrong anchor does damage, since G3 claims Onyx beats a competent human and four-ply search is shallow relative to Qubic's forcing sequences. So: human-anchor the lower opponents from tester results, then set the upper ones from the rating differences the round-robin already measures, and record the chain. Where the chain is weak, publish the tier label without a number — §7.10's opponent list renders both, so showing one is a data change.
+The published ratings in Idea-final.md §6.4 are estimates (open item OI-03). The self-play harness turns them into an ordering; only humans can turn them into a scale.
 
-This must be finished before 0.3b, because once published as live ratings the anchors are effectively frozen; correcting one afterwards invalidates every human rating derived from it. Moving the remaining fourteen opponents to 0.6 means they will be introduced *into* a live scale and can only be calibrated relative to the frozen six — a constraint the harness must support.
+**All twenty are calibrated together, in 0.1, before anything is published.** That is the reason they all ship at once. The alternative — six now, fourteen later — meant introducing new anchors into a scale that could no longer move, which is a permanent constraint accepted for no benefit.
+
+**Anchor from the bottom and chain upward.** Twelve friends-and-family testers will produce many results against Pebble and Twig and almost none against Oracle and Prime, which is exactly where a wrong anchor does damage. So: human-anchor the lower tiers from tester results, then set the upper ones from the rating differences the round-robin already measures, and record the chain. Where the chain is weak, publish the tier label without a number — the opponent list renders both, so showing one is a data change.
+
+**Correcting an anchor is now cheap, and that is a deliberate consequence.** These twenty govern a *device-local* computer rating, not a competitive human ladder. Adjusting one changes a number only its owner can see, on their own device — which is what makes it acceptable for Quadrim Prime to ship at fallback strength and be recalibrated when the solver lands at 1.0. Under the previous single-rating model, that would have invalidated every human rating derived from it.
 
 ### 12.4 Open items
 
@@ -646,7 +695,7 @@ None of these block starting.
 
 - **OI-01** — push unsupported on Flutter desktop; first matters at 0.5
 - **OI-02** — solver effort and asset size unknown; deliberately deferred to 1.0, with §6.5's fallback ladder as the answer if it proves impractical
-- **OI-03** — bot calibration; method and deadline now defined in §12.3
+- **OI-03** — **largely resolved.** All twenty opponents are calibrated together in 0.1 with the method in §12.3, and split ratings make a later correction cheap. What remains is doing it
 - **OI-04** — auto-match cold start; first matters at 0.4
 - **OI-05** — **largely answered.** The expert review sized it: steady state is negligible, roughly 250 games a day inside the free tier. The real exposure was the migration burst — one user with 500 local games costing about 1,000 writes at once — and the clean start removed it entirely. What remains is ordinary steady-state sizing before 0.3b
 
@@ -654,10 +703,19 @@ None of these block starting.
 
 - **OI-06** — Play's Data Safety treatment of Android backup, and whether a privacy policy is required for every app regardless of declared collection. Must be checked against current Play guidance, not reasoned about. Gates R5
 - **OI-07** — Play's public address requirement for individual developer accounts, and whether a Dutch KvK registration with address shielding satisfies it. Shape of the problem is certain; today's rules are not. Gates 0.3b
-- **OI-08** — anti-abuse for rated play at 0.3b. Per-pair caps do nothing against throwaway anonymous accounts without an attestation mechanism, and a repeat-matchup cap penalises the rematch loop §7.8 calls the app's cheapest retention mechanism. The control and the product's main engagement pattern are the same behaviour
+- **OI-08** — **substantially reduced.** The subscription removes the cheap sybil attack outright: rated human play now costs a yearly fee per account, so throwaway accounts are no longer free. What survives is collusion between two people who both pay, and the unresolved collision between a repeat-matchup cap and the rematch loop §7.8 calls the app's cheapest retention mechanism
+- **OI-12** — subscription mechanics at 0.3b: store product configuration on both platforms, receipt validation (server-side, since a client can claim anything), restore-purchases, the case where a player holds both products, grace and billing-retry periods, and refund handling
+- **OI-13** — tax and payout setup for a paid product, which makes the developer-identity question in OI-07 urgent rather than eventual. Both stores act as marketplace facilitator for VAT in most of the EU, but the developer still needs banking and tax details registered
+- **OI-14** — whether a subscription paywall changes the app's store category, content rating, or the target-audience answer given in ticket 016
 - **OI-09** — account deletion residues at 0.3b: head-to-head aggregates, reports authored *about* a deleted user, and the auth record itself are not covered by replacing an identity in a game document
 - **OI-10** — whether server-side move validation belongs at 0.3b or 0.4. The review split on it: deferring it removes a second language from the critical path to first online play, at the cost of a trustable rating in a product that has nothing to spend a rating on. §4.1 currently places it at 0.4
 - **OI-11** — who the twelve testers are. Gates R4 and, through it, everything
+- **OI-15** — a Firestore-triggered validator fires *after* the client write lands, so an illegal move is already in the document and already pushed to the opponent for the trigger's lifetime; and the trigger's own write re-fires it unless explicitly guarded. Conditional on OI-10
+- **OI-16** — Firestore rules must gate document creation on the document not already existing, and updates on membership. Otherwise an authenticated client can write over any game id it can name. **This cannot be added defensively later — rules are the only gate.** Gates 0.3a
+- **OI-17** — integrity events from failed validation are a record of suspected abuse attached to a person, with no shape, access rule or retention period. If accumulation ever drives an automatic sanction, GDPR Art. 22 requires human review and a contest path. Conditional on OI-10
+- **OI-18** — no data export path. GDPR Art. 15 and 20 apply from 0.3b; the documents are already JSON with a schema version, so this is nearly free designed in and awkward retrofitted
+- **OI-19** — the exact on-device storage locations of Firebase Auth and Installations data, needed to write the backup exclusion in §9.12 correctly. Verify against current Firebase documentation rather than assuming. Gates 0.3a
+- **OI-20** — whether the ePrivacy Art. 5(3) "strictly necessary" exemption covers cloud-backing-up game history. Storing locally is clearly necessary; copying to a cloud service the user did not request for that purpose is a weaker argument, and it is the strongest reason to consider making backup a visible toggle rather than a silent default. Gates ticket 001
 
 ### 12.5 Deviations from the to-spec skill
 

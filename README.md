@@ -3,7 +3,7 @@
 
 This document will show how this game was constructed using vibe coding folowing [the workflow described here](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
 
-Here is what i wrote as the initial [Idea](doc/IDEA.md) for the game.
+Here is what i wrote as the initial [Idea](doc/history/IDEA.md) for the game.
 
 **Prompt**
 ```
@@ -25,7 +25,7 @@ Put the results in the file doc/Idea-final-brainstorming.md
 Add all decisions to the file doc/idea-decisions.md
 ```	
 
-The result of that prompt was a [brainstorming](doc/Idea-final-brainstorming.md) document.
+The result of that prompt was a [brainstorming](doc/history/Idea-final-brainstorming.md) document.
 
 This next prompt overrides the write to tickets instructiions of the to-spec skill and instead 
 asks to write a spec document. It also answers 2 questions from the brainstorming document.
@@ -70,3 +70,32 @@ Return each agent's concerns and recommendations so I can fold them back into
 the spec and tickets. write the concerns and recommendations in the file doc/Idea-final-spec-review.md
 Add all decisions to the file doc/idea-decisions.md
 ```
+
+Solving the main concerns from the review resulted in the following changes to the spec and tickets:
+
+**Prompt**
+```
+I will not go public with the 0.1 and 0.2 release and only test that with friends and family. This will make it okay to just start with a clean history at 0.3. 
+Please work it throug and update the Idea-final-spec-review.md to remove the findings that are now solved with this change or make updates if things have changed.
+```
+
+Solving some of the other review issues:
+
+**Prompt**
+```
+As a reaction on the review, i would likce to process the following changes to the idea-final.md, idea-final-spec.md, idea-decisions.md and tickets
+- A user will get 2 elo ratings. 1 for games against the computer and 1 against real opponents.
+- All 20 computer opponents will be implemented from the start so that they can all be callibrated.
+- For games against a computer opponent all processing including validation will be on the users device only. Also the rating for that is only visible on the device itself.
+- A user needs to buy an app store subscription for unlocking the feature to play against real opponents. That subscription will be a price per year. It could also be purchased for just 1 year without renewal.
+- A user will have an option to configure if it wants a chat in every game, only friends games or never. On the start a game flow this can be changed for that specific game.
+```
+
+Cleanup of historical document so we can start another round of reviews.
+
+**Prompt**
+```
+i would like to move the documents that are only a record and which do not contribure to the implemantation into a doc/history folder.  I think that's the case for idea-final-brainstorming.md, idea-final-spec-review.md and the original idea.md please evaluate before moving.
+```
+
+

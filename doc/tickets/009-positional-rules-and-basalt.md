@@ -1,4 +1,4 @@
-# 009 — Positional rules and Basalt
+# 009 — Positional rules and Basalt: entering the Club tier
 
 **What to build:** An opponent that plays well even when no rule fires. Basalt prefers the central 2×2×2 cube, then corners, and breaks remaining ties by choosing the cell lying on the most lines it already part-owns. It is the first opponent that feels like it has a plan rather than merely reacting.
 

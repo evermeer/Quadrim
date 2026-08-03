@@ -1,6 +1,6 @@
 # Quadrim — Decision Log
 
-Every decision taken while turning [IDEA.md](IDEA.md) into a specification, a build approach, and a set of tickets.
+Every decision taken while turning [IDEA.md](history/IDEA.md) into a specification, a build approach, and a set of tickets.
 Each entry records the question, the decision, and what it costs or buys.
 
 Date: 2026-07-27
@@ -13,12 +13,13 @@ The project was planned in five steps, each producing one document. Decisions ar
 | Step | What it did | Produced | Decisions |
 |---|---|---|---|
 | 1 | Turned the rough idea into an unambiguous specification | [Idea-final.md](Idea-final.md) | D01–D35 |
-| 2 | Chose a build approach and release staging | [Idea-final-brainstorming.md](Idea-final-brainstorming.md) | D36–D46 |
+| 2 | Chose a build approach and release staging | [Idea-final-brainstorming.md](history/Idea-final-brainstorming.md) | D36–D46 |
 | 3 | Wrote the implementable specification | [Idea-final-spec.md](Idea-final-spec.md) | D47–D58 |
 | 4 | Broke release 0.1 into tickets | [tickets/](tickets/) | D59–D64 |
 | 5 | Reconciled the spec with a decision reversed in step 4 | [Idea-final-spec.md](Idea-final-spec.md) | D65 |
-| 6 | Expert review by backend, security and product reviewers | [Idea-final-spec-review.md](Idea-final-spec-review.md) | D66–D83 |
+| 6 | Expert review by backend, security and product reviewers | [Idea-final-spec-review.md](history/Idea-final-spec-review.md) | D66–D83 |
 | 7 | Private early releases and a clean start at 0.3 | [Idea-final-spec.md](Idea-final-spec.md) | D84–D91 |
+| 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
 
 Open items carried across all steps are listed at the end.
 
@@ -282,7 +283,7 @@ Decisions D01–D35. Established what Quadrim *is*, without regard to how or in 
 
 # Step 2 — Build approach and staging
 
-Decisions D36–D46. Produced [Idea-final-brainstorming.md](Idea-final-brainstorming.md). Where step 1 asked *what*, this step asked *by whom, in what order, and with what constraints* — and the answers reshaped the plan considerably.
+Decisions D36–D46. Produced [Idea-final-brainstorming.md](history/Idea-final-brainstorming.md). Where step 1 asked *what*, this step asked *by whom, in what order, and with what constraints* — and the answers reshaped the plan considerably.
 
 ## 11. Who is building it
 
@@ -494,7 +495,7 @@ Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
 
 # Step 6 — Expert review
 
-Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [Idea-final-spec-review.md](Idea-final-spec-review.md).
+Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [Idea-final-spec-review.md](history/Idea-final-spec-review.md).
 
 **These eighteen were settled at the time. Several were then superseded by [Step 7](#step-7--private-early-releases-and-a-clean-start)** — read this section together with [§19](#19-review-findings-against-these-decisions), which records what survived.
 
@@ -618,7 +619,7 @@ Every decision in this section changes a shape that release 0.1 writes to disk b
 
 ## 19. Review findings against these decisions
 
-The reviewers examined D66–D83 and found several of them defective or incomplete. **These are recorded as open, not resolved.** The full findings are in [Idea-final-spec-review.md](Idea-final-spec-review.md); nothing there has been accepted.
+The reviewers examined D66–D83 and found several of them defective or incomplete. **These are recorded as open, not resolved.** The full findings are in [Idea-final-spec-review.md](history/Idea-final-spec-review.md); nothing there has been accepted.
 
 | Decision | Status after review |
 |---|---|
@@ -708,6 +709,82 @@ Every decision in this section removes work that existed solely to keep 0.1's da
 **Decision:** Delete the profile document. Settings — locale, theme, tutorial completion — become the only local document besides games, and are owned by the same ticket that builds local storage. Statistics are derived from stored games at read time.
 **Rationale:** Closes a real gap the review found, in the same place the change already lands.
 **Consequence:** Also forces the fix for the tutorial practice game: since statistics are derived from stored games, the practice game must never be stored at all. It lives in memory for the tutorial's duration and never reaches the repository.
+
+---
+
+# Step 8 — Split ratings, the full roster, and a subscription
+
+Decisions D92–D100. Taken in reaction to the expert review. Between them these resolve the awkwardness that had accumulated around ratings, close the review's anchor-freeze problem permanently, and give the project a business model it did not have.
+
+## 22. Two ratings, not one
+
+### D92 — A player has two separate ratings
+**Question:** [D18](#d18--do-bot-games-affect-human-elo) made computer games affect a single human rating, which forced release 0.1 to present bot games as "unrated practice" with numbers that were not ratings ([D55](#d55--bot-difficulty-presentation-in-01)). Is one rating right?
+**Decision:** No. A player has **two independent ratings**:
+- a **computer rating**, earned against the twenty computer opponents, computed and stored entirely on the device, visible only on that device;
+- a **human rating**, earned only against real opponents, server-authoritative, arriving with online play at 0.3b.
+
+Neither influences the other. The same ELO maths and seed apply to both.
+**Rationale:** They measure different things and have different trust models. A rating earned against a deterministic opponent on your own hardware cannot be verified by anyone and does not need to be; a rating earned against another person in a competitive ladder must be. Conflating them forced the worse property of each onto the other.
+**Consequence:** Large and almost entirely simplifying. Supersedes [D18](#d18--do-bot-games-affect-human-elo), [D20](#d20--which-modes-are-rated) and [D55](#d55--bot-difficulty-presentation-in-01). Release 0.1 now has a **real, live rating from day one** instead of indicative numbers and an apology — which was the single most awkward thing in the plan. It also removes the reason the twenty opponent anchors were ever frozen against a live human scale.
+
+### D93 — Computer play is entirely on-device, forever
+**Question:** What part of a game against a computer opponent ever touches a server?
+**Decision:** None of it. Move generation, validation, win detection, and rating computation all happen on the device. The computer rating never leaves the device and is never visible to anyone else.
+**Rationale:** There is nothing to protect. A player who edits their own device rating has cheated only themselves, and no other player can see it or be affected by it. Server validation would be cost and complexity spent defending a number with no audience.
+**Consequence:** Answers an open item the review raised — whether computer games sync — with a permanent no. Combined with [D85](#d85--03-starts-with-a-clean-history), it means the offline half of the product never touches the network at any point in its life. The computer rating is device-bound: it survives an Android backup restore but does not follow a player to a new platform, and the app should say so.
+
+## 23. The full roster
+
+### D94 — All twenty computer opponents ship in 0.1
+**Question:** [D81](#d81--02-is-compressed-so-online-arrives-sooner) deferred fourteen of the twenty opponents until after online play, which the review then flagged as introducing fourteen fixed anchors into an already-live rating scale. Ship six or twenty?
+**Decision:** All twenty, from release 0.1.
+**Rationale:** Calibration is the reason. Twenty opponents calibrated together, against each other and against the closed testers, on one scale, before anything is published — rather than six now and fourteen later against frozen anchors.
+**Consequence:** Supersedes [D81](#d81--02-is-compressed-so-online-arrives-sooner)'s bot deferral and deletes the 0.6 release entirely. It closes the review's anchor-freeze finding permanently rather than mitigating it, and [D92](#d92--a-player-has-two-separate-ratings) makes any later correction cheap anyway, since these anchors now govern a device-local rating.
+
+**The honest cost:** this is a real scope increase to a release that was already growing. Most of it is cheap — opponents are configurations of one engine ([D23](#d23--number-and-design-of-computer-players)), so fourteen more is largely fourteen more catalogue entries. What is genuinely new engine work is the machinery the upper tiers need: threat-space search, a transposition table, iterative deepening, and exact endgame solving. That is two additional tickets of real work, not a data change.
+
+### D95 — Quadrim Prime ships at fallback strength
+**Question:** [D94](#d94--all-twenty-computer-opponents-ship-in-01) requires all twenty from the start, but Quadrim Prime is only perfect with the shipped strategy book, which [D24](#d24--how-the-perfect-bot-achieves-perfect-play) defers to 1.0 with unknown effort (OI-02).
+**Decision:** Prime ships on rung 2 of §6.5's fallback ladder — exact endgame solving plus the deepest achievable search — described honestly as extremely strong rather than perfect. It is upgraded to true perfection when the solver lands at 1.0, and its rating is recalibrated then.
+**Rationale:** Preserves the calibration goal without putting an unbounded research task ahead of anything playable. Recalibrating one anchor later is now cheap precisely because of [D92](#d92--a-player-has-two-separate-ratings) — it moves a device-local number, not a competitive ladder.
+**Consequence:** Prime's advertised strength must match what it actually delivers until 1.0. The claim of perfection is not made until it is true.
+
+## 24. The business model
+
+### D96 — An annual subscription unlocks play against real opponents
+**Question:** [D03](#d03--business-model) made the app free with no ads and no in-app purchases. Does that hold?
+**Decision:** No. Everything offline stays free forever — all twenty opponents, the tutorial, pass-and-play, and the computer rating. **Playing against real opponents requires a subscription**, sold through the App Store and Google Play at a price per year.
+**Rationale:** The free tier is a complete game, and the paid tier is the part that costs money to run. The line is explicable in one sentence, which is the main thing a paywall has to be.
+**Consequence:** Supersedes [D03](#d03--business-model) and removes "no ads or in-app purchases" from the permanent non-goals. Brings real work at 0.3b: store product configuration, billing integration, entitlement checks, receipt validation, restore-purchases, and tax and payout setup — which makes the developer-identity question of OI-07 urgent rather than eventual.
+
+**An unplanned security benefit.** The review's strongest unresolved abuse finding was that per-account rate limits have no stable subject, because anonymous accounts are free and unlimited. They are no longer free: rated human play now costs a yearly subscription per account. That does not eliminate collusion between two paying players, but it removes the cheap sybil attack entirely and makes OI-08 a much smaller problem.
+
+### D97 — Two subscription products
+**Question:** Auto-renewing, or a fixed term?
+**Decision:** Both. An auto-renewing annual subscription, and a non-renewing one-year purchase for players who do not want a recurring charge.
+**Rationale:** Requested. Both stores support the pair natively.
+**Consequence:** Two products to configure and two entitlement paths to test, including the case where a player holds both.
+
+### D98 — A lapsed subscription finishes what it started
+**Question:** What happens when a subscription expires mid-season?
+**Decision:** Games already in progress can be played to their end. No new online games can be started. The human rating is frozen and retained, and resumes where it left off if the player resubscribes.
+**Rationale:** Nobody should lose a game they were winning because a card expired, and the opponent should not be handed a forfeit win by someone else's billing. Freezing rather than resetting the rating means resubscribing is a resumption, not a restart.
+**Consequence:** Entitlement is checked at game *creation*, not on every move. Interacts with [D16](#d16--abandonment-outcome)'s day-7 forfeit: a lapsed player must still be able to move in an existing game, or the paywall would silently cause forfeits.
+
+## 25. Chat control
+
+### D99 — Chat availability is a player preference with a per-game override
+**Question:** [D31](#d31--chat-scope) gives every shared game a chat channel. Is that always wanted?
+**Decision:** No. A setting offers three values — chat in **every game**, **friends only**, or **never** — and the choice can be changed for one specific game in the start-a-game flow.
+**Rationale:** Requested, and it directly addresses a review finding: because chat permission derives from game membership, creating a game was implicitly opening a channel to a stranger. Now it is not.
+**Consequence:** Chat availability is decided at game creation and recorded on the game rather than derived at message time. The default should be **friends only** — the setting is worth little if the permissive value is the one nobody changes.
+
+### D100 — The more restrictive preference wins
+**Question:** Two players in one game have conflicting preferences. Whose applies?
+**Decision:** The more restrictive. Chat exists for a game only if **both** players allow it for that game.
+**Rationale:** Makes "never" actually mean never. Any other rule lets a stranger place someone in a conversation they opted out of.
+**Consequence:** The start-a-game flow must show whether chat will be available for this game, and why not when it will not be — otherwise the setting is invisible and reads as a bug.
 
 ---
 

@@ -1,7 +1,7 @@
 # Quadrim — Final Specification
 
 The unambiguous description of what Quadrim is and what v1 must do.
-Derived from [IDEA.md](IDEA.md); every choice is justified in [idea-decisions.md](idea-decisions.md).
+Derived from [IDEA.md](history/IDEA.md); every choice is justified in [idea-decisions.md](idea-decisions.md).
 
 Status: agreed. No code written yet.
 Date: 2026-07-27
@@ -76,35 +76,68 @@ Forfeits are recorded as ordinary losses and update ratings normally. Both timer
 
 ## 4. Game modes
 
-| Mode | Opponent | Network | Rated |
-|---|---|---|---|
-| Async online | human | yes | yes |
-| Real-time online | human | yes | yes |
-| Vs computer | one of 20 bots | no | yes |
-| Pass-and-play | human, same device | no | **no** |
+| Mode | Opponent | Network | Affects | Needs a subscription |
+|---|---|---|---|---|
+| Async online | human | yes | Human rating | yes |
+| Real-time online | human | yes | Human rating | yes |
+| Vs computer | one of 20 opponents | **never** | Computer rating | no |
+| Pass-and-play | human, same device | no | Nothing | no |
 
 Async and real-time share one game-state model and one move pipeline. Real-time adds only the per-move clock and opponent presence.
 
-Pass-and-play is unrated because the second party is unauthenticated and the result is therefore unverifiable.
+Pass-and-play affects no rating because the second party is unauthenticated and the result is therefore unverifiable.
 
 A player may hold at most **20 simultaneous active games against human opponents**. Computer games are uncapped. Exceeding the cap produces a clear message.
+
+### 4.1 Access and subscription
+
+**Everything offline is free, forever.** All twenty computer opponents, the tutorial, pass-and-play, local history, and the computer rating. No ads, no time limit, no feature held back. This is a complete game on its own.
+
+**Playing against real opponents requires a subscription**, sold through the App Store and Google Play at a price per year. It unlocks the entire human side: asynchronous and real-time games, friends, invite links, open challenges, matchmaking, chat, and the human rating.
+
+Two products:
+
+| Product | Behaviour |
+|---|---|
+| Annual subscription | Auto-renewing yearly |
+| One year, non-renewing | A single year, no recurring charge |
+
+**When a subscription lapses:**
+
+- Games already in progress can be played to the end. A billing event must never hand someone a forfeit win, and must never cause the lapsed player to forfeit by inactivity.
+- No new online games can be started.
+- The human rating is **frozen and retained**, not reset. Resubscribing resumes it.
+
+Entitlement is therefore checked when a game is created, not on every move.
 
 ---
 
 ## 5. Rating
 
-Standard ELO.
+A player has **two independent ratings**. Neither influences the other.
+
+| | Computer rating | Human rating |
+|---|---|---|
+| Earned against | The 20 computer opponents | Real opponents only |
+| Computed | On the device | On the server |
+| Stored | On the device | In the cloud, with the account |
+| Visible to | Only that device's owner | The player and their opponents |
+| Requires | Nothing | A subscription (§4.1) |
+
+Both use the same maths:
 
 - Seed: **1200**
-- K-factor: **32** for a player's first 20 rated games, **16** thereafter
+- K-factor: **32** for a player's first 20 rated games on that ladder, **16** thereafter
 - Score: win 1, draw 0.5, loss 0
 - Expected score: `E = 1 / (1 + 10^((R_opponent − R_self) / 400))`
 - Update: `R' = round(R + K × (S − E))`
 - Floor: 100
 
-Computer players have **fixed** ratings that never change. They are anchors: a human's rating moves after a bot game, the bot's does not. The 20 anchor values must be calibrated before launch (see open item OI-03 in the decision log); once published they are effectively frozen.
+Computer players have **fixed** ratings that never change. They are anchors on the computer ladder: a player's computer rating moves after a game, the opponent's does not. All 20 are calibrated together before release, against each other and against real testers.
 
-Ratings are computed exclusively in a Cloud Function. No client ever writes a rating.
+**Why the split.** The two ratings measure different things under different trust models. A rating earned against a deterministic opponent on your own hardware cannot be verified by anyone and does not need to be — editing it cheats only yourself, and nobody else can see it. A rating earned against another person in a competitive ladder must be trustworthy. Conflating them forced the worse property of each onto the other.
+
+The human rating is computed exclusively on the server; no client ever writes it. The computer rating is computed only on the device and never leaves it — which also means it does not follow a player to a different platform.
 
 ---
 
@@ -202,13 +235,15 @@ Perfection is achieved by a **build-time solver** that precomputes the proven wi
 
 The solver is a separate build-time deliverable, not part of the app.
 
-**Fallback ladder**, in order, if the book proves impractical (see open item OI-02):
+**Fallback ladder**, in order (see open item OI-02):
 
-1. Book plus exact endgame — the target.
-2. Exact endgame plus deepest achievable search, with Prime's rating and description corrected to claim strength rather than perfection.
-3. Titan promoted to top bot, Prime withdrawn from the roster.
+1. Book plus exact endgame — the target, and what Prime becomes at 1.0.
+2. Exact endgame plus deepest achievable search, described as extremely strong rather than perfect.
+3. Titan promoted to top opponent, Prime withdrawn from the roster.
 
-Claiming perfection that the engine does not deliver is not an option.
+**Prime ships on rung 2 and stays there until the solver exists.** The full roster is present from the first release so that all twenty can be calibrated together, but the solver is an unbounded research task that must not sit ahead of a playable game. Until it lands, Prime is advertised as extremely strong, not perfect, and its rating is recalibrated when it is upgraded — cheap to do, because computer ratings are device-local (§5).
+
+Claiming perfection the engine does not deliver is not an option.
 
 ---
 
@@ -227,7 +262,7 @@ On desktop, resizing a window can cross the breakpoint mid-game, so both layouts
 
 ### 7.2 Main screen
 
-- Statistics for completed games: wins, losses, draws, and current ELO rating
+- Statistics for completed games: wins, losses, draws, and both ratings — the computer rating always, the human rating once a subscription exists
 - List of active games, each showing opponent, whose turn it is, and time remaining where applicable
 - A large, primary "new game" button
 - A button to launch the tutorial
@@ -302,6 +337,10 @@ Parts 1 and 4 require real features: line illustration on the board, a scripted-
 
 Free-text 1:1 chat, available only between the two players of a shared game and only while that game exists in history. No chat with computer players, no group chat, no global chat.
 
+**Chat is opt-in per player, and the more restrictive preference wins.** A setting offers three values — chat in **every game**, **friends only**, or **never** — defaulting to friends only. The choice can be overridden for one specific game in the start-a-game flow.
+
+Chat exists for a game only if **both** players allow it for that game. This matters because chat permission otherwise derives from game membership, which would mean that creating a game against a stranger implicitly opens a channel to them. Availability is therefore decided when the game is created and recorded on the game, and the start-a-game flow shows whether chat will be available and why not when it will not be.
+
 Required safety features:
 
 - **Block a player** — blocked players cannot message *or* challenge the blocker
@@ -364,7 +403,7 @@ Provisional; refined during planning.
 | `reports` | user reports awaiting review |
 | `bots` | the 20 computer players: name, avatar, blurb, fixed rating, engine configuration |
 
-Pass-and-play games are stored locally on the device, flagged unrated, and are not written to Firestore.
+Pass-and-play and computer games are stored locally on the device and are never written to Firestore. Only games against real opponents reach the cloud.
 
 ### 10.4 Scheduled work
 
@@ -380,7 +419,8 @@ English and Dutch, both complete at launch. English is the fallback locale. All 
 
 Named so that nobody builds them by accident:
 
-- No ads, in-app purchases, or any payment path
+- No ads, ever. The only payment path is the subscription in §4.1 — no consumables, no cosmetics, no pay-to-win
+- No paywall on anything offline: all twenty opponents, the tutorial, pass-and-play and the computer rating are free permanently
 - No takebacks or undo, in any mode
 - No spectating of other people's games
 - No tournaments, leagues, seasons, or leaderboards beyond the rating shown on profiles
@@ -388,7 +428,8 @@ Named so that nobody builds them by accident:
 - No uploaded avatars or profile photos
 - No true rotatable 3D board
 - No board sizes other than 4×4×4
-- No cross-platform floating of bot ratings
+- No floating of computer opponent ratings — they are fixed anchors
+- No syncing of the computer rating or of offline games; both are device-local permanently
 
 ---
 
@@ -401,10 +442,11 @@ Quadrim v1 is complete when:
 3. Client and validating function agree on every move of a shared test corpus of full games.
 4. All twenty computer players exist, are distinguishable in play, and have calibrated ratings.
 5. The top bot's advertised strength matches what it actually delivers, per the fallback ladder in 6.5.
-6. Ratings update correctly, including provisional K, draws, forfeits, and the rating floor.
+6. Both ratings update correctly and independently, including provisional K, draws, forfeits, and the rating floor. The computer rating never leaves the device; the human rating is never written by a client.
 7. Async games expire correctly with a warning first.
 8. All four matchmaking paths create playable games.
-9. Chat works, with block, report, and profanity filtering all functional.
+9. Chat works, with block, report, and profanity filtering all functional, and honours the per-player preference — including the case where the two players disagree and the more restrictive setting applies.
+9a. Both subscription products can be purchased, restored on a new device, and correctly gate online play; a lapsed subscription lets existing games finish, blocks new ones, and leaves the human rating frozen rather than reset.
 10. Account deletion works and is reachable in-app.
 11. Both layouts render correctly on phone and large screen, in both themes, at increased font scale.
 12. The board is playable and legible for a colourblind player, and navigable by screen reader.
