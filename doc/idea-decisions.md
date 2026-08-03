@@ -21,6 +21,7 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 7 | Private early releases and a clean start at 0.3 | [Idea-final-spec.md](Idea-final-spec.md) | D84–D91 |
 | 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
 | 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
+| 10 | The published Qubic literature | [Idea-final.md](Idea-final.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
 
 Open items carried across all steps are listed at the end.
 
@@ -892,6 +893,34 @@ With validation at 0.4, the rules are the entire trust boundary of the first pub
 The spec has criteria for the engine, game flow, interface, tutorial, data and release gates, and none for security or privacy — so every invariant above is a paragraph with no test behind it. A section is created now, seeded with what 0.1 can already assert, so 0.3's criteria are not invented under deadline pressure.
 
 Also adopted without a question, as corrections: a field-level client write allowlist rather than a document-level one; invite codes with entropy, expiry, single-use and a block check; the export path shipping alongside deletion; a tester privacy notice for the closed test; the repository loading games once so the main screen's four derivations share one read; deletion of the `bots` Firestore collection, which contradicts device-only computer play; and a public store-listing ticket for 0.3b with the app name's availability checked.
+
+---
+
+# Step 10 — The published literature
+
+Decisions D119–D121. The user found the Wikipedia entry for 3D tic-tac-toe. The plan already knew the game was solved; what it did not have were the **numbers**, and those change one of the largest risk items in the project.
+
+## 29. What the sources actually say
+
+### D119 — The perfect-play strategy is published work, not original research
+**Question:** [D24](#d24--how-the-perfect-bot-achieves-perfect-play) planned a build-time solver to compute the proven winning strategy, and OI-02 has carried "unknown effort, unknown asset size" ever since.
+**Decision:** The strategy is treated as **existing literature to be obtained and verified**, not computed. OI-02 becomes a bounded acquire-verify-licence task with proof-number search as the documented fallback.
+**Rationale:** The game was weakly solved by Mahalko in 1976, given a complete first-player-win strategy by Patashnik in 1980 via a computer-assisted proof costing around 1,500 hours, and solved independently again by Allis using proof-number search. Three numbers matter: the strategy is roughly **2,929 stored positions**, everything else is reachable by **forcing moves** — which is the threat-space search the Club tier already builds — and the positions were reportedly published online.
+**Consequence:** The asset is kilobytes, not an unknown. The 1.0 work shifts from original computation to verification. Two caveats stop this being a free win: the strategy covers the **first player only**, so Prime moving second still defends by search; and Wikipedia reporting that data was made available online is not confirmation that it is obtainable and redistributable today. [D95](#d95--quadrim-prime-ships-at-fallback-strength) therefore stands unchanged — Prime ships on rung 2 until verification succeeds, because unverified data is not a proof.
+
+### D120 — Cell degree becomes a generated constant
+**Question:** The positional rules ([D23](#d23--number-and-design-of-computer-players), §6.3) prefer the central 2×2×2 and then corners, on the strength of play experience.
+**Decision:** Emit **cell degree** from the same generator as the line table: the 8 corners and 8 inner cells lie on **7** winning lines each; the other 48 lie on **4**.
+**Rationale:** It turns folk wisdom into a measurable fact, and it is a free correctness check — if the generated degrees disagree with the literature, the line table is wrong.
+**Consequence:** Two things follow. The heuristic becomes "prefer high-degree cells", which is what the hand-written ladder was approximating. And corners and inner cells are **the same class** under the board's symmetries, so ranking centre strictly above corners is a distinction the game does not make — it stays in the ladder as a *flavour* axis for opponent personalities, not a strength one.
+
+### D121 — Positions are canonicalised under the 192 automorphisms
+**Question:** The Expert tier needs a transposition table that fits on a phone, and any stored strategy needs to be small.
+**Decision:** Canonicalise a position to a representative of its symmetry class before caching or looking it up. The group has **192** automorphisms (Silver, 1967) — the familiar rotations and reflections plus two operations that reorder cells along every line at once.
+**Rationale:** Collapsing up to 192 equivalent positions into one entry is the difference between a table that fits and one that does not, and it shrinks the strategy book by the same factor.
+**Consequence:** A new engine export and a correctness obligation — positions related by a symmetry must produce the same canonical form. It also means the opening is far smaller than it looks: an empty board has only **two** genuinely distinct first moves, a 7-line cell or a 4-line cell.
+
+**Recorded for care rather than as a decision:** **Qubic** was a Parker Brothers trade name. This product is Quadrim; the older name is used descriptively in the documents and must never appear as branding.
 
 ---
 

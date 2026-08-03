@@ -275,6 +275,8 @@ The whole of the game's logic. Every function is deterministic given its inputs;
 | `Player` | Which side. Two values. |
 | `GameState` | Immutable. Exposes the board, the side to move, and the ordered move list. |
 | `winningLines` | The 76 lines, as a constant. **Generated — never hand-edited.** |
+| `cellDegree` | How many winning lines each cell sits on — 7 for the 8 corners and 8 inner cells, 4 for the other 48. Generated alongside the line table, and the measurable fact the positional rules approximate |
+| `canonical(GameState)` | A representative of the position's symmetry class under the board's 192 automorphisms. Collapses up to 192 positions into one, which is what makes a transposition table and any stored strategy affordable |
 | `legalMoves(GameState)` | All empty cells. |
 | `applyMove(GameState, Cell)` | Returns the next state. Rejects an occupied cell or a move in a finished game. |
 | `outcome(GameState)` | `ongoing`, `draw`, or `win` carrying **both the winner and the completed line**. |
@@ -423,6 +425,8 @@ What matters to implementation is which engine capability each tier requires, be
 Fourteen of the twenty are catalogue entries over capabilities the lower tiers already establish. The genuinely new engine work sits in the Club, Expert and Master rows.
 
 **Quadrim Prime ships without the strategy book** and is therefore not yet perfect — see §4.1. Its catalogue entry must describe what it currently is, not what it becomes at 1.0.
+
+That book is now known to be a small, published dataset rather than something to be computed from scratch — about 2,929 positions, solved independently twice since 1976 (Idea-final.md §6.5.1). It is still not shipped until it has been obtained, verified and licence-checked, but the odds of Prime reaching genuine perfection at 1.0 are considerably better than when this plan was written.
 
 All twenty are calibrated together before release, which is the reason they all ship at once.
 
@@ -763,7 +767,7 @@ None of these block starting.
 **Inherited:**
 
 - **OI-01** — push unsupported on Flutter desktop; first matters at 0.5
-- **OI-02** — solver effort and asset size unknown; deliberately deferred to 1.0, with §6.5's fallback ladder as the answer if it proves impractical
+- **OI-02** — **substantially reduced.** The strategy is published literature, not original research: independently solved twice, with the first-player-win strategy amounting to roughly 2,929 stored positions and everything else reachable by forcing moves (Idea-final.md §6.5.1). Asset size is kilobytes, not an unknown. What remains is a bounded task — **locate the published data, verify it against an independent implementation, and confirm its licence permits shipping it inside an application**. If that fails, proof-number search is the documented reproducible route. Prime stays on fallback rung 2 until verification succeeds, because unverified data is not a proof
 - **OI-03** — **largely resolved.** All twenty opponents are calibrated together in 0.1 with the method in §12.3, and split ratings make a later correction cheap. What remains is doing it
 - **OI-04** — auto-match cold start; first matters at 0.4
 - **OI-05** — **largely answered.** The expert review sized it: steady state is negligible, roughly 250 games a day inside the free tier. The real exposure was the migration burst — one user with 500 local games costing about 1,000 writes at once — and the clean start removed it entirely. What remains is ordinary steady-state sizing before 0.3b

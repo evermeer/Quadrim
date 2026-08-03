@@ -39,7 +39,33 @@ Exactly 76 lines win. They are generated as:
 
 This table is precomputed once as a constant list of 76 four-element cell sets. It is the single shared source of truth for win detection, threat detection, the computer engine's evaluation, the tutorial's line illustrations, and the server-side validator. Nothing in the system may enumerate lines independently.
 
-### 2.2 Placement
+The construction above matches the published analysis exactly: 48 lines parallel to an edge, 24 parallel to a face diagonal, 4 body diagonals (§14).
+
+### 2.2 Cell degree — how many lines each cell sits on
+
+Not every cell is worth the same, and the difference is exact rather than a matter of taste:
+
+| Cell class | Count | Winning lines through it |
+|---|---|---|
+| Corner cells | 8 | **7** |
+| Inner cells (the central 2×2×2) | 8 | **7** |
+| Face cells | 24 | 4 |
+| Edge cells | 24 | 4 |
+
+Sixteen cells sit on seven lines each; the other forty-eight sit on four. Corner and inner cells are **equivalent under the game's symmetries** — they are one class, not two.
+
+This is a shared constant, emitted by the same generator as the line table, and it is what the positional rules in §6.3 are actually expressing.
+
+### 2.3 The symmetry group
+
+The board has **192 automorphisms**. They combine the familiar rotations and reflections with two less obvious operations that reorder cells along every line at once — swapping inner cells for outer ones, and permuting within those pairs (§14).
+
+Two consequences the engine should exploit:
+
+- A position can be **canonicalised** to a representative of its symmetry class, which collapses up to 192 distinct positions into one. That shrinks a transposition table and any stored strategy proportionally.
+- The opening is far smaller than it looks: an empty board has only **two** genuinely distinct first moves — a 7-line cell or a 4-line cell — not 64.
+
+### 2.4 Placement
 
 Every empty cell is always legal. There is no gravity, no adjacency requirement, no reserved or blocked cell, and no handicap. Legal-move generation is "the set of empty cells".
 
@@ -200,6 +226,10 @@ Applied when no strategic rule fires, and as the tie-break within a rule.
 3. Among candidates, choose the cell lying on the greatest number of lines that already contain two or more of the bot's own pieces and none of the opponent's.
 4. If still tied, choose at random.
 
+**Why these rules work, and a correction they imply.** Rules 1 and 2 are folk wisdom that turns out to be exactly right for a measurable reason: the eight inner cells and the eight corners are the sixteen cells sitting on **seven** winning lines each, against four for every other cell (§2.2). The rules are a hand-written approximation of "prefer high-degree cells".
+
+But the two are **the same class** — inner and corner cells are equivalent under the board's symmetries — so ranking centre strictly above corners is a distinction the game does not make. Implement the ladder as written, because the roster's personalities are defined against it and `positionalBias` deliberately lets opponents weight them differently. Just record that a bias favouring centre over corners is a *flavour* choice, not a strength one.
+
 ### 6.4 The roster
 
 Twenty opponents across five tiers. Ratings are provisional estimates pending calibration.
@@ -258,6 +288,26 @@ Quadrim Prime plays perfectly. Because Quadrim is a solved first-player win, **P
 Perfection is achieved by a **build-time solver** that precomputes the proven winning strategy and ships it as a compressed asset. At runtime Prime follows the book, and switches to exact search once the remaining position is small enough to solve outright. Deep alpha-beta alone is very strong but not perfect, and runtime proof search is far too slow on a phone.
 
 The solver is a separate build-time deliverable, not part of the app.
+
+### 6.5.1 This has already been solved — twice
+
+The strategy does not have to be invented. See §14 for sources.
+
+- **1976 — Eugene Mahalko** weakly solved the game: proved a first-player win exists, without producing the strategy.
+- **1980 — Oren Patashnik** published a complete first-player-win strategy, via a computer-assisted proof costing about **1,500 hours** of contemporary computer time. Independently verified.
+- **Later — Victor Allis** solved it again independently, using **proof-number search**.
+
+Three details change this project's estimate materially:
+
+**The strategy is about 2,929 positions, not an unbounded artefact.** Patashnik's result is a set of move choices for roughly 2,929 difficult "strategic" positions; everything else is reachable by sequences made entirely of *forcing* moves. That is a small dataset — kilobytes, not megabytes — and it means the shipped asset is far smaller than "a proven winning strategy" suggests. Under symmetry canonicalisation (§2.3) it is smaller still.
+
+**Most of the work is forcing-move search, which the engine already needs.** If only ~2,929 positions require a stored choice, the runtime job is largely threat and forcing-sequence search — precisely the threat-space search the Club tier already builds. The book covers the hard branch points; the engine plays the rest.
+
+**The positions were reportedly published online.** If they can be obtained, verified and licensed, the build-time "solver" becomes an *acquire-verify-encode* task rather than 1,500 hours of original computation. If they cannot, Allis's proof-number search is the documented reproducible route.
+
+**What this does not solve.** Patashnik's strategy is for the **first player**. Moving second, Prime has no book to follow — its optimal defence still comes from search. And "weakly solved" means the strategy wins, not that every position carries a stored evaluation.
+
+**Effect on the plan:** OI-02 stops being an unbounded research task and becomes a bounded verification one — obtain the data, confirm it against an independent implementation, check its licence. Prime still ships on rung 2 until that verification succeeds, because an unverified dataset is not a proof, but rung 1 is now considerably more likely and considerably cheaper than assumed.
 
 **Fallback ladder**, in order (see open item OI-02):
 
@@ -511,11 +561,25 @@ Quadrim v1 is complete when:
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Perfect-play book is impractical to build or too large to ship | Top bot cannot deliver what it promises | Fallback ladder in 6.5 |
+| Perfect-play book cannot be obtained, verified or licensed | Top opponent cannot deliver what it promises | Fallback ladder in 6.5. Risk is materially lower than first assessed: the strategy is published, is about 2,929 positions, and has been solved independently twice (§6.5.1) |
 | Computer anchor ratings mis-calibrated | Every player's computer rating is distorted; recalibrating rewrites their history unless each game stored the anchor it was played against | Calibrate all twenty together before release; store the anchor on each completed game |
 | **The subscription gates a feature whose value depends on a population that does not exist at launch** | Zero conversion and zero online games, misread as the online half failing when what failed was the gate | Subscription moves to 0.4; accepting an invite is free forever, so the growth loop is not taxed |
 | **A fabricated but legal game moves a victim's rating** | Paying customers lose rating from games they never played — a refund event and a data-accuracy obligation | Human rating and server-side validation ship together at 0.4 |
 | Auto-match has no population at launch | Players queue against nobody | Offer a rating-matched computer opponent after a short wait |
 | Client and server rules logic drift | Moves rejected or wins missed | One shared line definition, one shared test corpus |
 | Desktop and web players silently forfeit async games | Unfair losses | Surface the notification limitation; consider exempting desktop-only accounts from forfeit |
-| Firebase per-game function cost unestimated | Cost surprise at scale | Estimate before launch |
+| Firebase per-game function cost unestimated | Cost surprise at scale | Sized: steady state is negligible; the migration burst that dominated it no longer exists |
+
+---
+
+## 14. Sources
+
+The game is public, old, and thoroughly analysed. Nothing about its mathematics needs to be derived here.
+
+- **Wikipedia, "3D tic-tac-toe"** — https://en.wikipedia.org/wiki/3D_tic-tac-toe — the entry point, and the source of the line counts, cell degrees, automorphism count and solution history cited above.
+- **R. Silver (1967)** — established the group of 192 automorphisms.
+- **Eugene Mahalko (1976)** — weak solution: a first-player win exists.
+- **Oren Patashnik (1980)** — complete first-player-win strategy, computer-assisted, ~1,500 hours, ~2,929 stored strategic positions. Independently verified.
+- **Victor Allis** — independent solution by proof-number search.
+
+Two cautions before anything here is depended on. The published strategy data must be **located, verified against an independent implementation, and checked for licence** before it is shipped inside an application — Wikipedia reports it was made available online, which is not the same as confirming it is obtainable and redistributable today. And the game's commercial name **Qubic** was a Parker Brothers trade name; this product is called Quadrim, and the older name should be used descriptively, never as branding.

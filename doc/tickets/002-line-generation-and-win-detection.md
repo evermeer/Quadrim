@@ -9,7 +9,8 @@ This is the foundation the whole game rests on, and it is the one place where a 
 **Status:** ready-for-agent
 
 - [ ] A build-time generator emits the 76 lines as committed source, marked as generated and not to be edited
-- [ ] Exactly 76 lines are produced: 48 axis-aligned, 24 diagonals lying within a flat plane, 4 corner-to-corner space diagonals
+- [ ] Exactly 76 lines are produced: 48 axis-aligned, 24 diagonals lying within a flat plane, 4 corner-to-corner space diagonals — which matches the published analysis exactly, and is the cheapest available check that the generator is right
+- [ ] The generator also emits the **cell degree** table, and it agrees with the literature: the 8 corners and 8 inner cells sit on 7 lines each, the other 48 cells on 4. A mismatch means the line table is wrong
 - [ ] The generator also emits a corpus of complete games with known outcomes, covering every winning-line family, forced draws, and illegal-move cases
 - [ ] CI fails if the generated output is stale relative to the generator
 - [ ] A test verifies that each of the 76 lines, filled by either player, is recognised as a win

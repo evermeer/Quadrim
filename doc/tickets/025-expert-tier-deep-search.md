@@ -9,6 +9,8 @@ This is the first ticket with genuinely new engine machinery rather than new con
 **Status:** ready-for-agent
 
 - [ ] A transposition table caches evaluated positions, with a bounded memory footprint that is recorded
+- [ ] Positions are **canonicalised under the board's 192 automorphisms** before being cached or looked up, so that up to 192 equivalent positions share one entry. This is the difference between a table that fits on a phone and one that does not
+- [ ] Canonicalisation is verified: two positions related by a symmetry produce the same canonical form, and equivalent positions yield equivalent evaluations
 - [ ] Iterative deepening searches progressively deeper within a time budget rather than fixing a depth up front
 - [ ] Exact endgame solving proves a win, loss or draw once the number of empty cells falls below a configurable threshold
 - [ ] A proven result is never overridden by a heuristic estimate
