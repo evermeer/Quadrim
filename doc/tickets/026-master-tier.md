@@ -15,7 +15,8 @@ That is safe to do precisely because computer ratings are device-local: changing
 - [ ] Both use exact endgame solving and never lose a position that solving proves is drawn or won
 - [ ] Prime's catalogue description and any text shown to the player describe it as extremely strong, **not perfect** — the roster is now complete, the claim of perfection is not yet earned
 - [ ] Prime beats Oracle over a significant number of self-play games
-- [ ] Both choose a move within a recorded time budget on the oldest supported device, and the interface stays responsive
-- [ ] Where the time budget forces a shallower search than intended, that is recorded rather than silently accepted
+- [ ] Both use **node budgets, never wall-clock**, so their play is identical across devices and in CI
+- [ ] The wall-clock equivalent is measured and recorded against the named reference device, and the interface stays responsive there
+- [ ] Where the node budget forces a shallower search than intended, that is recorded rather than silently accepted
 - [ ] A note is carried into the 1.0 work: Prime's description and anchor must both be revisited when the solver lands
 - [ ] Every opponent still returns only legal moves across thousands of random positions

@@ -18,6 +18,7 @@ Rematch is the cheapest retention mechanism the game has, and the alternating st
 - [ ] The starting player of a first game is chosen at random, and the reason it was chosen is recorded
 - [ ] The game tells the player who moves first and why
 - [ ] A player can resign at any point, and the game ends as a loss for them
+- [ ] There is no draw-offer mechanism anywhere — a player who wants out of a dead position resigns
 - [ ] Resignation requires a confirmation so it cannot be triggered accidentally
 - [ ] The result is announced to a screen reader
 - [ ] All new strings are present in English and Dutch

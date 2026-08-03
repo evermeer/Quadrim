@@ -19,4 +19,7 @@
 - [ ] Keystore credentials are kept out of version control, and a check enforces this
 - [ ] A signed release build installs and runs correctly on a physical Android device
 - [ ] The app version and build number scheme is defined and applied
-- [ ] What Play requires of an individual developer account regarding a publicly displayed contact address is checked and recorded, since it will apply by 0.3b
+- [ ] The app name's availability is checked on both stores and against trademark registers, and the result recorded — it sits beside the application id in irreversibility and is currently unchecked
+- [ ] What Play requires of an individual developer account regarding a publicly displayed contact address is checked and recorded, since it applies by 0.3b
+- [ ] Whether a non-residential address is acceptable, and the current scope of KvK address shielding for a home-run sole trader, are checked and recorded with a date — for a solo developer both questions point at a home address
+- [ ] DSA trader-verification requirements as currently enforced by both stores on EU-established developers are checked and recorded with a date, **including whether they reach closed-testing-only distribution**

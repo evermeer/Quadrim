@@ -15,6 +15,10 @@ All access to games goes through a single repository contract. That contract exi
 - [ ] Games are stored as JSON documents keyed by id, matching the game document shape in the specification
 - [ ] Moves are stored as a plain ordered list of cell indices; whose move each was is derived from list position and the recorded starting seat, never stored
 - [ ] A game records only which opponent it was against — a computer opponent or the pass-and-play second seat
+- [ ] A completed game records the **opponent's rating at the time it was played**, so that recalibrating an opponent later does not silently rewrite the player's whole rating history
+- [ ] A completed game records a completion timestamp, which is the ordering key for the rating fold, with the game id as tie-break
+- [ ] A result records an outcome and a **separate reason** — line, full board, resignation, timeout or abandonment — because a clock-driven ending cannot be derived from the moves
+- [ ] The repository can load all completed games once, so callers can fold the same in-memory list rather than sweeping storage repeatedly
 - [ ] **No device identifier is generated, stored or transmitted anywhere**
 - [ ] Every stored document carries a schema version
 - [ ] A document whose schema version is greater than the reader understands is skipped; equal or lower is read and upgraded

@@ -99,3 +99,13 @@ i would like to move the documents that are only a record and which do not contr
 ```
 
 
+**Prompt**
+```
+Start a new review of the doc/Idea-final-spec.md and the tickets in the ./doc/tickets folder and 
+also evaluate if averything in idea-final.md is covered. Ask clarifying questions before proposing
+changes if anything is unclear. 
+Then use the Agency Agents backend-architect, security-engineer, and product-manager and evaluate 
+each agent's concerns and recommendations and ask clarifying questions before you fold 
+them back into the spec and tickets. 
+Add all decisions to the file doc/idea-decisions.md
+```

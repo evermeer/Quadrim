@@ -14,6 +14,8 @@ This is where the app stops being a board and becomes a product.
 - [ ] Completed games are listed most recent first, and tapping one opens its replay
 - [ ] A large, obviously primary button starts a new game
 - [ ] A separate button opens the tutorial
+- [ ] An entry point to the settings screen exists
+- [ ] Statistics, the per-opponent breakdown, the computer rating and the milestones are derived from **one** load of the stored games, not four independent sweeps
 - [ ] Statistics and lists update when a game finishes, without needing a restart
 - [ ] The player's computer rating is shown prominently, labelled so it reads as a rating against the computer rather than a universal one
 - [ ] There is room in the layout for the separate human rating arriving at 0.3b, without the two ever reading as one number

@@ -11,8 +11,9 @@ It is **derived, not stored**: a fold over completed games against the fixed opp
 **Status:** ready-for-agent
 
 - [ ] A new player with no history has a computer rating of 1200
-- [ ] The rating is computed by folding completed games against computer opponents in chronological order; nothing is stored separately
-- [ ] Computing it twice over the same games gives the same answer
+- [ ] The rating is computed by folding completed games against computer opponents, ordered by completion time with the game id as tie-break; nothing is stored separately
+- [ ] The fold uses the **anchor stored on each game**, not the current catalogue value — so recalibrating an opponent is a deliberate re-fold rather than a silent rewrite of history, and every delta a player was shown stays reproducible
+- [ ] Computing it twice over the same games gives the same answer, in the same build and across builds
 - [ ] K is 32 for the first 20 games on this ladder and 16 thereafter
 - [ ] Draws score one half; the rating is rounded and floored at 100
 - [ ] Opponent ratings are fixed anchors and never move

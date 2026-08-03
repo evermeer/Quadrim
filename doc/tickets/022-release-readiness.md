@@ -13,6 +13,8 @@
 - [ ] Every interface acceptance criterion passes
 - [ ] Every tutorial acceptance criterion passes
 - [ ] Every data acceptance criterion passes
+- [ ] Every security and privacy acceptance criterion that 0.1 can satisfy passes
+- [ ] The backup allowlist has been re-verified against what is actually in the app directory — a new dependency can add state silently
 - [ ] The fourteen-day closed test has completed with twelve testers throughout
 - [ ] **Production access has been granted, and is banked rather than used**
 - [ ] Survey results are collected and compared against the thresholds committed in ticket 024

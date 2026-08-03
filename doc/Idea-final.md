@@ -53,9 +53,11 @@ Every empty cell is always legal. There is no gravity, no adjacency requirement,
 4. A placement completing any of the 76 lines with four pieces of the mover's colour ends the game immediately as a win for that player. The completed line is recorded and highlighted.
 5. If the 64th piece is placed with no line completed, the game is a draw.
 6. Either player may **resign** at any point on or off turn, losing immediately.
-7. Either player may **offer a draw**; the opponent accepts or declines. An accepted offer ends the game as a draw. An offer is cancelled by the offerer's next move.
-8. There are **no takebacks and no undo**, in any mode, including against computer opponents. A submitted move is final.
+7. There are **no takebacks and no undo**, in any mode, including against computer opponents. A submitted move is final.
+8. There are **no draw offers**. A game ends by four-in-a-row, a full board, resignation, or timeout — nothing is negotiated. A player who wants out of a dead position resigns.
 9. Move history is append-only and complete, which makes every game replayable.
+
+A game's terminal state therefore records an **outcome** — win or draw — and a separate **reason**: line, full board, resignation, timeout, or abandonment. The two are separate because a clock-driven ending cannot be derived from the moves.
 
 ### 3.1 First move
 
@@ -78,8 +80,8 @@ Forfeits are recorded as ordinary losses and update ratings normally. Both timer
 
 | Mode | Opponent | Network | Affects | Needs a subscription |
 |---|---|---|---|---|
-| Async online | human | yes | Human rating | yes |
-| Real-time online | human | yes | Human rating | yes |
+| Async online | human | yes | Human rating | only to *initiate* — see §4.1 |
+| Real-time online | human | yes | Human rating | only to *initiate* |
 | Vs computer | one of 20 opponents | **never** | Computer rating | no |
 | Pass-and-play | human, same device | no | Nothing | no |
 
@@ -91,24 +93,41 @@ A player may hold at most **20 simultaneous active games against human opponents
 
 ### 4.1 Access and subscription
 
-**Everything offline is free, forever.** All twenty computer opponents, the tutorial, pass-and-play, local history, and the computer rating. No ads, no time limit, no feature held back. This is a complete game on its own.
+**Everything release 0.1 shipped is free, forever.** All twenty computer opponents, the tutorial, pass-and-play, local history and statistics, and the computer rating. No ads, no time limit, no feature held back. This is a complete game on its own.
 
-**Playing against real opponents requires a subscription**, sold through the App Store and Google Play at a price per year. It unlocks the entire human side: asynchronous and real-time games, friends, invite links, open challenges, matchmaking, chat, and the human rating.
+**Accepting a game is free. Initiating and discovering are paid.**
 
-Two products:
+| | Free | Subscription |
+|---|---|---|
+| Accept an invite link or a direct challenge | yes | yes |
+| Concurrent human games | up to 3 | up to 20 |
+| Human rating, earned normally | yes | yes |
+| Create invite links, challenge someone directly | no | yes |
+| Auto-match | no | yes |
+| Open challenge board | no | yes |
+| Chat | no | yes |
+
+The line is drawn here because invite links are the only way a new person ever reaches this app. Charging the *recipient* means a friend's invitation arrives as a sales pitch, and the one growth loop the product has is throttled at its highest-intent moment. It also keeps the anti-abuse benefit: auto-match and the open challenge board are the surfaces a throwaway account would farm, and both stay paid.
+
+Three products, sold through the App Store and Google Play:
 
 | Product | Behaviour |
 |---|---|
-| Annual subscription | Auto-renewing yearly |
+| Annual | Auto-renewing yearly, with a store-native free trial |
+| Monthly | Auto-renewing monthly |
 | One year, non-renewing | A single year, no recurring charge |
+
+**The price is not yet decided.** It is an open decision that must be made before 0.4, not an implementation detail — it determines whether monthly is needed and how long the trial should be.
 
 **When a subscription lapses:**
 
-- Games already in progress can be played to the end. A billing event must never hand someone a forfeit win, and must never cause the lapsed player to forfeit by inactivity.
-- No new online games can be started.
-- The human rating is **frozen and retained**, not reset. Resubscribing resumes it.
+- Games already in progress play to the end and **rate normally for both players**. "Frozen" means no new rated games can be *started*, not that results stop counting — an asymmetric rating update would inflate the ladder for whoever happened to be playing a lapsed opponent.
+- A lapsed player may accept one rematch of a series already in progress, so a billing date cannot deny them the first move that §3.1's alternating rule owes them.
+- A lapsed player is **exempt from the inactivity forfeit** in their remaining games. A billing event must never hand someone a forfeit win.
 
-Entitlement is therefore checked when a game is created, not on every move.
+Entitlement is checked when a game is **created and when one is joined** — never on a move, so that the lapse behaviour above works. It is a server-written field that no client can touch, set only after receipt validation, and revoked on refund, chargeback or a voided purchase.
+
+The developer never handles payment instruments: both stores are merchant of record. No direct payment path is ever added.
 
 ---
 
@@ -122,7 +141,8 @@ A player has **two independent ratings**. Neither influences the other.
 | Computed | On the device | On the server |
 | Stored | On the device | In the cloud, with the account |
 | Visible to | Only that device's owner | The player and their opponents |
-| Requires | Nothing | A subscription (§4.1) |
+| Requires | Nothing | A linked account (§8) |
+| Arrives in | 0.1 | 0.4 |
 
 Both use the same maths:
 
@@ -138,6 +158,10 @@ Computer players have **fixed** ratings that never change. They are anchors on t
 **Why the split.** The two ratings measure different things under different trust models. A rating earned against a deterministic opponent on your own hardware cannot be verified by anyone and does not need to be — editing it cheats only yourself, and nobody else can see it. A rating earned against another person in a competitive ladder must be trustworthy. Conflating them forced the worse property of each onto the other.
 
 The human rating is computed exclusively on the server; no client ever writes it. The computer rating is computed only on the device and never leaves it — which also means it does not follow a player to a different platform.
+
+**The human rating arrives at 0.4, not with the first online play at 0.3b.** It ships together with the server-side move validation that makes it trustworthy, because the two are the same feature: without validation, a modified client can author a legal, replayable game naming any opponent and move that opponent's rating without them ever opening the app. Replay proves legality, never authorship, so a rating recomputed later from unvalidated move lists would faithfully reproduce every fabrication. Release 0.3b therefore ships online play with a win/loss/draw record and no rating — and nobody has a rating to lose, because nobody has one yet.
+
+Because a rating is worth losing, it also requires a **linked account** (§8). An anonymous account vanishes with the device.
 
 ---
 
@@ -296,22 +320,32 @@ When a game ends, the completed line is highlighted on the board. Win detection 
 
 ### 7.6 Matchmaking entry points
 
-| Path | Behaviour |
-|---|---|
-| Invite link or game code | Create a game, share a link or short code; whoever opens it joins |
-| Auto-match | Join a queue; the server pairs the nearest-rated waiting player |
-| Friends list | Add opponents by display name, challenge them directly, see recent activity |
-| Open challenge board | Public list of open games anyone may accept |
+| Path | Behaviour | Creating | Accepting |
+|---|---|---|---|
+| Invite link or code | Create a game, share a link or code; whoever opens it joins | paid | **free** |
+| Direct challenge to a friend | Challenge someone on your friends list | paid | **free** |
+| Auto-match | Join a queue; the server pairs the nearest-rated waiting player | paid | paid |
+| Open challenge board | Public list of open games anyone may accept | paid | paid |
 
-Auto-match should offer a similarly-rated computer opponent after a short wait rather than leaving a player queued against an empty population.
+**Invite codes are bearer tokens and are specified as such:** enough entropy to resist enumeration, short expiry, single use, revocable by the creator, and checked against the creator's block list on join. A guessable code is a way into strangers' games, and with it their profile and — where both allow it — a chat channel.
+
+**Friendship is mutual.** Adding someone sends a request; friendship exists only once it is accepted. Unfriending revokes it immediately and a block removes it. Friend requests carry **no free text** and are rate-limited per sender, because an unfiltered request message would be a chat channel that bypasses the chat preference entirely. Display-name lookup is exact-match only and rate-limited, returning only what is needed to send a request — not the full profile.
+
+This matters more than it looks: `friendsOnly` is the default chat preference, so if friendship were unilateral, anyone who added you would become a friend and the default would be defeated by the adder's own action.
+
+Auto-match should offer a similarly-rated computer opponent after a short wait rather than leaving a player queued against an empty population. That fallback creates a local computer game on the computer ladder — it is not an online game and does not consume the online cap.
 
 ### 7.7 Profile view
 
-Display name, avatar, ELO, win/loss/draw record, head-to-head record against the viewer, member-since date, and last-active date. Head-to-head totals are maintained incrementally by Cloud Function, not recomputed by scanning history.
+Display name, avatar, human rating, win/loss/draw record, head-to-head record against the viewer, and member-since date. The computer rating is never shown to anyone but its owner.
+
+Last-active is **coarsened** — "active this week" rather than a timestamp — and shown only to accepted friends. Combined with globally unique display names and add-by-name, a precise last-active is a presence-tracking capability against a named individual.
+
+Head-to-head totals are maintained incrementally by Cloud Function, not recomputed by scanning history.
 
 ### 7.8 End of game
 
-A result screen showing the highlighted winning line and the ELO change for both players, plus a one-tap rematch that swaps colours and the starting player.
+A result screen showing the highlighted winning line, the rating change on whichever ladder the game belonged to, and a one-tap rematch that swaps colours and the starting player. A pass-and-play result shows no rating change, because it affects none.
 
 ### 7.9 Tutorial
 
@@ -339,17 +373,25 @@ Free-text 1:1 chat, available only between the two players of a shared game and 
 
 **Chat is opt-in per player, and the more restrictive preference wins.** A setting offers three values — chat in **every game**, **friends only**, or **never** — defaulting to friends only. The choice can be overridden for one specific game in the start-a-game flow.
 
-Chat exists for a game only if **both** players allow it for that game. This matters because chat permission otherwise derives from game membership, which would mean that creating a game against a stranger implicitly opens a channel to them. Availability is therefore decided when the game is created and recorded on the game, and the start-a-game flow shows whether chat will be available and why not when it will not be.
+Chat exists for a game only if **both** players allow it for that game. This matters because chat permission otherwise derives from game membership, which would mean that creating a game against a stranger implicitly opens a channel to them.
+
+Availability is resolved when the game is **accepted**, not when it is created — three of the four matchmaking paths give the joiner no start-a-game flow, so resolving at creation would silently ignore their preference. The joiner gets the same per-game override the creator does, and both are shown whether chat will be available, and why not when it will not be.
+
+It stays revocable. Either player can turn chat off in an existing game; switching the global preference to `never` clears it across every active game; and blocking terminates it immediately. A game record with no chat field means chat is unavailable, so games created before chat existed fail closed.
 
 Required safety features:
 
-- **Block a player** — blocked players cannot message *or* challenge the blocker
+- **Block a player** — blocked players cannot message, challenge, invite, accept your invites, or see your profile. The block is checked **in the game-creation and invite-acceptance path**, not only when a message is sent
 - **Report a player or a message** — routed for review
 - **Profanity filtering** — server-side, applied before a message is delivered
 
+**Block, report, and server-side display-name validation ship at 0.3b, one release before chat.** They are contact-surface features, not chat features, and 0.3b is what opens the contact surface: invites, profiles, push, and user-chosen display names visible to strangers.
+
 Display names are globally unique, validated server-side against a profanity list, and immutable for 30 days after each change so name-swapping cannot be used to evade blocks.
 
-**Account deletion** is available in-app. It removes personal data — display name, avatar choice, chat messages, authored reports — while retaining anonymised game records so opponents' rating histories remain coherent. This is required by Apple's guidelines and by GDPR.
+**Accounts are linked before they are worth anything.** Anonymous authentication is enough to try online play at 0.3b, but before a first rated game or any purchase the account must be linked to Google, Apple or email. An anonymous account cannot be recovered when the device is lost, and a data-subject request against one cannot be verified — there is no way to establish that the person asking is the person whose data it is. Offering third-party sign-in on iOS requires Sign in with Apple alongside it.
+
+**Account deletion and data export** are both available in-app; they are the same traversal in opposite directions. Deletion removes personal data — display name, avatar choice, chat messages, authored reports — while retaining game records with the identity replaced by an opaque per-game token, so opponents' rating histories remain coherent. Deletion must state plainly that **it does not cancel the store subscription**, which is a common review rejection.
 
 ---
 
@@ -359,7 +401,7 @@ Display names are globally unique, validated server-side against a profanity lis
 |---|---|
 | Your turn | The opponent has moved |
 | New chat message | The opponent sent a message |
-| Game ended | Win, loss, resignation, accepted draw, or timeout |
+| Game ended | Win, loss, resignation, or timeout |
 | Challenge received | An invite or an accepted open challenge |
 
 Each is individually toggleable in settings.
@@ -381,9 +423,11 @@ The client computes moves and renders them immediately so play feels instant. A 
 A client may write **only**:
 - its own move appended to a game it is a participant in, when it is that client's turn
 - its own chat messages
-- its own profile fields
+- these profile fields, and no others: display name, avatar id, notification toggles, chat preference
 
-A client may **never** write game results, ratings, opponents' data, or any bot's rating. Enforced by Firestore security rules.
+A client may **never** write game results, either rating, subscription entitlement, win/loss/draw totals, provisional counts, timestamps, or opponents' data. The allowlist is **field-level, not document-level** — "its own profile fields" would otherwise permit exactly the writes the sentence above forbids. Enforced by Firestore security rules.
+
+**Those rules are the trust boundary, so they are a tested deliverable, not configuration.** They get their own ticket and an adversarial emulator suite in CI in which every test is an attempt that must be *denied*: writing another player's game, overwriting an existing game id, writing a result or a rating or an entitlement, appending two moves in one write, moving out of turn, exceeding the game cap.
 
 The rules logic exists in two places — Dart on the client, and in the validating function. Both must be driven by the same 76-line definition and covered by the same shared test vectors, or they will drift apart.
 
@@ -393,7 +437,7 @@ Provisional; refined during planning.
 
 | Collection | Holds |
 |---|---|
-| `players` | profile, avatar id, rating, provisional game count, W/L/D totals, timestamps |
+| `players` | profile, avatar id, human rating, provisional game count, W/L/D totals, subscription entitlement, timestamps |
 | `players/{id}/blocks` | blocked player ids |
 | `games` | participants, mode, colours, who started, move list, state, result, winning line, clock/expiry fields |
 | `games/{id}/messages` | chat messages |
@@ -401,7 +445,8 @@ Provisional; refined during planning.
 | `matchQueue` | waiting auto-match entries |
 | `challenges` | open and directed challenges |
 | `reports` | user reports awaiting review |
-| `bots` | the 20 computer players: name, avatar, blurb, fixed rating, engine configuration |
+
+There is deliberately **no `bots` collection**. The twenty computer opponents are code-side constants; computer play never touches the network, so a server-side copy of their configuration would be a second source of truth for something the server never uses.
 
 Pass-and-play and computer games are stored locally on the device and are never written to Firestore. Only games against real opponents reach the cloud.
 
@@ -420,8 +465,10 @@ English and Dutch, both complete at launch. English is the fallback locale. All 
 Named so that nobody builds them by accident:
 
 - No ads, ever. The only payment path is the subscription in §4.1 — no consumables, no cosmetics, no pay-to-win
-- No paywall on anything offline: all twenty opponents, the tutorial, pass-and-play and the computer rating are free permanently
+- **Everything release 0.1 shipped stays free forever**: all twenty opponents, the tutorial, pass-and-play, local history and statistics, and the computer rating. This is the promise made to the people who install the free game. It is deliberately *not* the broader "nothing offline is ever paid", which would permanently foreclose a future offline feature nobody has invented yet
+- Accepting an invite or a challenge is free forever; only initiating and discovering are paid
 - No takebacks or undo, in any mode
+- No draw offers, in any mode
 - No spectating of other people's games
 - No tournaments, leagues, seasons, or leaderboards beyond the rating shown on profiles
 - No group chat, global chat, or chat outside a shared game
@@ -445,9 +492,12 @@ Quadrim v1 is complete when:
 6. Both ratings update correctly and independently, including provisional K, draws, forfeits, and the rating floor. The computer rating never leaves the device; the human rating is never written by a client.
 7. Async games expire correctly with a warning first.
 8. All four matchmaking paths create playable games.
-9. Chat works, with block, report, and profanity filtering all functional, and honours the per-player preference — including the case where the two players disagree and the more restrictive setting applies.
-9a. Both subscription products can be purchased, restored on a new device, and correctly gate online play; a lapsed subscription lets existing games finish, blocks new ones, and leaves the human rating frozen rather than reset.
-10. Account deletion works and is reachable in-app.
+9. Chat works, with block, report, and profanity filtering all functional, and honours the per-player preference — including the case where the two players disagree and the more restrictive setting applies. Blocking terminates chat in existing games, and a game with no chat field fails closed.
+9a. All three subscription products can be purchased, restored on a new device, and correctly gate *initiation* while leaving acceptance free; a lapsed subscription lets existing games finish and rate normally, blocks new ones, exempts the player from inactivity forfeit, and permits one rematch of a series in progress.
+9b. Entitlement cannot be written by any client, and is revoked on refund, chargeback or voided purchase.
+9c. The Firestore security rules pass an adversarial suite in which every attempt is denied.
+10. Account deletion and data export both work and are reachable in-app, and deletion states that it does not cancel the store subscription.
+10a. An account is linked to a recoverable credential before its first rated game or purchase.
 11. Both layouts render correctly on phone and large screen, in both themes, at increased font scale.
 12. The board is playable and legible for a colourblind player, and navigable by screen reader.
 13. The tutorial runs end to end, including the interactive practice game.
@@ -462,7 +512,9 @@ Quadrim v1 is complete when:
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Perfect-play book is impractical to build or too large to ship | Top bot cannot deliver what it promises | Fallback ladder in 6.5 |
-| Bot anchor ratings mis-calibrated at launch | Every derived human rating is distorted, and correcting it invalidates histories | Calibrate by self-play plus human testing before publishing |
+| Computer anchor ratings mis-calibrated | Every player's computer rating is distorted; recalibrating rewrites their history unless each game stored the anchor it was played against | Calibrate all twenty together before release; store the anchor on each completed game |
+| **The subscription gates a feature whose value depends on a population that does not exist at launch** | Zero conversion and zero online games, misread as the online half failing when what failed was the gate | Subscription moves to 0.4; accepting an invite is free forever, so the growth loop is not taxed |
+| **A fabricated but legal game moves a victim's rating** | Paying customers lose rating from games they never played — a refund event and a data-accuracy obligation | Human rating and server-side validation ship together at 0.4 |
 | Auto-match has no population at launch | Players queue against nobody | Offer a rating-matched computer opponent after a short wait |
 | Client and server rules logic drift | Moves rejected or wins missed | One shared line definition, one shared test corpus |
 | Desktop and web players silently forfeit async games | Unfair losses | Surface the notification limitation; consider exempting desktop-only accounts from forfeit |

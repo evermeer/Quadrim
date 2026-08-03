@@ -20,6 +20,7 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 6 | Expert review by backend, security and product reviewers | [Idea-final-spec-review.md](history/Idea-final-spec-review.md) | D66–D83 |
 | 7 | Private early releases and a clean start at 0.3 | [Idea-final-spec.md](Idea-final-spec.md) | D84–D91 |
 | 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
+| 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
 
 Open items carried across all steps are listed at the end.
 
@@ -785,6 +786,112 @@ Neither influences the other. The same ELO maths and seed apply to both.
 **Decision:** The more restrictive. Chat exists for a game only if **both** players allow it for that game.
 **Rationale:** Makes "never" actually mean never. Any other rule lets a stranger place someone in a conversation they opted out of.
 **Consequence:** The start-a-game flow must show whether chat will be available for this game, and why not when it will not be — otherwise the setting is invisible and reads as a bug.
+
+---
+
+# Step 9 — Second expert review
+
+Decisions D101–D118. A coverage check of [Idea-final.md](Idea-final.md) against the spec and tickets found four gaps, and a second review by the same three specialists produced five Critical findings. The result is the largest change to the release ladder since staging was adopted: **0.3b becomes free online play, and 0.4 becomes the competitive paid product.**
+
+## 26. Gaps found by the coverage check
+
+### D101 — Placeholder art in 0.1, real art in 0.2
+**Question:** Tickets require twenty opponent avatars and an app icon; no ticket produced them.
+**Decision:** A ticket produces placeholder avatars and a plain icon for 0.1. Real art becomes explicit scope in 0.2, named with a count and a make-or-commission decision.
+**Consequence:** 0.2's row grows again, immediately before the release most likely to stall. The twenty personality blurbs in two languages get the same owner.
+
+### D102 — A settings screen ships in 0.1
+**Question:** [D91](#d91--settings-own-what-the-profile-used-to) created a settings document holding `locale` and `theme`, but nothing could write them.
+**Decision:** A small settings screen ships in 0.1 — language override, theme override, restart tutorial.
+**Rationale:** Without a language override a Dutch tester on an English-locale phone cannot see the Dutch build at all, and half the closed test is in Dutch.
+**Consequence:** New ticket, and a blocker of the first upload.
+
+### D103 — Draw offers are removed from the product entirely
+**Question:** Idea-final.md gave both players a right to offer a draw; the spec deferred it as meaningless offline.
+**Decision:** Removed everywhere. Games end by four-in-a-row, a full board, resignation, or timeout.
+**Rationale:** A negotiated draw is a two-party state machine touching move history, clocks and rating, for a case players can resolve by resigning.
+**Consequence:** Supersedes [D12](#d12--draw-condition) in part and [D13](#d13--available-in-game-actions). Removes work from every online mode, not just 0.1. `result.outcome` still needs a **timeout** value, which it did not have.
+
+## 27. The ladder redrawn
+
+The three reviewers independently converged on one shape. Security found the human rating unsafe at 0.3b; product found the subscription meaningless at 0.3b; both found that Cloud Functions exist at 0.3b regardless, so the reasoning behind deferring validation was mispriced.
+
+### D104 — The human rating moves to 0.4
+**Question:** Should a live, server-authoritative human rating ship with the first public release?
+**Decision:** No. It moves to 0.4, together with the validation that makes it trustworthy. 0.3b ships online play with a win/loss/draw record and no ELO.
+**Rationale:** Three Critical findings, deleted rather than mitigated. Replay proves legality, not authorship — a modified client authoring *both* players' moves produces a game that is legal, replays cleanly, and reproduces a fabricated result exactly, which "recompute later" can never detect. Worse, a fabricated game moves a *victim's* rating without them ever opening the app: a refund event, and a GDPR accuracy and rectification problem over data attributed to an identified person. The rating's only functional consumer, auto-match, is already at 0.4, and [D03's successor](#d96--an-annual-subscription-unlocks-play-against-real-opponents) permanently forbids leaderboards and tournaments, so nothing else needs it earlier.
+**Consequence:** Nobody has a rating to lose at the first public release, because nobody has one. Supersedes the 0.3b half of [D92](#d92--a-player-has-two-separate-ratings) — the split itself stands, only its timing moves.
+
+### D105 — Move validation travels with the rating
+**Question:** [OI-10 re-taken.](#d104--the-human-rating-moves-to-04) Deferring server-side validation was justified as keeping a second language off 0.3b's critical path.
+**Decision:** Validation lands at 0.4, with the rating. The justification is corrected: it was never about the language.
+**Rationale:** Both reviewers found independently that 0.3b ships Cloud Functions regardless — push on opponent move, the scheduled 5-day and 7-day sweep, head-to-head aggregates, and later receipt validation. What deferral actually saves is the shared 76-line table in TypeScript and the corpus wiring. Validation now sits with the rating because that is the only thing it protects, not because it is expensive.
+**Consequence:** Retires OI-10. `functions/` is created at 0.3b for other reasons; the validator is added to it at 0.4.
+
+### D106 — The subscription moves to 0.4
+**Question:** Should the subscription gate the first public release?
+**Decision:** No. It moves to 0.4.
+**Rationale:** At 0.3b the paid tier sells access to a population of zero. It is not a cold-start problem but a two-sided market where **both sides must pay to enter**, which forecloses every standard remedy. The plan already conceded it and mislabelled it: [Idea-final.md §7.6](Idea-final.md) has auto-match fall back to a computer opponent, which is the paid feature degrading into the free one. Both stores also expect a subscription's content to be available at purchase.
+**Consequence:** Supersedes the timing in [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents). 0.4 is where friends, open challenges, auto-match and chat exist — the first moment there is something to sell.
+
+### D107 — Free to accept, paid to initiate
+**Question:** Should all human play be paid, or only part of it?
+**Decision:** Accepting an invite or a direct challenge is **free forever**, with a cap of a few concurrent human games. The subscription buys initiation and discovery: creating invites, auto-match, the open challenge board, chat, and the full 20-game cap.
+**Rationale:** Invite links are the only acquisition channel in the entire roadmap. Taxing them means a friend's invitation arrives as a sales pitch, and conversion at that moment is near zero. This keeps [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents)'s anti-abuse benefit almost intact, because auto-match and the open challenge board — the surfaces a throwaway account would farm — stay paid.
+**Consequence:** Supersedes [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents)'s "all play against real opponents". Adds a user story: a player invited by a friend can accept and play without paying.
+
+### D108 — Three products and a free trial
+**Question:** Two annual products, no trial, no price.
+**Decision:** Auto-renewing annual, auto-renewing monthly, and a non-renewing year, with a store-native free trial on the annual. **The price remains an explicit open decision before 0.4.**
+**Consequence:** Supersedes [D97](#d97--two-subscription-products). The price is now a named open item rather than an omission.
+
+### D109 — Block, report and name validation move to 0.3b
+**Question:** These sat with chat at 0.4.
+**Decision:** They move to 0.3b. Free-text chat, chat preferences and profanity filtering stay at 0.4.
+**Rationale:** They are contact-surface features, not chat features, and 0.3b is what opens the contact surface — invites, profiles, push, and user-chosen display names visible to strangers. [D107](#d107--free-to-accept-paid-to-initiate) makes human play free there, so there are more accounts, not fewer. Both stores expect blocking and reporting wherever users can reach each other.
+**Consequence:** The block check belongs in the **game-creation and invite-acceptance path**, not only the message path — which is where the first review located it and where it never landed.
+
+### D110 — Linking is required before the first rated game or purchase
+**Question:** Accounts are anonymous from 0.3a. Is that enough to hold a rating or a subscription?
+**Decision:** No. Anonymous is fine for trying online play at 0.3b. Before the first rated game or any purchase, the account must be linked to Google, Apple or email.
+**Rationale:** An anonymous account vanishes with the device — taking a paid year and a rating with it, with no support path. It also makes a GDPR data-subject request unverifiable: there is no way to establish that the person asking is the person whose data it is.
+**Consequence:** Offering third-party sign-in on iOS requires Sign in with Apple alongside. In-app deletion must also state that it does not cancel the store subscription — a common review rejection.
+
+### D111 — The free-forever promise is scoped to release 0.1's feature set
+**Question:** "No paywall on anything offline" was a permanent non-goal written under the old free-with-no-purchases model, and [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents) reversed that model without revisiting the list.
+**Decision:** Replace it with: everything release 0.1 shipped — twenty opponents, the tutorial, pass-and-play, local history and statistics, and the computer rating — is free forever.
+**Rationale:** Keeps the promise actually made to the people who install the free game, and stops permanently foreclosing a future offline feature that has not been invented yet. No ads, no consumables, no cosmetics and no pay-to-win stay as written.
+**Consequence:** The non-goals list was re-derived under [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents) rather than inherited from [D03](#d03--business-model).
+
+### D112 — All twenty opponents ship in the first uploaded build
+**Question:** Ticket 011 depends on the Master tier and ticket 016 depends on 011, so the first build twelve people ever see is gated behind transposition tables, 8-ply search and exact endgame solving. Both reviewers recommended shipping the first three tiers and adding the rest as updates.
+**Decision:** **Recommendation declined.** All twenty ship in the first uploaded build.
+**Rationale:** The user's call, made with the cost stated.
+**Consequence, recorded plainly:** the first upload waits for the hardest engine work in the project, and the fourteen-day Play clock starts correspondingly later — the clock that [D87](#d87--the-14-day-clock-is-burned-during-01) exists to start early. This is the one place where the plan knowingly departs from §12.1's rule to protect the date twelve people first play.
+
+## 28. Fixes adopted without a question
+
+Taken directly from the reviews because they are corrections, not choices.
+
+### D113 — Friendship is mutual and accepted
+Adding someone is a request; friendship exists only once accepted. Unfriending revokes immediately, a block removes it, friend requests carry **no free text** and are rate-limited, and display-name lookup is exact-match only. Without this, `friendsOnly` — the default chat setting adopted to close the first review's unsolicited-contact finding — is defeated by the attacker's own action, because anyone who adds you becomes a friend.
+
+### D114 — Chat availability is resolved at acceptance and stays revocable
+Three of the four matchmaking paths have no start-a-game flow for the joiner, so combining both preferences at *creation* is unimplementable. Availability is resolved when the game is **accepted**, giving the joiner the same override. Either player can revoke it later, switching the global preference to `never` clears it across active games, and blocking terminates it immediately. An absent field means chat unavailable, so games created before 0.4 fail closed.
+
+### D115 — Determinism uses node budgets, not wall-clock
+Acceptance criterion E7 requires identical state and seed to produce identical moves. A millisecond budget makes every Expert and Master opponent non-deterministic across devices and between CI and a phone. All search budgets are expressed in **nodes**; the wall-clock equivalent is measured and recorded separately against a **named reference device**, which is also the device the responsiveness criteria are judged on.
+
+### D116 — The computer-rating fold records its anchor and its ordering key
+The fold is only reproducible if each completed game stores the opponent's anchor rating at the time it was played, and if "chronological" names a field. Games store `opponentRating`, and the fold orders by completion time with the game id as tie-break. Without the first, recalibrating any anchor silently rewrites every player's entire history and the "+12" they saw becomes unreproducible; without the second, a long-running game reorders the fold when it finally completes.
+
+### D117 — Firestore security rules are a tested deliverable
+With validation at 0.4, the rules are the entire trust boundary of the first public release. They get their own ticket at 0.3a and an adversarial emulator suite in CI where every test is an attempt that must be **denied**: write another player's game, overwrite an existing id, write a result, write an entitlement, append two moves at once, move out of turn, exceed the game cap. This is a fourth test seam.
+
+### D118 — Security and privacy acceptance criteria exist as a section
+The spec has criteria for the engine, game flow, interface, tutorial, data and release gates, and none for security or privacy — so every invariant above is a paragraph with no test behind it. A section is created now, seeded with what 0.1 can already assert, so 0.3's criteria are not invented under deadline pressure.
+
+Also adopted without a question, as corrections: a field-level client write allowlist rather than a document-level one; invite codes with entropy, expiry, single-use and a block check; the export path shipping alongside deletion; a tester privacy notice for the closed test; the repository loading games once so the main screen's four derivations share one read; deletion of the `bots` Firestore collection, which contradicts device-only computer play; and a public store-listing ticket for 0.3b with the app name's availability checked.
 
 ---
 

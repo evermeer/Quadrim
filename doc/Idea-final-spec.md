@@ -62,17 +62,27 @@ G7 replaces the previous position that 0.1 could only offer "unrated practice" w
 
 | Release | Contents | Platforms | Audience |
 |---|---|---|---|
-| **0.1** | Engine, board, **all 20 opponents**, live computer rating, pass-and-play, full tutorial, local history and stats, both layouts, English + Dutch | Android | **Private** — 12 friends and family, Play closed testing |
-| 0.2 | iOS build, App Store submission, fixes the closed test demanded | Android, iOS | **Private** — closed testing + TestFlight |
-| 0.3a | Anonymous auth, a Firestore repository passing the same flow tests as the local one, one async game between two owned devices | Android, iOS | **Private** |
-| 0.3b | **Subscription**, invite links, human rating live, push, account deletion, privacy policy | Android, iOS | **First public release** |
-| 0.4 | Chat with preferences, block/report/filter, friends, open challenges, auto-match, server-side move validation | Android, iOS | Public |
+| **0.1** | Engine, board, **all 20 opponents**, live computer rating, pass-and-play, full tutorial, settings screen, placeholder art, local history and stats, both layouts, English + Dutch | Android | **Private** — 12 friends and family, Play closed testing |
+| 0.2 | iOS build, App Store submission, **art package**, fixes the closed test demanded | Android, iOS | **Private** — closed testing + TestFlight |
+| 0.3a | Anonymous auth, a Firestore repository passing the same flow tests as the local one, **security rules as a tested deliverable**, one async game between two owned devices | Android, iOS | **Private** |
+| 0.3b | **Free online play** via invite links, W/L/D record but **no rating**, push, block, report, server-side display-name validation, account deletion and export, privacy policy, public store listing | Android, iOS | **First public release** |
+| 0.4 | **Subscription**, **human rating**, **server-side move validation**, account linking, chat with preferences and filtering, friends, open challenges, auto-match | Android, iOS | Public |
 | 0.5 | Real-time mode with 60s move clocks, Web, Windows, macOS | all five | Public |
 | 1.0 | Rust solver, Quadrim Prime upgraded to true perfection, computer-ladder recalibration | all five | Public |
 
 Only 0.1 is specified below. Later rows are commitments of intent, not of detail.
 
 **Why 0.3 is split.** Making the first public release also the first release in an entirely unfamiliar stack — auth, Firestore, security rules, push, billing, and a published privacy policy at once — puts every risk on one release with no prior public exposure to learn from. 0.3a is the layer-proving step: one thin slice through auth and Firestore, verified against the identical flow tests the local implementation already passes, before any of it is exposed to a stranger.
+
+**Why 0.3b ships neither the rating nor the subscription.** A second expert review found both unsafe there, for unrelated reasons that happen to have the same remedy.
+
+The **rating** cannot be trusted without server-side validation, and validation cannot rescue it retroactively: replay proves a move list is *legal*, never that it is *authentic*. A modified client authoring both players' moves produces a game that replays perfectly and reproduces a fabricated result — and that result moves a real opponent's rating without them ever opening the app. So the rating ships with the validation, at 0.4, and 0.3b has none to forge.
+
+The **subscription** at 0.3b would sell access to a population of zero — not a cold start but a two-sided market where both sides must pay to enter, which forecloses every standard remedy. §7.6 already conceded it by having auto-match fall back to a computer opponent, which is the paid feature degrading into the free one. Both stores also expect a subscription's content to exist at purchase.
+
+What 0.3b does ship is the thing that has to work first: **can two people actually play each other**. Free, via invite links, with a win/loss/draw record and no ladder.
+
+**Why block and report move earlier, to 0.3b.** They are contact-surface features, not chat features. 0.3b is what opens the contact surface — invites, profiles, push, and user-chosen display names visible to strangers — and free online play means more accounts on it, not fewer. Free-text chat, chat preferences and profanity filtering stay at 0.4.
 
 **Why all twenty opponents ship in 0.1.** Calibration. Twenty opponents measured together, against each other and against the closed testers, on one scale, before anything is published — rather than six now and fourteen later against anchors that can no longer move. An earlier plan deferred fourteen of them past the point where the scale froze; that created a permanent constraint for no gain.
 
@@ -84,7 +94,7 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 
 **Game**
 - Full 4×4×4 board, all 76 winning lines, any-empty-cell placement
-- Win, draw, and resign; draw offers are meaningless offline and are omitted until 0.3
+- Win, draw, and resign. **There are no draw offers, in any mode or release** — a game ends by four-in-a-row, a full board, resignation or timeout, and nothing is negotiated
 - Random starting player, alternating on rematch
 - Append-only move history; no undo, no takeback, in any mode
 
@@ -104,7 +114,8 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 - Move-history scrubber for live and completed games
 - Result screen with the winning line highlighted, and one-tap rematch
 - Main screen: local statistics, completed-games list, new-game button, tutorial button
-- Opponent selection showing name, avatar, tier, and indicative rating
+- Opponent selection showing name, avatar, tier, and the opponent's rating, grouped by tier
+- A settings screen: language override, theme override, restart tutorial
 
 **Tutorial** — all four parts
 1. Rules, and what the 76 winning lines look like on the board
@@ -130,13 +141,17 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 |---|---|
 | Accounts and authentication | 0.3a |
 | Any network call whatsoever | 0.3a |
-| **The subscription, and all play against real opponents** | 0.3b |
-| The **human** rating | 0.3b |
+| Play against real opponents, free, by invite link | 0.3b |
 | Push notifications | 0.3b |
-| In-app account deletion and privacy policy | 0.3b (mandatory then, not before) |
+| Blocking, reporting, server-side display-name validation | 0.3b |
+| In-app account deletion, data export, privacy policy | 0.3b (mandatory then, not before) |
 | A public release of any kind | 0.3b |
-| Chat, chat preferences, blocking, reporting, profanity filtering | 0.4 |
-| Friends, invites, open challenges, auto-match | 0.3b–0.4 |
+| **The subscription** | 0.4 |
+| **The human rating** | 0.4 |
+| **Server-side move validation** | 0.4 |
+| Account linking to a recoverable credential | 0.4 (required before a first rated game or purchase) |
+| Chat, chat preferences, profanity filtering | 0.4 |
+| Friends, open challenges, auto-match | 0.4 |
 | Real-time play and move clocks | 0.5 |
 | iOS, Web, Windows, macOS builds | 0.2 / 0.5 |
 | The Rust solver, and Quadrim Prime becoming genuinely perfect | 1.0 |
@@ -145,7 +160,9 @@ Only 0.1 is specified below. Later rows are commitments of intent, not of detail
 
 ### 5.2 Out of scope permanently
 
-Per Idea-final.md §12: **no ads ever**, and no payment path other than the subscription — no consumables, no cosmetics, nothing pay-to-win; no paywall on anything offline; no undo or takeback in any mode; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; computer opponent ratings never float; the computer rating and offline games never sync.
+Per Idea-final.md §11: **no ads ever**, and no payment path other than the subscription — no consumables, no cosmetics, nothing pay-to-win; **everything release 0.1 shipped stays free forever**, and accepting an invite is free forever; no undo or takeback in any mode; **no draw offers in any mode**; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; computer opponent ratings never float; the computer rating and offline games never sync.
+
+Note the deliberate narrowing: the promise is that **0.1's feature set** is free forever, not that nothing offline is ever paid. The broader form was written under a free-with-no-purchases model and would permanently foreclose a future offline feature nobody has designed yet.
 
 ---
 
@@ -263,8 +280,8 @@ The whole of the game's logic. Every function is deterministic given its inputs;
 | `outcome(GameState)` | `ongoing`, `draw`, or `win` carrying **both the winner and the completed line**. |
 | `threats(GameState, Player)` | Lines with three of `Player` and one empty cell — the primitive behind both bot rules and tutorial hints. |
 | `BotConfig` | The six parameter axes: search depth, enabled rules, blunder rate, positional bias, aggression, randomness. |
-| `chooseMove(BotConfig, GameState, Random)` | The single bot brain. Same function for every opponent. |
-| `botCatalogue` | The roster as data. Six entries in 0.1, twenty by 0.2. |
+| `chooseMove(BotConfig, GameState, int seed)` | The single bot brain. Same function for every opponent. Takes a **seed**, not a `Random`, so the call can be hosted in an isolate — `Random` is not sendable across one. Returns a future: the Expert and Master tiers must search without blocking the interface and must be abandonable when the player leaves. Any transposition table is created and discarded within a single call, so the function stays pure and E7's determinism holds. |
+| `botCatalogue` | The roster as data. **Twenty entries, from 0.1.** |
 
 **Invariants.** `applyMove` never mutates its input. `outcome` returning a win always names a line present in `winningLines`. `chooseMove` always returns a member of `legalMoves`. Given the same `Random` seed and state, `chooseMove` is reproducible.
 
@@ -277,9 +294,13 @@ Used from 0.1 for real: it computes the live computer rating on the device, and 
 | `expectedScore(own, opponent)` | `1 / (1 + 10^((opponent − own) / 400))` |
 | `kFactor(gamesPlayed)` | 32 below 20 games on that ladder, 16 at or above |
 | `updatedRating(current, k, score, expected)` | Rounded, floored at 100 |
-| `ratingFrom(Iterable<CompletedGame>)` | Folds games in chronological order from the 1200 seed and returns the current rating |
+| `ratingFrom(Iterable<CompletedGame>)` | Folds games ordered by `completedAt`, game id as tie-break, from the 1200 seed, using each game's stored `opponentRating` |
 
 The last export is what makes the computer rating derived rather than stored: it is a pure function of the games already on disk, so it cannot drift from them, and it needs no separate persistence. The two ladders are computed by the same functions over different game sets and never mix.
+
+Two details make the fold actually reproducible, and both live in the data rather than here: it folds against the anchor **stored on each game**, not the current catalogue value, and it orders by an explicit field. See §8.3.
+
+The human rating is **not** this fold. Human ELO is not separable per player — each update depends on the opponent's rating at that moment — so recomputing it is a global chronological replay across every account, not a per-player fold. The maths is shared; the traversal is not. That is one reason the human rating and its validation ship together at 0.4 rather than being retrofitted.
 
 ### 7.3 `GameRepository` — the testing seam
 
@@ -349,13 +370,16 @@ Removing the device identifier also shrinks what the Android backup carries (§8
   "schemaVersion": 1,
   "mode": "vsComputer | passAndPlay",
   "opponent": "bot:onyx | guest",
+  "opponentRating": 1650,
   "playerSeat": 0,
   "startingSeat": 0,
   "startReason": "random | rematchAlternation",
   "moves": [27, 14, 3, 61],
   "state": "active | complete",
+  "completedAt": "2026-07-27T18:09:44Z",
   "result": {
-    "outcome": "win | draw | resign",
+    "outcome": "win | draw",
+    "reason": "line | fullBoard | resignation | timeout | abandonment",
     "winnerSeat": 0,
     "line": [3, 18, 33, 48]
   },
@@ -370,7 +394,10 @@ Notes:
 - **`moves` is a plain ordered list of cell indices, `0..63`.** Whose move it was derives from position in the list and `startingSeat` — turns strictly alternate, so storing an author per move would be storing a derivable fact. No per-move id, index, or timestamp is stored either: the array position *is* the index, there is no network to retry over, and no clock decides anything in 0.1.
 - The list is append-only and complete, which is what makes replay a pure fold rather than a stored artefact.
 - `result.line` holds the four cell indices of the completed line, so highlighting needs no recomputation.
-- There is no `rated` field. Nothing in 0.1 or 0.2 is rated, and 0.3's ratings start clean, so a permanently-false flag would be decoration.
+- **`opponentRating` records the anchor this game was actually played against.** Without it, recalibrating any opponent silently rewrites every player's entire rating history, and the "+12" they saw on a result screen becomes unreproducible. It is one integer, and it is what makes recalibration a deliberate re-fold rather than a silent rewrite.
+- **`completedAt` is the fold's ordering key**, with the game id as tie-break. "Chronological" has to name a field: computer games are uncapped and concurrent, so a game started Monday and finished Friday must not fold before one started and finished on Tuesday.
+- **`outcome` and `reason` are separate.** A clock-driven ending cannot be derived from the moves, so the reason has to be recorded rather than inferred. `timeout` and `abandonment` are unreachable in 0.1 and present because the field's shape should not change when they become reachable.
+- There is no `rated` field. The ladder a game belongs to follows from its `mode`, so a flag would be a second source of truth.
 - There is no `participants` array. It existed to be queryable by Firestore security rules, which will never see this document.
 
 ### 8.4 No profile document
@@ -446,13 +473,15 @@ This purity is what allows the identical code to run in a unit test, in the app,
 
 ### 9.4 Bots are data
 
-One `chooseMove`, six configurations in 0.1 and twenty by 0.2. Adding an opponent is a catalogue entry. Calibration is a matter of running self-play across configurations rather than across code paths.
+One `chooseMove`, **twenty configurations from 0.1**. Adding an opponent is a catalogue entry. Calibration is a matter of running self-play across configurations rather than across code paths.
 
 ### 9.5 Persistence sits behind `GameRepository`, and statistics are derived
 
 The interface exists from the first commit even though 0.1 has one implementation. Its purpose is no longer migration — it is the boundary Seam B tests against, and the contract 0.3a's Firestore implementation must satisfy by passing the *same* flow tests.
 
 Statistics are computed by folding completed games at read time, never stored. A stored aggregate is a second write that can silently drift from the games it summarises, and there is no scale here to justify it: offline history stays local, stays small, and is never behind a network.
+
+**The main screen loads games once and all four derivations fold the same in-memory list** — overall statistics, the per-opponent breakdown, the computer rating, and the milestones. Four independent sweeps of one-file-per-game storage would make the home screen's cost grow four times faster than a player's history, which is invisible at fifty games and not at several thousand.
 
 The tutorial's practice game follows directly from this. Because statistics are derived from stored games, a stored practice game would count. **It is therefore never stored at all** — it lives in memory for the tutorial's duration and never reaches the repository. That is strictly cheaper than adding a mode value every future reader would have to filter out.
 
@@ -537,6 +566,12 @@ The whole of the game's logic, tested only through §7.1's exports. Pure functio
 
 Full user flows without widgets: start a game, play to a win, play to a draw, resign, scrub history, rematch with swapped starter, persist and reload. The fake is in-memory and shared with 0.3's tests, where the same flow tests must pass against the Firestore implementation.
 
+**Seam D — Firestore security rules, adversarially. From 0.3a.**
+
+With move validation at 0.4, the rules are the entire trust boundary of the first public release. Every test in the suite is an attempt that must be **denied**: write another player's game; overwrite an existing game id; write a `result`, a rating, or an entitlement; append two moves in one write; move out of turn; create a game while unentitled; delete a move; exceed the concurrent-game cap. Run in the Firebase emulator, in CI, from the first commit that has rules.
+
+This is a deliverable with a ticket, not configuration. "The rules are correct" is currently the whole security argument for 0.3b, and an argument with no artefact behind it is an assumption.
+
 **Seam C — golden tests for the board. Thin.**
 
 A small fixed set: empty board, mid-game, won game with the line highlighted — in each layout, each theme. Enough to catch a rendering regression, few enough not to become a maintenance tax.
@@ -579,7 +614,7 @@ Exhaustive on Seam A. Every flow in §6's 0.1 user stories covered at Seam B. Se
 | F2 | A completed game | rematch is chosen | the previous non-starter starts, and the new game references the old |
 | F3 | An in-progress game | history is scrubbed | the displayed position changes and the game state does not |
 | F4 | A won game | the result screen is shown | the winning line is highlighted |
-| F5 | A game against a bot | it completes | it is recorded as unrated |
+| F5 | Any search budget | a move is chosen twice on different hardware | the same move is returned, because budgets are counted in **nodes**, never milliseconds |
 | F6 | Any completed game | the app restarts | the game is still present and replayable |
 | F7 | A pass-and-play game | it is in progress | the current player is unambiguous on screen |
 | F8 | A game | resign is chosen | the game ends as a loss for the resigning seat |
@@ -651,6 +686,36 @@ Exhaustive on Seam A. Every flow in §6's 0.1 user stories covered at Seam B. Se
 
 Gate R5 was previously written as an assertion that the declaration would say "no data collected". With backup enabled that is no longer safe to assume, and misdeclaring Data Safety is a policy-violation removal rather than a warning — so it is now a verification task with a recorded answer.
 
+### 11.7 Security and privacy
+
+This section exists from 0.1 even though most of it is not yet reachable. Every invariant below was, until now, a paragraph of prose with no test behind it — and the ones that bite hardest arrive under deadline pressure at 0.3.
+
+**Testable in 0.1:**
+
+| # | Criterion |
+|---|---|
+| S1 | No network call is made at any point in a game against a computer opponent — cross-references F13 |
+| S2 | No device identifier is generated, stored or transmitted — cross-references D2 |
+| S3 | Only games and settings are backup-eligible, by explicit allowlist — cross-references D9 |
+| S4 | The repository is the only reader and writer of stored data; no screen touches storage directly |
+| S5 | The twelve closed testers have been given a written privacy notice covering what is collected (their Play enrolment address, survey answers, two statistics screenshots), why, who holds it, how long, and how to withdraw. **This is the only personal-data processing release 0.1 has, and it is the developer's, not the app's** |
+| S6 | Tester screenshots are deleted once ticket 014's calibration has consumed them |
+
+**Gated on 0.3 and stated now so they are not invented later:**
+
+| # | Criterion |
+|---|---|
+| S7 | The adversarial rules suite passes: every listed attempt is denied |
+| S8 | The client write allowlist is field-level; ratings, entitlement, totals and timestamps are server-written only |
+| S9 | Entitlement is written only after receipt validation, by the server, and is revoked on refund, chargeback or voided purchase |
+| S10 | Invite codes resist enumeration, expire, are single-use, are revocable, and are checked against the creator's block list on join |
+| S11 | A block prevents challenge, invite acceptance and profile visibility, checked in the game-creation path |
+| S12 | Friendship requires acceptance; friend requests carry no free text and are rate-limited |
+| S13 | Account deletion leaves no identifier linking a retained game to the deleted account, and the tombstone is randomly generated per game |
+| S14 | Data export returns everything deletion would remove, in a machine-readable form |
+| S15 | Firebase auth material, the entitlement cache, the FCM token and the Installations ID are excluded from backup |
+| S16 | The backup allowlist is re-verified against the app directory at every release, because a new dependency can add state silently |
+
 ---
 
 ## 12. Further Notes
@@ -683,6 +748,10 @@ The published ratings in Idea-final.md §6.4 are estimates (open item OI-03). Th
 
 **All twenty are calibrated together, in 0.1, before anything is published.** That is the reason they all ship at once. The alternative — six now, fourteen later — meant introducing new anchors into a scale that could no longer move, which is a permanent constraint accepted for no benefit.
 
+**And all twenty are in the first uploaded build**, not just in the release. Both reviewers recommended otherwise — ship the first three tiers, add Expert and Master as updates inside the fourteen days, exactly as tutorial parts 3 and 4 already do — on the grounds that twelve recruited testers will produce no games above Sable anyway. That was declined. The cost is recorded plainly: the first build twelve people ever see waits for transposition tables, 8-ply search and exact endgame solving, and the fourteen-day Play clock starts correspondingly later. It is the one place this plan knowingly departs from §12.1's rule about protecting that date.
+
+A full round-robin over twenty opponents is 190 pairs, not the 15 that six would have been, and the upper-tier pairs are the slowest. Ticket 014 therefore calibrates an **adjacent-pairs chain plus a sparse cross-tier sample** at a reduced node budget, which establishes the ordering and the gaps without the quadratic cost.
+
 **Anchor from the bottom and chain upward.** Twelve friends-and-family testers will produce many results against Pebble and Twig and almost none against Oracle and Prime, which is exactly where a wrong anchor does damage. So: human-anchor the lower tiers from tester results, then set the upper ones from the rating differences the round-robin already measures, and record the chain. Where the chain is weak, publish the tier label without a number — the opponent list renders both, so showing one is a data change.
 
 **Correcting an anchor is now cheap, and that is a deliberate consequence.** These twenty govern a *device-local* computer rating, not a competitive human ladder. Adjusting one changes a number only its owner can see, on their own device — which is what makes it acceptable for Quadrim Prime to ship at fallback strength and be recalibrated when the solver lands at 1.0. Under the previous single-rating model, that would have invalidated every human rating derived from it.
@@ -708,14 +777,21 @@ None of these block starting.
 - **OI-13** — tax and payout setup for a paid product, which makes the developer-identity question in OI-07 urgent rather than eventual. Both stores act as marketplace facilitator for VAT in most of the EU, but the developer still needs banking and tax details registered
 - **OI-14** — whether a subscription paywall changes the app's store category, content rating, or the target-audience answer given in ticket 016
 - **OI-09** — account deletion residues at 0.3b: head-to-head aggregates, reports authored *about* a deleted user, and the auth record itself are not covered by replacing an identity in a game document
-- **OI-10** — whether server-side move validation belongs at 0.3b or 0.4. The review split on it: deferring it removes a second language from the critical path to first online play, at the cost of a trustable rating in a product that has nothing to spend a rating on. §4.1 currently places it at 0.4
+- **OI-10** — **closed.** Validation ships at 0.4 together with the human rating, because that is the only thing it protects. The original justification — keeping a second language off 0.3b's critical path — was mispriced: 0.3b needs Cloud Functions regardless, for push, the scheduled forfeit sweep, and head-to-head aggregates. What deferral actually saves is the shared TypeScript line table and corpus wiring
 - **OI-11** — who the twelve testers are. Gates R4 and, through it, everything
 - **OI-15** — a Firestore-triggered validator fires *after* the client write lands, so an illegal move is already in the document and already pushed to the opponent for the trigger's lifetime; and the trigger's own write re-fires it unless explicitly guarded. Conditional on OI-10
 - **OI-16** — Firestore rules must gate document creation on the document not already existing, and updates on membership. Otherwise an authenticated client can write over any game id it can name. **This cannot be added defensively later — rules are the only gate.** Gates 0.3a
 - **OI-17** — integrity events from failed validation are a record of suspected abuse attached to a person, with no shape, access rule or retention period. If accumulation ever drives an automatic sanction, GDPR Art. 22 requires human review and a contest path. Conditional on OI-10
 - **OI-18** — no data export path. GDPR Art. 15 and 20 apply from 0.3b; the documents are already JSON with a schema version, so this is nearly free designed in and awkward retrofitted
 - **OI-19** — the exact on-device storage locations of Firebase Auth and Installations data, needed to write the backup exclusion in §9.12 correctly. Verify against current Firebase documentation rather than assuming. Gates 0.3a
-- **OI-20** — whether the ePrivacy Art. 5(3) "strictly necessary" exemption covers cloud-backing-up game history. Storing locally is clearly necessary; copying to a cloud service the user did not request for that purpose is a weaker argument, and it is the strongest reason to consider making backup a visible toggle rather than a silent default. Gates ticket 001
+- **OI-20** — whether the ePrivacy Art. 5(3) "strictly necessary" exemption covers cloud-backing-up game history. Storing locally is clearly necessary; copying to a cloud service the user did not request for that purpose is a weaker argument, and it is the strongest reason to consider making backup a visible toggle rather than a silent default. Gates ticket 001. **Stronger now than when raised:** at 0.3 that directory also holds auth material and entitlement, and a visible toggle would simultaneously resolve this and simplify the OI-06 Data Safety answer by making it a user choice
+- **OI-21** — **the subscription price.** No number exists anywhere. It determines whether the monthly product is needed and how long the trial should be, so nothing downstream of it can be evaluated. Must be decided before 0.4
+- **OI-22** — whether the twelve testers can name someone they would actually play a game against. This is the demand signal for the entire paid tier, it is free to measure in the closed test, and until it is measured the business model is the largest untested assumption in the plan
+- **OI-23** — DSA trader-verification duties, which both stores now enforce on EU-established developers. Selling a subscription makes the developer unambiguously a trader. **Verify whether it also reaches closed-testing-only distribution** — if it does, this touches 0.1 rather than 0.4. Undeclared traders being delisted in the EU is a real outcome, so this needs an answer with a date attached
+- **OI-24** — VAT treatment of store payouts for a Dutch sole trader, and whether the small-business scheme is compatible. **Verify with an accountant, not by reasoning**
+- **OI-25** — chat message retention. "While the game exists in history" is not a period, and history is indefinite
+- **OI-26** — the app name's availability on both stores and against trademark registers. It sits beside the application id in irreversibility and is currently unchecked
+- **OI-27** — the 0.4 human ladder will be seeded by invite-only pairs of people who know each other, then auto-match will pair strangers using numbers produced by that population. Decide before 0.4 whether the ladder reseeds
 
 ### 12.5 Deviations from the to-spec skill
 

@@ -4,7 +4,9 @@
 
 Twenty is enough that presentation matters. A flat list of twenty is a wall; grouped by tier, with the player's own rating visible, it is a ladder with an obvious next rung.
 
-**Blocked by:** 026 — The Master tier
+**Blocked by:** 026 — The Master tier; 029 — Placeholder art and opponent content
+
+*Note: this ticket gates the first upload through ticket 016, and 026 sits at the end of the entire engine chain. That was a deliberate choice — see the specification §12.3 — and its cost is that the first build twelve people ever see waits for the hardest engine work in the project.*
 
 **Status:** ready-for-agent
 

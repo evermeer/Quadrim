@@ -19,7 +19,8 @@ The harness exists because the twenty published ratings are estimates. All twent
 - [ ] A command-line tool plays any two catalogue opponents against each other for a configurable number of games
 - [ ] The tool alternates who starts, so the first-player advantage does not distort results
 - [ ] The tool reports win, loss and draw counts and an implied rating difference
-- [ ] A full round-robin across all twenty opponents can be run in one command, with a recorded runtime that makes it practical to repeat after a configuration change
+- [ ] Calibration runs as an **adjacent-pairs chain plus a sparse cross-tier sample**, at a reduced node budget — not a full round-robin. Twenty opponents is 190 pairs, the upper-tier pairs are the slowest, and the chain establishes the ordering and the gaps for a fraction of the cost
+- [ ] The whole calibration can be run in one command, with a recorded runtime that makes it practical to repeat after a configuration change
 - [ ] Results confirm the intended strength ordering across all five tiers, and any inversion is treated as a configuration defect rather than accepted
 - [ ] The published numbers are derived by human-anchoring the lower tiers from closed-test results and chaining the upper tiers from measured gaps, with the chain recorded so a later correction can be reasoned about
 - [ ] The harness can also calibrate a single opponent against others whose ratings are already fixed — needed when Quadrim Prime is upgraded and recalibrated at 1.0
