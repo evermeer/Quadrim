@@ -7,5 +7,37 @@
   "placeholderTagline": "Four in a row, stacked in a cube.",
   "@placeholderTagline": {
     "description": "Placeholder tagline on the skeleton home screen until the main screen ships."
-  }
+  },
+  "passAndPlay": "Pass and play",
+  "@passAndPlay": {
+    "description": "Button starting a two-players-one-device game."
+  },
+  "lightPlays": "Light to move",
+  "darkPlays": "Dark to move",
+  "@lightPlays": {
+    "description": "Turn indicator. The first player always plays the light pieces."
+  },
+  "lightWins": "Light wins!",
+  "darkWins": "Dark wins!",
+  "gameDrawn": "It's a draw — the board is full.",
+  "cellSemantics": "Layer {layer}, row {row}, column {column}, {state}",
+  "@cellSemantics": {
+    "description": "Screen reader label for one board cell. state is one of cellEmpty/cellLight/cellDark.",
+    "placeholders": {
+      "layer": {"type": "int"},
+      "row": {"type": "int"},
+      "column": {"type": "int"},
+      "state": {"type": "String"}
+    }
+  },
+  "cellEmpty": "empty",
+  "cellLight": "light piece",
+  "cellDark": "dark piece",
+  "layerLabel": "Layer {layer}",
+  "@layerLabel": {
+    "placeholders": {
+      "layer": {"type": "int"}
+    }
+  },
+  "backToHome": "Back"
 }

@@ -192,4 +192,88 @@ for (final line in _linesThroughCell[cell.index]) {
 
 ## Functional Validation
 
-⚠️ No Jira key — ticket reference `doc/tickets/003-engine-core.md`. All criteria verified by tests: immutable `GameState` (mutation attempt throws, input never changes), `legalMoves` = empty cells and empty once won, occupied/out-of-range/finished-game rejections, outcome names winner and exact line for all 76 lines × both players, near-miss quads never win, full corpus replays (155 games incl. 3 draws), threat detection with structure invariant over 200 pseudo-random positions, engine purity enforced by tool/check.sh. One test-helper bug (predicate rejecting all candidates) was found and fixed during the run, before review.
+⚠️ No Jira key — ticket reference `doc/tickets/003-engine-core.md`. (Section continues below with ticket 004.) All criteria verified by tests: immutable `GameState` (mutation attempt throws, input never changes), `legalMoves` = empty cells and empty once won, occupied/out-of-range/finished-game rejections, outcome names winner and exact line for all 76 lines × both players, near-miss quads never win, full corpus replays (155 games incl. 3 draws), threat detection with structure invariant over 200 pseudo-random positions, engine purity enforced by tool/check.sh. One test-helper bug (predicate rejecting all candidates) was found and fixed during the run, before review.
+
+---
+---
+
+# Code Review: ticket 004 (working tree) → main @ 3acb934
+
+> Generated: 2026-08-11T00:15:00+02:00
+> Changed files: 9 (board_view.dart, game_screen.dart, game_screen_test.dart, main.dart, 2 ARB + 3 generated l10n)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] `cellSizeForWidth` is dead code — `style`
+
+**File:** `app/lib/game/board_view.dart:289`
+
+**Evidence:**
+```dart
+/// Effective cell size for a given available width.
+double cellSizeForWidth(double width) {
+  final gridInnerWidth = (width - BoardView._layerGap) / 2;
+```
+Grep across `lib/` and `test/`: zero call sites.
+
+**Problem:** A speculative public helper duplicating the arithmetic already inlined in `BoardView.build`. Two copies of the same geometry that can drift apart, and neither the app nor the tests use this one.
+
+**Fix:** Delete it. Reintroduce when a caller exists.
+
+### [MINOR] The kMinCellSize floor is claimed but not enforced below 360dp — `bug`
+
+**File:** `app/lib/game/board_view.dart:304`
+
+**Evidence:**
+```dart
+  // Cap cells at 48dp on wide screens; narrow phones get what fits,
+  // never below kMinCellSize (asserted in tests).
+  final ideal = boardWidthForCell(48);
+  return math.min(available, ideal);
+```
+
+**Problem:** `clampBoardWidth` only caps the upper bound; there is no lower bound, and the sole size test runs at 390dp. Working the geometry backwards through the screen's 8dp padding: a 320dp-wide device yields ~30dp cells — below the 32dp floor the comment asserts. The comment claims a guarantee the code does not provide.
+
+**Fix:** Add a test at the narrowest width the product supports and state that width, so the floor is a gate rather than a comment. Record sub-360dp as a known limitation for ticket 021's device audit rather than silently shipping cells under the audited floor.
+
+### [NIT] Production widgets carry test-only keys — `style`
+
+**File:** `app/lib/game/board_view.dart:203`
+
+**Evidence:**
+```dart
+key: ValueKey('cell-${cell.index}'),
+```
+
+**Problem:** The key exists solely so widget tests can address a cell; nothing in the app reads it.
+
+**Fix:** None. This is the conventional Flutter approach and the alternative (finding by semantics label) is slower and more brittle. Noted so the intent is on record.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/004-playable-board-pass-and-play.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| All four layers, all 64 cells, no scrolling | ✅ | 2x2 layer arrangement, `board_view.dart:47`; semantics test walks all 64 |
+| Layers legible as depth | ✅ | horizontal shear 0.15, `board_view.dart:35` |
+| Occupied vs empty unmistakable | ✅ | pebble with radial gradient vs empty tile, `board_view.dart:217` |
+| Single tap places, no confirmation | ✅ | `game_screen_test.dart:47` full game via single taps |
+| Taps on occupied cells do nothing | ✅ | test `tapping an occupied cell does nothing` |
+| Player to move unambiguous | ✅ | turn banner with piece swatch; asserted each half-move in the win test |
+| Reaches a win and a draw, announces which | ✅ | win test + draw test replaying a corpus drawn game |
+| Pieces distinguished by lightness not hue | ✅ | `board_view.dart:255` (D124) |
+| Every cell has a screen-reader label | ✅ | test asserts all 64 match layer/row/column/contents |
+| Turn changes and result announced | ✅ | `Semantics(liveRegion: true)` banner, `game_screen.dart:108` (D136) |
+| Reliable touch target on smallest phone | ⚠️ | verified at 390dp (~37dp cells); see MINOR above for <360dp |
+| Legible in light and dark themes | ⚠️ | uses `ColorScheme` roles throughout, so both themes render; visual verification is ticket 021 |
+| Strings in English and Dutch | ✅ | both ARB files extended; `tool/check.sh` string gate passes |

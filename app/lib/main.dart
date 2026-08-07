@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'game/game_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'theme.dart';
 
@@ -42,14 +43,29 @@ class _PlaceholderHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(l10n.appTitle, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(l10n.placeholderTagline),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Spacer(),
+              Text(l10n.appTitle,
+                  style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              Text(l10n.placeholderTagline),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const GameScreen()),
+                  ),
+                  child: Text(l10n.passAndPlay),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,17 @@
 {
   "@@locale": "nl",
   "appTitle": "Quadrim",
-  "placeholderTagline": "Vier op een rij, gestapeld in een kubus."
+  "placeholderTagline": "Vier op een rij, gestapeld in een kubus.",
+  "passAndPlay": "Samen op één toestel",
+  "lightPlays": "Licht is aan zet",
+  "darkPlays": "Donker is aan zet",
+  "lightWins": "Licht wint!",
+  "darkWins": "Donker wint!",
+  "gameDrawn": "Gelijkspel — het bord is vol.",
+  "cellSemantics": "Laag {layer}, rij {row}, kolom {column}, {state}",
+  "cellEmpty": "leeg",
+  "cellLight": "lichte steen",
+  "cellDark": "donkere steen",
+  "layerLabel": "Laag {layer}",
+  "backToHome": "Terug"
 }

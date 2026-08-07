@@ -1014,6 +1014,23 @@ Nocturne is dark-only (FirstRunHandoff §3). The light theme is generated from t
 ### D134 — CI is GitHub Actions running the same script as local
 The repo already lives on GitHub. One workflow, one step: `bash tool/check.sh` — identical to the local gate, so CI cannot drift from what a developer runs. The APK build is deliberately not in CI (slow, and the analyze+test gate is what the ticket demands); it is verified locally per ticket.
 
+## 33. Ticket 004 — the playable board
+
+### D135 — Board geometry: 2×2 sheared layers, WCAG-AA cell sizing
+**Question:** [D127](#d127--the-boards-geometry-must-be-re-derived-from-the-touch-target-not-the-other-way-round) demanded geometry derived from the touch target, with 44dp as the working minimum. Implementation proved that **44dp is geometrically impossible** for 64 always-visible cells on a phone: a 2×2 layer arrangement at 390dp width yields at most ~42dp even with zero decoration, and a single-column stack exceeds screen height.
+**Decision:** The board is four 4×4 grids in a 2×2 arrangement. Depth comes from a **horizontal shear** (0.15), not a perspective rotation — shear leaves cell height untouched, so the rendered hit area equals the cell. Cell size derives from available width: ~37dp on a 390dp phone, ~34dp on 360dp, capped at 48dp on wide screens. The audited floor is **32dp**, justified by WCAG 2.5.8 AA, which permits dense adjacent-target grids at ≥24dp with spacing — the regime keyboards and calendar grids live in. A widget test pins the reference-device size and the floor.
+**Rationale:** 44dp is the iOS-HIG/AAA bar for isolated controls; holding the whole product to it here would force scrolling (breaking U1) or a rotatable board (a permanent non-goal). The tests, not judgement, established the impossibility.
+**Consequence:** Acceptance criterion U4's "platform minimum" reads as WCAG AA for board cells specifically. Flagged to ticket 021's real-device audit, and the closed-test survey already asks about hesitation and mis-taps — that is the empirical check on this decision. The shear also produced one real bug the widget tests caught: without reserving the shear width inside each layer's layout, sheared rows overlapped the neighbouring layer and stole its taps.
+
+**Supported width floor.** The floor only holds down to **360dp**, which is therefore the narrowest supported screen; below roughly 340dp cells fall under 32dp. Pinned by widget tests at 360, 390 and 412dp, plus one asserting the whole board fits without scrolling at the narrowest. Sub-360dp devices are a recorded limitation for ticket 021, not a silent degradation — the review caught that an earlier comment claimed a guarantee the code did not provide.
+
+### D136 — Screen-reader announcements via a live region, not explicit calls
+The turn banner is a Semantics live region: every text change (turn, win, draw) is announced automatically. The explicit `SemanticsService.announce` API is deprecated in current Flutter and would have duplicated the live region anyway. Each board cell is its own semantics container so an occupied cell's label never merges into its layer's.
+
+---
+
+## Appendix — session tooling
+
 Not product decisions, recorded so the session is complete.
 
 - **MemPalace was broken and was repaired.** The plugin (3.4.1) launched its MCP server via a `mempalace-mcp` command that the installed package (3.3.2) never shipped, so the server failed to start every session. The package was upgraded to 3.6.0, which installs the launcher and also fixes a crash in `mempalace status` caused by a chromadb SQL-variable limit when fetching all drawer metadata in one query. Two stale directories, `palace.bak-2026-07-22` and `palace.corrupt-2026-07-22`, remain at roughly 263 MB each and were left for the user to decide on.

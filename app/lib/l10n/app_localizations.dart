@@ -109,6 +109,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Four in a row, stacked in a cube.'**
   String get placeholderTagline;
+
+  /// Button starting a two-players-one-device game.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass and play'**
+  String get passAndPlay;
+
+  /// Turn indicator. The first player always plays the light pieces.
+  ///
+  /// In en, this message translates to:
+  /// **'Light to move'**
+  String get lightPlays;
+
+  /// No description provided for @darkPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark to move'**
+  String get darkPlays;
+
+  /// No description provided for @lightWins.
+  ///
+  /// In en, this message translates to:
+  /// **'Light wins!'**
+  String get lightWins;
+
+  /// No description provided for @darkWins.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark wins!'**
+  String get darkWins;
+
+  /// No description provided for @gameDrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s a draw — the board is full.'**
+  String get gameDrawn;
+
+  /// Screen reader label for one board cell. state is one of cellEmpty/cellLight/cellDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer {layer}, row {row}, column {column}, {state}'**
+  String cellSemantics(int layer, int row, int column, String state);
+
+  /// No description provided for @cellEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'empty'**
+  String get cellEmpty;
+
+  /// No description provided for @cellLight.
+  ///
+  /// In en, this message translates to:
+  /// **'light piece'**
+  String get cellLight;
+
+  /// No description provided for @cellDark.
+  ///
+  /// In en, this message translates to:
+  /// **'dark piece'**
+  String get cellDark;
+
+  /// No description provided for @layerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer {layer}'**
+  String layerLabel(int layer);
+
+  /// No description provided for @backToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backToHome;
 }
 
 class _AppLocalizationsDelegate

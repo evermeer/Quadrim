@@ -13,4 +13,44 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get placeholderTagline => 'Vier op een rij, gestapeld in een kubus.';
+
+  @override
+  String get passAndPlay => 'Samen op één toestel';
+
+  @override
+  String get lightPlays => 'Licht is aan zet';
+
+  @override
+  String get darkPlays => 'Donker is aan zet';
+
+  @override
+  String get lightWins => 'Licht wint!';
+
+  @override
+  String get darkWins => 'Donker wint!';
+
+  @override
+  String get gameDrawn => 'Gelijkspel — het bord is vol.';
+
+  @override
+  String cellSemantics(int layer, int row, int column, String state) {
+    return 'Laag $layer, rij $row, kolom $column, $state';
+  }
+
+  @override
+  String get cellEmpty => 'leeg';
+
+  @override
+  String get cellLight => 'lichte steen';
+
+  @override
+  String get cellDark => 'donkere steen';
+
+  @override
+  String layerLabel(int layer) {
+    return 'Laag $layer';
+  }
+
+  @override
+  String get backToHome => 'Terug';
 }
