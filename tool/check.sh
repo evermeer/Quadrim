@@ -29,13 +29,26 @@ fi
 
 [ $fail -ne 0 ] && exit 1
 
+echo "== generated sources are not stale =="
+(cd tools/linegen && dart pub get >/dev/null 2>&1 && dart run bin/linegen.dart >/dev/null)
+if ! git diff --exit-code -- \
+    packages/quadrim_engine/lib/src/winning_lines.g.dart \
+    packages/quadrim_engine/test/fixtures/corpus.json; then
+  echo "FAIL: generated files are stale - commit the output of tools/linegen"
+  exit 1
+fi
+
 echo "== analyze + test =="
 (cd app && flutter gen-l10n && flutter analyze && flutter test)
 for pkg in packages/quadrim_engine packages/quadrim_rating tools/linegen; do
   echo "-- $pkg"
   (cd "$pkg" && dart pub get --offline >/dev/null 2>&1 || dart pub get >/dev/null
    dart analyze --fatal-infos
-   if [ -d test ]; then dart test; else echo "(no tests yet)"; fi)
+   if compgen -G 'test/**/*_test.dart' >/dev/null || compgen -G 'test/*_test.dart' >/dev/null; then
+     dart test
+   else
+     echo "(no tests yet)"
+   fi)
 done
 
 echo "ALL CHECKS PASSED"

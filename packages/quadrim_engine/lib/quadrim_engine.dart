@@ -3,5 +3,7 @@
 ///
 /// This package is pure Dart. It must never import Flutter, Firebase,
 /// `dart:io`, an ambient clock, or an ambient random source — tool/check.sh
-/// enforces this. Content arrives with tickets 002 and 003.
+/// enforces this.
 library;
+
+export 'src/winning_lines.g.dart';
