@@ -139,3 +139,57 @@ expect(Random(20260727).nextInt(1 << 30),
 ## Functional Validation
 
 ⚠️ No Jira key — ticket reference `doc/tickets/002-line-generation-and-win-detection.md`. All criteria verified: 76 lines emitted and independently cross-checked by direction-walk enumeration (test), degree table matches literature exactly (16×7, 48×4, per-cell), corpus covers all 76 lines × both seats + 3 draws + illegal cases, replay test proves every recorded outcome, exhaustive C(64,4) scan finds exactly 76 collinear quads, CI staleness gate live, nothing else enumerates lines.
+
+---
+---
+
+# Code Review: ticket 003 (working tree) → main @ e1a82a1
+
+> Generated: 2026-08-10T22:05:00+02:00
+> Changed files: 3 (engine.dart, engine_test.dart, package export)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 2 |
+
+## Findings
+
+### [NIT] `owner()` throws RangeError, not ArgumentError, on an invalid cell — `style`
+
+**File:** `packages/quadrim_engine/lib/src/engine.dart:103`
+
+**Evidence:**
+```dart
+Player? owner(Cell cell) => _board[cell.index];
+```
+
+**Problem:** `owner(Cell(64))` surfaces as a raw list `RangeError` instead of the `ArgumentError` the mutating API throws; inconsistent error shape on the read path. No caller constructs out-of-range cells today.
+
+**Fix:** Defer. If it ever bites, mirror `applyMove`'s `isValid` guard.
+
+### [NIT] A move completing two lines at once records the first in table order — `style`
+
+**File:** `packages/quadrim_engine/lib/src/engine.dart:131`
+
+**Evidence:**
+```dart
+for (final line in _linesThroughCell[cell.index]) {
+  if (line.every((c) => board[c] == mover)) {
+    win = Win(mover, line);
+    break;
+  }
+}
+```
+
+**Problem:** A double-completing move exists in Qubic; the recorded/highlighted line is the lexicographically first. Deterministic and spec-compatible (Idea-final rule 4 speaks of "the completed line", singular), but undocumented.
+
+**Fix:** One doc line on `Win.line` noting the tie-break. Defer to next touch of the file.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/003-engine-core.md`. All criteria verified by tests: immutable `GameState` (mutation attempt throws, input never changes), `legalMoves` = empty cells and empty once won, occupied/out-of-range/finished-game rejections, outcome names winner and exact line for all 76 lines × both players, near-miss quads never win, full corpus replays (155 games incl. 3 draws), threat detection with structure invariant over 200 pseudo-random positions, engine purity enforced by tool/check.sh. One test-helper bug (predicate rejecting all candidates) was found and fixed during the run, before review.

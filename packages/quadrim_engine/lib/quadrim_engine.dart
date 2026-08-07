@@ -6,4 +6,5 @@
 /// enforces this.
 library;
 
+export 'src/engine.dart';
 export 'src/winning_lines.g.dart';
