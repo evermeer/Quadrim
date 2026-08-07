@@ -141,3 +141,13 @@ Add the decissions to the file doc/idea-decisions.md
 
 Then use the skill design:design-handoff to create a design handoff document for the first run experience.
 ```
+
+Start implementation.
+**Prompt**
+```
+Now that the spec and tickets are finalized, start implementing the game according to the tickets in the ./doc/tickets folder.
+The goal is to have a working v0.1 version of the game that can be tested by friends and family.
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+After each ticket run the skill code-review-expert 
+Commit the code to the main branch after each ticket is completed and reviewed.
+```
