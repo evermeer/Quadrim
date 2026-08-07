@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup allowlist for Android 12+ (android:dataExtractionRules).
+  Backup stays ON deliberately (decision D72): a player replacing their phone
+  keeps their history, and with no device identifier in storage (D90) nothing
+  in the backed-up set identifies anyone.
+  Cloud backup and device-to-device transfer are both allowed for the same
+  set (recorded choice per ticket 001): the cloud copy is what D72 exists
+  for, and it is end-to-end encrypted with the device credential on
+  Android 9+. Revisit at 0.3a when auth material appears (spec 9.12).
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="quadrim/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="quadrim/" />
+    </device-transfer>
+</data-extraction-rules>

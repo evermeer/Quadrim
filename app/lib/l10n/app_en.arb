@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "appTitle": "Quadrim",
+  "@appTitle": {
+    "description": "The application name shown on the home screen. Not translated per se, but routed through l10n so no screen ever hardcodes it."
+  },
+  "placeholderTagline": "Four in a row, stacked in a cube.",
+  "@placeholderTagline": {
+    "description": "Placeholder tagline on the skeleton home screen until the main screen ships."
+  }
+}

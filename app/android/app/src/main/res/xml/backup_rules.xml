@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup allowlist for Android 11 and below (android:fullBackupContent).
+  Explicit allowlist, never the platform default of everything: at 0.3a this
+  directory gains Firebase auth material that must NEVER be restored onto a
+  second device (spec 9.12). Only the app's own documents are eligible.
+  Ticket 005 must store games and settings under files/quadrim/.
+-->
+<full-backup-content>
+    <include domain="file" path="quadrim/" />
+</full-backup-content>

@@ -23,6 +23,7 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
 | 10 | The published Qubic literature | [Idea-final.md](Idea-final.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
 | 11 | First-run experience design review | [FirstRunHandoff.md](FirstRunHandoff.md) | D122–D129 |
+| 12 | Implementation | the code | D130+ |
 
 Open items carried across all steps are listed at the end.
 
@@ -992,7 +993,26 @@ Three findings that only a running prototype could produce, now in the handoff: 
 
 ---
 
-## Appendix — session tooling
+# Step 12 — Implementation
+
+Decisions taken while writing code, one batch per ticket. Routine choices (library versions, file layout already fixed by the spec) are not recorded; only what a future reader would otherwise have to reverse-engineer.
+
+## 32. Ticket 001 — skeleton and CI
+
+### D130 — Toolchain: Flutter 3.44.9 stable at C:\D\flutter
+Flutter was not installed. Installed 3.44.9 stable (Dart 3.12.2) to `C:\D\flutter`, wired to the existing Android SDK at `%LOCALAPPDATA%\Android\Sdk`, cmdline-tools added, licenses accepted, `flutter doctor` fully green. Not on the system PATH — build scripts and CI set their own.
+
+### D131 — Local storage lives under `files/quadrim/`
+The backup allowlist (D72, spec §9.12) needs a concrete path to include, so the contract is fixed now: **everything ticket 005 persists goes under the `quadrim/` subdirectory of the app's files directory.** Both cloud backup and device-to-device transfer include exactly that path and nothing else — the allowlist-not-default rule exists so that 0.3a's Firebase auth material is excluded by construction rather than by remembering.
+
+### D132 — The hardcoded-string check is a grep, not an analyzer plugin
+Ticket 001 wants the build to fail when a user-facing literal appears. Implemented as a grep for `Text('…')` literals in `app/lib` (excluding generated l10n) inside `tool/check.sh`. A custom analyzer rule would catch more shapes; the grep catches the shape people actually write, costs nothing, and lives in the same script CI runs. Upgrade if it ever misses something that mattered.
+
+### D133 — The light theme exists but is a seed derivation
+Nocturne is dark-only (FirstRunHandoff §3). The light theme is generated from the same accent seed so `ThemeMode.system` works and nothing hardcodes darkness; it gets real design attention no later than ticket 021's audit. Recorded so nobody mistakes it for a designed artefact.
+
+### D134 — CI is GitHub Actions running the same script as local
+The repo already lives on GitHub. One workflow, one step: `bash tool/check.sh` — identical to the local gate, so CI cannot drift from what a developer runs. The APK build is deliberately not in CI (slow, and the analyze+test gate is what the ticket demands); it is verified locally per ticket.
 
 Not product decisions, recorded so the session is complete.
 

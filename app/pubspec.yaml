@@ -1,0 +1,27 @@
+name: quadrim
+description: "Quadrim - four in a row inside a 4x4x4 cube."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  quadrim_engine:
+    path: ../packages/quadrim_engine
+  quadrim_rating:
+    path: ../packages/quadrim_rating
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
