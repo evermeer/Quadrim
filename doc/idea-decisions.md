@@ -22,7 +22,7 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
 | 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
 | 10 | The published Qubic literature | [Idea-final.md](Idea-final.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
-| 11 | First-run experience design review | [FirstRunHandoff.md](FirstRunHandoff.md) | D122–D128 |
+| 11 | First-run experience design review | [FirstRunHandoff.md](FirstRunHandoff.md) | D122–D129 |
 
 Open items carried across all steps are listed at the end.
 
@@ -957,11 +957,20 @@ Decisions D122–D128. A first-run experience was designed in Claude Design and 
 
 ## 31. Defects found in the delivered design
 
-### D126 — The prototype does not render as delivered
-**Question:** [DesignHandoff.md](DesignHandoff.md) states the prototype can be opened directly in a browser to see the full interactive flow. Can it?
-**Decision:** No, and the handoff is corrected to say so. `design_system/_ds_bundle.js` declares `"components":[]` — it is an empty stub — so no component runtime loads and every template binding renders as literal `{{ … }}` text.
-**Rationale:** Verified by opening the file and screenshotting it. The page renders as unresolved placeholders on a dark ground.
-**Consequence:** The prototype is readable as source but not runnable as a reference. Anyone needing the live flow must re-export it from Claude Design. Strings must be read out of the source rather than observed in a running page — which makes D122's warning sharper, since the wrong roster is what a careless extraction would pick up.
+### D126 — The prototype was missing one file, and now runs
+**Question:** [DesignHandoff.md](DesignHandoff.md) states the prototype can be opened directly in a browser. The delivered copy rendered as literal `{{ … }}` placeholders. Why, and is it recoverable?
+
+**Diagnosis, corrected twice.** The first reading — that `_ds_bundle.js` was an empty stub — was **wrong**. A fresh project download produced a byte-identical 300-byte bundle, so that file is simply empty by design: this prototype uses raw Nocturne tokens and inline logic rather than registered design-system components.
+
+The actual cause was a single missing file. The design's whole content is inline — 16,695 bytes of `type="text/x-dc"` script carrying the board logic and all copy in both languages — and a browser will not execute that MIME type. The runtime that evaluates it, `support.js` (69 KB), was never copied into the repo. There are no CDN references and no external framework, so this was a packaging fault, not a network one.
+
+**Decision:** Restored. `support.js` and the `_ds/nocturne-6bb5054c-7621-445d-889f-56706a347aa4/` asset directory now sit in `design_reference/` at the paths the HTML expects. The download also contained a **1.3 MB fully self-contained standalone HTML**, which is now the reference of record — it has zero external references and opens anywhere.
+
+**Consequence:** The flow was walked end to end in a browser and **every source-based finding was confirmed visually**: all twenty prototype names present with none from the specification, Easy/Medium/Hard with none of the five tiers, "Unrated" on the main screen, and a five-step tutorial under a six-segment progress bar.
+
+Three findings that only a running prototype could produce, now in the handoff: both the welcome step and the picker leave roughly half the screen empty above a bottom-pinned button; the tutorial's hint is static scripted text rather than computed from the position, which ticket 020 forbids; and "Start match" is enabled before an opponent is chosen.
+
+**The lesson worth keeping:** the review's conclusions did not move, but three real defects were invisible until it ran. A prototype that cannot be executed is worth materially less than one that can, and "read the source instead" is not an equivalent substitute.
 
 ### D127 — The board's geometry must be re-derived from the touch target, not the other way round
 **Question:** The design specifies a board 170 px wide holding four columns, each layer transformed by `rotateX(42deg)`.
@@ -974,6 +983,12 @@ Decisions D122–D128. A first-run experience was designed in Claude Design and 
 **Decision:** Wrong model. The main screen shows a live computer rating, seeded at 1200 and moving after every game against a computer opponent.
 **Rationale:** "Unrated practice" was the pre-[D92](#d92--a-player-has-two-separate-ratings) position, superseded when ratings were split in two. The design was built against a specification snapshot that predates it.
 **Consequence:** The tag becomes a value, and the result screen shows its delta (ticket 027). It must be labelled so it cannot be mistaken for the human rating arriving at 0.3b.
+
+### D129 — Tier names carry a plain-language description
+**Question:** [D123](#d123--five-tiers-not-three-categories) replaced the design's three categories with the specification's five tiers. The design's categories carried descriptions — "Makes mistakes on purpose", "Plays solid lines, punishes blunders", "Sees deep into the cube". Do those survive the replacement?
+**Decision:** Yes. Each of the five tiers gets a one-line description in that voice. The tier name alone is not enough.
+**Rationale:** Seen rendered, the descriptions do more work than the labels. "Novice" and "Casual" are internal vocabulary that tells a player nothing about how an opponent behaves; "makes mistakes on purpose" tells them exactly what to expect. Discarding the copy along with the three-way grouping would have been a real loss — and it was only obvious once the screen was running.
+**Consequence:** Ten new strings, five descriptions in two languages, added to ticket 029's content scope. Tier rating ranges must also be **derived from the roster** rather than written by hand: the design's bands left 900–1100 and 1600–1800 uncovered, and the roster has opponents at 1000, 1650 and 1700.
 
 ---
 

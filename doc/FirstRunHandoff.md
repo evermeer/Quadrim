@@ -28,7 +28,11 @@ Four things in the delivered design contradict the specification. Implement the 
 | Rating tag reads "Unrated" | A live computer rating, seeded 1200 | "Unrated practice" is the pre-D92 model, superseded when ratings split (D128) |
 | "Step N / 5" with six progress segments | Step count and segment count must match | The design contradicts itself; the tutorial has four parts (tickets 018–020) plus a welcome |
 
-**The prototype does not run.** `design_system/_ds_bundle.js` declares `"components":[]`, so no component runtime loads and every binding renders as literal `{{ … }}`. Read strings from the source, not from a rendered page — and check every opponent name against §6.4, because the source carries the wrong roster (D126).
+**The prototype runs. Use `First-Run Experience (standalone).html`** — 1.3 MB, zero external references, opens in any browser. That is the reference of record.
+
+The `.dc.html` variant also works now: it was missing only `support.js` (69 KB), the runtime that evaluates its inline `type="text/x-dc"` block. That file and the `_ds/nocturne-6bb5054c-.../` assets are restored at the paths it expects. The 300-byte `_ds_bundle.js` is **correct, not a stub** — this design uses raw Nocturne tokens and inline logic rather than registered components, so its bundle is genuinely empty.
+
+**Every contradiction in the table above was confirmed in the running prototype**, not just read from source. Still read strings from the source rather than retyping them — but check every opponent name against §6.4, because the source carries the wrong roster (D122).
 
 ---
 
@@ -240,6 +244,21 @@ A complete game must be playable start to finish using a screen reader alone, on
 1. **Touch targets** (§4.1) — the specified board geometry fails the minimum. Structural, not a tweak.
 2. **Flexible left column** (§2) — 128px fixed breaks at large font scale.
 3. **Result screen** (§5.5) — needs designing; it is specified here but not drawn.
+
+### Found only by running it
+
+These were invisible in source review and are cheap to fix now.
+
+- **Half the screen is empty on two of four screens.** The tutorial's welcome step is a title and two lines above ~500px of nothing; the picker is three collapsed cards above ~400px of nothing, both over a bottom-pinned button. Neither is broken, but the welcome step is the highest-curiosity moment in the app and currently spends it on blank space — it is also the one tutorial step with no board, in a tutorial whose whole job is teaching the player to read the board.
+- **The tutorial hint is scripted static text** — "Try the center — it opens the most lines" appears regardless of position. Ticket 020 requires hints derived from real threat detection, naming a concrete reason. This is the single largest gap between prototype and specified behaviour.
+- **"Start match" is enabled with no opponent selected.** Disable it, or select a sensible default.
+- **Tier rating ranges must be derived from the roster, not written by hand.** The prototype shows ~600–900, ~1100–1600, ~1800–2400, leaving 900–1100 and 1600–1800 uncovered — and the roster has opponents at 1000, 1650 and 1700.
+- **"Pick a difficulty to see its bots"** — "bots" is developer vocabulary. The product says opponents.
+- **"Welcome to Quadrim"** is generic hero copy that repeats the app title. The line beneath it — four in a row, stacked in a cube — is the actual hook and is doing that work in smaller type.
+
+### Keep from the design, against the spec's own vocabulary
+
+The three categories carried descriptions — *makes mistakes on purpose*, *plays solid lines, punishes blunders*, *sees deep into the cube*. Those are better than the tier names they are being replaced by: "Novice" is internal vocabulary, "makes mistakes on purpose" tells a player what will actually happen. **Each of the five tiers gets a one-line description in that voice** (D129). Ten strings, two languages, owned by ticket 029.
 
 ### Designed elsewhere, deliberately absent from this flow
 
