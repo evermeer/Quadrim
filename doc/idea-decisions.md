@@ -22,6 +22,7 @@ The project was planned in five steps, each producing one document. Decisions ar
 | 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
 | 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
 | 10 | The published Qubic literature | [Idea-final.md](Idea-final.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
+| 11 | First-run experience design review | [FirstRunHandoff.md](FirstRunHandoff.md) | D122–D128 |
 
 Open items carried across all steps are listed at the end.
 
@@ -921,6 +922,58 @@ Decisions D119–D121. The user found the Wikipedia entry for 3D tic-tac-toe. Th
 **Consequence:** A new engine export and a correctness obligation — positions related by a symmetry must produce the same canonical form. It also means the opening is far smaller than it looks: an empty board has only **two** genuinely distinct first moves, a 7-line cell or a 4-line cell.
 
 **Recorded for care rather than as a decision:** **Qubic** was a Parker Brothers trade name. This product is Quadrim; the older name is used descriptively in the documents and must never appear as branding.
+
+---
+
+# Step 11 — First-run experience design review
+
+Decisions D122–D128. A first-run experience was designed in Claude Design and delivered as [design.md](design.md), a prototype in `design_reference/`, and the Nocturne design system in `design_system/`. It was reviewed against the specification and tickets. The reconciled result is [FirstRunHandoff.md](FirstRunHandoff.md).
+
+## 30. Reconciling design with spec
+
+### D122 — The specification's roster wins
+**Question:** The prototype invents twenty opponents — Pip, Dott, Cubby, Fenn, Loop, Nook, Vex, Marlo, Suri, Halden, Quill, Ravel, Denz, Astra, Korr, Vantage, Ilex, Zephyrine, Oberon, Meridian — rated 620 to 2400. The specification's roster is Pebble through Quadrim Prime, rated 600 to 2600. Which is authoritative?
+**Decision:** The specification's roster. The design adopts it.
+**Rationale:** The roster is load-bearing well beyond the picker screen: [Idea-final.md](Idea-final.md) §6.4 defines it, ticket 011 renders it, tickets 006 through 026 build to it, and ticket 014's calibration chain is about to measure those exact ratings. Renaming twenty opponents to match a prototype would ripple through eight tickets and re-anchor a scale that is nearly ready to be measured.
+**Consequence:** The prototype's names are a mock, not a proposal. Any string extracted from it must be checked against §6.4 rather than copied.
+
+### D123 — Five tiers, not three categories
+**Question:** The picker groups opponents into Easy, Medium and Hard. The specification has five tiers — Novice, Casual, Club, Expert, Master.
+**Decision:** Five tiers.
+**Rationale:** Twenty opponents in three groups is roughly seven per accordion, which is a long scroll inside each and flattens the sense of a ladder. Five tiers averages four, so each group is scannable and the rungs are visible. Ticket 011 already requires grouping by tier.
+**Consequence:** The picker's accordion count changes from three to five. Tier labels are translated; opponent names are not.
+
+### D124 — Lightness satisfies the non-hue requirement
+**Question:** The design distinguishes pieces by lightness — a white pebble against a black one. The specification said pieces must be distinguished by **shape** as well as colour.
+**Decision:** Lightness satisfies it. The specification's wording is relaxed: pieces must be distinguishable without relying on hue; shape is an acceptable alternative, not a requirement.
+**Rationale:** The original rule existed to prevent hue-only encoding, which is the failure mode that excludes red-green colour vision deficiency. A light piece against a dark one does not merely avoid that failure — it is the strongest available signal, and it survives full achromatopsia, which two similarly-toned shapes would not. The rule was guarding against a problem this design already solves better.
+**Consequence:** [Idea-final.md](Idea-final.md) §7.10 and [Idea-final-spec.md](Idea-final-spec.md) §4.2 reworded. The pebble treatment is kept, which also preserves the most characterful thing in the design. Ticket 021's audit criterion still applies — it must be verified under simulation, not assumed.
+
+### D125 — First-run scope is the four screens plus the missing end state
+**Question:** The design covers tutorial, main screen, opponent picker and match. Several things release 0.1 requires are absent. How much does the handoff cover?
+**Decision:** The four designed screens, **plus the result screen**, which is added because a match with no win or lose state is not a finishable first run. Everything else absent is named as designed-but-deferred rather than left silent.
+**Rationale:** The result screen is not a nice-to-have: ticket 007 requires the winning line highlighted, the rating delta shown, and a one-tap rematch. Without it the flow has no terminal state at all — the design tool's own suggested next step was to add win/lose detection to the match screen.
+**Consequence:** Explicitly deferred to a later design pass, and listed as such: the move-history scrubber (ticket 012), the settings screen (ticket 028), pass-and-play entry (spec §4), per-opponent statistics and milestones (tickets 013, 023), the large-screen landscape layout (ticket 017), and a light theme (§7.10).
+
+## 31. Defects found in the delivered design
+
+### D126 — The prototype does not render as delivered
+**Question:** [DesignHandoff.md](DesignHandoff.md) states the prototype can be opened directly in a browser to see the full interactive flow. Can it?
+**Decision:** No, and the handoff is corrected to say so. `design_system/_ds_bundle.js` declares `"components":[]` — it is an empty stub — so no component runtime loads and every template binding renders as literal `{{ … }}` text.
+**Rationale:** Verified by opening the file and screenshotting it. The page renders as unresolved placeholders on a dark ground.
+**Consequence:** The prototype is readable as source but not runnable as a reference. Anyone needing the live flow must re-export it from Claude Design. Strings must be read out of the source rather than observed in a running page — which makes D122's warning sharper, since the wrong roster is what a careless extraction would pick up.
+
+### D127 — The board's geometry must be re-derived from the touch target, not the other way round
+**Question:** The design specifies a board 170 px wide holding four columns, each layer transformed by `rotateX(42deg)`.
+**Decision:** The board's dimensions are a **derived** value in the handoff, not a fixed one. The constraint is the minimum touch target; the geometry follows from it.
+**Rationale:** Four columns in 170 px is roughly 41 px before transformation, and a 42-degree rotation compresses the vertical axis to around 70 percent of that. The effective target lands near 29 px — comfortably below the platform minimum, on the smallest supported phone, for the single most-used control in the game.
+**Consequence:** Either the board grows, the perspective angle softens, or the cells stop being square. This is structural rather than a tweak, and it is the one finding that could invalidate the layout. Acceptance criterion U4 and ticket 021 both already require the check.
+
+### D128 — The rating on the main screen is live, not "Unrated"
+**Question:** The design shows a rating tag reading "Unrated".
+**Decision:** Wrong model. The main screen shows a live computer rating, seeded at 1200 and moving after every game against a computer opponent.
+**Rationale:** "Unrated practice" was the pre-[D92](#d92--a-player-has-two-separate-ratings) position, superseded when ratings were split in two. The design was built against a specification snapshot that predates it.
+**Consequence:** The tag becomes a value, and the result screen shows its delta (ticket 027). It must be labelled so it cannot be mistaken for the human rating arriving at 0.3b.
 
 ---
 

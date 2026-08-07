@@ -126,7 +126,7 @@ What 0.3b does ship is the thing that has to work first: **can two people actual
 **Non-functional**
 - English and Dutch, complete
 - Light and dark themes
-- Colourblind-safe pieces distinguished by shape as well as colour
+- Pieces distinguishable without relying on hue — lightness contrast satisfies this, shape is an alternative not a requirement
 - Screen reader labels for every cell and for game state
 - System font scaling respected; finger-sized targets on the smallest supported phone
 - Local persistence in Firestore-shaped JSON documents

@@ -122,3 +122,22 @@ The complete strategy can be found at https://ranger.uta.edu/~weems/NOTES6319/PA
 Could that help for creating the perfect computer player? If so, can you add information about that to the specs?
 ```
 
+Now I went to https://claude.ai/design and asked for a design for the game. The result is in the [design](doc/design.md) document.
+
+**Prompt**
+```
+Based on the doc/Idea-final.md , the doc/Idea-final-spec.md and the tickets in the doc/tickets folder,
+I create a first run experience for the game using Claude Design. 
+I put the results in de doc folder. See the DesignHandof.md file for the handoff.
+
+If you need more details about what was done in Claude Design, then you can use the 
+claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/b1cfa4c8-147f-43ac-aa79-fc7318d8bfd4?file=First-Run+Experience.dc.html
+
+use the skills design-consultation and design-review to reevaluate the design and flow of the first run experience. 
+Make sure that the choices made in the design are consistent with the spec and tickets.
+Ask clarifying questions about the design and flow if anything is unclear before finalizing the first run experience.
+Add the decissions to the file doc/idea-decisions.md
+
+Then use the skill design:design-handoff to create a design handoff document for the first run experience.
+```

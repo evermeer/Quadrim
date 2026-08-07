@@ -414,7 +414,7 @@ Parts 1 and 4 require real features: line illustration on the board, a scripted-
 
 ### 7.10 Accessibility
 
-- **Colourblind-safe pieces.** Pieces are distinguished by shape as well as colour. Colour alone is never the only signal — the whole game is "my colour against yours".
+- **Pieces distinguishable without hue.** The two players' pieces must differ by something other than hue alone — the whole game is "my piece against yours", and hue-only encoding excludes roughly one man in twelve. **Lightness satisfies this**, and a light piece against a dark one is the strongest available signal: it survives every form of colour vision deficiency including full achromatopsia, which two shapes in similar tones would not. Shape is an acceptable alternative, not a requirement.
 - **Screen reader support.** Every cell exposes a semantic label such as "layer 2, row 3, column 1, empty". Game state, whose turn it is, and the result are announced.
 - **Scalable text and large targets.** System font scaling is respected; cells stay finger-sized on small phones.
 - **Light and dark themes.** Board and pieces readable in both.

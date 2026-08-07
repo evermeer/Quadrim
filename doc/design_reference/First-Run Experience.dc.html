@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-6bb5054c-7621-445d-889f-56706a347aa4/styles.css">
+<script src="_ds/nocturne-6bb5054c-7621-445d-889f-56706a347aa4/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#0c0d14}
+.dv-turn{padding:48px 44px 60px}
+.dv-thd{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:6px;flex-wrap:wrap}
+.dv-thdl{display:flex;align-items:baseline;gap:10px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#2a2c3d;color:#e9e9ed;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 15px/1.2 var(--font-heading,system-ui,sans-serif);color:#e9e9ed}
+.dv-tsub{font:400 12.5px/1.6 var(--font-body,system-ui,sans-serif);color:rgba(233,233,237,.55);margin:6px 0 30px;max-width:66ch}
+.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:12px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.12);color:#e9e9ed;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;flex-direction:column;gap:2px}
+.dv-oname{font:600 13px var(--font-heading,system-ui,sans-serif);color:#e9e9ed}
+.dv-odesc{font:400 11.5px/1.4 var(--font-body,system-ui,sans-serif);color:rgba(233,233,237,.5);max-width:280px}
+.dv-next{margin:34px 0 0;font:12.5px/1.6 var(--font-body,system-ui,sans-serif);color:rgba(233,233,237,.5)}
+</style>
+</helmet>
+<section class="dv-turn" id="t1">
+<div class="dv-thd">
+<div class="dv-thdl"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">First-run directions for Quadrim</span></div>
+<div class="seg" role="radiogroup" aria-label="Language">
+<label class="seg-opt"><input type="radio" name="lang" checked="{{ isEn }}" onChange="{{ setLangEn }}" />EN</label>
+<label class="seg-opt"><input type="radio" name="lang" checked="{{ isNl }}" onChange="{{ setLangNl }}" />NL</label>
+</div>
+</div>
+<p class="dv-tsub">Guided walkthrough tutorial from tickets 018&ndash;020, into the main screen, opponent picker and match screen from 013. Click Next/Back, Play and Start match inside the phone.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span class="dv-oname">Guided walkthrough</span><span class="dv-odesc">Tutorial &rarr; main screen &rarr; opponent picker &rarr; match, full flow.</span></div>
+<div style="width:390px">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:var(--color-bg);color:var(--color-text);padding:28px 22px 22px;box-sizing:border-box;font-family:var(--font-body)">
+<sc-if value="{{ a.isTutorial }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;height:100%">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<span style="font-size:11px;color:var(--color-neutral-300)">{{ a.stepLabel }}</span>
+<a href="#" style="font-size:12px;color:var(--color-accent-300)" onClick="{{ a.doSkip }}">{{ a.skipLabelLong }}</a>
+</div>
+<div style="display:flex;gap:6px;margin-bottom:26px">
+<sc-for list="{{ a.dots }}" as="dot" hint-placeholder-count="6">
+<div style="height:4px;flex:1;border-radius:2px;background:{{ dot.color }}"></div>
+</sc-for>
+</div>
+<sc-if value="{{ a.noLayers }}" hint-placeholder-val="{{ false }}">
+<div style="font-family:var(--font-heading);font-weight:500;font-size:24px;line-height:1.25;margin-bottom:12px">{{ a.title }}</div>
+<div style="font-size:14.5px;line-height:1.55;color:var(--color-neutral-300)">{{ a.body }}</div>
+</sc-if>
+<sc-if value="{{ a.hasLayers }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:14px;align-items:flex-start">
+<div style="flex:0 0 128px">
+<div style="font-family:var(--font-heading);font-weight:500;font-size:18px;line-height:1.3;margin-bottom:10px">{{ a.title }}</div>
+<div style="font-size:12.5px;line-height:1.5;color:var(--color-neutral-300)">{{ a.body }}</div>
+</div>
+<div style="position:relative;width:170px;height:500px;flex:0 0 auto">
+<sc-for list="{{ a.layers }}" as="layer" hint-placeholder-count="4">
+<div style="{{ layer.wrapStyle }}">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
+<sc-for list="{{ layer.cells }}" as="cell" hint-placeholder-count="16">
+<div style="{{ cell.cellStyle }}"><sc-if value="{{ cell.hasPiece }}"><div style="{{ cell.dotStyle }}"></div></sc-if></div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ a.hasHint }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:10px;text-align:center">
+<button type="button" class="btn btn-ghost" onClick="{{ a.doToggleHint }}">{{ a.hintBtnLabel }}</button>
+<sc-if value="{{ a.showHint }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="margin-top:10px;padding:12px 14px;font-size:13px;color:var(--color-accent-300);text-align:left">{{ a.hintText }}</div>
+</sc-if>
+</div>
+</sc-if>
+<div style="margin-top:auto;display:flex;gap:10px;padding-top:16px">
+<button type="button" class="btn btn-ghost" style="{{ a.backStyle }}" onClick="{{ a.goBack }}">{{ a.backLabel }}</button>
+<button type="button" class="btn btn-primary" style="flex:1" onClick="{{ a.goNext }}">{{ a.nextLabel }}</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ a.isMain }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;overflow-y:auto">
+<div style="font-family:var(--font-heading);font-weight:500;font-size:24px">{{ mainTitle }}</div>
+<div class="card" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;gap:16px">
+<div><div style="font-size:17px;font-weight:500;font-family:var(--font-heading)">{{ statsWins }}</div><div style="font-size:10px;color:var(--color-neutral-300)">{{ statsWinsLabel }}</div></div>
+<div><div style="font-size:17px;font-weight:500;font-family:var(--font-heading)">{{ statsLosses }}</div><div style="font-size:10px;color:var(--color-neutral-300)">{{ statsLossesLabel }}</div></div>
+<div><div style="font-size:17px;font-weight:500;font-family:var(--font-heading)">{{ statsDraws }}</div><div style="font-size:10px;color:var(--color-neutral-300)">{{ statsDrawsLabel }}</div></div>
+</div>
+<span class="tag tag-outline" style="white-space:nowrap">{{ ratingValue }}</span>
+</div>
+<div>
+<div style="font-size:11px;letter-spacing:.02em;color:var(--color-neutral-300);margin-bottom:8px;text-transform:uppercase">{{ a.activeSectionLabel }}</div>
+<sc-if value="{{ a.isActive }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="cursor:pointer;padding:12px 14px" onClick="{{ a.doResumeMatch }}">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<span class="card-title">{{ a.matchOpponentName }}</span>
+<span class="tag tag-accent">{{ a.resumeLabel }}</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ a.hasNoActiveGames }}" hint-placeholder-val="{{ true }}">
+<div style="font-size:13px;color:var(--color-neutral-300);padding:4px 2px">{{ a.noActiveGamesLabel }}</div>
+</sc-if>
+</div>
+<div>
+<div style="font-size:11px;letter-spacing:.02em;color:var(--color-neutral-300);margin-bottom:8px;text-transform:uppercase">{{ a.historySectionLabel }}</div>
+<sc-if value="{{ a.hasHistory }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ a.history }}" as="h" hint-placeholder-count="0">
+<div class="card" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+<span class="card-title">{{ h.name }}</span>
+<span class="card-meta">{{ h.resultLabel }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ a.noHistoryFlag }}" hint-placeholder-val="{{ true }}">
+<div style="font-size:13px;color:var(--color-neutral-300);padding:4px 2px">{{ a.noHistoryLabel }}</div>
+</sc-if>
+</div>
+<div style="flex:1"></div>
+<sc-if value="{{ a.noActiveGame }}" hint-placeholder-val="{{ true }}">
+<button type="button" class="btn btn-primary btn-block" onClick="{{ a.doPlay }}">{{ playLabel }}</button>
+</sc-if>
+<button type="button" class="btn btn-secondary btn-block" onClick="{{ a.restart }}">{{ tutorialLabel }}</button>
+</div>
+</sc-if>
+<sc-if value="{{ a.isOpponent }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:10px">
+<button type="button" class="btn btn-ghost btn-icon" onClick="{{ a.doBackToMain }}" aria-label="{{ a.backToMainLabel }}">&larr;</button>
+<div style="font-family:var(--font-heading);font-weight:500;font-size:20px">{{ a.opponentTitle }}</div>
+</div>
+<div style="font-size:13px;color:var(--color-neutral-300);margin-top:-8px">{{ a.opponentSubtitle }}</div>
+<div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto">
+<sc-for list="{{ a.categories }}" as="cat" hint-placeholder-count="3">
+<div class="card" style="{{ cat.headerStyle }}" onClick="{{ cat.onToggle }}">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;flex-direction:column;gap:2px">
+<span class="card-title">{{ cat.name }}</span>
+<span class="card-meta">{{ cat.desc }}</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<span class="tag tag-outline" style="white-space:nowrap">{{ cat.tag }}</span>
+<span style="font-size:16px;color:var(--color-accent-300);width:16px;text-align:center">{{ cat.chevron }}</span>
+</div>
+</div>
+<div style="{{ cat.panelStyle }}">
+<div style="display:flex;flex-direction:column;gap:4px">
+<sc-for list="{{ cat.bots }}" as="bot" hint-placeholder-count="6">
+<div style="{{ bot.rowStyle }}" onClick="{{ bot.onSelect }}">
+<span style="{{ bot.nameStyle }}">{{ bot.name }}</span>
+<span style="font-size:11px;color:var(--color-neutral-300)">{{ bot.rating }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<button type="button" class="btn btn-primary btn-block" onClick="{{ a.doStartMatch }}">{{ a.startLabel }}</button>
+</div>
+</sc-if>
+<sc-if value="{{ a.isMatch }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;height:100%">
+<div style="display:flex;gap:14px;align-items:flex-start">
+<div style="flex:0 0 128px;display:flex;flex-direction:column;gap:12px">
+<span class="tag tag-outline" style="align-self:flex-start">{{ a.matchOpponentName }}</span>
+<div style="font-family:var(--font-heading);font-weight:500;font-size:18px;line-height:1.3">{{ a.matchTurnLabel }}</div>
+</div>
+<div style="position:relative;width:170px;height:500px;flex:0 0 auto">
+<sc-for list="{{ a.matchLayers }}" as="layer" hint-placeholder-count="4">
+<div style="{{ layer.wrapStyle }}">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
+<sc-for list="{{ layer.cells }}" as="cell" hint-placeholder-count="16">
+<div style="{{ cell.cellStyle }}" onClick="{{ cell.onClick }}"><sc-if value="{{ cell.hasPiece }}"><div style="{{ cell.dotStyle }}"></div></sc-if></div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+<button type="button" class="btn btn-ghost btn-block" onClick="{{ a.doExitMatch }}">{{ a.exitLabel }}</button>
+<a href="#" style="text-align:center;font-size:12px;color:var(--color-neutral-300)" onClick="{{ a.doResignMatch }}">{{ a.resignLabel }}</a>
+</div>
+</div>
+</sc-if>
+</div>
+</x-import>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "animate the layers separating on step change" &middot; "add win/lose detection to the match screen" &middot; "add a settings screen to change opponent mid-game"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+function buildCells(board) {
+  board = board || {};
+  var filled = board.filled || [];
+  var opp = board.opp || [];
+  var hl = board.hl || [];
+  var cells = [];
+  for (var i = 0; i < 16; i++) {
+    var isFilled = filled.indexOf(i) !== -1;
+    var isOpp = opp.indexOf(i) !== -1;
+    var isHl = hl.indexOf(i) !== -1;
+    var cellStyle = {
+      position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm, 6px)',
+      background: isHl ? 'rgba(145,132,217,0.20)' : 'var(--color-neutral-600)',
+      border: isHl ? '1px solid var(--color-accent)' : '1px solid var(--color-neutral-500)',
+      boxShadow: isHl ? '0 0 0 3px rgba(145,132,217,0.14)' : 'none',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    };
+    var dotStyle = null;
+    if (isFilled) dotStyle = pieceStyle('light');
+    else if (isOpp) dotStyle = pieceStyle('dark');
+    cells.push({ cellStyle: cellStyle, dotStyle: dotStyle, hasPiece: !!dotStyle });
+  }
+  return cells;
+}
+
+function pieceStyle(kind) {
+  if (kind === 'light') {
+    return {
+      width: '58%', height: '58%', borderRadius: '50%',
+      background: 'radial-gradient(circle at 32% 28%, #ffffff, #e4e4e6 55%, #c3c3c8 100%)',
+      boxShadow: '0 2px 3px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.12)',
+    };
+  }
+  return {
+    width: '58%', height: '58%', borderRadius: '50%',
+    background: 'radial-gradient(circle at 32% 28%, #4a4a52, #1c1c22 55%, #050507 100%)',
+    boxShadow: '0 2px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4)',
+  };
+}
+
+var STEPS_A = [
+  { kind: 'welcome',
+    title_en: 'Welcome to Quadrim', title_nl: 'Welkom bij Quadrim',
+    body_en: "Four in a row, stacked in a cube. Let's learn how to see it.",
+    body_nl: 'Vier op een rij, gestapeld in een kubus. Laten we leren hoe je dat ziet.' },
+  { kind: 'rule', layers: [ { filled: [0,1,2,3], hl: [0,1,2,3] }, {}, {}, {} ],
+    title_en: 'The objective', title_nl: 'Het doel',
+    body_en: 'Line up four of your pieces \u2014 along an axis, across a layer, or straight through the cube.',
+    body_nl: 'Zet vier stukken op een rij \u2014 langs een as, over een laag, of dwars door de kubus.' },
+  { kind: 'rule', layers: [ { filled: [0], hl: [0] }, { filled: [5], hl: [5] }, { filled: [10], hl: [10] }, { filled: [15], hl: [15] } ],
+    title_en: 'Every angle counts', title_nl: 'Elke hoek telt',
+    body_en: 'Sixteen cells become one cube. Wins hide on the diagonals players miss first.',
+    body_nl: 'Zestien vakjes worden \u00e9\u00e9n kubus. Winst schuilt in de diagonalen die spelers als eerste missen.' },
+  { kind: 'strategy', layers: [ { hl: [0,3,12,15], filled: [0,3,12,15] }, { hl: [5,6,9,10], filled: [5,6,9,10] }, { hl: [5,6,9,10], filled: [5,6,9,10] }, { hl: [0,3,12,15], filled: [0,3,12,15] } ],
+    title_en: 'Center and corners', title_nl: 'Midden en hoeken',
+    body_en: 'The center cells and the corners decide most games. Build there first.',
+    body_nl: 'De middelste vakjes en de hoeken beslissen de meeste partijen. Bouw daar eerst.' },
+  { kind: 'practice', layers: [ { filled: [0,5], opp: [1,4] }, {}, {}, {} ],
+    title_en: 'Now you play', title_nl: 'Nu speel jij',
+    body_en: 'A gentle opponent, and a hint whenever you want one.',
+    body_nl: 'Een milde tegenstander, en een hint wanneer je maar wilt.',
+    hint_en: 'Try the center \u2014 it opens the most lines.',
+    hint_nl: 'Probeer het midden \u2014 dat opent de meeste lijnen.' },
+  { kind: 'main' },
+];
+
+function buildLayers(layersConfig) {
+  layersConfig = layersConfig || [{}, {}, {}, {}];
+  var out = [];
+  for (var i = 0; i < 4; i++) {
+    out.push({
+      cells: buildCells(layersConfig[i] || {}),
+      wrapStyle: {
+        position: 'absolute', left: (i * 8) + 'px', top: (i * 130) + 'px', width: '140px',
+        transform: 'perspective(700px) rotateX(42deg) rotateZ(-3deg)', transformOrigin: 'top left',
+        zIndex: i + 1,
+      },
+    });
+  }
+  return out;
+}
+
+var OPPONENT_CATEGORIES = [
+  { id: 'easy', name_en: 'Easy', name_nl: 'Makkelijk', tag_en: '~600\u2013900', tag_nl: '~600\u2013900',
+    desc_en: 'Makes mistakes on purpose.', desc_nl: 'Maakt met opzet fouten.',
+    bots: [
+      { name: 'Pip', rating: 620 }, { name: 'Dott', rating: 680 }, { name: 'Cubby', rating: 720 },
+      { name: 'Fenn', rating: 770 }, { name: 'Loop', rating: 830 }, { name: 'Nook', rating: 880 },
+    ] },
+  { id: 'medium', name_en: 'Medium', name_nl: 'Gemiddeld', tag_en: '~1100\u20131600', tag_nl: '~1100\u20131600',
+    desc_en: 'Plays solid lines, punishes blunders.', desc_nl: 'Speelt solide, straft fouten af.',
+    bots: [
+      { name: 'Vex', rating: 1120 }, { name: 'Marlo', rating: 1200 }, { name: 'Suri', rating: 1280 },
+      { name: 'Halden', rating: 1350 }, { name: 'Quill', rating: 1420 }, { name: 'Ravel', rating: 1490 },
+      { name: 'Denz', rating: 1560 },
+    ] },
+  { id: 'hard', name_en: 'Hard', name_nl: 'Moeilijk', tag_en: '~1800\u20132400', tag_nl: '~1800\u20132400',
+    desc_en: 'Sees deep into the cube.', desc_nl: 'Ziet diep in de kubus.',
+    bots: [
+      { name: 'Astra', rating: 1820 }, { name: 'Korr', rating: 1950 }, { name: 'Vantage', rating: 2050 },
+      { name: 'Ilex', rating: 2140 }, { name: 'Zephyrine', rating: 2230 }, { name: 'Oberon', rating: 2320 },
+      { name: 'Meridian', rating: 2400 },
+    ] },
+];
+
+function buildMatchLayers(board, turn, onCellClick, interactive) {
+  interactive = interactive !== false;
+  var out = [];
+  for (var i = 0; i < 4; i++) {
+    var cells = [];
+    for (var j = 0; j < 16; j++) {
+      var idx = i * 16 + j;
+      var val = board[idx];
+      var cellStyle = {
+        position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm, 6px)',
+        background: 'var(--color-neutral-600)', border: '1px solid var(--color-neutral-500)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: (interactive && !val && turn === 'user') ? 'pointer' : 'default',
+      };
+      var dotStyle = null;
+      if (val === 'user') dotStyle = pieceStyle('light');
+      else if (val === 'bot') dotStyle = pieceStyle('dark');
+      cells.push({ cellStyle: cellStyle, dotStyle: dotStyle, hasPiece: !!dotStyle, onClick: function (i2) { return function () { onCellClick(i2); }; }(idx) });
+    }
+    out.push({
+      cells: cells,
+      wrapStyle: {
+        position: 'absolute', left: (i * 8) + 'px', top: (i * 130) + 'px', width: '140px',
+        transform: 'perspective(700px) rotateX(42deg) rotateZ(-3deg)', transformOrigin: 'top left',
+        zIndex: i + 1,
+      },
+    });
+  }
+  return out;
+}
+
+class Component extends DCLogic {
+  state = { lang: 'en', stepA: 0, hintA: false, viewA: 'flow', expandedCatA: null, selectedBotA: null, matchBoardA: new Array(64).fill(null), matchTurnA: 'user', isActiveA: false, historyA: [] };
+
+  stepsFor(dir) { return STEPS_A; }
+
+  go(dir, delta) {
+    var steps = this.stepsFor(dir);
+    var key = 'step' + dir;
+    this.setState(function (s) {
+      var n = s[key] + delta;
+      if (n < 0) n = 0;
+      if (n > steps.length - 1) n = steps.length - 1;
+      var out = {}; out[key] = n; return out;
+    });
+  }
+  skip(dir) {
+    var steps = this.stepsFor(dir);
+    var out = {}; out['step' + dir] = steps.length - 1; this.setState(out);
+  }
+  toggleHint(dir) {
+    var key = 'hint' + dir;
+    this.setState(function (s) { var out = {}; out[key] = !s[key]; return out; });
+  }
+  goToOpponentPick(dir) { var out = {}; out['view' + dir] = 'opponent'; this.setState(out); }
+  backToMainScreen(dir) { var out = {}; out['view' + dir] = 'flow'; this.setState(out); }
+  toggleCategory(dir, id) {
+    var key = 'expandedCat' + dir;
+    this.setState(function (s) { var out = {}; out[key] = s[key] === id ? null : id; return out; });
+  }
+  pickBot(dir, catId, botName) {
+    var out = {}; out['selectedBot' + dir] = { cat: catId, name: botName }; this.setState(out);
+  }
+  goToMatch(dir) { var out = {}; out['view' + dir] = 'match'; out['isActive' + dir] = true; this.setState(out); }
+  backToOpponentPick(dir) { var out = {}; out['view' + dir] = 'opponent'; this.setState(out); }
+  exitMatch(dir) { var out = {}; out['view' + dir] = 'flow'; this.setState(out); }
+  resignMatch(dir) {
+    var self = this;
+    this.setState(function (s) {
+      var out = {};
+      var bot = s['selectedBot' + dir];
+      out['history' + dir] = bot ? [{ name: bot.name }].concat(s['history' + dir]) : s['history' + dir];
+      out['view' + dir] = 'flow'; out['isActive' + dir] = false; out['selectedBot' + dir] = null;
+      out['matchBoard' + dir] = new Array(64).fill(null); out['matchTurn' + dir] = 'user';
+      return out;
+    });
+  }
+  resumeMatch(dir) { var out = {}; out['view' + dir] = 'match'; this.setState(out); }
+  placePiece(dir, idx) {
+    var self = this;
+    var boardKey = 'matchBoard' + dir, turnKey = 'matchTurn' + dir;
+    this.setState(function (s) {
+      if (s[turnKey] !== 'user' || s[boardKey][idx]) return null;
+      var next = s[boardKey].slice(); next[idx] = 'user';
+      var out = {}; out[boardKey] = next; out[turnKey] = 'bot'; return out;
+    }, function () {
+      setTimeout(function () { self.botMove(dir); }, 550);
+    });
+  }
+  botMove(dir) {
+    var boardKey = 'matchBoard' + dir, turnKey = 'matchTurn' + dir;
+    this.setState(function (s) {
+      if (s[turnKey] !== 'bot') return null;
+      var empties = []; for (var i = 0; i < 64; i++) if (!s[boardKey][i]) empties.push(i);
+      if (!empties.length) return null;
+      var pick = empties[Math.floor(Math.random() * empties.length)];
+      var next = s[boardKey].slice(); next[pick] = 'bot';
+      var out = {}; out[boardKey] = next; out[turnKey] = 'user'; return out;
+    });
+  }
+
+  buildDirVals(dir, steps) {
+    var lang = this.state.lang;
+    var idx = this.state['step' + dir];
+    var step = steps[idx];
+    var isMain = step.kind === 'main';
+    var cells = step.board ? buildCells(step.board) : [];
+    var dots = steps.map(function (s, i) { return { color: i === idx ? 'var(--color-accent)' : 'var(--color-neutral-700)' }; });
+    var showHint = this.state['hint' + dir];
+    var view = this.state['view' + dir];
+    var expandedCat = this.state['expandedCat' + dir];
+    var selectedBot = this.state['selectedBot' + dir];
+    var self = this;
+    var categories = OPPONENT_CATEGORIES.map(function (cat) {
+      var isOpen = expandedCat === cat.id;
+      var bots = cat.bots.map(function (bot) {
+        var isSelected = !!selectedBot && selectedBot.cat === cat.id && selectedBot.name === bot.name;
+        return {
+          name: bot.name, rating: bot.rating,
+          rowStyle: {
+            cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '9px 10px', borderRadius: 'var(--radius-sm, 6px)',
+            background: isSelected ? 'rgba(145,132,217,0.16)' : 'transparent',
+            border: isSelected ? '1px solid var(--color-accent)' : '1px solid transparent',
+          },
+          nameStyle: { fontSize: '13px', color: isSelected ? 'var(--color-accent-300)' : 'var(--color-text)' },
+          onSelect: function (e) { if (e && e.stopPropagation) e.stopPropagation(); self.pickBot(dir, cat.id, bot.name); },
+        };
+      });
+      return {
+        id: cat.id,
+        name: lang === 'en' ? cat.name_en : cat.name_nl,
+        tag: lang === 'en' ? cat.tag_en : cat.tag_nl,
+        desc: lang === 'en' ? cat.desc_en : cat.desc_nl,
+        isOpen: isOpen,
+        chevron: isOpen ? '\u2212' : '+',
+        panelStyle: {
+          maxHeight: isOpen ? (cat.bots.length * 46 + 8) + 'px' : '0px', overflow: 'hidden',
+          transition: 'max-height 0.32s ease', marginTop: isOpen ? '8px' : '0px',
+        },
+        headerStyle: { cursor: 'pointer', borderColor: isOpen ? 'var(--color-accent)' : '' },
+        bots: bots,
+        onToggle: function () { self.toggleCategory(dir, cat.id); },
+      };
+    });
+    return {
+      isMain: isMain && view === 'flow', isTutorial: !isMain,
+      isOpponent: isMain && view === 'opponent',
+      opponentTitle: lang === 'en' ? 'Choose your opponent' : 'Kies je tegenstander',
+      opponentSubtitle: lang === 'en' ? 'Pick a difficulty to see its bots.' : 'Kies een niveau om de bots te zien.',
+      categories: categories,
+      selectedBotLabel: selectedBot ? (lang === 'en' ? 'vs ' + selectedBot.name : 'vs ' + selectedBot.name) : '',
+      startLabel: (lang === 'en' ? 'Start match' : 'Start partij') + (selectedBot ? ' \u00b7 ' + selectedBot.name : ''),
+      backToMainLabel: lang === 'en' ? 'Back' : 'Terug',
+      doPlay: function () { self.goToOpponentPick(dir); },
+      doBackToMain: function () { self.backToMainScreen(dir); },
+      isMatch: view === 'match',
+      matchLayers: view === 'match' ? buildMatchLayers(this.state['matchBoard' + dir], this.state['matchTurn' + dir], function (i2) { self.placePiece(dir, i2); }) : [],
+      matchOpponentName: selectedBot ? selectedBot.name : '',
+      matchTurnLabel: this.state['matchTurn' + dir] === 'user' ? (lang === 'en' ? 'Your turn' : 'Jouw beurt') : (lang === 'en' ? "Opponent's turn" : 'Beurt tegenstander'),
+      exitLabel: lang === 'en' ? 'Exit' : 'Verlaten',
+      resignLabel: lang === 'en' ? 'Resign' : 'Opgeven',
+      doStartMatch: function () { self.goToMatch(dir); },
+      doExitMatch: function () { self.exitMatch(dir); },
+      doResignMatch: function () { self.resignMatch(dir); },
+      isActive: this.state['isActive' + dir],
+      noActiveGame: !this.state['isActive' + dir],
+      activeGameLabel: lang === 'en' ? 'Game in progress' : 'Partij bezig',
+      resumeLabel: lang === 'en' ? 'Resume' : 'Verder',
+      doResumeMatch: function () { self.resumeMatch(dir); },
+      hasNoActiveGames: !this.state['isActive' + dir],
+      noActiveGamesLabel: lang === 'en' ? 'No active games' : 'Geen actieve partijen',
+      history: (this.state['history' + dir] || []).map(function (h) { return { name: h.name, resultLabel: lang === 'en' ? 'Resigned' : 'Opgegeven' }; }),
+      hasHistory: (this.state['history' + dir] || []).length > 0,
+      noHistoryFlag: (this.state['history' + dir] || []).length === 0,
+      noHistoryLabel: lang === 'en' ? 'No games yet' : 'Nog geen partijen',
+      activeSectionLabel: lang === 'en' ? 'Active games' : 'Actieve partijen',
+      historySectionLabel: lang === 'en' ? 'Previous games' : 'Eerdere partijen',
+      stepLabel: (lang === 'en' ? 'Step ' : 'Stap ') + (idx + 1) + ' / ' + (steps.length - 1),
+      title: lang === 'en' ? step.title_en : step.title_nl,
+      body: lang === 'en' ? step.body_en : step.body_nl,
+      hasBoard: !!step.board,
+      cells: cells,
+      hasLayers: !!step.layers,
+      noLayers: !isMain && !step.layers,
+      layers: step.layers ? buildLayers(step.layers) : [],
+      dots: dots,
+      progressPct: Math.round(((idx + 1) / steps.length) * 100),
+      hasHint: !!step.hint_en,
+      showHint: showHint,
+      hintText: lang === 'en' ? step.hint_en : step.hint_nl,
+      hintBtnLabel: lang === 'en' ? (showHint ? 'Hide hint' : 'Show hint') : (showHint ? 'Verberg hint' : 'Toon hint'),
+      backLabel: lang === 'en' ? 'Back' : 'Terug',
+      backStyle: idx === 0 ? { visibility: 'hidden' } : {},
+      nextLabel: idx === steps.length - 2 ? (lang === 'en' ? 'Start playing' : 'Begin met spelen') : (lang === 'en' ? 'Next' : 'Volgende'),
+      skipLabel: lang === 'en' ? 'Skip' : 'Overslaan',
+      skipLabelLong: lang === 'en' ? 'Skip tutorial' : 'Tutorial overslaan',
+      goBack: function () { self.go(dir, -1); },
+      goNext: function () { self.go(dir, 1); },
+      doSkip: function () { self.skip(dir); },
+      doToggleHint: function () { self.toggleHint(dir); },
+      restart: function () { var out = {}; out['step' + dir] = 0; out['view' + dir] = 'flow'; self.setState(out); },
+    };
+  }
+
+  renderVals() {
+    var lang = this.state.lang;
+    return {
+      isEn: lang === 'en', isNl: lang === 'nl',
+      setLangEn: () => this.setState({ lang: 'en' }),
+      setLangNl: () => this.setState({ lang: 'nl' }),
+      a: this.buildDirVals('A', STEPS_A),
+      mainTitle: 'Quadrim',
+      mainSubtitle: lang === 'en' ? 'Your first game awaits' : 'Je eerste partij wacht',
+      statsWins: '0', statsLosses: '0', statsDraws: '0',
+      statsWinsLabel: lang === 'en' ? 'Wins' : 'Winst',
+      statsLossesLabel: lang === 'en' ? 'Losses' : 'Verlies',
+      statsDrawsLabel: lang === 'en' ? 'Draws' : 'Gelijk',
+      ratingLabel: lang === 'en' ? 'Computer rating' : 'Computerrating',
+      ratingValue: lang === 'en' ? 'Unrated' : 'Ongewaardeerd',
+      playLabel: lang === 'en' ? 'New game' : 'Nieuwe partij',
+      tutorialLabel: lang === 'en' ? 'Tutorial' : 'Tutorial',
+    };
+  }
+}
+
+</script>
+</body>
+</html>
