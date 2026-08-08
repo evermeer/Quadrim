@@ -3,21 +3,33 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quadrim/data/document_store.dart';
+import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/game/board_view.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
-Future<void> _pumpGame(WidgetTester tester) async {
-  await tester.pumpWidget(const QuadrimApp());
+/// Pumps the app over a throwaway store and opens the game screen.
+///
+/// The repository is the real one — it is the only path to stored data
+/// (criterion S4), so faking it would test a path the app does not use. Only
+/// the *store* is swapped: `testWidgets` runs in a fake-async zone that never
+/// completes real file I/O, so the on-disk store is proven separately in
+/// repository_test.dart's plain `test` bodies.
+Future<LocalGameRepository> _pumpGame(WidgetTester tester) async {
+  final repository = await LocalGameRepository.open(MemoryDocumentStore());
+  addTearDown(repository.dispose);
+  await tester.pumpWidget(QuadrimApp(repository: repository));
   await tester.tap(find.text('Pass and play'));
   await tester.pumpAndSettle();
+  return repository;
 }
 
 Future<void> _tapCell(WidgetTester tester, int index) async {
   final finder = find.byKey(ValueKey('cell-$index'));
-  await tester.ensureVisible(finder);
   await tester.tap(finder, warnIfMissed: false);
-  await tester.pump();
+  // The move round-trips through the repository, so settle rather than pump.
+  await tester.pumpAndSettle();
 }
 
 void main() {

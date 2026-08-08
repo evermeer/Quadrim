@@ -151,3 +151,13 @@ Ask clarifying questions if anything is unclear and add the decissions to the fi
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
 ```
+
+Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
+**Prompt**
+```
+Continue implementing the game according to the tickets in the ./doc/tickets folder.
+The goal is to have all tickets implemented so that there is a complete testable 0.1 version..
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+After each ticket run the skill code-review-expert 
+Commit the code to the main branch after each ticket is completed and reviewed.
+```

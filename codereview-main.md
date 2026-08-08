@@ -277,3 +277,146 @@ key: ValueKey('cell-${cell.index}'),
 | Reliable touch target on smallest phone | ⚠️ | verified at 390dp (~37dp cells); see MINOR above for <360dp |
 | Legible in light and dark themes | ⚠️ | uses `ColorScheme` roles throughout, so both themes render; visual verification is ticket 021 |
 | Strings in English and Dutch | ✅ | both ARB files extended; `tool/check.sh` string gate passes |
+
+---
+---
+
+# Code Review: ticket 005 (working tree) → main @ 66972b5
+
+> Generated: 2026-08-11T02:40:00+02:00
+> Changed files: 9 (4 new data-layer sources, 1 new test file, game_screen, main, 2 existing test files; plus pubspec + lock)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 3 |
+| nit | 2 |
+
+## Findings
+
+### [MINOR] `_watch` can drop a change emitted between the first value and the subscription — `bug`
+
+**File:** `app/lib/data/local_game_repository.dart:80`
+
+**Evidence:**
+```dart
+Stream<T> _watch<T>(T Function() value) async* {
+  yield value();
+  yield* _changes.stream.map((_) => value());
+}
+```
+
+**Problem:** The generator subscribes to `_changes` only *after* the initial value has been consumed. A write landing in that microtask gap emits into a broadcast controller with no listener and is lost, so the subscriber keeps showing stale state until the next write. Not reachable today because every write follows a user tap, but ticket 006's bot writes its reply immediately after the screen subscribes — squarely inside the gap.
+
+**Fix:** Subscribe first, then push the current value:
+```dart
+Stream<T> _watch<T>(T Function() value) {
+  late StreamController<T> controller;
+  StreamSubscription<void>? sub;
+  controller = StreamController<T>(
+    onListen: () {
+      sub = _changes.stream.listen((_) => controller.add(value()));
+      controller.add(value());
+    },
+    onCancel: () => sub?.cancel(),
+  );
+  return controller.stream;
+}
+```
+
+### [MINOR] `appendMove` and `resign` return a Future but throw synchronously — `bug`
+
+**File:** `app/lib/data/local_game_repository.dart:139`
+
+**Evidence:**
+```dart
+Future<GameDocument> appendMove(String id, int cell) {
+  final game = _requireActive(id);
+```
+
+**Problem:** Neither method is `async`, so `_requireActive`'s `ArgumentError`/`StateError` and `GameState.fromMoves`'s validation error escape synchronously rather than as a failed Future. A caller that treats the result as a Future — `repository.appendMove(...).catchError(...)`, or the fire-and-forget call in `game_screen.dart:47` — does not catch them; in the widget case the throw lands in the gesture callback and takes down the frame. The screen only avoids this because `BoardView` already refuses taps on occupied cells, which is a second guard, not the contract.
+
+**Fix:** Mark both `async`. Errors then surface through the returned Future, which is what the signature promises.
+
+### [MINOR] Stored lists are handed out mutable, unlike every other model in the repo — `architecture`
+
+**File:** `app/lib/data/documents.dart:115`
+
+**Evidence:**
+```dart
+final List<int> moves;
+```
+and `documents.dart:199`
+```dart
+moves: (json['moves'] as List?)?.cast<int>() ?? const [],
+```
+
+**Problem:** `cast<int>()` returns a *view* over the decoded list, not a copy, so `GameDocument.moves` aliases whatever the store handed over and is freely mutable by any caller. The engine established the opposite standard one ticket ago — ticket 003's `GameState` is immutable and has a test asserting a mutation attempt throws. Two neighbouring models with opposite mutability rules is the kind of inconsistency that gets discovered by a bug.
+
+**Fix:** Wrap in the constructor: `moves = List.unmodifiable(moves)`, same for `GameResult.line`.
+
+### [NIT] A settings document from a newer build is reset rather than preserved — `bug`
+
+**File:** `app/lib/data/local_game_repository.dart:47`
+
+**Evidence:**
+```dart
+final settings = SettingsDocument.fromJson(await store.readSettings() ?? {});
+```
+
+**Problem:** `fromJson` correctly returns null for a newer `schemaVersion`, and the caller falls back to defaults — but unlike a skipped *game*, the next `saveSettings` then overwrites the newer document with the older shape. Skipping preserves games; for settings it silently destroys them. Only reachable by installing an older build over a newer one.
+
+**Fix:** Defer. When it matters, record that the on-disk version was newer and refuse to write until the user changes a setting deliberately. Not worth the machinery for a private 0.1 with no downgrade path.
+
+### [NIT] Unknown enum values coerce to a default rather than skipping the record — `style`
+
+**File:** `app/lib/data/documents.dart:74`
+
+**Evidence:**
+```dart
+outcome: _enumByName(GameOutcome.values, json['outcome'], GameOutcome.draw),
+```
+
+**Problem:** A malformed `outcome` reads as a draw rather than being rejected, so a damaged win would be silently miscounted by the rating fold. Unreachable while `schemaVersion` gates the field set, which is why this is a nit and not a bug.
+
+**Fix:** None now. If the shape ever changes within a schema version, make the enum readers return null and skip the document, as `fromJson` already does for a bad id or timestamp.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/005-local-persistence-game-repository.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Single contract: watch, list active, list completed, create, append, resign, delete | ✅ | `game_repository.dart:14-59` |
+| Stream-based, not future-based | ✅ | all three `watch*` return `Stream`; `local_game_repository.dart:80` |
+| JSON documents keyed by id, matching spec §8.3 | ✅ | test `stored games carry a schema version and no device identifier` asserts the exact key set |
+| Moves a plain ordered list; authorship derived | ✅ | `documents.dart:126` `seatForMove`; test `whose move each was derives from position and the starting seat` |
+| Records only which opponent | ✅ | `documents.dart:104`; `kGuestOpponent` / `botOpponent` |
+| Completed game records opponent's rating at the time | ✅ | `documents.dart:110`; asserted in `a created game is stored, active and empty` |
+| Completion timestamp is the fold's ordering key, id as tie-break | ✅ | `local_game_repository.dart:92-98`; test `active and completed lists separate, completed ordered for the fold` |
+| Outcome and reason separate | ✅ | tests for line, fullBoard and resignation; resignation test asserts the position is still `Ongoing` |
+| Load all completed games once | ✅ | `loadCompletedGames`; test `statistics are derivable by folding completed games` |
+| No device identifier anywhere | ✅ | exact-key-set assertion; verified on device — stored document contains no identifier |
+| Every document carries a schema version | ✅ | `documents.dart:13`, asserted on disk |
+| Newer schema skipped, equal/lower read | ✅ | test `a document from a newer schema is skipped, not misread` |
+| Game ids unique and stable across restarts | ✅ | `local_game_repository.dart:62`; restart test reads the same id back |
+| Settings document with language, theme, tutorial completion | ✅ | `documents.dart:224`; round-trip and restart tests |
+| Statistics derived, never stored | ✅ | no aggregate is written; the stored key set assertion would fail if one were |
+| In-progress game survives restart with moves intact | ✅ | unit test, **and** verified on device: 4 moves → `am force-stop` → relaunch → restored |
+| A process kill during a write leaves no corrupted record | ✅ | atomic tmp+rename, `document_store.dart:104`; test `a kill mid-write leaves no corrupted record` |
+| No screen reads or writes storage except through the repository | ✅ | only `main.dart` constructs the store (composition root); `game_screen.dart` imports the contract only |
+
+### Post-review outcome
+
+All three minor findings were applied. The first turned out to be worth more than its severity suggested:
+
+- **`_watch` race** — fixed with `Stream.multi`, which subscribes before publishing. The first attempt (a `StreamController` adding inside `onListen`) hung every widget test. Bisected to a cause with no project code in it: `.first` on a stream whose `onCancel` awaits a *broadcast* subscription's `cancel()` never completes inside `testWidgets`' fake-async zone. `onCancel` now fires and forgets. Pinned by a new test that writes in the same microtask as the subscribe (D140).
+- **Synchronous throws** — `appendMove` and `resign` are now `async`, so validation failures surface through the returned Future.
+- **Mutable lists** — `GameDocument.moves` and `GameResult.line` are `List.unmodifiable`, matching the standard ticket 003 set for `GameState`. New test asserts mutation throws.
+
+The two nits were deliberately not implemented; both are recorded above with the condition that would make them worth doing.
+
+Full suite after fixes: 43 app tests, 8 engine tests, 8 generator tests. `tool/check.sh` reports ALL CHECKS PASSED.

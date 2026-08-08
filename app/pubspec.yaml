@@ -12,6 +12,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  path_provider: ^2.1.5
   quadrim_engine:
     path: ../packages/quadrim_engine
   quadrim_rating:

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
+import '../data/documents.dart';
+import '../data/game_repository.dart';
 import '../l10n/app_localizations.dart';
 import 'board_view.dart';
 
@@ -8,28 +10,53 @@ import 'board_view.dart';
 /// always holds the light pieces. Bot play arrives with ticket 006 and the
 /// full result screen with ticket 007 — here a game ends with an announced
 /// banner and a back button.
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+///
+/// Every move goes through [GameRepository] (ticket 005, criterion S4): this
+/// screen keeps no board state of its own, it replays the stored move list.
+class GameScreen extends StatelessWidget {
+  const GameScreen({
+    super.key,
+    required this.repository,
+    required this.gameId,
+  });
 
-  @override
-  State<GameScreen> createState() => _GameScreenState();
-}
-
-class _GameScreenState extends State<GameScreen> {
-  GameState _state = GameState.initial();
-
-  void _onCellTap(Cell cell) {
-    setState(() {
-      _state = applyMove(_state, cell);
-    });
-    // The turn banner is a Semantics live region: screen readers announce
-    // every text change there (turn, win, draw) without an explicit call.
-  }
+  final GameRepository repository;
+  final String gameId;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final o = outcome(_state);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.passAndPlay)),
+      body: SafeArea(
+        child: StreamBuilder<GameDocument?>(
+          stream: repository.watchGame(gameId),
+          builder: (context, snapshot) {
+            final game = snapshot.data;
+            if (game == null) return const SizedBox.shrink();
+            return _GameBody(
+              game: game,
+              onCellTap: (cell) => repository.appendMove(game.id, cell.index),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _GameBody extends StatelessWidget {
+  const _GameBody({required this.game, required this.onCellTap});
+
+  final GameDocument game;
+  final void Function(Cell cell) onCellTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    // The board is replayed from the stored moves, never held alongside them.
+    final state = GameState.fromMoves(game.moves);
+    final o = outcome(state);
     final over = o is! Ongoing;
     final highlight = o is Win ? o.line : const <int>[];
 
@@ -37,55 +64,50 @@ class _GameScreenState extends State<GameScreen> {
       Win(winner: Player.first) => l10n.lightWins,
       Win() => l10n.darkWins,
       Draw() => l10n.gameDrawn,
-      Ongoing() => _state.sideToMove == Player.first
+      Ongoing() => state.sideToMove == Player.first
           ? l10n.lightPlays
           : l10n.darkPlays,
     };
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.passAndPlay)),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: _TurnBanner(
-                text: statusText,
-                lightToMove: !over && _state.sideToMove == Player.first,
-                over: over,
-              ),
-            ),
-            Expanded(
-              // Right-aligned column of four layers (D137). No scroll view:
-              // the board sizes itself to fit, so a scrollable would only
-              // ever hide a layout bug.
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: BoardView(
-                    state: _state,
-                    enabled: !over,
-                    onCellTap: _onCellTap,
-                    highlight: highlight,
-                  ),
-                ),
-              ),
-            ),
-            if (over)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonal(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.backToHome),
-                  ),
-                ),
-              ),
-          ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: _TurnBanner(
+            text: statusText,
+            lightToMove: !over && state.sideToMove == Player.first,
+            over: over,
+          ),
         ),
-      ),
+        Expanded(
+          // Right-aligned column of four layers (D137). No scroll view:
+          // the board sizes itself to fit, so a scrollable would only
+          // ever hide a layout bug.
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: BoardView(
+                state: state,
+                enabled: !over,
+                onCellTap: onCellTap,
+                highlight: highlight,
+              ),
+            ),
+          ),
+        ),
+        if (over)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonal(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.backToHome),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

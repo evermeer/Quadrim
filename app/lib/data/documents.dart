@@ -1,0 +1,263 @@
+/// The two persisted document shapes (spec §8.3 and §8.6).
+///
+/// Deliberately minimal: 0.1's data is never uploaded and 0.3 starts from an
+/// empty database, so nothing here is shaped for a future cloud. In
+/// particular there is **no device identifier** anywhere (spec §8.2, D90) and
+/// no per-move authorship — whose move each was derives from list position
+/// and [GameDocument.startingSeat].
+library;
+
+/// The version every document is written with. A document whose version is
+/// greater than this is skipped by the reader; equal or lower is read and
+/// upgraded (spec §8.7).
+const int kSchemaVersion = 1;
+
+enum GameMode { vsComputer, passAndPlay }
+
+/// The lifecycle field, stored as `state`. Named [GameStatus] because the
+/// engine already owns `GameState`, which is the board rather than the record.
+enum GameStatus { active, complete }
+
+enum GameOutcome { win, draw }
+
+/// Why the game ended. Separate from the outcome because a clock-driven
+/// ending cannot be derived from the moves. `timeout` and `abandonment` are
+/// unreachable in 0.1 and present so the field's shape does not change when
+/// they become reachable.
+enum GameEndReason { line, fullBoard, resignation, timeout, abandonment }
+
+enum StartReason { random, rematchAlternation }
+
+/// The opponent value for the second seat in pass-and-play (spec §8.2).
+const String kGuestOpponent = 'guest';
+
+/// The opponent value for a computer opponent, e.g. `bot:onyx`.
+String botOpponent(String botId) => 'bot:$botId';
+
+T _enumByName<T extends Enum>(List<T> values, Object? name, T fallback) {
+  for (final v in values) {
+    if (v.name == name) return v;
+  }
+  return fallback;
+}
+
+class GameResult {
+  GameResult({
+    required this.outcome,
+    required this.reason,
+    this.winnerSeat,
+    List<int>? line,
+  }) : line = line == null ? null : List.unmodifiable(line);
+
+  final GameOutcome outcome;
+  final GameEndReason reason;
+
+  /// Null on a draw.
+  final int? winnerSeat;
+
+  /// The four cell indices of the completed line, so highlighting needs no
+  /// recomputation. Null unless [reason] is [GameEndReason.line].
+  final List<int>? line;
+
+  Map<String, Object?> toJson() => {
+        'outcome': outcome.name,
+        'reason': reason.name,
+        'winnerSeat': winnerSeat,
+        'line': line,
+      };
+
+  static GameResult fromJson(Map<String, Object?> json) => GameResult(
+        outcome: _enumByName(GameOutcome.values, json['outcome'], GameOutcome.draw),
+        reason:
+            _enumByName(GameEndReason.values, json['reason'], GameEndReason.fullBoard),
+        winnerSeat: json['winnerSeat'] as int?,
+        line: (json['line'] as List?)?.cast<int>(),
+      );
+}
+
+class GameDocument {
+  GameDocument({
+    required this.id,
+    required this.mode,
+    required this.opponent,
+    required this.opponentRating,
+    required this.playerSeat,
+    required this.startingSeat,
+    required this.startReason,
+    required List<int> moves,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.completedAt,
+    this.result,
+    this.rematchOf,
+    this.schemaVersion = kSchemaVersion,
+  }) : moves = List.unmodifiable(moves);
+
+  final String id;
+  final int schemaVersion;
+  final GameMode mode;
+
+  /// `bot:<botId>` or [kGuestOpponent]. The only record of who was played.
+  final String opponent;
+
+  /// The anchor rating this game was actually played against, so recalibrating
+  /// an opponent later is a deliberate re-fold rather than a silent rewrite of
+  /// the player's history. Null for [kGuestOpponent], which has no rating.
+  final int? opponentRating;
+
+  final int playerSeat;
+  final int startingSeat;
+  final StartReason startReason;
+
+  /// Cell indices 0..63, in play order. Append-only and complete, which is
+  /// what makes replay a pure fold.
+  final List<int> moves;
+
+  final GameStatus status;
+
+  /// The fold's ordering key, with [id] as tie-break.
+  final DateTime? completedAt;
+  final GameResult? result;
+  final String? rematchOf;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  /// Which seat plays the move at [index]. Turns strictly alternate, so this
+  /// is derived rather than stored (spec §8.3).
+  int seatForMove(int index) => (startingSeat + index) % 2;
+
+  /// The seat whose turn it is now.
+  int get seatToMove => seatForMove(moves.length);
+
+  GameDocument copyWith({
+    List<int>? moves,
+    GameStatus? status,
+    DateTime? completedAt,
+    GameResult? result,
+    DateTime? updatedAt,
+  }) =>
+      GameDocument(
+        id: id,
+        schemaVersion: schemaVersion,
+        mode: mode,
+        opponent: opponent,
+        opponentRating: opponentRating,
+        playerSeat: playerSeat,
+        startingSeat: startingSeat,
+        startReason: startReason,
+        moves: moves ?? this.moves,
+        status: status ?? this.status,
+        completedAt: completedAt ?? this.completedAt,
+        result: result ?? this.result,
+        rematchOf: rematchOf,
+        createdAt: createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'schemaVersion': schemaVersion,
+        'mode': mode.name,
+        'opponent': opponent,
+        'opponentRating': opponentRating,
+        'playerSeat': playerSeat,
+        'startingSeat': startingSeat,
+        'startReason': startReason.name,
+        'moves': moves,
+        'state': status.name,
+        'completedAt': completedAt?.toUtc().toIso8601String(),
+        'result': result?.toJson(),
+        'rematchOf': rematchOf,
+        'createdAt': createdAt.toUtc().toIso8601String(),
+        'updatedAt': updatedAt.toUtc().toIso8601String(),
+      };
+
+  /// Returns null when the document cannot be read: a schema version newer
+  /// than this build understands, or a record damaged beyond parsing. Both
+  /// are skipped rather than thrown, so one bad file cannot lock a player out
+  /// of their history.
+  static GameDocument? fromJson(Map<String, Object?> json) {
+    final version = json['schemaVersion'];
+    if (version is! int || version > kSchemaVersion) return null;
+    final id = json['id'];
+    final createdAt = DateTime.tryParse(json['createdAt'] as String? ?? '');
+    final updatedAt = DateTime.tryParse(json['updatedAt'] as String? ?? '');
+    if (id is! String || id.isEmpty || createdAt == null || updatedAt == null) {
+      return null;
+    }
+    return GameDocument(
+      id: id,
+      schemaVersion: version,
+      mode: _enumByName(GameMode.values, json['mode'], GameMode.passAndPlay),
+      opponent: json['opponent'] as String? ?? kGuestOpponent,
+      opponentRating: json['opponentRating'] as int?,
+      playerSeat: json['playerSeat'] as int? ?? 0,
+      startingSeat: json['startingSeat'] as int? ?? 0,
+      startReason:
+          _enumByName(StartReason.values, json['startReason'], StartReason.random),
+      moves: (json['moves'] as List?)?.cast<int>() ?? const [],
+      status: _enumByName(GameStatus.values, json['state'], GameStatus.active),
+      completedAt: DateTime.tryParse(json['completedAt'] as String? ?? ''),
+      result: json['result'] == null
+          ? null
+          : GameResult.fromJson((json['result'] as Map).cast<String, Object?>()),
+      rematchOf: json['rematchOf'] as String?,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+/// The only local document besides games (spec §8.6). The computer rating is
+/// deliberately absent: it is folded from completed games, so storing it would
+/// create a second copy that can drift.
+class SettingsDocument {
+  const SettingsDocument({
+    this.locale = 'system',
+    this.theme = 'system',
+    this.tutorialCompleted = false,
+    this.schemaVersion = kSchemaVersion,
+  });
+
+  final int schemaVersion;
+
+  /// `en`, `nl` or `system`.
+  final String locale;
+
+  /// `light`, `dark` or `system`.
+  final String theme;
+
+  final bool tutorialCompleted;
+
+  SettingsDocument copyWith({
+    String? locale,
+    String? theme,
+    bool? tutorialCompleted,
+  }) =>
+      SettingsDocument(
+        locale: locale ?? this.locale,
+        theme: theme ?? this.theme,
+        tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
+      );
+
+  Map<String, Object?> toJson() => {
+        'schemaVersion': schemaVersion,
+        'locale': locale,
+        'theme': theme,
+        'tutorialCompleted': tutorialCompleted,
+      };
+
+  /// Null when unreadable — see [GameDocument.fromJson]. The caller falls back
+  /// to defaults rather than failing to start.
+  static SettingsDocument? fromJson(Map<String, Object?> json) {
+    final version = json['schemaVersion'];
+    if (version is! int || version > kSchemaVersion) return null;
+    return SettingsDocument(
+      schemaVersion: version,
+      locale: json['locale'] as String? ?? 'system',
+      theme: json['theme'] as String? ?? 'system',
+      tutorialCompleted: json['tutorialCompleted'] as bool? ?? false,
+    );
+  }
+}

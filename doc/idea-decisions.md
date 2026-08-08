@@ -1041,6 +1041,42 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 - The freed left column is where the move list and scrubber (ticket 012) will go. A test asserts at least 30% of the width stays clear so that space is not quietly consumed.
 - Each layer caption now has a fixed height, so the cell arithmetic is exact rather than dependent on how tall the caption renders; it scales down instead of overflowing at large system text sizes.
 
+### D138 — The store is pluggable, not the repository
+**Question:** Ticket 005 requires that no screen touches storage directly and that widget tests run against the repository contract. The first implementation put file I/O inside the repository, which made every widget test hang: `testWidgets` runs its body in a fake-async zone that never completes real `dart:io` futures.
+
+**Decision:** Split into a `DocumentStore` (where bytes live) and one `LocalGameRepository` (the rules: validation, completion, ordering). `FileDocumentStore` is atomic tmp-then-rename on disk; `MemoryDocumentStore` does not outlive the process.
+
+**Rationale:** The obvious alternative — a second fake `GameRepository` for widget tests — would have duplicated completion logic, so the rules of the game would exist twice and could disagree. Swapping only the storage keeps one implementation of the rules and still gives widget tests a store that works under fake async.
+
+**Consequence:** The contract suite runs against **both** stores, which is the same suite 0.3a's Firestore implementation must pass. Behaviour only the disk can have — surviving a restart, surviving a truncated file, skipping a newer schema — is tested separately in plain `test` bodies where real I/O completes.
+
+### D139 — Game completion is decided by the repository, not by each caller
+**Question:** When a move ends a game, who writes the result — the repository or the screen that appended the move?
+
+**Decision:** `appendMove` applies the move, asks the engine for the outcome, and writes `state`, `result` and `completedAt` itself.
+
+**Rationale:** Completion is a pure function of the move list, so it is derivable exactly once. Any caller that forgot would leave a finished game stored as `active` forever, and 0.1 already has two callers (pass-and-play, and bot play in ticket 006) with more coming. Appending is also where validation belongs: the replay that decides the outcome is the same replay that rejects an illegal cell, so an illegal move cannot reach storage.
+
+**Consequence:** The repository depends on `quadrim_engine`. That is the data layer depending on the pure domain layer, which is the direction spec §9.7 allows.
+
+### D140 — Storage subscribes before it publishes
+**Question:** How should the `watch` streams deliver the current value as well as subsequent changes?
+
+**Decision:** `Stream.multi`: each listener gets its own controller, the change subscription is established first, and the current value is delivered after.
+
+**Rationale:** The natural `async*` form — yield the current value, then `yield*` the change stream — subscribes only after the first value has been consumed, leaving a microtask-wide window in which a write emits to a broadcast controller with no listener and is silently lost. Unreachable while every write follows a user tap; reachable the moment ticket 006's bot replies as the screen opens. Found by code review, pinned by a test that writes in the same microtask as the subscribe.
+
+**Consequence:** `onCancel` deliberately does not return the inner subscription's cancel future. Awaiting a *broadcast* subscription's cancel never completes inside `testWidgets`' fake-async zone, which hangs `.first` — reproduced in isolation with no project code involved. There is nothing useful to wait for, since cancelling a broadcast subscription cannot fail.
+
+### D141 — Pass-and-play resumes the unfinished game rather than starting a new one
+**Question:** Ticket 005 requires that an in-progress game survives a restart, but the main screen that would list and resume games is ticket 013.
+
+**Decision:** Until ticket 013 exists, the placeholder home button resumes the unfinished pass-and-play game if there is one and starts a fresh one otherwise.
+
+**Rationale:** Silently starting a new game would have made the acceptance criterion unverifiable end to end, and an explicit resume affordance is ticket 013's design decision to make, not something to invent here and then undo.
+
+**Consequence:** Verified on the emulator, not only in tests: four moves, `am force-stop`, relaunch, board restored from `files/quadrim/games/` — the exact path the backup allowlist covers.
+
 ---
 
 ## Appendix — session tooling
