@@ -25,7 +25,12 @@ Widget _harness(LocalGameRepository repo, String id, {Locale? locale}) =>
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: GameScreen(repository: repo, gameId: id, random: Random(5)),
+      home: GameScreen(
+        repository: repo,
+        gameId: id,
+        random: Random(5),
+        opponentMove: chooseMoveInline,
+      ),
     );
 
 void _phone(WidgetTester tester) {

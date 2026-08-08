@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
@@ -15,6 +16,37 @@ import 'board_view.dart';
 /// reads as a rendering glitch rather than as a turn (ticket 006).
 const Duration kBotMoveDelay = Duration(milliseconds: 550);
 
+/// How the screen obtains a computer opponent's move.
+///
+/// Injected rather than called directly because the two callers need opposite
+/// things: the app must not run a four-ply search on the interface thread,
+/// and a widget test cannot wait for a real isolate — `testWidgets` runs in a
+/// fake-async zone where an isolate's future never completes (D153).
+typedef OpponentMove = Future<int> Function(
+    List<int> moves, BotConfig bot, Random random);
+
+/// The app's implementation: the search runs in a background isolate.
+///
+/// Onyx and Sable take tens of milliseconds for a typical move and up to a
+/// couple of hundred for the worst one measured (D152); on the interface
+/// thread that is a visible stutter in the middle of the opponent's turn.
+/// The seed is drawn on this side and sent as an integer, because a [Random]
+/// cannot cross an isolate boundary — which also keeps the move reproducible
+/// from an injected seeded source.
+Future<int> chooseMoveInBackground(
+        List<int> moves, BotConfig bot, Random random) =>
+    compute(_chooseMoveIsolate, (moves, bot.id, random.nextInt(1 << 31)));
+
+int _chooseMoveIsolate((List<int>, String, int) request) {
+  final (moves, botId, seed) = request;
+  return chooseMove(GameState.fromMoves(moves), botById(botId)!, Random(seed))
+      .index;
+}
+
+/// The test implementation: the same choice, made inline.
+Future<int> chooseMoveInline(List<int> moves, BotConfig bot, Random random) =>
+    Future.value(chooseMove(GameState.fromMoves(moves), bot, random).index);
+
 /// One game, whether against a person sharing the device or a computer
 /// opponent. The first player always holds the light pieces.
 ///
@@ -26,6 +58,7 @@ class GameScreen extends StatefulWidget {
     required this.repository,
     required this.gameId,
     this.random,
+    this.opponentMove = chooseMoveInBackground,
   });
 
   final GameRepository repository;
@@ -34,6 +67,9 @@ class GameScreen extends StatefulWidget {
   /// Injected so a test can pin what the opponent plays. Null means a fresh
   /// unseeded source, which is what the app uses.
   final Random? random;
+
+  /// How the opponent's move is computed. Defaults to a background isolate.
+  final OpponentMove opponentMove;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -119,8 +155,20 @@ class _GameScreenState extends State<GameScreen> {
     try {
       await Future<void>.delayed(kBotMoveDelay);
       if (!mounted) return;
-      final move = chooseMove(GameState.fromMoves(game.moves), bot, _random);
-      await widget.repository.appendMove(game.id, move.index);
+      final move = await widget.opponentMove(game.moves, bot, _random);
+      if (!mounted) return;
+      // The move was computed for the position as it stood when the turn
+      // began, and the player can resign while it is being computed — the
+      // Resign action is deliberately available during the opponent's turn.
+      // Appending to a game the repository no longer accepts moves for throws
+      // out of an unawaited future, so the stale move is dropped instead.
+      final current = _game;
+      if (current == null ||
+          !_isOpponentsTurn(current) ||
+          current.moves.length != game.moves.length) {
+        return;
+      }
+      await widget.repository.appendMove(game.id, move);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -186,6 +234,7 @@ class _GameScreenState extends State<GameScreen> {
           repository: widget.repository,
           gameId: next.id,
           random: widget.random,
+          opponentMove: widget.opponentMove,
         ),
       ),
     );

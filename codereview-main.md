@@ -781,3 +781,139 @@ None — every criterion is addressed.
 Both minor findings fixed; both nits stand with the reason recorded. New decision: D149 — the positional ladder is weights arranged to produce an order, not an if-else chain.
 
 Full suite: 49 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` passes.
+
+---
+
+# Code Review: ticket 010 (working tree) → main @ b4fd4f3
+
+> Generated: 2026-08-08
+> Base: HEAD (b4fd4f3), work uncommitted
+> Changed files: 10 — `packages/quadrim_engine/lib/src/search.dart` (new), `.../lib/src/bot.dart`, `.../lib/quadrim_engine.dart`, `.../test/search_test.dart` (new), `.../test/bot_test.dart`, `.../test/strategic_bot_test.dart`, `app/lib/game/game_screen.dart`, `app/test/bot_game_test.dart`, `app/test/result_screen_test.dart`, `doc/idea-decisions.md`
+
+---
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 1 |
+| nit | 2 |
+
+---
+
+## Findings
+
+### [MAJOR] Resigning while the opponent thinks crashes the screen — `bug`
+
+**File:** `app/lib/game/game_screen.dart:160`
+
+**Evidence (before the fix):**
+```dart
+final move = await widget.opponentMove(game.moves, bot, _random);
+if (!mounted) return;
+await widget.repository.appendMove(game.id, move);
+```
+The Resign action is rendered whenever `game.status == GameStatus.active` (`game_screen.dart:242`) with no `_busy` gate, and `LocalGameRepository.appendMove` calls `_requireActive`, which throws `StateError('game … is already complete')` (`local_game_repository.dart:225`).
+
+**Problem:** The player can resign inside the opponent's thinking time; the move then computed is appended to a game that no longer accepts moves, and the `StateError` escapes an `unawaited` future as an unhandled exception.
+
+**Reproduced first:** `app/test/bot_game_test.dart` — "resigning while the opponent is thinking does not crash" fails on HEAD with `Bad state: game … is already complete` thrown from `_playOpponentIfItsTurn`.
+
+**Fix:** Applied. Before appending, the screen re-checks the live document: the game must still be active, still the opponent's turn, and still at the move count the search was given. A move computed for a position that is no longer on the board is dropped.
+
+**Note on severity:** the window existed before this ticket — the 550 ms delay alone was enough — but ticket 010 widens it by an isolate round-trip plus up to half a second of search, and Sable is the opponent most likely to be thinking when the player gives up.
+
+### [MINOR] A candidate could tie for best on a bound rather than a score — `bug`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:100`
+
+**Evidence (before the fix):**
+```dart
+final score =
+    board.scoreAfter(candidates[i].index, depth, defence, alpha: alpha);
+```
+
+**Problem:** The root shares alpha between candidates. At the minimising node below the root the cut condition is `alpha >= best`, so a fail-low candidate returns a value less than *or equal to* alpha — including exactly alpha. `_searchBest` in `bot.dart` selects every candidate whose score equals the maximum and hands the set to the positional ladder, so a move the search rated strictly worse could be the one played.
+
+**Fix:** Applied — the window opens at `alpha - 1`, so a bound always lands strictly below the running maximum and only exact scores can equal it. A test now asserts that every candidate tying for the maximum reproduces that score under an exact, unwindowed search.
+
+**Consequence, recorded:** this changed play enough to flatten the whole Club ladder, which is what forced the retune in D154. Worth stating plainly — the ladder measured before this fix was measuring a bug.
+
+### [NIT] `_orderedMoves` rescans all 76 lines at every internal node — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:344`
+
+**Evidence:**
+```dart
+for (var l = 0; l < 76; l++) {
+  for (var side = 0; side < 2; side++) {
+    if (_count[side][l] == 3 && _count[1 - side][l] == 0) {
+```
+
+**Problem:** 152 iterations plus a `Set` allocation per node, where the evaluation next to it is O(1) by design.
+
+**Fix:** Not applied. The measured budget is met with room (Onyx 1.8 ms mean, Sable 21.3 ms — D152), and the same counters the quiescence check uses could drive this incrementally if a later tier needs it. Optimising an already-fast path against no measurement is how the four-ply version got slower *and* weaker.
+
+### [NIT] `_forcedWin` and `_ruleCandidates` both compute the immediate wins — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:355`
+
+**Evidence:**
+```dart
+if (_immediateWins(state, me).isNotEmpty) return null;
+if (_immediateWins(state, me.opponent).isNotEmpty) return null;
+```
+followed, for the same position, by the same two calls inside `_ruleCandidates`.
+
+**Problem:** Four scans of the 76 lines where two would do.
+
+**Fix:** Not applied. Each scan is roughly 300 array reads against a search that visits tens of thousands of nodes; threading the result through would trade a measurable nothing for a less readable gate. The gate is where it is because it states a rule — a forcing sequence means nothing when either side wins outright — and that is worth more than the scans.
+
+---
+
+## Rejected during validation
+
+- **"`_lineWeight[4] = 0` means a completed line scores nothing."** True and harmless: a winning placement is caught by `_place`'s return value and never reaches the evaluation.
+- **"`botById(botId)!` in the isolate entry point can throw on an unknown id."** The caller looks the bot up from the same catalogue and passes `bot.id` back, so the id round-trips. Not reachable.
+- **"The threat-space search should reuse the engine's lines-through-cell table."** It stores different data — line *indices*, because the per-line counters are keyed by identity, not contents. Building it from `winningLines` in six lines is not duplication of the engine's table.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/010-search-and-onyx.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Alpha-beta over the heuristic evaluation, configurable depth | ✅ | `search.dart:68` `searchScores`; `BotConfig.searchDepth`; tests for depth validation, forced win, faster win, delayed loss |
+| Evaluation derived from threats and line ownership, reusing engine primitives | ✅ | `evaluatePosition` walks `winningLines`; the search's incremental copy is held to it exactly, over 60 complete games, at `search_test.dart:51` |
+| Threat-space search finds what plain search at the same depth misses | ✅ | `search_test.dart:196` sweeps for positions where the forcing search sees a win and depth 4 does not, and requires five of them |
+| Marlin, Vireo, Onyx and Sable exist as catalogue entries | ✅ | `bot.dart:250`–`:305`; configurations asserted at `search_test.dart:254`. Two documented deviations from §6.4's prose — see Gaps |
+| Each chooses within a responsive budget, with the budget recorded | ✅ | Budget recorded as D152: 250 ms mean / 1 s worst on a mid-range phone. Measured here: Marlin 0.1/0.6, Vireo 2.3/25.6, Onyx 1.8/12.9, Sable 21.3/476 ms |
+| Search never blocks the interface | ✅ | `compute` in a background isolate (D153), `game_screen.dart:31`; exercised through `tester.runAsync` in `bot_game_test.dart` |
+| Given a forced win within the horizon, it is found | ✅ | `search_test.dart:85` and `:94` — the immediate win scores `kWinScore - 1` and a two-move win evaluates positively |
+| Given a forced loss within the horizon, it delays or avoids it | ✅ | `search_test.dart:118` — blocking scores far above every non-blocking move, all of which score as losses |
+| Each of the four beats the tier below it | ✅ | `search_test.dart:302`, and verified off-test across three independent seeds: Marlin–Basalt ≈117–75, Vireo–Marlin ≈110–90, Onyx–Vireo ≈26–14, Sable–Onyx ≈31–9 |
+| Search results reproducible for a given seed, state and depth | ✅ | `search_test.dart:152`; `chooseMove`'s determinism is covered by `bot_test.dart:39`, and the isolate is handed a drawn seed rather than a `Random` |
+| Every opponent still returns only legal moves across thousands of positions | ✅ | `search_test.dart:326` (150 positions each for the four, at milliseconds a move), plus the unchanged 3000-position sweep for the ten cheap opponents |
+
+### Gaps
+
+None blocking. Two deviations from Idea-final §6.4's *prose*, both deliberate, measured and recorded as D154:
+
+- **Vireo searches three plies, not two.** At equal depth it and Marlin are level however the temperaments are set, over 400-game matches. Defensive weighting is worth nothing in this game.
+- **Onyx searches three plies with a six-move forcing search, not four plies plain.** The four-ply version was both slower (59 ms mean against 1.8) and weaker — it lost to a three-ply Vireo, 73–87.
+
+The published ratings are unchanged, which is what D144 requires: measurement moves the parameters, not the numbers.
+
+### Notes
+
+- Ticket 006's `UnimplementedError` guard for `searchDepth > 0` (D142) is removed, since the behaviour it stood in for now exists. Its test is replaced by one asserting a four-ply configuration returns a legal move.
+- `botName` in `app/lib/game/game_screen.dart:268` still knows only Pebble, so the four new opponents would render as `bot:onyx`. Unchanged since ticket 008 and still unreachable — nothing can start a game against them until ticket 011.
+- The catalogue is now fourteen of twenty. Tickets 025 and 026 add the Expert and Master tiers; D154 and D156 together say where that work should start, and it is the evaluation, not the depth.
+
+### Post-review outcome
+
+One major and one minor finding, both fixed; the major one test-first. Two nits stand with the reason. New decisions: D150–D156.
+
+Full suite: 71 engine tests, 63 app, 19 rating, 8 generator. `tool/check.sh` passes.

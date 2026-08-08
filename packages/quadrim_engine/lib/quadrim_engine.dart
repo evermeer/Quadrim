@@ -8,4 +8,5 @@ library;
 
 export 'src/bot.dart';
 export 'src/engine.dart';
+export 'src/search.dart';
 export 'src/winning_lines.g.dart';

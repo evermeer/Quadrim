@@ -42,7 +42,8 @@ void main() {
       final ratings = opponentCatalogue.map((b) => b.rating).toList();
       expect(ratings, orderedEquals(ratings.toList()..sort()));
       expect(ids, containsAll(['pebble', 'twig', 'mote', 'clover', 'bramble',
-        'finch', 'kestrel', 'willow', 'ember', 'basalt']));
+        'finch', 'kestrel', 'willow', 'ember', 'basalt', 'marlin', 'vireo',
+        'onyx', 'sable']));
     });
 
     test('the configurations match the roster in Idea-final 6.4', () {

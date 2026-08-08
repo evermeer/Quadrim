@@ -20,7 +20,12 @@ Widget _harness(LocalGameRepository repo, String id, Random random) =>
     MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: GameScreen(repository: repo, gameId: id, random: random),
+      home: GameScreen(
+        repository: repo,
+        gameId: id,
+        random: random,
+        opponentMove: chooseMoveInline,
+      ),
     );
 
 void _phone(WidgetTester tester) {
@@ -188,7 +193,12 @@ void main() {
       locale: const Locale('nl'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: GameScreen(repository: repo, gameId: game.id, random: Random(3)),
+      home: GameScreen(
+        repository: repo,
+        gameId: game.id,
+        random: Random(3),
+        opponentMove: chooseMoveInline,
+      ),
     ));
     await tester.pump();
 
@@ -197,4 +207,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Jij bent aan zet'), findsOneWidget);
   });
+
+  testWidgets('the app path runs the search in a background isolate', (
+    tester,
+  ) async {
+    // The screen's default is chooseMoveInBackground, which every other test
+    // replaces because a real isolate never completes inside the fake-async
+    // zone testWidgets runs in (D153). runAsync steps outside that zone, so
+    // this one test exercises the path the app actually takes — with Onyx,
+    // whose four-ply search is the reason the isolate exists.
+    final move = await tester.runAsync(() =>
+        chooseMoveInBackground(const [0, 21, 5], onyx, Random(11)));
+    final state = GameState.fromMoves(const [0, 21, 5]);
+    expect(legalMoves(state).map((c) => c.index), contains(move));
+  });
+
+  testWidgets('resigning while the opponent is thinking does not crash', (
+    tester,
+  ) async {
+    _phone(tester);
+    final repo = await _repository();
+    // Seat 1 opens, so the opponent moves first and the screen is busy from
+    // the moment it appears.
+    final game = await repo.createGame(
+      mode: GameMode.vsComputer,
+      opponent: botOpponent(pebble.id),
+      opponentRating: pebble.rating,
+      startingSeat: 1,
+    );
+    await tester.pumpWidget(_harness(repo, game.id, Random(3)));
+    await tester.pump();
+
+    // The player resigns inside the opponent's thinking time. Its move is
+    // then computed for a game that no longer accepts moves; appending it
+    // would throw StateError out of an unawaited future.
+    await repo.resign(game.id, seat: game.playerSeat);
+    await tester.pump();
+    await tester.pump(kBotMoveDelay);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    final stored = await repo.watchGame(game.id).first;
+    expect(stored!.status, GameStatus.complete);
+    expect(stored.moves, isEmpty, reason: 'the stale move must be dropped');
+  });
+
 }

@@ -12,6 +12,7 @@ library;
 import 'dart:math';
 
 import 'engine.dart';
+import 'search.dart';
 import 'winning_lines.g.dart';
 
 /// The four rules that make an opponent look like it is paying attention
@@ -36,6 +37,7 @@ final class BotConfig {
     required this.id,
     required this.rating,
     this.searchDepth = 0,
+    this.threatSearchDepth = 0,
     this.rules = const <StrategicRule>{},
     this.blunderRate = 0,
     this.centreBias = 0,
@@ -51,7 +53,8 @@ final class BotConfig {
         assert(lineBias >= 0 && lineBias <= 1),
         assert(aggression >= 0 && aggression <= 1),
         assert(tieBreakRandomness >= 0 && tieBreakRandomness <= 1),
-        assert(searchDepth >= 0);
+        assert(searchDepth >= 0),
+        assert(threatSearchDepth >= 0);
 
   /// Stable identifier, stored in a game document as `bot:<id>`. Never
   /// translated, and never renamed once a game has referenced it.
@@ -61,8 +64,18 @@ final class BotConfig {
   /// measurement disagrees, the configuration below is what changes (D144).
   final int rating;
 
-  /// Plies of adversarial search. 0 means the rules and bias decide alone.
+  /// Plies of adversarial search, counting this opponent's own move. 0 means
+  /// the rules and the positional ladder decide alone.
   final int searchDepth;
+
+  /// How many of its *own* forcing moves this opponent will follow when
+  /// hunting a forced win. 0 disables threat-space search.
+  ///
+  /// Separate from [searchDepth] because the two look at different things: a
+  /// depth-limited search sees every reply and so cannot go far, while this
+  /// sees only replies the opponent has no choice about and so goes much
+  /// further for much less work (D151).
+  final int threatSearchDepth;
 
   final Set<StrategicRule> rules;
 
@@ -110,6 +123,16 @@ final class BotConfig {
 
   /// The probability this opponent lets a double threat go undenied.
   double get _denialSkipChance => max(0, 2 * aggression - 1);
+
+  /// What the opponent's line ownership counts for, relative to its own, in
+  /// the search's heuristic evaluation. 1 weighs both equally; above 1 the
+  /// opponent's structure worries it more than its own pleases it.
+  ///
+  /// Derived from [aggression] rather than configured separately (D150), so
+  /// Marlin and Vireo differ in temperament by one number, in the rule order
+  /// and in the evaluation at once — which is what "opposing temperaments"
+  /// has to mean if the two are to be distinguishable in play.
+  double get defence => 2 * (1 - aggression);
 }
 
 const Set<StrategicRule> _allRules = {
@@ -214,6 +237,75 @@ const BotConfig basalt = BotConfig(
   lineBias: 0.25,
 );
 
+// The Club tier's searching opponents. All four are Basalt's rules and
+// positional ladder plus a look ahead; what separates them is how far they
+// look, at what, and with which temperament.
+
+/// Two plies, weighted towards its own structure.
+const BotConfig marlin = BotConfig(
+  id: 'marlin',
+  rating: 1500,
+  searchDepth: 2,
+  rules: _allRules,
+  blunderRate: 0.05,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+  aggression: 0.6,
+);
+
+/// Three plies and a short look for forced wins, weighted towards what the
+/// opponent is building.
+///
+/// Deeper than Marlin, and looking two forcing moves ahead, because
+/// temperament alone does not separate them: measured over 400 games at equal
+/// depth the two are level, and defensive weighting turns out to be worth
+/// nothing at all in a game of 76 competing lines (D154).
+const BotConfig vireo = BotConfig(
+  id: 'vireo',
+  rating: 1550,
+  searchDepth: 3,
+  threatSearchDepth: 3,
+  rules: _allRules,
+  blunderRate: 0.04,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+  aggression: 0.4,
+);
+
+/// Three plies and a five-move forcing search, even-handed. The first
+/// opponent that will beat a competent human more often than not.
+///
+/// Its edge over Vireo is entirely the forcing search. Depth is the weakest
+/// of the three levers this engine has, and past three plies it does not
+/// separate opponents at all (D154, D156).
+const BotConfig onyx = BotConfig(
+  id: 'onyx',
+  rating: 1650,
+  searchDepth: 3,
+  threatSearchDepth: 6,
+  rules: _allRules,
+  blunderRate: 0.03,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// Four plies plus threat-space search, so it also sees forced wins far
+/// beyond that horizon.
+const BotConfig sable = BotConfig(
+  id: 'sable',
+  rating: 1700,
+  searchDepth: 4,
+  threatSearchDepth: 9,
+  rules: _allRules,
+  blunderRate: 0.02,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
 /// Every shipped opponent, weakest first.
 const List<BotConfig> opponentCatalogue = [
   pebble,
@@ -226,6 +318,10 @@ const List<BotConfig> opponentCatalogue = [
   willow,
   ember,
   basalt,
+  marlin,
+  vireo,
+  onyx,
+  sable,
 ];
 
 BotConfig? botById(String id) {
@@ -247,18 +343,19 @@ Cell chooseMove(GameState state, BotConfig config, Random random) {
   final moves = legalMoves(state);
   if (moves.isEmpty) throw StateError('no legal move: the game is over');
 
-  // Adversarial search is ticket 010. Throwing rather than quietly falling
-  // through to the rules means a catalogue entry added ahead of its behaviour
-  // fails loudly instead of shipping as a weaker opponent (D142).
-  if (config.searchDepth > 0) {
-    throw UnimplementedError(
-      'bot ${config.id} asks for ${config.searchDepth}-ply search, '
-      'which arrives with ticket 010',
-    );
+  final me = state.sideToMove;
+  var candidates = _forcedWin(state, config, me) ??
+      _ruleCandidates(state, config, random, me) ??
+      moves;
+
+  // Search narrows the candidates to those it cannot separate; the positional
+  // ladder then decides among them exactly as it does without search. Two
+  // moves the evaluation scores alike are genuinely alike to this opponent,
+  // and picking the more central of them is better than picking at random.
+  if (config.searchDepth > 0 && candidates.length > 1) {
+    candidates = _searchBest(state, config, me, candidates);
   }
 
-  final me = state.sideToMove;
-  final candidates = _ruleCandidates(state, config, random, me) ?? moves;
   final chosen = _positionalPick(config, random, state, me, candidates);
 
   // A blunder discards the considered move for a different legal one. It is a
@@ -274,6 +371,36 @@ Cell chooseMove(GameState state, BotConfig config, Random random) {
     }
   }
   return chosen;
+}
+
+/// The single move that begins a forced win, when this opponent looks for
+/// one and one exists.
+///
+/// Gated on neither side having an immediate win: if this opponent has one,
+/// rule 1 takes it and nothing is faster; if the opponent has one, no forcing
+/// sequence of ours survives their taking it, and rule 2 must block.
+List<Cell>? _forcedWin(GameState state, BotConfig config, Player me) {
+  if (config.threatSearchDepth == 0) return null;
+  if (_immediateWins(state, me).isNotEmpty) return null;
+  if (_immediateWins(state, me.opponent).isNotEmpty) return null;
+  final move = threatSpaceWin(state, me, config.threatSearchDepth);
+  return move == null ? null : [move];
+}
+
+/// The candidates the search cannot separate: those scoring the maximum.
+List<Cell> _searchBest(
+  GameState state,
+  BotConfig config,
+  Player me,
+  List<Cell> candidates,
+) {
+  final scores = searchScores(state, me, candidates, config.searchDepth,
+      defence: config.defence);
+  final best = scores.reduce(max);
+  return [
+    for (var i = 0; i < candidates.length; i++)
+      if (scores[i] == best) candidates[i],
+  ];
 }
 
 /// The cells the first matching enabled rule points at, or null when no rule

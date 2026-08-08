@@ -57,9 +57,12 @@ void main() {
     });
 
     test('the chosen move is always legal, over thousands of positions', () {
-      // Every catalogue entry, over randomly generated reachable positions.
+      // Every catalogue entry that decides in microseconds, over randomly
+      // generated reachable positions. The searching opponents cost
+      // milliseconds a move and are swept separately, at a sample size that
+      // fits the suite's runtime (search_test.dart).
       final random = Random(20260811);
-      for (final bot in opponentCatalogue) {
+      for (final bot in opponentCatalogue.where((b) => b.searchDepth == 0)) {
         for (var i = 0; i < 3000; i++) {
           final state = _randomPosition(random);
           final move = chooseMove(state, bot, random);
@@ -79,10 +82,14 @@ void main() {
       expect(() => chooseMove(won, pebble, Random(1)), throwsStateError);
     });
 
-    test('a configuration asking for search fails loudly', () {
-      const future = BotConfig(id: 'onyx', rating: 1650, searchDepth: 4);
-      expect(() => chooseMove(GameState.initial(), future, Random(1)),
-          throwsA(isA<UnimplementedError>()));
+    test('a configuration asking for search now gets it', () {
+      // Ticket 006 made this throw, so a catalogue entry could not quietly
+      // ship as a weaker opponent than its rating claimed (D142). Ticket 010
+      // implements the search, so the guard has done its job and goes.
+      const searcher = BotConfig(id: 'test-searcher', rating: 1, searchDepth: 4);
+      final move = chooseMove(GameState.initial(), searcher, Random(1));
+      expect(legalMoves(GameState.initial()).map((c) => c.index),
+          contains(move.index));
     });
   });
 }

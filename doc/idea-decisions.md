@@ -1153,6 +1153,84 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** The order is a property of the numbers, not of the code, so a mis-set weight silently reorders the ladder. Basalt's test asserts the gaps (`centreBias − cornerBias > lineBias`, and the same for corner over edge) rather than the resulting behaviour alone. `edgeBias` ships unused by any opponent; it exists because the criterion asks for it and because the alternative is discovering the need for it in ticket 025.
 
+### D150 — Temperament is one number, reaching the rule order and the evaluation alike
+**Question:** Marlin and Vireo are described as searching two plies "with opposing temperaments". The search needs a weighting between one's own line ownership and the opponent's. Is that a new configuration field, or the existing `aggression`?
+
+**Decision:** The existing one. `BotConfig.defence` is derived as `2 × (1 − aggression)`, and multiplies the opponent's line ownership in the heuristic evaluation. One number therefore sets the order of rules 3 and 4, the probability of skipping a denial ([D148](#d148--aggression-is-an-ordering-plus-a-skip-probability)), and now the evaluation's weighting.
+
+**Rationale:** Two knobs meaning "how defensive is it" would inevitably be set inconsistently — an opponent that denies double threats first but evaluates aggressively is not a temperament, it is a bug that never throws. Deriving keeps the catalogue readable: Marlin's 0.6 and Vireo's 0.4 are the whole of their difference in intent.
+
+**Consequence:** `aggression` is now load-bearing in three places, so changing its meaning is a change to every searching opponent. See [D154](#d154--the-club-tier-was-retuned-to-what-self-play-actually-measures) for what measurement then said about how much temperament is worth.
+
+### D151 — Threat-space search is a separate depth, not a deeper search
+**Question:** Sable is "4-ply plus dedicated threat-space search for double threats". Is that a bigger `searchDepth`, or its own thing?
+
+**Decision:** Its own field, `threatSearchDepth`, counting how many of the opponent's *own* forcing moves it will follow. Zero disables it. It runs before the rule ladder, gated on neither side having an immediate win, and when it finds a forced win that move is the only candidate.
+
+**Rationale:** The two look at different things. A depth-limited search examines every reply and so cannot go far; a forcing search examines only replies the opponent has no choice about, and so goes much further for much less work. Expressing "look eight plies ahead, but only down forcing lines" as a `searchDepth` of 8 would be a lie about the cost.
+
+**Consequence:** The candidate set for a forcing move is not every empty cell but only cells on a line where the mover already holds two and the opponent none — a move creates a threat exactly when it does that, so the narrowing is the definition rather than a heuristic. It is what keeps the fan-out in single figures.
+
+### D152 — The computer's move budget, and where the time is spent
+**Question:** Ticket 010 requires a move "within a time budget that feels responsive on a mid-range phone, with the budget recorded". What is the budget, and does the search meet it?
+
+**Decision:** **250 ms mean and 1 s worst case on a mid-range phone.** Measured on the development machine over complete games: Marlin 0.1 ms mean / 0.6 ms worst, Vireo 2.3 / 25.6, Onyx 1.8 / 12.9, Sable 21.3 / 476. The opponent's visible delay stays at 550 ms (ticket 006), so on that machine every opponent but Sable finishes inside the pause the player already sees.
+
+**Rationale:** Getting there needed three changes, each measured. The search keeps its own mutable board with make/unmake and incrementally maintained line counts instead of copying a `GameState` per node (a four-ply look at the opening position: 438 ms → 79 ms). The root orders its candidates by a one-ply pass and then shares alpha between them (2087 ms → 62 ms worst over a game). The forcing search narrows candidates as in [D151](#d151--threat-space-search-is-a-separate-depth-not-a-deeper-search) (949 ms → 177 ms worst at nine forcing moves).
+
+**Consequence:** Sable is the one opponent near the edge: a phone is perhaps two to four times slower than this machine, which puts its worst case around a second and a half. It is the strongest opponent in 0.1 and it thinks off the interface thread ([D153](#d153--the-search-runs-in-a-background-isolate-injected-as-a-function)), so a visibly long think is a reasonable thing for it to do — but ticket 016's first real-device run must confirm it, and this decision updated with what that finds. The engine test asserts only that no move exceeds 1 s on this machine: an order of magnitude loose on the mean, deliberately, because it guards against a change that makes the search catastrophically slower and is not pretending to be a device measurement.
+
+### D153 — The search runs in a background isolate, injected as a function
+**Question:** "Search never blocks the interface" — but `chooseMove` is synchronous, and a widget test cannot wait for a real isolate.
+
+**Decision:** `GameScreen` takes an `OpponentMove` function, defaulting to `chooseMoveInBackground`, which hands the move list, the bot id and a drawn seed to `compute`. Widget tests pass `chooseMoveInline`, which makes the same choice on the spot. One test uses `tester.runAsync` to exercise the real isolate path with Onyx.
+
+**Rationale:** A `Random` cannot cross an isolate boundary, so the seed is drawn on the interface side and sent as an integer — which incidentally keeps the opponent reproducible from an injected seeded source, as every existing test needs. Injecting a function rather than a class keeps this to one parameter with a default; the seam exists because `testWidgets` runs in a fake-async zone where an isolate's future never completes, which this project has already been bitten by twice ([D138](#d138--the-store-is-pluggable-not-the-repository)).
+
+**Consequence:** The engine stays pure — `dart:isolate` never enters it, and the concurrency concern lives in the app layer where it belongs.
+
+### D154 — The Club tier was retuned to what self-play actually measures
+**Question:** Idea-final §6.4 gives Vireo 2-ply search with defensive weighting at 1550 and Marlin 2-ply with aggressive weighting at 1500, and Onyx a plain 4-ply search at 1650. Does that produce the ladder it claims?
+
+**Decision:** No, and the parameters changed rather than the ratings ([D144](#d144--published-opponent-ratings-are-fixed-calibration-moves-the-parameters-not-the-numbers)). What ships is:
+
+| | search plies | forcing moves | blunder | aggression |
+|---|---|---|---|---|
+| Marlin 1500 | 2 | — | 5% | 0.6 |
+| Vireo 1550 | 3 | 3 | 4% | 0.4 |
+| Onyx 1650 | 3 | 6 | 3% | 0.5 |
+| Sable 1700 | 4 | 9 | 2% | 0.5 |
+
+**Rationale:** Measured over matches of 200–400 games with alternating starts:
+- **Defensive weighting is worth nothing.** At equal depth Vireo and Marlin are level however the two are set (185–185, 180–194, 173–206 across aggression pairs from 0.45/0.55 to 0.45/0.65), and a *more* aggressive Marlin is strictly stronger against Basalt (121–73 at 0.7 against 103–89 at 0.55). In a game of 76 competing lines, building beats shadowing.
+- **Depth barely separates opponents.** A plain four-ply Onyx against a three-ply Vireo was 100–92; a four-ply Onyx against a three-ply Vireo *with* a two-move forcing search actually lost, 73–87.
+- **Forced-win detection dominates everything.** Every rung above Marlin is separated by forcing depth alone.
+
+The shipped ladder, at the sample sizes the tests use, holds across three independent seeds: Marlin–Basalt about 117–75, Vireo–Marlin about 110–90, Onyx–Vireo about 26–14 of 40, Sable–Onyx about 31–9 of 40.
+
+**Consequence:** Vireo and Onyx search three plies rather than the two and four §6.4's prose gives them, and both have a forcing search it does not mention. Both deviations are recorded here rather than silently absorbed, and both are cheap — Onyx costs 1.8 ms a move where the four-ply version cost 59 ms and played worse. The larger finding is for [OI-03](#oi-03--bot-rating-calibration) and ticket 014: the levers that actually move strength in this game are, in order, forcing-search depth, then blunder rate, then search depth, and temperament not at all. The Expert and Master tiers (tickets 025, 026) should be built on the first of those, not the third — and the fact that ordinary depth stops paying past three plies is a statement about the evaluation, which is where that work should start.
+
+### D155 — A bug the retuning exposed: an unforced "forced" win
+**Question:** Sable initially lost to Onyx (19–21) despite strictly more machinery. Why?
+
+**Decision:** The threat-space search returned a double-threat move before checking whether the opponent could simply complete a line on their next move. Reordered so that check comes first; Sable then beat Onyx 52–8 in the same harness.
+
+**Rationale:** A double threat is only unanswerable if the opponent has to answer it. With a win of their own on the board they never do, and the "forced win" was a losing move played in preference to whatever the four-ply search wanted.
+
+**Consequence:** The soundness of a claimed forced win is now a test, not an assumption: over the sequences short enough to check exhaustively, every reply to a claimed win is verified still to lose. A head-to-head result would not have caught this — it only showed up as a bot that was mysteriously no better than the one below it.
+
+### D156 — Two search defects the ladder measurement exposed
+**Question:** With the parameters of [D154](#d154--the-club-tier-was-retuned-to-what-self-play-actually-measures) settled, a four-ply Onyx still lost to a three-ply Vireo, and the tie the positional ladder breaks was sometimes not a tie at all. Both are search defects, not tuning.
+
+**Decision:** Two fixes, both in `search.dart`:
+
+1. **The root window opens one point below the best already in hand**, not at it. With the window at alpha, a candidate that fails low can return exactly alpha — an upper bound the caller cannot distinguish from a genuine tie. Since the caller uses ties to choose (the positional ladder picks among equal-scoring moves), a move the search rated *worse* could be played. One point lower, a bound always lands strictly below the maximum.
+2. **One move of quiescence at the horizon.** A leaf where the side to move completes a line is a decided position, and evaluating it as quiet is simply wrong — the error is largest at even depths, where the search stops just after the opponent's reply. The count of lines one move from completing is maintained incrementally alongside the evaluation, so the check is a comparison rather than a scan.
+
+**Rationale:** The first was found by reasoning about the fail-soft bound rather than by a failing test, and it changed play enough to flatten the whole ladder when fixed — which is what forced the retune in D154. The second was found by disbelieving a measurement: "deeper search loses" is a claim about the searcher, not about the game.
+
+**Consequence:** Quiescence did not, in the end, make four-ply beat three-ply — so the horizon was not the whole story, and the evaluation itself is the remaining suspect. That is now the recorded starting point for the Expert tier rather than a surprise waiting in ticket 025. Both fixes have tests that fail without them: one asserts that no candidate reaches the maximum on a bound, the other that a position where the opponent wins next move never scores as quiet.
+
 ---
 
 ## Appendix — session tooling
