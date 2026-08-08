@@ -25,7 +25,8 @@ void main() {
       expect(pebble.rating, 600);
       expect(pebble.rules, isEmpty);
       expect(pebble.searchDepth, 0);
-      expect(pebble.positionalBias, PositionalBias.none);
+      expect(pebble.centreBias, 0);
+      expect(pebble.cornerBias, 0);
       expect(pebble.blunderRate, 0);
     });
 
@@ -78,12 +79,8 @@ void main() {
       expect(() => chooseMove(won, pebble, Random(1)), throwsStateError);
     });
 
-    test('a configuration beyond ticket 006 fails loudly', () {
-      const future = BotConfig(
-        id: 'twig',
-        rating: 700,
-        rules: {StrategicRule.winNow},
-      );
+    test('a configuration asking for search fails loudly', () {
+      const future = BotConfig(id: 'onyx', rating: 1650, searchDepth: 4);
       expect(() => chooseMove(GameState.initial(), future, Random(1)),
           throwsA(isA<UnimplementedError>()));
     });

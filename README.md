@@ -152,7 +152,7 @@ After each ticket run the skill code-review-expert
 Commit the code to the main branch after each ticket is completed and reviewed.
 ```
 
-Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
+After it stoped half way (4 times): Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
 **Prompt**
 ```
 Continue implementing the game according to the tickets in the ./doc/tickets folder.

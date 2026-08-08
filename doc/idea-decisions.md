@@ -1126,6 +1126,24 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** The panel competes with the board for height, on a screen where every dp above the board costs a sixteenth of a cell. Combined with the first-move caption this pushed `kMinSupportedHeight` from 760 to 780 — a real narrowing of the supported device range, taken deliberately and pinned by the geometry tests.
 
+### D147 — Centre and corner preference are two weights, not one enum
+**Question:** Ticket 006 gave `BotConfig` a `positionalBias` enum with `none | centre | corners`. Ticket 008 requires corner and centre preference to be **configurable independently**.
+
+**Decision:** Replace the enum with two weights, `centreBias` and `cornerBias`, each 0–1.
+
+**Rationale:** A three-valued enum cannot express "both" or "a little of each", and the roster needs exactly that range — Finch has a strong centre preference, Kestrel is corner-hungry, Bramble and Ember have no positional sense at all. It also matches what [Idea-final §6.3](Idea-final.md) already records: the central 2×2×2 and the corners are **the same class** under the board's symmetries, both sitting on seven lines each, so ranking one strictly above the other is a flavour choice rather than a strength one. Two weights say that; an ordered enum implies the opposite.
+
+**Consequence:** A breaking change to an API one ticket old, which is cheap now and would not be later. Nothing outside the engine referenced it. Ticket 009's third positional rule — most lines already part-owned — becomes another term in the same scoring step rather than another enum case.
+
+### D148 — Aggression is an ordering plus a skip probability
+**Question:** Ticket 008 requires aggression to weight "building one's own threats against blocking the opponent's", and the roster describes Kestrel as ignoring opponent double threats "about a third of the time". What is aggression, numerically?
+
+**Decision:** `aggression` ∈ [0,1] does two things: below 0.5 the opponent denies a double threat before building one and at or above it builds first; above 0.5 it additionally skips the denial entirely with probability `2 × aggression − 1`.
+
+**Rationale:** Ordering alone cannot express "a third of the time" — it is all or nothing. A separate "ignore rate" field would have been a second knob meaning nearly the same thing, and Kestrel would be the only opponent to use it. One number that reads as temperament keeps the catalogue honest: Kestrel's 0.67 *is* the one-third.
+
+**Consequence:** Rules 1 and 2 are deliberately exempt. Taking an offered win is never wrong, and missing an offered loss is what `blunderRate` already models — letting aggression skip those too would make a high-aggression opponent simply bad rather than reckless.
+
 ---
 
 ## Appendix — session tooling

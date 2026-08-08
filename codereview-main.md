@@ -590,3 +590,79 @@ Full suite: 51 app tests, 23 engine tests, 8 generator tests. `tool/check.sh` pa
 All three minor findings fixed; the nit removed. The rating maths (ticket 014) and the fold (ticket 027) were pulled forward because this ticket's rating criterion depends on both — recorded as D145 rather than left as an undocumented dependency inversion.
 
 Full suite: 61 app tests, 23 engine tests, 19 rating tests, 8 generator tests. `tool/check.sh` passes.
+
+---
+---
+
+# Code Review: ticket 008 (working tree) → main @ 6d35745
+
+> Generated: 2026-08-11T06:30:00+02:00
+> Changed files: 3 (bot.dart rewritten, bot_test.dart updated, strategic_bot_test.dart new)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 2 |
+
+## Findings
+
+### [MINOR] `PositionalBias` was replaced by two independent weights — `architecture`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:76`
+
+**Evidence:**
+```dart
+final double centreBias;
+final double cornerBias;
+```
+replacing ticket 006's `enum PositionalBias { none, centre, corners }`.
+
+**Problem:** This is a breaking change to an API shipped one ticket ago, and it was not called out in the ticket. Left unrecorded it looks like churn.
+
+**Fix:** Kept, and recorded as D147. The criterion "corner and centre preference are configurable independently" cannot be met by a three-valued enum — Kestrel is corner-hungry, Finch centre-loving, and a configuration must be able to say both or neither. Nothing outside the engine referenced the enum, so the blast radius was two lines of ticket 006's test.
+
+### [NIT] `botName` in the app still knows only Pebble — `architecture`
+
+**File:** `app/lib/game/game_screen.dart:196`
+
+**Problem:** Eight new opponents exist in the catalogue but the app would render `bot:twig` for them.
+
+**Fix:** Deliberately not fixed here. Nothing can start a game against them until ticket 011 adds opponent selection, so there is no reachable defect; 011 and 029 own opponent names and content and will need a real lookup rather than another switch arm.
+
+### [NIT] The fork test's helper duplicates `_followUpWins` — `style`
+
+**File:** `packages/quadrim_engine/test/strategic_bot_test.dart:352`
+
+**Problem:** `_forkCells` in the test re-implements the production scan.
+
+**Fix:** Intentional. A test that asks the implementation whether the implementation is right proves nothing; this one walks all 76 lines independently, which is the same technique ticket 002 used to cross-check the generated line table.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/008-strategic-rule-bots.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Four rules implemented and evaluated in order | ✅ | `_ruleCandidates`; tests for each rule plus "taking a win outranks blocking one" |
+| Rules individually enabled or disabled | ✅ | `Set<StrategicRule>`; Twig has only `winNow` and demonstrably fails to block |
+| Blunder rate replaces the chosen move with a weaker legal one | ✅ | test asserts the considered move is *never* played at rate 1 — a re-roll would sometimes return it |
+| Aggression weights building against blocking | ✅ | ordering of rules 3/4 plus a denial-skip probability; test finds positions where both forks exist and asserts opposite choices |
+| Corner and centre preference configurable independently | ✅ | two weights; test asserts each alone, and both together |
+| All eight exist with the §6.4 configurations | ✅ | catalogue test checks each personality and the descending blunder ladder |
+| Immediate win taken | ✅ | >30/60 seeds for three bots; Pebble finds it <10/60 |
+| Immediate loss blocked | ✅ | Mote blocks ~60% (its 40% blunder rate); Twig, lacking the rule, <10/60 |
+| Double threat played when available | ✅ | over sampled positions, the rule-enabled bot picks a fork more than twice as often as one without |
+| Blunder rates verified statistically | ✅ | 3000 trials per bot, observed within 0.04 of configured |
+| Aggressive builds before blocking, defensive the reverse | ✅ | both >60% of comparable positions |
+| Only legal moves across thousands of positions | ✅ | every catalogue entry, 400 positions each, cross-checked against `legalMoves` and `applyMove` |
+| The eight are distinguishable in play | ✅ | head-to-head matches with alternating starts: Ember beats Pebble >3:1, beats Mote, Twig beats Pebble |
+
+### Post-review outcome
+
+The API change is recorded as D147 rather than left implicit. Both nits stand as written, each with the reason.
+
+Full suite: 37 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` passes.
