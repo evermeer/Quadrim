@@ -116,37 +116,79 @@ void main() {
 
   // D135: 44dp is geometrically impossible for 64 always-visible cells on a
   // phone. The audited floor is kMinCellSize (WCAG 2.5.8 AA plus margin) and
-  // it must hold across the whole supported width range, not just on the
-  // device that happened to be tested first.
-  for (final width in [kMinSupportedWidth, 390.0, 412.0]) {
-    testWidgets('cells stay at or above the audited floor at ${width}dp',
-        (tester) async {
-      tester.view.physicalSize = Size(width * 3, 844 * 3);
+  // it must hold across the whole supported range, not just on the device
+  // that happened to be tested first. Since D137 stacked the layers into one
+  // column, height binds before width — so the corners of the supported
+  // range are exercised on both axes.
+  for (final size in [
+    Size(kMinSupportedWidth, kMinSupportedHeight),
+    const Size(390, 844),
+    const Size(412, 915),
+    Size(412, kMinSupportedHeight), // wide but short: height still binds
+  ]) {
+    testWidgets(
+        'cells stay at or above the audited floor at '
+        '${size.width}x${size.height}dp', (tester) async {
+      tester.view.physicalSize = size * 3;
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
       await _pumpGame(tester);
-      final size = tester.getSize(find.byKey(const ValueKey('cell-0')));
-      expect(size.width, greaterThanOrEqualTo(kMinCellSize),
-          reason: 'cell width below the audited floor at ${width}dp');
-      expect(size.height, greaterThanOrEqualTo(kMinCellSize));
+      final cell = tester.getSize(find.byKey(const ValueKey('cell-0')));
+      expect(cell.width, greaterThanOrEqualTo(kMinCellSize),
+          reason: 'cell width below the audited floor at $size');
+      expect(cell.height, greaterThanOrEqualTo(kMinCellSize));
       // Square in hit-test space: the shear must not squash the target.
-      expect(size.height, closeTo(size.width, 0.01));
+      expect(cell.height, closeTo(cell.width, 0.01));
     });
   }
 
-  testWidgets('the whole board fits without scrolling at the narrowest width',
+  testWidgets('the four layers stack vertically against the right edge',
       (tester) async {
-    tester.view.physicalSize = Size(kMinSupportedWidth * 3, 844 * 3);
+    const width = 412.0;
+    tester.view.physicalSize = const Size(width * 3, 915 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await _pumpGame(tester);
+
+    // D137: one column, layer 1 through layer 4 top to bottom.
+    var previousBottom = 0.0;
+    for (final z in [0, 1, 2, 3]) {
+      final top = tester.getRect(find.byKey(ValueKey('cell-${z * 16}')));
+      expect(top.top, greaterThan(previousBottom),
+          reason: 'layer ${z + 1} must sit below layer $z');
+      previousBottom = tester
+          .getRect(find.byKey(ValueKey('cell-${z * 16 + 15}')))
+          .bottom;
+    }
+
+    // Right-aligned, leaving the left of the screen free. Measured on the
+    // board rather than a cell: getRect transforms the corner points, so a
+    // sheared cell's bottom-right lands one shear-step inside the edge.
+    final board = tester.getRect(find.byType(BoardView));
+    expect(width - board.right, lessThan(12.0),
+        reason: 'board must hug the right edge');
+    // Four stacked layers fill the height, so the board lands at roughly half
+    // the width. The bound that matters is that a usable strip stays free on
+    // the left for the move list and scrubber (ticket 012).
+    expect(board.left, greaterThan(width * 0.3),
+        reason: 'board must leave a usable column free on the left');
+  });
+
+  testWidgets('the whole board fits without scrolling at the smallest screen',
+      (tester) async {
+    tester.view.physicalSize =
+        const Size(kMinSupportedWidth, kMinSupportedHeight) * 3;
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
     await _pumpGame(tester);
     // U1: all four layers and all 64 cells visible at once.
-    for (final i in [0, 16, 32, 63]) {
+    for (var i = 0; i < 64; i++) {
       final r = tester.getRect(find.byKey(ValueKey('cell-$i')));
       expect(r.top, greaterThanOrEqualTo(0.0), reason: 'cell $i above viewport');
-      expect(r.bottom, lessThanOrEqualTo(844.0),
+      expect(r.bottom, lessThanOrEqualTo(kMinSupportedHeight),
           reason: 'cell $i below the fold — board must not need scrolling');
       expect(r.left, greaterThanOrEqualTo(0.0));
       expect(r.right, lessThanOrEqualTo(kMinSupportedWidth));

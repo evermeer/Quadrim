@@ -5,13 +5,17 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../l10n/app_localizations.dart';
 
-/// The 4x4x4 board as four sheared 4x4 grids in a 2x2 arrangement.
+/// The 4x4x4 board as four sheared 4x4 grids stacked in one column, aligned
+/// to the right edge (D137).
 ///
 /// Geometry follows D127: the touch target is the constraint and the board
 /// derives from it. A horizontal shear (not a perspective rotation) carries
 /// the depth illusion, because shear leaves cell height untouched — the
 /// rendered hit area of every cell equals the cell itself. Layers read
-/// z = 0..3 in reading order, nearest first.
+/// z = 0..3 top to bottom, nearest first.
+///
+/// Stacked vertically, screen *height* is normally what limits the cell, so
+/// the size is derived from both axes and the smaller wins.
 class BoardView extends StatelessWidget {
   const BoardView({
     super.key,
@@ -35,39 +39,48 @@ class BoardView extends StatelessWidget {
   static const _shear = 0.15; // horizontal skew; depth cue (see D135)
   static const _cellGap = 2.0;
   static const _layerGap = 8.0;
+  static const _captionHeight = 16.0;
+  static const _captionGap = 2.0;
+
+  /// Fixed chrome above each layer's grid, so the height budget below is
+  /// exact rather than dependent on how tall the caption happens to render.
+  static const _layerChrome = _captionHeight + _captionGap;
+
+  /// Cells stop growing here so the board does not balloon on wide screens.
+  static const _maxCellSize = 48.0;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Two layer-columns; shear consumes extra width, so reserve for it.
-        final gridInnerWidth = (constraints.maxWidth - _layerGap) / 2;
-        final shearReserve = _shear * gridInnerWidth;
-        final cellSize = ((gridInnerWidth - shearReserve) - 3 * _cellGap) / 4;
+        // Width holds one sheared grid; the shear consumes extra width.
+        final byWidth =
+            (constraints.maxWidth / (1 + _shear) - 3 * _cellGap) / 4;
+        // Height holds four layers: 16 cell rows, 12 cell gaps, 3 layer gaps
+        // and four captions.
+        final byHeight = (constraints.maxHeight -
+                4 * _layerChrome -
+                12 * _cellGap -
+                3 * _layerGap) /
+            16;
+        // math.max guards degenerate constraints; a negative size would throw
+        // in the Container below rather than merely look wrong.
+        final cellSize =
+            math.max(1.0, math.min(math.min(byWidth, byHeight), _maxCellSize));
         return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            for (var row = 0; row < 2; row++)
+            for (var z = 0; z < 4; z++)
               Padding(
-                padding: EdgeInsets.only(top: row == 0 ? 0 : _layerGap),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var col = 0; col < 2; col++)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          left: col == 0 ? 0 : _layerGap,
-                        ),
-                        child: _LayerView(
-                          z: row * 2 + col,
-                          state: state,
-                          enabled: enabled,
-                          onCellTap: onCellTap,
-                          highlight: highlight,
-                          cellSize: cellSize,
-                        ),
-                      ),
-                  ],
+                padding: EdgeInsets.only(top: z == 0 ? 0 : _layerGap),
+                child: _LayerView(
+                  z: z,
+                  state: state,
+                  enabled: enabled,
+                  onCellTap: onCellTap,
+                  highlight: highlight,
+                  cellSize: cellSize,
                 ),
               ),
           ],
@@ -110,13 +123,23 @@ class _LayerView extends StatelessWidget {
             // The enclosing Semantics(container) already announces the layer;
             // exposing this Text too would read "Layer 1" twice.
             child: ExcludeSemantics(
-              child: Text(
-                l10n.layerLabel(z + 1),
-                style: Theme.of(context).textTheme.labelSmall,
+              // Fixed height keeps the cell-size arithmetic exact; scaleDown
+              // means a large system text scale shrinks the caption instead
+              // of overflowing it.
+              child: SizedBox(
+                height: BoardView._captionHeight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.layerLabel(z + 1),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: BoardView._captionGap),
           // The shear: x' = x + k*(gridSize - y), so rows nearer the top
           // (deeper into the board) shift right, suggesting depth. The
           // SizedBox reserves that extra width INSIDE this layer's layout —
@@ -275,34 +298,21 @@ class _Pebble extends StatelessWidget {
   }
 }
 
-/// The maximum board width that keeps cells at or above [minCell] — used by
-/// the game screen to centre the board rather than letting cells shrink
-/// below the touch minimum on wide screens, and to report when a screen is
-/// too narrow for the minimum (verified in ticket 021's audit).
-double boardWidthForCell(double minCell) {
-  final grid = 4 * minCell + 3 * BoardView._cellGap;
-  final sheared = grid * (1 + BoardView._shear);
-  return sheared * 2 + BoardView._layerGap;
-}
-
 /// The audited floor (D135). 44dp is geometrically impossible for 64
-/// always-visible cells on a 390dp phone; WCAG 2.5.8 AA permits dense
-/// adjacent-target grids at >=24dp with spacing, and this board keeps a
-/// comfortable margin above that. Ticket 021 verifies on real devices and
-/// the closed-test survey asks about mis-taps.
+/// always-visible cells on a phone; WCAG 2.5.8 AA permits dense adjacent-
+/// target grids at >=24dp with spacing, and this board keeps a comfortable
+/// margin above that. Ticket 021 verifies on real devices and the
+/// closed-test survey asks about mis-taps.
 const double kMinCellSize = 32;
 
-/// The narrowest screen this board is supported on. At 360dp cells land
-/// near 36dp; below roughly 340dp they fall under [kMinCellSize], so
-/// smaller devices are a known limitation for ticket 021 rather than a
-/// silent degradation. Both bounds are pinned by widget tests.
+/// The narrowest screen this board is supported on. Since D137 stacked the
+/// layers vertically it is screen *height* that binds first, but the width
+/// claim still bounds the sheared grid. Both bounds are pinned by widget
+/// tests at [kMinSupportedHeight].
 const double kMinSupportedWidth = 360;
 
-double clampBoardWidth(double available) {
-  // Only an upper bound: cap cells at 48dp so the board does not balloon on
-  // wide screens. Narrower screens get whatever fits — the floor is a
-  // supported-device claim (kMinSupportedWidth), not something this function
-  // can enforce without clipping the board.
-  final ideal = boardWidthForCell(48);
-  return math.min(available, ideal);
-}
+/// The shortest screen this board is supported on. Four stacked layers need
+/// 16 cell rows plus chrome; below this the cell falls under [kMinCellSize],
+/// which is a known limitation for ticket 021's audit rather than a silent
+/// degradation.
+const double kMinSupportedHeight = 760;

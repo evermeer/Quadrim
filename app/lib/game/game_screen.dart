@@ -56,19 +56,18 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
             Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => SizedBox(
-                      width: clampBoardWidth(constraints.maxWidth),
-                      child: BoardView(
-                        state: _state,
-                        enabled: !over,
-                        onCellTap: _onCellTap,
-                        highlight: highlight,
-                      ),
-                    ),
+              // Right-aligned column of four layers (D137). No scroll view:
+              // the board sizes itself to fit, so a scrollable would only
+              // ever hide a layout bug.
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: BoardView(
+                    state: _state,
+                    enabled: !over,
+                    onCellTap: _onCellTap,
+                    highlight: highlight,
                   ),
                 ),
               ),

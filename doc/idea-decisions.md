@@ -1027,6 +1027,20 @@ The repo already lives on GitHub. One workflow, one step: `bash tool/check.sh` �
 ### D136 — Screen-reader announcements via a live region, not explicit calls
 The turn banner is a Semantics live region: every text change (turn, win, draw) is announced automatically. The explicit `SemanticsService.announce` API is deprecated in current Flutter and would have duplicated the live region anyway. Each board cell is its own semantics container so an occupied cell's label never merges into its layer's.
 
+### D137 — The four layers stack in one column against the right edge, not a 2×2 grid
+**Question:** [D135](#d135--board-geometry-2×2-sheared-layers-wcag-aa-cell-sizing) arranged the four layers as a 2×2 grid, on the reasoning that "a single-column stack exceeds screen height". Seeing it running, the user asked for the four boards beneath each other on the right of the screen instead.
+
+**Decision:** One column, layers 1–4 top to bottom, aligned to the **right** edge. The left of the screen is deliberately left free.
+
+**Rationale:** D135's rejection of the single column was measured against the **44dp** target it had just abandoned. Sixteen cell rows at 44dp need 824dp of board height, which no phone has. At the 32dp floor D135 itself adopted, the stack needs 632dp — which fits comfortably. The claim was true of the requirement it was written under and false of the requirement that survived it; it should have been re-derived when the floor moved. Measured, the column gives cells of roughly the same size as the 2×2 grid did (~42dp at 412×915, ~35dp at 390×844), so nothing was paid for the change.
+
+**Consequence:**
+- Cell size is now derived from **both** axes and the smaller wins; screen **height** is normally the binding constraint, where it was width before. `boardWidthForCell` and `clampBoardWidth` were deleted — the board sizes itself from its constraints, so no caller needs to compute a width for it.
+- A second supported-device bound exists: `kMinSupportedHeight` = 760dp, alongside `kMinSupportedWidth` = 360dp. Below either, cells fall under the [D135](#d135--board-geometry-2×2-sheared-layers-wcag-aa-cell-sizing) floor. Both are pinned by widget tests at the corners of the supported range, including a wide-but-short case where height still binds.
+- The game screen no longer wraps the board in a scroll view. The board fits by construction, so a scrollable could only ever hide a layout bug rather than reveal it.
+- The freed left column is where the move list and scrubber (ticket 012) will go. A test asserts at least 30% of the width stays clear so that space is not quietly consumed.
+- Each layer caption now has a fixed height, so the cell arithmetic is exact rather than dependent on how tall the caption renders; it scales down instead of overflowing at large system text sizes.
+
 ---
 
 ## Appendix — session tooling
