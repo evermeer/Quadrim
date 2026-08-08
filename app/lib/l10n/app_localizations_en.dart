@@ -53,4 +53,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToHome => 'Back';
+
+  @override
+  String get playTheComputer => 'Play the computer';
+
+  @override
+  String get yourTurn => 'Your turn';
+
+  @override
+  String botThinking(String bot) {
+    return '$bot is thinking…';
+  }
+
+  @override
+  String get youWin => 'You win!';
+
+  @override
+  String youLose(String bot) {
+    return '$bot wins!';
+  }
+
+  @override
+  String get botPebble => 'Pebble';
 }

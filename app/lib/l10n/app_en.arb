@@ -39,5 +39,31 @@
       "layer": {"type": "int"}
     }
   },
-  "backToHome": "Back"
+  "backToHome": "Back",
+  "playTheComputer": "Play the computer",
+  "@playTheComputer": {
+    "description": "Button starting a game against a computer opponent."
+  },
+  "yourTurn": "Your turn",
+  "@yourTurn": {
+    "description": "Turn indicator in a game against the computer, when it is the player's move."
+  },
+  "botThinking": "{bot} is thinking…",
+  "@botThinking": {
+    "description": "Shown while a computer opponent decides its move. Bot names are never translated.",
+    "placeholders": {
+      "bot": {"type": "String"}
+    }
+  },
+  "youWin": "You win!",
+  "youLose": "{bot} wins!",
+  "@youLose": {
+    "placeholders": {
+      "bot": {"type": "String"}
+    }
+  },
+  "botPebble": "Pebble",
+  "@botPebble": {
+    "description": "Opponent name. Bot names are not translated; routed through l10n so no screen hardcodes a string."
+  }
 }

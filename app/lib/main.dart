@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:quadrim_engine/quadrim_engine.dart';
 
 import 'data/document_store.dart';
 import 'data/documents.dart';
@@ -57,20 +59,39 @@ class _PlaceholderHome extends StatelessWidget {
 
   final GameRepository repository;
 
-  /// Resumes the unfinished pass-and-play game if there is one, otherwise
+  /// Resumes the unfinished game of this [mode] if there is one, otherwise
   /// starts a fresh one. The real main screen (ticket 013) lists games and
   /// makes resuming explicit; until then this is what makes an in-progress
-  /// game survive a restart.
-  Future<String> _resumeOrCreate() async {
+  /// game survive a restart (D141).
+  Future<String> _resumeOrCreate(GameMode mode, {String? opponent}) async {
     final active = await repository.watchActiveGames().first;
     for (final game in active) {
-      if (game.mode == GameMode.passAndPlay) return game.id;
+      if (game.mode == mode) return game.id;
     }
     final created = await repository.createGame(
-      mode: GameMode.passAndPlay,
-      opponent: kGuestOpponent,
+      mode: mode,
+      opponent: opponent ?? kGuestOpponent,
+      opponentRating: opponent == null ? null : pebble.rating,
+      // Who opens alternates by chance until ticket 007 introduces rematch
+      // alternation; against the computer that means the player sometimes
+      // arrives to find a piece already on the board.
+      startingSeat: Random().nextInt(2),
     );
     return created.id;
+  }
+
+  Future<void> _open(
+    BuildContext context,
+    GameMode mode, {
+    String? opponent,
+  }) async {
+    final id = await _resumeOrCreate(mode, opponent: opponent);
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GameScreen(repository: repository, gameId: id),
+      ),
+    );
   }
 
   @override
@@ -88,21 +109,24 @@ class _PlaceholderHome extends StatelessWidget {
               const SizedBox(height: 8),
               Text(l10n.placeholderTagline),
               const Spacer(),
+              // Choosing an opponent is ticket 011's screen; until then the
+              // two modes are two buttons.
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () async {
-                    final id = await _resumeOrCreate();
-                    if (!context.mounted) return;
-                    await Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => GameScreen(
-                          repository: repository,
-                          gameId: id,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () => _open(
+                    context,
+                    GameMode.vsComputer,
+                    opponent: botOpponent(pebble.id),
+                  ),
+                  child: Text(l10n.playTheComputer),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  onPressed: () => _open(context, GameMode.passAndPlay),
                   child: Text(l10n.passAndPlay),
                 ),
               ),

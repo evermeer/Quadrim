@@ -420,3 +420,85 @@ All three minor findings were applied. The first turned out to be worth more tha
 The two nits were deliberately not implemented; both are recorded above with the condition that would make them worth doing.
 
 Full suite after fixes: 43 app tests, 8 engine tests, 8 generator tests. `tool/check.sh` reports ALL CHECKS PASSED.
+
+---
+---
+
+# Code Review: ticket 006 (working tree) → main @ d0d11d1
+
+> Generated: 2026-08-11T04:05:00+02:00
+> Changed files: 11 (bot.dart + bot_test.dart new, game_screen, main, engine export, 2 ARB + 3 generated l10n, bot_game_test.dart new)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 0 |
+| nit | 2 |
+
+## Findings
+
+### [MAJOR] A second tap before the first is stored lets the player take the opponent's turn — `bug`
+
+**File:** `app/lib/game/game_screen.dart:104`
+
+**Evidence:** before the fix,
+```dart
+enabled: !_isOpponentsTurn(game),
+onCellTap: (cell) => widget.repository.appendMove(game.id, cell.index),
+```
+
+**Problem:** `enabled` is derived from `_game`, which only updates when the write round-trips through the repository. A second tap inside that window sees a board that is still enabled and appends a second move — so in a game against the computer the player plays the opponent's move as well, and the opponent then never gets a turn. Reproduced by a test before fixing: two taps in one frame stored `[0, 1]` rather than `[0]`.
+
+**Fix:** One `_busy` flag covering both directions — dispatching a human move and running the opponent's — set synchronously before the await and cleared in a `finally`. Regression test asserts the second tap is dropped *and* that the opponent still gets its own turn afterwards.
+
+### [NIT] `botName` duplicates the catalogue as a switch — `architecture`
+
+**File:** `app/lib/game/game_screen.dart:115`
+
+**Evidence:**
+```dart
+String botName(AppLocalizations l10n, String opponent) =>
+    switch (opponent) { 'bot:pebble' => l10n.botPebble, _ => opponent };
+```
+
+**Problem:** Every new opponent needs an arm here as well as a catalogue entry, and the fallback silently renders the raw `bot:<id>` string if one is forgotten.
+
+**Fix:** Defer to ticket 029, which owns opponent names, avatars and blurbs and will need a real per-bot content lookup anyway. Not worth a lookup table for one entry.
+
+### [NIT] The opponent's pause is a fixed delay, not a floor on real thinking time — `style`
+
+**File:** `app/lib/game/game_screen.dart:15`
+
+**Evidence:**
+```dart
+const Duration kBotMoveDelay = Duration(milliseconds: 550);
+```
+
+**Problem:** Pebble decides instantly so the delay is the whole visible time, but Onyx at 4-ply (ticket 010) will take real time and then add 550ms on top, making strong opponents feel sluggish rather than thoughtful.
+
+**Fix:** When ticket 010 lands, measure the search and pad to a minimum rather than adding to it. Premature now — there is nothing to measure.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/006-bot-engine-and-pebble.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| One move-choosing function serves every opponent, parameterised | ✅ | `bot.dart` `chooseMove(state, config, random)`; no per-bot class |
+| Config covers depth, rules, blunder rate, positional bias, aggression, tie-break randomness | ✅ | `BotConfig`, all six fields with range asserts |
+| Catalogue exists as data, Pebble first | ✅ | `opponentCatalogue`; tests assert unique ids, weakest-first ordering |
+| Randomness injected, not ambient | ✅ | `Random` is a parameter; purity check forbids ambient sources; test asserts same seed + state ⇒ same move |
+| Starting a game offers computer or second human | ✅ | two buttons; test asserts the created game is `vsComputer` against `bot:pebble` |
+| A full game against Pebble reaches win, loss or draw | ✅ | widget test plays to completion and asserts a stored result; verified on the emulator |
+| Chosen move always legal, thousands of positions, every entry | ✅ | 3000 random reachable positions per catalogue entry, cross-checked against `legalMoves` and `applyMove` |
+| The computer's move is visible as it happens | ✅ | `kBotMoveDelay` + "Pebble is thinking…" banner; test asserts the mid-think state and that the board is closed to taps |
+| All new strings in English and Dutch | ✅ | both ARBs; Dutch test asserts "Pebble denkt na…" and "Jij bent aan zet" |
+
+### Post-review outcome
+
+The major finding was fixed test-first: the reproduction was written and confirmed failing (`[0, 1]`) before the guard was added. The two nits are deliberately deferred, each with the ticket that will make it worth doing.
+
+Full suite: 51 app tests, 23 engine tests, 8 generator tests. `tool/check.sh` passes.

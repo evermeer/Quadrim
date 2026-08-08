@@ -181,6 +181,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back'**
   String get backToHome;
+
+  /// Button starting a game against a computer opponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the computer'**
+  String get playTheComputer;
+
+  /// Turn indicator in a game against the computer, when it is the player's move.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get yourTurn;
+
+  /// Shown while a computer opponent decides its move. Bot names are never translated.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} is thinking…'**
+  String botThinking(String bot);
+
+  /// No description provided for @youWin.
+  ///
+  /// In en, this message translates to:
+  /// **'You win!'**
+  String get youWin;
+
+  /// No description provided for @youLose.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} wins!'**
+  String youLose(String bot);
+
+  /// Opponent name. Bot names are not translated; routed through l10n so no screen hardcodes a string.
+  ///
+  /// In en, this message translates to:
+  /// **'Pebble'**
+  String get botPebble;
 }
 
 class _AppLocalizationsDelegate

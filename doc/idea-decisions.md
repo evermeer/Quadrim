@@ -1077,6 +1077,24 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** Verified on the emulator, not only in tests: four moves, `am force-stop`, relaunch, board restored from `files/quadrim/games/` — the exact path the backup allowlist covers.
 
+### D142 — A bot configuration beyond what the code can do fails loudly
+**Question:** `BotConfig` carries search depth, strategic rules and positional bias from ticket 006, but the behaviour behind those fields arrives with tickets 008–010. What should `chooseMove` do if a configuration asks for them today?
+
+**Decision:** Throw `UnimplementedError`. Do not fall through to the random choice.
+
+**Rationale:** Falling through would make any catalogue entry added ahead of its behaviour a second Pebble that *looks* like it works — and the thing that would eventually notice is ticket 014's calibration harness, reporting an opponent as badly mis-rated with no obvious cause. Failing at the first call names the actual problem.
+
+**Consequence:** The catalogue holds exactly one entry until ticket 008. A test asserts the guard fires for a configuration with rules enabled.
+
+### D143 — One busy flag guards both the player's move and the opponent's
+**Question:** Code review found that a second tap landing before the first had round-tripped through the repository was stored as well — in a game against the computer, the player took the opponent's turn and the opponent then never moved.
+
+**Decision:** A single `_busy` flag in the game screen, set synchronously before dispatching either a human move or the opponent's, cleared in a `finally`.
+
+**Rationale:** The board's enabled state is derived from the last *stored* game, so it cannot be the guard against a move that has not been stored yet. Two separate flags — one for the human, one for the opponent — would have left the same window open between them.
+
+**Consequence:** Found by reviewing the diff, then reproduced as a failing test (`[0, 1]` instead of `[0]`) before being fixed. The regression test also asserts the opponent still gets its own turn afterwards, so the guard cannot be "fixed" by simply blocking the opponent.
+
 ---
 
 ## Appendix — session tooling

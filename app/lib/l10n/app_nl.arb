@@ -13,5 +13,11 @@
   "cellLight": "lichte steen",
   "cellDark": "donkere steen",
   "layerLabel": "Laag {layer}",
-  "backToHome": "Terug"
+  "backToHome": "Terug",
+  "playTheComputer": "Tegen de computer",
+  "yourTurn": "Jij bent aan zet",
+  "botThinking": "{bot} denkt na…",
+  "youWin": "Je wint!",
+  "youLose": "{bot} wint!",
+  "botPebble": "Pebble"
 }
