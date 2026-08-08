@@ -19,5 +19,17 @@
   "botThinking": "{bot} denkt na…",
   "youWin": "Je wint!",
   "youLose": "{bot} wint!",
-  "botPebble": "Pebble"
+  "botPebble": "Pebble",
+  "you": "Jij",
+  "sideLight": "Licht",
+  "firstMoveRandom": "Aftrap: {who} — willekeurig gekozen",
+  "firstMoveAlternating": "Aftrap: {who} — bij een revanche wisselt de aftrap",
+  "computerRatingChange": "Computerrating {rating} ({delta})",
+  "computerRatingNote": "Je rating tegen de computer, alleen op dit toestel.",
+  "passAndPlayNoRating": "Samen op één toestel telt niet mee voor je rating.",
+  "rematch": "Revanche",
+  "resign": "Opgeven",
+  "resignConfirmTitle": "Deze partij opgeven?",
+  "resignConfirmBody": "De partij eindigt als verlies voor de speler die aan zet is. Remise aanbieden kan niet.",
+  "cancel": "Annuleren"
 }

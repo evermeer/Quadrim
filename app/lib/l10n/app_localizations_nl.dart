@@ -75,4 +75,49 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get botPebble => 'Pebble';
+
+  @override
+  String get you => 'Jij';
+
+  @override
+  String get sideLight => 'Licht';
+
+  @override
+  String firstMoveRandom(String who) {
+    return 'Aftrap: $who — willekeurig gekozen';
+  }
+
+  @override
+  String firstMoveAlternating(String who) {
+    return 'Aftrap: $who — bij een revanche wisselt de aftrap';
+  }
+
+  @override
+  String computerRatingChange(int rating, String delta) {
+    return 'Computerrating $rating ($delta)';
+  }
+
+  @override
+  String get computerRatingNote =>
+      'Je rating tegen de computer, alleen op dit toestel.';
+
+  @override
+  String get passAndPlayNoRating =>
+      'Samen op één toestel telt niet mee voor je rating.';
+
+  @override
+  String get rematch => 'Revanche';
+
+  @override
+  String get resign => 'Opgeven';
+
+  @override
+  String get resignConfirmTitle => 'Deze partij opgeven?';
+
+  @override
+  String get resignConfirmBody =>
+      'De partij eindigt als verlies voor de speler die aan zet is. Remise aanbieden kan niet.';
+
+  @override
+  String get cancel => 'Annuleren';
 }

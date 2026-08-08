@@ -232,7 +232,7 @@ But the two are **the same class** — inner and corner cells are equivalent und
 
 ### 6.4 The roster
 
-Twenty opponents across five tiers. Ratings are provisional estimates pending calibration.
+Twenty opponents across five tiers. **The ratings below are fixed** — they are the anchor a player's computer rating is earned against, so they do not move (D144). Each opponent's *actual* strength is an approximate estimate at 0.1; where it disagrees with the published number, the opponent's configuration is what gets corrected, not the number.
 
 **Novice**
 

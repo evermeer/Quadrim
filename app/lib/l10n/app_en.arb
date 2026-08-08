@@ -65,5 +65,38 @@
   "botPebble": "Pebble",
   "@botPebble": {
     "description": "Opponent name. Bot names are not translated; routed through l10n so no screen hardcodes a string."
-  }
+  },
+  "you": "You",
+  "sideLight": "Light",
+  "firstMoveRandom": "Opening move: {who} — chosen at random",
+  "@firstMoveRandom": {
+    "description": "Caption explaining who opens a first game and why. who is You, a bot name, Light or Dark.",
+    "placeholders": {
+      "who": {"type": "String"}
+    }
+  },
+  "firstMoveAlternating": "Opening move: {who} — the start alternates in a rematch",
+  "@firstMoveAlternating": {
+    "placeholders": {
+      "who": {"type": "String"}
+    }
+  },
+  "computerRatingChange": "Computer rating {rating} ({delta})",
+  "@computerRatingChange": {
+    "description": "Result screen rating line. delta is a preformatted signed number such as +12 or -8.",
+    "placeholders": {
+      "rating": {"type": "int"},
+      "delta": {"type": "String"}
+    }
+  },
+  "computerRatingNote": "Your rating against the computer, on this device only.",
+  "@computerRatingNote": {
+    "description": "Must make clear this is not a universal rating (spec: two independent ladders)."
+  },
+  "passAndPlayNoRating": "No rating changes in pass and play.",
+  "rematch": "Rematch",
+  "resign": "Resign",
+  "resignConfirmTitle": "Resign this game?",
+  "resignConfirmBody": "The game ends as a loss for the side to move. There is no draw offer.",
+  "cancel": "Cancel"
 }

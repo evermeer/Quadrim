@@ -75,4 +75,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botPebble => 'Pebble';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get sideLight => 'Light';
+
+  @override
+  String firstMoveRandom(String who) {
+    return 'Opening move: $who — chosen at random';
+  }
+
+  @override
+  String firstMoveAlternating(String who) {
+    return 'Opening move: $who — the start alternates in a rematch';
+  }
+
+  @override
+  String computerRatingChange(int rating, String delta) {
+    return 'Computer rating $rating ($delta)';
+  }
+
+  @override
+  String get computerRatingNote =>
+      'Your rating against the computer, on this device only.';
+
+  @override
+  String get passAndPlayNoRating => 'No rating changes in pass and play.';
+
+  @override
+  String get rematch => 'Rematch';
+
+  @override
+  String get resign => 'Resign';
+
+  @override
+  String get resignConfirmTitle => 'Resign this game?';
+
+  @override
+  String get resignConfirmBody =>
+      'The game ends as a loss for the side to move. There is no draw offer.';
+
+  @override
+  String get cancel => 'Cancel';
 }

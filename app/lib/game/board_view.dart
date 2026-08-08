@@ -315,4 +315,10 @@ const double kMinSupportedWidth = 360;
 /// 16 cell rows plus chrome; below this the cell falls under [kMinCellSize],
 /// which is a known limitation for ticket 021's audit rather than a silent
 /// degradation.
-const double kMinSupportedHeight = 760;
+///
+/// Raised from 760 by ticket 007: the caption naming who opens and why costs
+/// about 20dp of chrome, and every dp above the board comes out of the cell
+/// at sixteen rows to one. That trade is deliberate — a permanently reserved
+/// line keeps the board from resizing mid-game, which is worth more than the
+/// handful of very short screens it excludes.
+const double kMinSupportedHeight = 780;

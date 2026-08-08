@@ -4,7 +4,9 @@
 
 The maths is used immediately: ticket 027 computes the player's live computer rating with it, and the same functions serve the human rating on the server from 0.3b.
 
-The harness exists because the twenty published ratings are estimates. All twenty ship together in 0.1 specifically so that they can be calibrated on one scale, against each other and against real testers, before anything is public. Self-play establishes the ordering and the gaps; only humans can fix the absolute scale.
+The harness exists because the twenty opponents must actually play at the strength they advertise. **The published ratings are fixed and do not move (D144)** — they are the anchor every player's computer rating is earned against, so changing one would silently rewrite the meaning of every result already recorded against it. When measurement disagrees with the published number, the *opponent's configuration* is what changes: blunder rate, search depth, rule set, positional bias.
+
+For 0.1 the strengths are an approximate estimate and are stated as such. All twenty ship together so they sit on one scale from the start, and the tuning pass happens once there is enough real play to measure against.
 
 **Blocked by:** 026 — The Master tier
 
@@ -22,5 +24,6 @@ The harness exists because the twenty published ratings are estimates. All twent
 - [ ] Calibration runs as an **adjacent-pairs chain plus a sparse cross-tier sample**, at a reduced node budget — not a full round-robin. Twenty opponents is 190 pairs, the upper-tier pairs are the slowest, and the chain establishes the ordering and the gaps for a fraction of the cost
 - [ ] The whole calibration can be run in one command, with a recorded runtime that makes it practical to repeat after a configuration change
 - [ ] Results confirm the intended strength ordering across all five tiers, and any inversion is treated as a configuration defect rather than accepted
-- [ ] The published numbers are derived by human-anchoring the lower tiers from closed-test results and chaining the upper tiers from measured gaps, with the chain recorded so a later correction can be reasoned about
-- [ ] The harness can also calibrate a single opponent against others whose ratings are already fixed — needed when Quadrim Prime is upgraded and recalibrated at 1.0
+- [ ] The harness **reports** measured strength against each opponent's fixed published rating; it never rewrites the roster (D144)
+- [ ] An opponent measuring outside tolerance for its published rating is reported as a configuration defect, to be corrected by changing that opponent's parameters
+- [ ] The harness can measure a single opponent against others whose configurations are already settled — needed when Quadrim Prime is upgraded at 1.0, and for the post-0.1 tuning pass

@@ -748,7 +748,9 @@ What remains is smaller and still worth stating plainly in the app rather than d
 
 ### 12.3 Calibrating twenty opponents at once
 
-The published ratings in Idea-final.md §6.4 are estimates (open item OI-03). The self-play harness turns them into an ordering; only humans can turn them into a scale.
+**The published ratings in Idea-final.md §6.4 are fixed (D144).** They are the anchor every player's computer rating is earned against, so a rating that moves silently rewrites the meaning of every result already recorded against it. The self-play harness therefore *measures and reports*; it never rewrites the roster. Where measured strength disagrees with the published number, the opponent's configuration is what changes — blunder rate, search depth, rule set, positional bias.
+
+For 0.1 the strengths are an approximate estimate and are described that way. The tuning pass waits for enough real play to measure against, which makes it a post-0.1 activity rather than a release gate.
 
 **All twenty are calibrated together, in 0.1, before anything is published.** That is the reason they all ship at once. The alternative — six now, fourteen later — meant introducing new anchors into a scale that could no longer move, which is a permanent constraint accepted for no benefit.
 
@@ -768,7 +770,7 @@ None of these block starting.
 
 - **OI-01** — push unsupported on Flutter desktop; first matters at 0.5
 - **OI-02** — **substantially reduced.** The strategy is published literature, not original research: independently solved twice, with the first-player-win strategy amounting to roughly 2,929 stored positions and everything else reachable by forcing moves (Idea-final.md §6.5.1). Asset size is kilobytes, not an unknown. What remains is a bounded task, and the **preferred route is to re-derive the strategy in-house by proof-number search** rather than to source it. What cost 1,500 hours in 1980 is a modest modern run, the symmetry reduction shrinks it further, and derived data carries **no licence question** — which sourced data does. The 1980 paper is method and proof, not a dataset, and is copyrighted under JSTOR terms; it is a reference to verify against, not a supply. Prime stays on fallback rung 2 until a derivation is complete and cross-checked against the published result, because unverified data is not a proof
-- **OI-03** — **largely resolved.** All twenty opponents are calibrated together in 0.1 with the method in §12.3, and split ratings make a later correction cheap. What remains is doing it
+- **OI-03** — **narrowed by D144.** The question is no longer "what should the ratings be" — they are fixed — but "do the current parameters produce the strength each fixed rating claims". All twenty are measured together with the method in §12.3; a mismatch is a configuration defect to correct on the bot. The measurement pass needs real play to anchor against, so it lands after 0.1
 - **OI-04** — auto-match cold start; first matters at 0.4
 - **OI-05** — **largely answered.** The expert review sized it: steady state is negligible, roughly 250 games a day inside the free tier. The real exposure was the migration burst — one user with 500 local games costing about 1,000 writes at once — and the clean start removed it entirely. What remains is ordinary steady-state sizing before 0.3b
 

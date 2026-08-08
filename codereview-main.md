@@ -502,3 +502,91 @@ const Duration kBotMoveDelay = Duration(milliseconds: 550);
 The major finding was fixed test-first: the reproduction was written and confirmed failing (`[0, 1]`) before the guard was added. The two nits are deliberately deferred, each with the ticket that will make it worth doing.
 
 Full suite: 51 app tests, 23 engine tests, 8 generator tests. `tool/check.sh` passes.
+
+---
+---
+
+# Code Review: ticket 007 (working tree) → main @ d2fcb31
+
+> Generated: 2026-08-11T05:20:00+02:00
+> Changed files: 10 (rating package + its tests, rating_fold.dart new, game_screen, board_view, 2 ARB + 3 generated l10n, result_screen_test.dart new)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 3 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] The rating change assumed this game was the most recent ever finished — `bug`
+
+**File:** `app/lib/data/rating_fold.dart:56`
+
+**Evidence:** before the fix,
+```dart
+({int before, int after}) computerRatingAround(List<GameDocument> completed) =>
+    ratingAround(ratedGamesFrom(completed));
+```
+
+**Problem:** `ratingAround` reports the step caused by the **last** entry it is given, so this returned the change caused by the most recently completed game on the ladder — correct only while the game whose result screen is open is also the newest one ever finished. That holds for the only navigation 0.1 has today and stops holding the moment ticket 013 lets a player open a finished game from a list.
+
+**Fix:** Take the prefix ending at the game being shown: `computerRatingAround(completed, gameId)` finds the game on the ladder and folds up to and including it. Returns the seed for a game not on the ladder.
+
+### [MINOR] `didUpdateWidget` did not re-point the subscription — `bug`
+
+**File:** `app/lib/game/game_screen.dart:76`
+
+**Evidence:** `initState` subscribed to `widget.gameId` and nothing re-subscribed on change.
+
+**Problem:** Flutter reuses `State` when the same widget type is rebuilt in the same position, so a `GameScreen` handed a different `gameId` kept watching the first one — showing the wrong game with no error. Caught by a test that pumped two games in succession.
+
+**Fix:** `didUpdateWidget` cancels and re-subscribes when the id changes, clearing `_game`, `_rating` and `_busy` with it.
+
+### [MINOR] "You moves first" — `bug`
+
+**File:** `app/lib/l10n/app_en.arb:72`
+
+**Evidence:** `"firstMoveRandom": "{who} moves first, chosen at random"` with `who` ∈ {You, Pebble, Light}.
+
+**Problem:** Composing a sentence around a placeholder that is sometimes second person produces "You moves first". The test asserted the broken string, so it passed.
+
+**Fix:** Reworded to a label form that takes any subject in both languages: "Opening move: {who} — chosen at random" / "Aftrap: {who} — willekeurig gekozen".
+
+### [NIT] `sideDark` was added and never used — `style`
+
+**File:** `app/lib/l10n/app_nl.arb`
+
+**Problem:** Light always opens, so the pass-and-play caption only ever names Light. The dark string was dead in both locales.
+
+**Fix:** Removed. Reintroduce when something needs it.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/007-result-screen-rematch-resign.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Winning line highlighted on the board | ✅ | `highlight` from `Win.line`; result sits *below* the board so the line stays visible |
+| Result states who won, or that it was drawn | ✅ | tests for win, loss, draw and resignation |
+| Computer-rating change shown, labelled so it is not mistaken for universal | ✅ | "Computer rating 1169 (-31)" + "Your rating against the computer, on this device only." — verified on the emulator |
+| Pass-and-play result makes clear no rating changed | ✅ | "No rating changes in pass and play."; test also asserts no rating line appears |
+| Rematch in one tap | ✅ | test taps `Rematch` |
+| Rematch: the player who did not start, starts | ✅ | test asserts `startingSeat` flipped |
+| Rematch records which game it followed | ✅ | `rematchOf` asserted |
+| First game's starter random, reason recorded | ✅ | `StartReason.random` written at creation |
+| The game says who moves first and why | ✅ | permanent caption; cost 20dp of supported height, recorded in `kMinSupportedHeight` |
+| Resign at any point, ends as a loss for the resigner | ✅ | test asserts `winnerSeat` is the other seat and `reason` is `resignation` |
+| No draw-offer mechanism anywhere | ✅ | test asserts no "draw"/"Draw" text on a running game; dialog says so explicitly |
+| Resignation requires confirmation | ✅ | test cancels once and confirms once |
+| Result announced to a screen reader | ✅ | test asserts the banner carries the result text and the live-region flag |
+| All new strings in English and Dutch | ✅ | Dutch test asserts "Je wint!", "Revanche", and the rating note |
+
+### Post-review outcome
+
+All three minor findings fixed; the nit removed. The rating maths (ticket 014) and the fold (ticket 027) were pulled forward because this ticket's rating criterion depends on both — recorded as D145 rather than left as an undocumented dependency inversion.
+
+Full suite: 61 app tests, 23 engine tests, 19 rating tests, 8 generator tests. `tool/check.sh` passes.

@@ -1095,6 +1095,37 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** Found by reviewing the diff, then reproduced as a failing test (`[0, 1]` instead of `[0]`) before being fixed. The regression test also asserts the opponent still gets its own turn afterwards, so the guard cannot be "fixed" by simply blocking the opponent.
 
+### D144 — Published opponent ratings are fixed; calibration moves the parameters, not the numbers
+**Question:** The twenty ratings are estimates ([OI-03](#oi-03--bot-rating-calibration)). Ticket 014's harness will measure real relative strength. When measurement disagrees with the published number, which one changes?
+
+**Decision:** **The published rating is final and does not move.** It is the anchor the player's rating is earned against. When measurement disagrees, the *opponent's configuration* is adjusted — blunder rate, search depth, rule set, positional bias — until its actual strength matches the number it advertises. Recalibration is therefore a tuning task on the bot, not a rewrite of the ladder.
+
+**Rationale:** A rating a player earned against "Onyx, 1650" means nothing if Onyx later becomes 1520. Every derived rating in every player's history would silently change meaning, and the "+12" they saw on a result screen would become unreproducible. Fixing the advertised number and tuning the bot to meet it keeps every past result valid, and makes the failure mode a visible configuration change rather than an invisible historical rewrite. It also matches how the roster is presented: the tiers and their ratings are product, the parameters are implementation.
+
+**Consequence:**
+- Ticket 014's harness measures and **reports**; it never rewrites the roster. An opponent measuring outside tolerance for its published rating is a configuration defect to fix, exactly as a tier inversion already is.
+- `opponentRating` on a completed game (spec §8.3) will now normally equal the catalogue rating for that opponent. It stays, because it is what makes the invariant checkable and would be the only record if the rule were ever broken.
+- Real strength for 0.1 is an approximate estimate and is stated as such. The tuning pass waits for enough real play to measure against, which is a post-0.1 activity.
+- [OI-03](#oi-03--bot-rating-calibration) narrows: it is no longer "what should the ratings be" but "do the current parameters produce the strength each fixed rating claims".
+
+### D145 — The rating maths and the fold were pulled forward into ticket 007
+**Question:** Ticket 007 is blocked only by 004, but one of its acceptance criteria — showing the change to the player's computer rating — needs the rating maths (ticket 014) and the fold over completed games (ticket 027). Which gives?
+
+**Decision:** Implement `quadrim_rating` and the app-side fold now, as part of 007. Tickets 014 and 027 keep their remaining scope: 014 the self-play harness, 027 the main-screen display.
+
+**Rationale:** The alternative was to ship 007 without the rating line and revisit the result screen twice. The maths is small, pure and fully specified in spec §7.2, so there was nothing to discover by waiting — the dependency in the ticket graph was simply missing.
+
+**Consequence:** The ticket ordering is wrong as written, not just inconvenient. Recorded here rather than silently reordered, so the graph can be corrected if it is ever regenerated. `ratingAround` was added beyond §7.2's four exports: a result screen needs the rating either side of one game, and folding twice from the seed to get it would have been the same work written at the call site.
+
+### D146 — The result sits below the board, not over it
+**Question:** Ticket 007 calls for a "result screen", and also requires the four cells of the winning line to be highlighted so the player can see how it was won. A screen that covers the board satisfies one and defeats the other.
+
+**Decision:** An inline result panel below the board, not a route or a dialog.
+
+**Rationale:** Seeing *how* the line was completed is the more valuable half of the requirement, and it is worthless if the board is behind a card. Keeping both on screen also means rematch is one tap from the position that was just played rather than one tap after a dismissal.
+
+**Consequence:** The panel competes with the board for height, on a screen where every dp above the board costs a sixteenth of a cell. Combined with the first-move caption this pushed `kMinSupportedHeight` from 760 to 780 — a real narrowing of the supported device range, taken deliberately and pinned by the geometry tests.
+
 ---
 
 ## Appendix — session tooling

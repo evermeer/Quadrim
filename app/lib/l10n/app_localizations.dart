@@ -217,6 +217,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pebble'**
   String get botPebble;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @sideLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get sideLight;
+
+  /// Caption explaining who opens a first game and why. who is You, a bot name, Light or Dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening move: {who} — chosen at random'**
+  String firstMoveRandom(String who);
+
+  /// No description provided for @firstMoveAlternating.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening move: {who} — the start alternates in a rematch'**
+  String firstMoveAlternating(String who);
+
+  /// Result screen rating line. delta is a preformatted signed number such as +12 or -8.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer rating {rating} ({delta})'**
+  String computerRatingChange(int rating, String delta);
+
+  /// Must make clear this is not a universal rating (spec: two independent ladders).
+  ///
+  /// In en, this message translates to:
+  /// **'Your rating against the computer, on this device only.'**
+  String get computerRatingNote;
+
+  /// No description provided for @passAndPlayNoRating.
+  ///
+  /// In en, this message translates to:
+  /// **'No rating changes in pass and play.'**
+  String get passAndPlayNoRating;
+
+  /// No description provided for @rematch.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch'**
+  String get rematch;
+
+  /// No description provided for @resign.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign'**
+  String get resign;
+
+  /// No description provided for @resignConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resign this game?'**
+  String get resignConfirmTitle;
+
+  /// No description provided for @resignConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The game ends as a loss for the side to move. There is no draw offer.'**
+  String get resignConfirmBody;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
 }
 
 class _AppLocalizationsDelegate

@@ -6,6 +6,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
+import '../data/rating_fold.dart';
 import '../l10n/app_localizations.dart';
 import 'board_view.dart';
 
@@ -43,6 +44,10 @@ class _GameScreenState extends State<GameScreen> {
   late final Random _random = widget.random ?? Random();
   GameDocument? _game;
 
+  /// The computer-ladder rating either side of this game, computed once the
+  /// game completes. Null while the game is running, or in pass-and-play.
+  ({int before, int after})? _rating;
+
   /// True from the moment a move is dispatched until it has been stored and
   /// observed. It guards both directions:
   ///
@@ -62,6 +67,22 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   @override
+  void didUpdateWidget(GameScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Flutter reuses this State when the same widget type is rebuilt in the
+    // same position, so a changed game id must re-point the subscription —
+    // otherwise the screen keeps showing the game it was first given.
+    if (oldWidget.gameId != widget.gameId) {
+      _subscription?.cancel();
+      _game = null;
+      _rating = null;
+      _busy = false;
+      _subscription =
+          widget.repository.watchGame(widget.gameId).listen(_onGame);
+    }
+  }
+
+  @override
   void dispose() {
     _subscription?.cancel();
     super.dispose();
@@ -69,7 +90,19 @@ class _GameScreenState extends State<GameScreen> {
 
   void _onGame(GameDocument? game) {
     setState(() => _game = game);
-    if (game != null) unawaited(_playOpponentIfItsTurn(game));
+    if (game == null) return;
+    unawaited(_playOpponentIfItsTurn(game));
+    if (game.status == GameStatus.complete &&
+        game.mode == GameMode.vsComputer &&
+        _rating == null) {
+      unawaited(_loadRating());
+    }
+  }
+
+  Future<void> _loadRating() async {
+    final completed = await widget.repository.loadCompletedGames();
+    if (!mounted) return;
+    setState(() => _rating = computerRatingAround(completed, widget.gameId));
   }
 
   bool _isOpponentsTurn(GameDocument game) =>
@@ -103,6 +136,61 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  /// Resigning ends the game as a loss for the resigner. There is deliberately
+  /// no draw offer anywhere in the product — a player who wants out of a dead
+  /// position resigns.
+  Future<void> _resign(GameDocument game) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.resignConfirmTitle),
+        content: Text(l10n.resignConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.resign),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    // Against the computer the player resigns whoever is to move; sharing a
+    // device, it is the side whose turn it is that gives up.
+    final seat = game.mode == GameMode.vsComputer
+        ? game.playerSeat
+        : game.seatToMove;
+    await widget.repository.resign(game.id, seat: seat);
+  }
+
+  /// A rematch alternates the start, which is what keeps a series fair given
+  /// the first player's advantage, and records the game it followed.
+  Future<void> _rematch(GameDocument game) async {
+    final next = await widget.repository.createGame(
+      mode: game.mode,
+      opponent: game.opponent,
+      opponentRating: game.opponentRating,
+      playerSeat: game.playerSeat,
+      startingSeat: (game.startingSeat + 1) % 2,
+      startReason: StartReason.rematchAlternation,
+      rematchOf: game.id,
+    );
+    if (!mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => GameScreen(
+          repository: widget.repository,
+          gameId: next.id,
+          random: widget.random,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -112,16 +200,25 @@ class _GameScreenState extends State<GameScreen> {
         title: Text(game != null && game.mode == GameMode.vsComputer
             ? botName(l10n, game.opponent)
             : l10n.passAndPlay),
+        actions: [
+          if (game != null && game.status == GameStatus.active)
+            TextButton(
+              onPressed: () => _resign(game),
+              child: Text(l10n.resign),
+            ),
+        ],
       ),
       body: SafeArea(
         child: game == null
             ? const SizedBox.shrink()
             : _GameBody(
                 game: game,
+                rating: _rating,
                 // Taps are the human's alone: a game against the computer
                 // must not let the player move for it while it thinks.
                 enabled: !_isOpponentsTurn(game),
                 onCellTap: _play,
+                onRematch: () => _rematch(game),
               ),
       ),
     );
@@ -136,13 +233,17 @@ String botName(AppLocalizations l10n, String opponent) =>
 class _GameBody extends StatelessWidget {
   const _GameBody({
     required this.game,
+    required this.rating,
     required this.enabled,
     required this.onCellTap,
+    required this.onRematch,
   });
 
   final GameDocument game;
+  final ({int before, int after})? rating;
   final bool enabled;
   final void Function(Cell cell) onCellTap;
+  final VoidCallback onRematch;
 
   @override
   Widget build(BuildContext context) {
@@ -150,18 +251,30 @@ class _GameBody extends StatelessWidget {
     // The board is replayed from the stored moves, never held alongside them.
     final state = GameState.fromMoves(game.moves);
     final o = outcome(state);
-    final over = o is! Ongoing;
+    // The record decides whether the game is over, not the board: a
+    // resignation leaves a perfectly playable position behind.
+    final over = game.status == GameStatus.complete;
     final highlight = o is Win ? o.line : const <int>[];
     final lightToMove = state.sideToMove == Player.first;
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: _TurnBanner(
-            text: _statusText(l10n, game, o, lightToMove),
-            lightToMove: !over && lightToMove,
-            over: over,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Column(
+            children: [
+              _TurnBanner(
+                text: _statusText(l10n, game, o, lightToMove),
+                lightToMove: !over && lightToMove,
+                over: over,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _firstMoveCaption(l10n, game),
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -181,20 +294,107 @@ class _GameBody extends StatelessWidget {
             ),
           ),
         ),
-        if (over)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton.tonal(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.backToHome),
-              ),
-            ),
-          ),
+        // The result sits below the board rather than over it, so the four
+        // highlighted cells of the winning line stay visible while the player
+        // reads how it ended.
+        if (over) _ResultPanel(game: game, rating: rating, onRematch: onRematch),
       ],
     );
   }
+}
+
+class _ResultPanel extends StatelessWidget {
+  const _ResultPanel({
+    required this.game,
+    required this.rating,
+    required this.onRematch,
+  });
+
+  final GameDocument game;
+  final ({int before, int after})? rating;
+  final VoidCallback onRematch;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final vsComputer = game.mode == GameMode.vsComputer;
+    final change = rating;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (vsComputer && change != null) ...[
+              Text(
+                l10n.computerRatingChange(
+                  change.after,
+                  _signed(change.after - change.before),
+                ),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 2),
+              // The two ladders are independent; this one never leaves the
+              // device, and saying so is the point of the label.
+              Text(
+                l10n.computerRatingNote,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+            if (!vsComputer)
+              Text(
+                l10n.passAndPlayNoRating,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onRematch,
+                    child: Text(l10n.rematch),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.tonal(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.backToHome),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "+12", "-8", "0" — the sign is part of the text rather than left to the
+/// reader, because a bare number next to a rating reads as the rating.
+String _signed(int delta) => delta > 0 ? '+$delta' : '$delta';
+
+/// Who opens, and why. Shown for the whole game rather than only at move one,
+/// because against a computer opponent that moves first the player would
+/// otherwise never see it.
+String _firstMoveCaption(AppLocalizations l10n, GameDocument game) {
+  final who = switch (game.mode) {
+    GameMode.vsComputer => game.startingSeat == game.playerSeat
+        ? l10n.you
+        : botName(l10n, game.opponent),
+    // Sharing a device the seats are anonymous, so the colours name them.
+    GameMode.passAndPlay => l10n.sideLight,
+  };
+  return switch (game.startReason) {
+    StartReason.random => l10n.firstMoveRandom(who),
+    StartReason.rematchAlternation => l10n.firstMoveAlternating(who),
+  };
 }
 
 /// Against a person the seats are anonymous, so the light/dark colours name
@@ -214,6 +414,16 @@ String _statusText(
         : l10n.youLose(botName(l10n, game.opponent)),
     Win(winner: Player.first) => l10n.lightWins,
     Win() => l10n.darkWins,
+    Ongoing() when game.status == GameStatus.complete && vsComputer =>
+      // Resignation: the board is still playable, so only the record knows.
+      game.result?.winnerSeat == game.playerSeat
+          ? l10n.youWin
+          : l10n.youLose(botName(l10n, game.opponent)),
+    // Light is whoever opened, which is startingSeat — not seat 0.
+    Ongoing() when game.status == GameStatus.complete =>
+      game.result?.winnerSeat == game.startingSeat
+          ? l10n.lightWins
+          : l10n.darkWins,
     Ongoing() when vsComputer => game.seatToMove == game.playerSeat
         ? l10n.yourTurn
         : l10n.botThinking(botName(l10n, game.opponent)),
