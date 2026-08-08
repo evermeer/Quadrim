@@ -666,3 +666,118 @@ replacing ticket 006's `enum PositionalBias { none, centre, corners }`.
 The API change is recorded as D147 rather than left implicit. Both nits stand as written, each with the reason.
 
 Full suite: 37 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` passes.
+
+---
+
+# Code Review: ticket 009 (working tree) → main @ 5adae40
+
+> Generated: 2026-08-08
+> Base: HEAD (5adae40), work uncommitted
+> Changed files: 4 — `packages/quadrim_engine/lib/src/bot.dart`, `packages/quadrim_engine/test/positional_bot_test.dart` (new), `packages/quadrim_engine/test/strategic_bot_test.dart`, `doc/idea-decisions.md`
+
+---
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 2 |
+
+---
+
+## Findings
+
+### [MINOR] The ladder's ordering invariant was asserted for Basalt alone — `architecture`
+
+**File:** `packages/quadrim_engine/test/positional_bot_test.dart:95`
+
+**Evidence (before the fix):**
+```dart
+expect(basalt.centreBias - basalt.cornerBias, greaterThan(basalt.lineBias));
+expect(basalt.cornerBias - basalt.edgeBias, greaterThan(basalt.lineBias));
+```
+
+**Problem:** D149 makes the positional order a property of the numbers, not of the code, but nothing checked it beyond one hard-coded opponent — ticket 010 adds Marlin and Vireo as "Basalt plus 2-ply search", and either could raise `lineBias` past the 0.5 class gap and silently invert the ladder with the whole suite still green.
+
+**Fix:** Applied. The assertion is now a loop over every catalogue entry with `lineBias > 0` (`positional_bot_test.dart:99`), so the check arrives with the opponent rather than having to be remembered.
+
+### [MINOR] `expect(opponentCatalogue.last, same(basalt))` breaks in the next ticket — `bug`
+
+**File:** `packages/quadrim_engine/test/positional_bot_test.dart:99`
+
+**Evidence (before the fix):**
+```dart
+expect(opponentCatalogue.last, same(basalt));
+```
+
+**Problem:** Basalt is last only until Marlin (1500) is appended in ticket 010. The assertion tests the catalogue's length, not anything about Basalt, and would fail for a correct change.
+
+**Fix:** Applied — `expect(opponentCatalogue, contains(basalt))`. Ordering by rating is already covered by the catalogue test in `strategic_bot_test.dart:42`.
+
+### [NIT] `edgeBias` ships unused by every opponent — `architecture`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:84`
+
+**Evidence:**
+```dart
+final double edgeBias;
+```
+
+**Problem:** No catalogue entry sets it; the forty-eight non-centre non-corner cells are scored 0 by all ten.
+
+**Fix:** Kept deliberately. The ticket requires that "positional bias is configurable, so later opponents can weight centre, corner and edge differently", and two knobs cannot express a preference for the third class. Recorded in D149, and exercised by a test that builds an edge-preferring configuration (`positional_bot_test.dart:78`) so the knob is proven rather than merely present.
+
+### [NIT] `_match` and `_randomPosition` are duplicated across the two bot test files — `style`
+
+**File:** `packages/quadrim_engine/test/positional_bot_test.dart:163`
+
+**Evidence:**
+```dart
+({int wins, int losses, int draws}) _match(
+```
+duplicating `strategic_bot_test.dart:8`.
+
+**Problem:** Two copies of a self-play harness will drift.
+
+**Fix:** Left as is for now. Extracting a `test/support/` library is the right move once a third file needs it — which ticket 010 will make true, since search opponents need the same match harness. Noted there rather than done here.
+
+---
+
+## Rejected during validation
+
+- **"Changing the two `if`s to an `else if` chain alters Clover, Finch and Kestrel."** Checked and false: `isCentreCell` requires all three coordinates inner and `isCornerCell` all three outer, so the classes are disjoint and no cell ever scored both. With `edgeBias` defaulting to 0 the third branch reproduces the old `0.0` starting score exactly.
+- **"Normalising by 7 makes the building term unfair to the 48 cells that lie on only 4 lines."** The divisor is a constant, so it cannot change the ordering by count within or across classes. Wrong assumption; discarded.
+- **"Scoring every candidate now costs 64 x 7 x 4 board reads per move."** `GameState.owner` is a list index (`engine.dart:99`), so this is ~1800 array reads, and the term is skipped entirely when `lineBias == 0`. The 120-game self-play match runs inside the suite's one-second budget. Not a finding.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/009-positional-rules-and-basalt.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Positional rules implemented and evaluated in order: centre, corner, most part-owned lines, random | ✅ | `bot.dart:405` scores class then building term; four tests, one per rung (`positional_bot_test.dart:18–60`) |
+| Used both when no strategic rule fires and as the tie-break within a rule | ✅ | `chooseMove` passes `_ruleCandidates(...) ?? moves` to the one `_positionalPick` (`bot.dart:261`); the tie-break case is tested at `positional_bot_test.dart:117` |
+| Positional bias configurable — centre, corner and edge weighted differently | ✅ | `centreBias`/`cornerBias`/`edgeBias`/`lineBias` (`bot.dart:81–95`); edge-preferring configuration tested at `positional_bot_test.dart:78` |
+| Basalt exists with the specified configuration | ✅ | `bot.dart:200` — 1400, all four rules, 6% blunder, matching Idea-final §6.4; asserted at `positional_bot_test.dart:90` |
+| Given an empty board, Basalt opens in the central cube | ✅ | 200 seeds, opened centrally in more than 170 — the shortfall is its configured 6% blunder rate, verified statistically as ticket 008 established |
+| Given several cells satisfying the same strategic rule, Basalt picks by the tie-break rather than at random | ✅ | a position offering wins at cell 21 (centre) and cell 3 (corner): Basalt takes 21 in >85/100 seeds, Ember — same rule, no positional sense — in <70/100 |
+| Basalt beats Ember over a significant number of self-play games | ✅ | 120 games with alternating starts: 103–17–0. Re-run at two further seeds off-test: 96–24–0 and 102–17–1 |
+| Every opponent still returns only legal moves across thousands of random positions | ✅ | 3000 positions for Basalt (`positional_bot_test.dart:150`), plus the existing all-catalogue sweeps in `bot_test.dart:59` and `strategic_bot_test.dart:282`, which now cover ten entries |
+
+### Gaps
+
+None — every criterion is addressed.
+
+### Notes
+
+- `botName` in `app/lib/game/game_screen.dart:231` still knows only Pebble, so Basalt would render as `bot:basalt`. Unchanged from ticket 008's review and still unreachable: nothing can start a game against it until ticket 011 adds opponent selection.
+- Basalt is the tenth of twenty opponents and the last that needs no search. Ticket 010 is the first that must implement `searchDepth`, which `chooseMove` currently rejects with `UnimplementedError` by design (D142).
+
+### Post-review outcome
+
+Both minor findings fixed; both nits stand with the reason recorded. New decision: D149 — the positional ladder is weights arranged to produce an order, not an if-else chain.
+
+Full suite: 49 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` passes.

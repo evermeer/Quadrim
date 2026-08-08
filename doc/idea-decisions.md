@@ -1144,6 +1144,15 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** Rules 1 and 2 are deliberately exempt. Taking an offered win is never wrong, and missing an offered loss is what `blunderRate` already models — letting aggression skip those too would make a high-aggression opponent simply bad rather than reckless.
 
+### D149 — The positional ladder is weights, not an if-else chain
+**Question:** Ticket 009 states the positional rules as an order — centre, then corner, then the cell on the most lines already part-owned, then random — but also requires that "positional bias is configurable, so later opponents can weight centre, corner and edge differently". An order and a set of weights are not the same thing. Which is the implementation?
+
+**Decision:** Weights, arranged to produce the order. `centreBias`, `cornerBias` and `edgeBias` weight the three classes the board partitions into, and `lineBias` weights the building term, scored as the fraction of the seven lines through a cell that already hold two or more own pieces and no opponent piece. Basalt uses 1.0 / 0.5 / 0.0 / 0.25, so any centre cell (1.00–1.25) outscores any corner (0.50–0.75), which outscores any other cell (0.00–0.25), and the building term decides within each class.
+
+**Rationale:** A hard-coded chain would satisfy the first criterion and defeat the third: it cannot express an opponent that cares more about the structure it is building than about where on the board that structure sits, which is exactly the direction the Club and Expert tiers move in. One scoring function also means the ladder is the tie-break inside a strategic rule and the whole decision when no rule fires, without a second code path. The three classes partition the board, so the class weights are an `else if` chain rather than a sum — a cell cannot be both centre and corner.
+
+**Consequence:** The order is a property of the numbers, not of the code, so a mis-set weight silently reorders the ladder. Basalt's test asserts the gaps (`centreBias − cornerBias > lineBias`, and the same for corner over edge) rather than the resulting behaviour alone. `edgeBias` ships unused by any opponent; it exists because the criterion asks for it and because the alternative is discovering the need for it in ticket 025.
+
 ---
 
 ## Appendix — session tooling

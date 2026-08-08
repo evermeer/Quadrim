@@ -36,13 +36,13 @@ import 'package:test/test.dart';
 
 void main() {
   group('catalogue', () {
-    test('the nine shipped so far are ordered weakest first, ids unique', () {
+    test('those shipped so far are ordered weakest first, ids unique', () {
       final ids = opponentCatalogue.map((b) => b.id).toSet();
       expect(ids.length, opponentCatalogue.length);
       final ratings = opponentCatalogue.map((b) => b.rating).toList();
       expect(ratings, orderedEquals(ratings.toList()..sort()));
       expect(ids, containsAll(['pebble', 'twig', 'mote', 'clover', 'bramble',
-        'finch', 'kestrel', 'willow', 'ember']));
+        'finch', 'kestrel', 'willow', 'ember', 'basalt']));
     });
 
     test('the configurations match the roster in Idea-final 6.4', () {
