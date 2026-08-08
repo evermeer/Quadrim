@@ -20,6 +20,10 @@ Future<LocalGameRepository> _pumpGame(WidgetTester tester) async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
   addTearDown(repository.dispose);
   await tester.pumpWidget(QuadrimApp(repository: repository));
+  // The main screen's one primary button opens a chooser; ticket 011 replaces
+  // the chooser with the opponent list, and this route stays the same.
+  await tester.tap(find.text('New game'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Pass and play'));
   await tester.pumpAndSettle();
   return repository;

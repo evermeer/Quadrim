@@ -10,6 +10,7 @@ import '../data/game_repository.dart';
 import '../data/rating_fold.dart';
 import '../l10n/app_localizations.dart';
 import 'board_view.dart';
+import 'opponent_name.dart';
 
 /// How long a computer opponent visibly takes over its move. Pebble decides
 /// in microseconds; without a pause its piece would simply appear, which
@@ -273,11 +274,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 }
-
-/// Bot names are never translated, but they still go through l10n so no
-/// screen hardcodes a user-facing string (D132).
-String botName(AppLocalizations l10n, String opponent) =>
-    switch (opponent) { 'bot:pebble' => l10n.botPebble, _ => opponent };
 
 class _GameBody extends StatelessWidget {
   const _GameBody({

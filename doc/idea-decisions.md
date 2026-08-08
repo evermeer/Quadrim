@@ -1077,6 +1077,8 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Consequence:** Verified on the emulator, not only in tests: four moves, `am force-stop`, relaunch, board restored from `files/quadrim/games/` — the exact path the backup allowlist covers.
 
+**Superseded by ticket 013.** The main screen now lists games in progress and resuming one is a tap on that list, which is what this decision said it would be. "New game" always starts a new game; nothing silently resumes any more.
+
 ### D142 — A bot configuration beyond what the code can do fails loudly
 **Question:** `BotConfig` carries search depth, strategic rules and positional bias from ticket 006, but the behaviour behind those fields arrives with tickets 008–010. What should `chooseMove` do if a configuration asks for them today?
 
@@ -1230,6 +1232,33 @@ The shipped ladder, at the sample sizes the tests use, holds across three indepe
 **Rationale:** The first was found by reasoning about the fail-soft bound rather than by a failing test, and it changed play enough to flatten the whole ladder when fixed — which is what forced the retune in D154. The second was found by disbelieving a measurement: "deeper search loses" is a claim about the searcher, not about the game.
 
 **Consequence:** Quiescence did not, in the end, make four-ply beat three-ply — so the horizon was not the whole story, and the evaluation itself is the remaining suspect. That is now the recorded starting point for the Expert tier rather than a surprise waiting in ticket 025. Both fixes have tests that fail without them: one asserts that no candidate reaches the maximum on a bound, the other that a position where the opponent wins next move never scores as quiet.
+
+### D157 — Pass-and-play does not count towards the record
+**Question:** The main screen shows wins, losses and draws. In pass-and-play the player holds both seats. Does a pass-and-play win count as a win?
+
+**Decision:** No. Statistics and the per-opponent breakdown cover games against the computer only. Pass-and-play games still appear in the lists of games in progress and games finished, and a finished one reports which *side* won rather than whether "you" did.
+
+**Rationale:** Every pass-and-play game is simultaneously a win and a loss for the one person playing it. Counting it either way makes the totals mean nothing, and counting it both ways makes them mean less. The same reasoning already excludes it from the rating ladder, where `passAndPlayNoRating` says so on the result screen — this is the same rule applied to the same games in a second place.
+
+**Consequence:** A player who only ever passes and plays sees an empty record and a seed rating, which is correct but bleak. Ticket 029's copy should make the record's scope explicit rather than leaving "0 won" to imply failure.
+
+### D158 — The main screen watches completed games rather than loading them once
+**Question:** Ticket 013 asks both that the statistics, breakdown, rating and milestones come from **one** load rather than four sweeps, and that they update when a game finishes without a restart. `GameRepository` offers both `loadCompletedGames()` (one-shot) and `watchCompletedGames()` (a stream). Which?
+
+**Decision:** The stream. One `HomeSummary.from(...)` fold per emission, feeding all four readings.
+
+**Rationale:** The one-load criterion is about not sweeping storage once per statistic; it is satisfied by any design where the four readings share a list. The stream satisfies it *and* the live-update criterion, where the one-shot load would need a manual refresh on every navigation back. `loadCompletedGames` remains the right call for the result screen, which folds a fixed history at a fixed moment.
+
+**Consequence:** The fold runs on every change rather than once per visit. It is a fold over a list already in memory, so the cost is nothing until the history is very large — and when it is, the answer is pagination in the repository, not a cached total (spec §7.2 forbids storing what the games already say).
+
+### D159 — Entry points ship before their screens, as placeholders
+**Question:** Ticket 013 requires a button that opens the tutorial (ticket 018) and an entry point to settings (ticket 028). Neither screen exists. Disable the buttons, omit them, or wire them to something?
+
+**Decision:** Wire them. Both open a placeholder route carrying one translated line, and tickets 018 and 028 replace that route rather than add one.
+
+**Rationale:** A disabled control is indistinguishable from a broken one, and an omitted control means the layout is re-litigated when the screen lands. A placeholder that says so is honest, is one widget, and makes the navigation path itself testable now.
+
+**Consequence:** One new string, `comingSoon`, which must be gone from both `.arb` files by ticket 022. Nobody outside this repository sees it before then: ticket 016's closed test is blocked by both 018 and 028.
 
 ---
 

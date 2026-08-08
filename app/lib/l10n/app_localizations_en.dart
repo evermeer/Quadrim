@@ -119,4 +119,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String ratingValue(int rating) {
+    return '$rating';
+  }
+
+  @override
+  String get newGame => 'New game';
+
+  @override
+  String get tutorial => 'Tutorial';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get comingSoon => 'Arrives in a later build.';
+
+  @override
+  String get computerRatingHeading => 'Against the computer';
+
+  @override
+  String get yourRecord => 'Your record';
+
+  @override
+  String recordLine(int wins, int losses, int draws) {
+    return '$wins won · $losses lost · $draws drawn';
+  }
+
+  @override
+  String get recordEmpty => 'No finished games against the computer yet.';
+
+  @override
+  String get byOpponent => 'By opponent';
+
+  @override
+  String opponentRecord(int wins, int losses, int draws, int played) {
+    return '$wins–$losses–$draws in $played games';
+  }
+
+  @override
+  String get inProgress => 'In progress';
+
+  @override
+  String get finishedGames => 'Finished games';
+
+  @override
+  String movesPlayed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count moves played',
+      one: '1 move played',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get resultWon => 'Won';
+
+  @override
+  String get resultLost => 'Lost';
+
+  @override
+  String get resultDrawn => 'Drawn';
+
+  @override
+  String get noGamesYet => 'No games yet.';
+
+  @override
+  String get botTwig => 'Twig';
+
+  @override
+  String get botMote => 'Mote';
+
+  @override
+  String get botClover => 'Clover';
+
+  @override
+  String get botBramble => 'Bramble';
+
+  @override
+  String get botFinch => 'Finch';
+
+  @override
+  String get botKestrel => 'Kestrel';
+
+  @override
+  String get botWillow => 'Willow';
+
+  @override
+  String get botEmber => 'Ember';
+
+  @override
+  String get botBasalt => 'Basalt';
+
+  @override
+  String get botMarlin => 'Marlin';
+
+  @override
+  String get botVireo => 'Vireo';
+
+  @override
+  String get botOnyx => 'Onyx';
+
+  @override
+  String get botSable => 'Sable';
 }

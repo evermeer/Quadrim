@@ -98,5 +98,72 @@
   "resign": "Resign",
   "resignConfirmTitle": "Resign this game?",
   "resignConfirmBody": "The game ends as a loss for the side to move. There is no draw offer.",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "ratingValue": "{rating}",
+  "@ratingValue": {
+    "description": "A rating on its own. Deliberately unformatted: a rating is written 1200, not 1,200 or 1.200, in every locale this ships in.",
+    "placeholders": {
+      "rating": {"type": "int"}
+    }
+  },
+  "newGame": "New game",
+  "@newGame": {
+    "description": "The main screen's primary action."
+  },
+  "tutorial": "Tutorial",
+  "settings": "Settings",
+  "comingSoon": "Arrives in a later build.",
+  "@comingSoon": {
+    "description": "Placeholder body for a screen whose ticket has not shipped yet."
+  },
+  "computerRatingHeading": "Against the computer",
+  "@computerRatingHeading": {
+    "description": "Label above the computer rating. Must not read as a universal rating: a separate rating against people arrives at 0.3b."
+  },
+  "yourRecord": "Your record",
+  "recordLine": "{wins} won · {losses} lost · {draws} drawn",
+  "@recordLine": {
+    "placeholders": {
+      "wins": {"type": "int"},
+      "losses": {"type": "int"},
+      "draws": {"type": "int"}
+    }
+  },
+  "recordEmpty": "No finished games against the computer yet.",
+  "byOpponent": "By opponent",
+  "opponentRecord": "{wins}–{losses}–{draws} in {played} games",
+  "@opponentRecord": {
+    "description": "One opponent's record: wins-losses-draws.",
+    "placeholders": {
+      "wins": {"type": "int"},
+      "losses": {"type": "int"},
+      "draws": {"type": "int"},
+      "played": {"type": "int"}
+    }
+  },
+  "inProgress": "In progress",
+  "finishedGames": "Finished games",
+  "movesPlayed": "{count, plural, =1{1 move played} other{{count} moves played}}",
+  "@movesPlayed": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "resultWon": "Won",
+  "resultLost": "Lost",
+  "resultDrawn": "Drawn",
+  "noGamesYet": "No games yet.",
+  "botTwig": "Twig",
+  "botMote": "Mote",
+  "botClover": "Clover",
+  "botBramble": "Bramble",
+  "botFinch": "Finch",
+  "botKestrel": "Kestrel",
+  "botWillow": "Willow",
+  "botEmber": "Ember",
+  "botBasalt": "Basalt",
+  "botMarlin": "Marlin",
+  "botVireo": "Vireo",
+  "botOnyx": "Onyx",
+  "botSable": "Sable"
 }

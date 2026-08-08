@@ -917,3 +917,119 @@ The published ratings are unchanged, which is what D144 requires: measurement mo
 One major and one minor finding, both fixed; the major one test-first. Two nits stand with the reason. New decisions: D150–D156.
 
 Full suite: 71 engine tests, 63 app, 19 rating, 8 generator. `tool/check.sh` passes.
+
+---
+
+# Code Review: ticket 013 (working tree) → main @ 8e3f06f
+
+> Generated: 2026-08-08
+> Base: HEAD (8e3f06f), work uncommitted
+> Changed files: 13 — `app/lib/home/home_screen.dart` (new), `app/lib/data/home_summary.dart` (new), `app/lib/game/opponent_name.dart` (new), `app/lib/main.dart`, `app/lib/game/game_screen.dart`, both `.arb` files and their generated output, `app/test/home_screen_test.dart` (new), `app/test/home_summary_test.dart` (new), `app/test/{smoke,game_screen,bot_game}_test.dart`, `doc/idea-decisions.md`
+
+---
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 2 |
+
+---
+
+## Findings
+
+### [MINOR] The finished-games list built every row, and it has no upper bound — `performance`
+
+**File:** `app/lib/home/home_screen.dart:139`
+
+**Evidence (before the fix):**
+```dart
+child: ListView(
+  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+  children: [
+    ...
+    for (final game in _completedGames)
+      _FinishedGameTile(game: game, onTap: () => _openGame(game.id)),
+```
+
+**Problem:** `ListView(children: [...])` materialises every child regardless of what is on screen, and the number of finished games grows without limit — a closed tester with a hundred games rebuilds a hundred tiles on every emission of the completed-games stream.
+
+**Fix:** Applied. The screen is now a `CustomScrollView`: the fixed sections stay eager in a `SliverList.list`, and each game list is a `SliverList.builder` behind a `_gameSection` helper. A regression test fails on the old code — with sixty finished games it asserts that fewer than sixty rows are built.
+
+### [MINOR] "Most recent first" was asserted nowhere on the screen — `test-coverage`
+
+**File:** `app/test/home_screen_test.dart:145`
+
+**Problem:** Criterion 14 is an ordering claim about this screen, and the screen simply passes `watchCompletedGames()` through. The repository's contract suite covers the stream's order; nothing covered the screen honouring it, so reversing the list here would have passed every test.
+
+**Fix:** Applied — a test finishes a game against Pebble and then one against Ember and asserts Ember's row sits above Pebble's, below the "Finished games" heading. It deliberately locates the rows by position rather than by count, because the per-opponent breakdown above orders the *other* way (weakest first) and both sections name the same opponents.
+
+### [NIT] D141 read as current after this ticket retired it — `documentation`
+
+**File:** `doc/idea-decisions.md:1071`
+
+**Evidence:**
+```
+**Decision:** Until ticket 013 exists, the placeholder home button resumes the
+unfinished pass-and-play game if there is one and starts a fresh one otherwise.
+```
+
+**Problem:** The placeholder home is gone and "New game" now always creates one; resuming is a tap on the in-progress list. A reader of the decisions file would have found a rule the code no longer follows.
+
+**Fix:** Applied — D141 carries a "Superseded by ticket 013" note. Not a rewrite: the decision was correct when taken and the record of why should survive.
+
+### [NIT] `_ActiveGameTile` and `_FinishedGameTile` differ only in their subtitle — `style`
+
+**File:** `app/lib/home/home_screen.dart:295`
+
+**Problem:** Two twelve-line widgets that share everything but one line.
+
+**Fix:** Not applied. Merging them means a nullable-result parameter or a subtitle callback, which is more machinery than the duplication costs — and ticket 023's milestones and ticket 012's replay entry point are both likely to push the two further apart, not closer together.
+
+---
+
+## Rejected during validation
+
+- **"`_newGame` no longer resumes an in-progress game, regressing D141."** Checked: D141 explicitly scoped itself to "until ticket 013 exists… the real main screen lists games and makes resuming explicit". This is that screen, and the in-progress list is that affordance. Recorded rather than treated as a defect.
+- **"The pass-and-play result label picks the wrong side."** `_resultLabel` compares `winnerSeat` to `startingSeat`, and the seat that moves first is the one holding the light pieces — `seatForMove(0) == startingSeat` in `documents.dart`. Correct, and covered by a test asserting "Light wins!".
+- **"`setState` in a stream listener registered from `initState` can fire before the first build."** The repository's `_watch` delivers its initial value through `Stream.multi`'s controller, which is asynchronous; no listener runs synchronously during `initState`.
+
+## Functional Validation
+
+⚠️ No Jira key — ticket reference `doc/tickets/013-main-screen.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| Overall statistics show wins, losses and draws | ✅ | `HomeSummary.from`; `home_summary_test.dart` "counts wins, losses and draws from the player's seat", and the screen renders `1 won · 0 lost · 0 drawn` |
+| Broken down by opponent | ✅ | `HomeSummary.byOpponent`; screen test "breaks the record down by opponent, weakest first" |
+| Games in progress listed with their opponent; tapping resumes | ✅ | `_ActiveGameTile`; screen test "tapping a game in progress resumes it" asserts the stored move is still on the board |
+| Completed games most recent first; tapping opens the replay | ✅ | screen tests "lists finished games most recent first" and "tapping a finished game opens it". The replay *scrubber* is ticket 012 — tapping opens the finished game and its result, which 012 adds to rather than replaces |
+| A large, obviously primary button starts a new game | ✅ | full-width `FilledButton`; test "the primary button starts a new game" |
+| A separate button opens the tutorial | ✅ | `TextButton`, opening a placeholder route until ticket 018 (D159); test "the tutorial and settings entry points exist and open" |
+| An entry point to settings exists | ✅ | app-bar `IconButton`, same placeholder treatment until ticket 028 |
+| Statistics, breakdown, rating and milestones from **one** load | ✅ | one `HomeSummary.from(games)` per stream emission (`home_screen.dart:50`); the rating comes from that same list via `rating_fold`, and `OpponentRecord.everBeaten` is the seam ticket 023's milestones read |
+| Statistics and lists update when a game finishes, without a restart | ✅ | screen test drives a game to completion against a live screen and asserts the record, the list and the section headings all change |
+| The computer rating is shown prominently and labelled as such | ✅ | `_RatingCard` with `computerRatingHeading` and the existing `computerRatingNote`; test asserts all three |
+| Room for the human rating arriving at 0.3b, never reading as one number | ✅ | the rating is a labelled `Card`, not a number in a statistics row — a card takes a sibling card. Deliberately no placeholder for the second rating: an empty "against people" slot is noise for a release that has no online play |
+| Statistics derived at read time, never stored | ✅ | nothing in `home_summary.dart` writes; the only storage call the screen makes is `createGame` |
+| Navigable by screen reader, readable at the largest font scale | ✅ | rating card exposes one composed `Semantics` label instead of three fragments; section headings carry `header: true`, asserted per heading; a 2× text-scale test asserts no overflow exception |
+| All new strings present in English and Dutch | ✅ | 20 new keys plus 13 opponent names in both `.arb` files; a Dutch-locale test asserts seven of them render and `tool/check.sh` rejects any user-facing literal outside l10n |
+
+### Gaps
+
+None — every criterion is addressed.
+
+### Notes
+
+- The string check caught `Text('$rating')` as a hardcoded literal. Rather than suppress it, the number now goes through `l10n.ratingValue`. It is deliberately **not** given `decimalPattern`: that renders 1200 as "1,200" in English and "1.200" in Dutch, and a rating is written unseparated in both.
+- `botName` moved out of `game_screen.dart` into `game/opponent_name.dart` and grew from one opponent to the fourteen that ship. The Expert and Master tiers (tickets 025, 026) still fall through to the raw `bot:<id>` key — deliberately, because an obviously wrong string on screen is better than a plausible name for an opponent that does not exist yet.
+- Choosing among twenty opponents is ticket 011, which is blocked by 026 and 029. Until then the primary button opens a two-option sheet, and every game against the computer is against Pebble.
+
+### Post-review outcome
+
+Two minor findings, both fixed, one with a regression test that fails on the previous code. Two nits, one applied to the decisions file and one declined with a reason. New decisions: D157–D159, plus a supersession note on D141.
+
+Full suite: 86 app tests, 71 engine, 19 rating, 8 generator. `tool/check.sh` passes.

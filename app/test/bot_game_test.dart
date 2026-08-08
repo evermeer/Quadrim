@@ -41,6 +41,8 @@ void main() {
     final repo = await _repository();
     await tester.pumpWidget(QuadrimApp(repository: repo));
 
+    await tester.tap(find.text('New game'));
+    await tester.pumpAndSettle();
     expect(find.text('Play the computer'), findsOneWidget);
     expect(find.text('Pass and play'), findsOneWidget);
 

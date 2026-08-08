@@ -289,6 +289,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// A rating on its own. Deliberately unformatted: a rating is written 1200, not 1,200 or 1.200, in every locale this ships in.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating}'**
+  String ratingValue(int rating);
+
+  /// The main screen's primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get newGame;
+
+  /// No description provided for @tutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial'**
+  String get tutorial;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Placeholder body for a screen whose ticket has not shipped yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives in a later build.'**
+  String get comingSoon;
+
+  /// Label above the computer rating. Must not read as a universal rating: a separate rating against people arrives at 0.3b.
+  ///
+  /// In en, this message translates to:
+  /// **'Against the computer'**
+  String get computerRatingHeading;
+
+  /// No description provided for @yourRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Your record'**
+  String get yourRecord;
+
+  /// No description provided for @recordLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{wins} won · {losses} lost · {draws} drawn'**
+  String recordLine(int wins, int losses, int draws);
+
+  /// No description provided for @recordEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished games against the computer yet.'**
+  String get recordEmpty;
+
+  /// No description provided for @byOpponent.
+  ///
+  /// In en, this message translates to:
+  /// **'By opponent'**
+  String get byOpponent;
+
+  /// One opponent's record: wins-losses-draws.
+  ///
+  /// In en, this message translates to:
+  /// **'{wins}–{losses}–{draws} in {played} games'**
+  String opponentRecord(int wins, int losses, int draws, int played);
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get inProgress;
+
+  /// No description provided for @finishedGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished games'**
+  String get finishedGames;
+
+  /// No description provided for @movesPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 move played} other{{count} moves played}}'**
+  String movesPlayed(int count);
+
+  /// No description provided for @resultWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Won'**
+  String get resultWon;
+
+  /// No description provided for @resultLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get resultLost;
+
+  /// No description provided for @resultDrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawn'**
+  String get resultDrawn;
+
+  /// No description provided for @noGamesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No games yet.'**
+  String get noGamesYet;
+
+  /// No description provided for @botTwig.
+  ///
+  /// In en, this message translates to:
+  /// **'Twig'**
+  String get botTwig;
+
+  /// No description provided for @botMote.
+  ///
+  /// In en, this message translates to:
+  /// **'Mote'**
+  String get botMote;
+
+  /// No description provided for @botClover.
+  ///
+  /// In en, this message translates to:
+  /// **'Clover'**
+  String get botClover;
+
+  /// No description provided for @botBramble.
+  ///
+  /// In en, this message translates to:
+  /// **'Bramble'**
+  String get botBramble;
+
+  /// No description provided for @botFinch.
+  ///
+  /// In en, this message translates to:
+  /// **'Finch'**
+  String get botFinch;
+
+  /// No description provided for @botKestrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Kestrel'**
+  String get botKestrel;
+
+  /// No description provided for @botWillow.
+  ///
+  /// In en, this message translates to:
+  /// **'Willow'**
+  String get botWillow;
+
+  /// No description provided for @botEmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Ember'**
+  String get botEmber;
+
+  /// No description provided for @botBasalt.
+  ///
+  /// In en, this message translates to:
+  /// **'Basalt'**
+  String get botBasalt;
+
+  /// No description provided for @botMarlin.
+  ///
+  /// In en, this message translates to:
+  /// **'Marlin'**
+  String get botMarlin;
+
+  /// No description provided for @botVireo.
+  ///
+  /// In en, this message translates to:
+  /// **'Vireo'**
+  String get botVireo;
+
+  /// No description provided for @botOnyx.
+  ///
+  /// In en, this message translates to:
+  /// **'Onyx'**
+  String get botOnyx;
+
+  /// No description provided for @botSable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sable'**
+  String get botSable;
 }
 
 class _AppLocalizationsDelegate
