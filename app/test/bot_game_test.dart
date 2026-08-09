@@ -49,6 +49,16 @@ void main() {
     expect(find.text('Pass and play'), findsOneWidget);
 
     await tester.tap(find.text('Play the computer'));
+    await tester.pumpAndSettle();
+
+    // Since ticket 011 the mode sheet leads to the opponent list rather than
+    // straight into a game against a default opponent, so nothing is stored
+    // until somebody is chosen.
+    expect(find.text('Choose an opponent'), findsOneWidget);
+    expect(await repo.watchActiveGames().first, isEmpty,
+        reason: 'no game exists until an opponent is picked');
+
+    await tester.tap(find.text('Pebble'));
     // Bounded pumps rather than pumpAndSettle: when the opponent opens, the
     // thinking indicator animates indefinitely and the frame scheduler never
     // goes idle (D166). Long enough to clear the opponent's visible pause.

@@ -162,6 +162,7 @@ The goal is to have all tickets implemented so that there is a complete testable
 Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
+Then open the new app in the simulator.
 ```
 
 After being notified obout problems with the implementation of the computer player, 

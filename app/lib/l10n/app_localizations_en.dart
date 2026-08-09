@@ -250,6 +250,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.';
 
   @override
+  String get chooseOpponent => 'Choose an opponent';
+
+  @override
+  String yourRating(int rating) {
+    return 'Your rating: $rating';
+  }
+
+  @override
+  String get matchEven => 'Even match';
+
+  @override
+  String get matchStronger => 'Above your level';
+
+  @override
+  String get matchWeaker => 'Below your level';
+
+  @override
+  String opponentSemantics(
+    String name,
+    String tier,
+    int rating,
+    String match,
+    String blurb,
+  ) {
+    return '$name. $tier. Rating $rating. $match. $blurb';
+  }
+
+  @override
   String get tierNovice => 'Novice';
 
   @override

@@ -1636,3 +1636,159 @@ so committing it would only preserve a stale answer.
 
 Gate after the fixes: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
 App 100 tests, engine 120, rating 19, linegen 8.
+
+---
+
+# Code Review: ticket 011 — opponent selection
+
+> Generated: 2026-08-09T21:20:00Z
+> Base: c12d5fc (working tree vs HEAD, changes uncommitted at review time)
+> Changed files: 8 (6 modified, 2 new)
+
+Scope is ticket 011 only. `app/lib/l10n/app_localizations*.dart` excluded as
+generated output.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 2 |
+
+---
+
+## Findings
+
+### [MINOR] At 200% text scale the app-bar title is pushed off the top of the screen — `accessibility`
+
+**File:** `app/lib/game/opponent_screen.dart:40`
+
+**Evidence:**
+```dart
+bottom: PreferredSize(
+  preferredSize: const Size.fromHeight(28),
+```
+
+Measured by pumping the screen at three text scales and reading the rects:
+
+| Text scale | "Choose an opponent" | "Your rating: 1182" | Gap |
+|---|---|---|---|
+| 1.0 | 14 – 42 | 56 – 76 | 14 px |
+| 1.5 | — | 46 – 76 | — |
+| 2.0 | **-1 – 37** | 36 – 76 | **-0.5 px** |
+
+**Problem:** The bottom strip is a constant 28 logical pixels while the text
+inside it scales with the user's font-size setting — 20 px at 1.0, 40 px at 2.0.
+The `AppBar` absorbs the difference by growing upward, so at 200% the title's
+top edge lands at **-1** — clipped by the screen — and the two strings touch.
+No overflow error is raised, because nothing here is a flex; Flutter simply
+paints them over one another. Android's font-size slider reaches 200% on stock
+Pixel settings, so this is a real device configuration, not a synthetic one.
+
+**Fix:** Scale the reserved height with the text, so the strip grows as its
+contents do:
+
+```dart
+bottom: PreferredSize(
+  preferredSize: Size.fromHeight(MediaQuery.textScalerOf(context).scale(28)),
+```
+
+Ticket 021 is the accessibility audit, but this was introduced here and the fix
+is one line.
+
+---
+
+### [NIT] A comment claims a dependency on catalogue ordering that the code does not have — `documentation`
+
+**File:** `app/lib/game/opponent_screen.dart:31`
+
+**Evidence:**
+```dart
+// Grouped by walking the catalogue in order rather than filtering it five
+// times: `catalogue_test.dart` holds tiers to be contiguous and ordered
+// weakest first, which makes one pass correct and keeps the screen's
+// ordering the catalogue's business rather than this widget's.
+```
+
+**Problem:** `putIfAbsent` groups correctly whether or not tiers are contiguous
+— an interleaved catalogue would still produce five correct sections. The
+contiguity guarantee affects only the *order* the sections appear in, not
+whether the grouping is right. The comment claims correctness rests on an
+invariant it does not rest on, which is the kind of thing a later reader
+believes and then reasons from.
+
+**Fix:** Say what the invariant actually buys: section order follows first
+appearance, and the catalogue's ordering is what makes that the ladder's order.
+
+---
+
+### [NIT] A missing blurb would produce a label ending in a bare full stop — `correctness`
+
+**File:** `app/lib/game/opponent_screen.dart:113`
+
+**Evidence:**
+```dart
+final blurb = botBlurb(l10n, key) ?? '';
+```
+feeding
+```dart
+label: l10n.opponentSemantics(..., blurb),
+```
+whose pattern is `{name}. {tier}. Rating {rating}. {match}. {blurb}`.
+
+**Problem:** With an empty blurb the announcement ends `"... Even match. "` —
+harmless, but the `?? ''` implies the case is expected while the message shape
+assumes it is not. **Not currently reachable:** the screen iterates
+`opponentCatalogue`, and `opponent_content_test.dart:31` fails if any catalogue
+member lacks a blurb in either language. It is defensive code guarding a case
+another test already forbids.
+
+**Fix:** Either drop the fallback and let the missing blurb be a loud failure,
+or keep it and note in the comment that the guard is belt-and-braces against a
+condition `opponent_content_test.dart` already enforces.
+
+---
+
+## Questions asked of this review that came back clean
+
+**Can `_newGame` create a game the player did not choose, or leave a dangling
+route?** No. `home_screen.dart:104` returns early when the opponent screen pops
+null, before `createGame` is reached, and `bot_game_test.dart:57` asserts that
+no game is stored at that point. Pass-and-play never reaches the list and
+correctly passes `kGuestOpponent` with a null rating.
+
+**Any `BuildContext` used across an async gap?** No. Every `await` is followed
+by a `mounted` check before the next `context` use — `flutter analyze` runs with
+`use_build_context_synchronously` active and reports no issues.
+
+**Does `matchBalance` behave at the extremes?** Yes. The widest pairing the app
+can produce is the rating floor against the top of the ladder — `expectedScore`
+computes `10^((2400-100)/400)`, about 5.6 million, with no overflow and no
+division by zero. `rating_test.dart` covers the seed against both ends of the
+catalogue, the boundary either side of 190 points, and band symmetry across a
+0–600 sweep.
+
+**Does the tier grouping break if the catalogue is reordered?** No — see the nit
+above; grouping is order-independent, and section order is pinned by
+`catalogue_test.dart`.
+
+## Outcome — all three applied
+
+| # | Finding | What was done |
+|---|---|---|
+| 1 | Title clipped at 200% text scale | Height now scales with the text; regression test at 1.0/1.5/2.0 |
+| 2 | Comment overstated an ordering dependency | Rewritten to say what the invariant actually buys |
+| 3 | Blurb fallback guarded an impossible case | Kept, with the reason and the test that forbids it named |
+
+The regression test for (1) asserts **positions**, not the absence of an
+exception, because there is no exception: at 200% the AppBar grows upward to
+fit its oversized bottom strip and paints the title off the top of the screen
+with no overflow stripe and no error. Verified against the unfixed code, where
+it reports `title clipped off the top at scale 2.0`.
+
+Gate after the fixes: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
+App 111 tests, engine 120, rating 24, linegen 8. Verified on an emulator as
+well: all twenty render grouped by tier, with three distinct match cues and
+both Master blurbs stating the first-player qualification in place.

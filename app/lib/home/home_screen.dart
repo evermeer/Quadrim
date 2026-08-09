@@ -9,6 +9,7 @@ import '../data/game_repository.dart';
 import '../data/home_summary.dart';
 import '../game/game_screen.dart';
 import '../game/opponent_name.dart';
+import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
 
 /// The app's home: what the player has done, what they are in the middle of,
@@ -74,9 +75,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Choosing among twenty opponents is ticket 011's screen. Until it exists
-  /// the primary button offers the two modes, which is the smallest thing
-  /// that makes "one obviously primary button starts a new game" true.
+  /// Mode first, then — for a computer game — which of the twenty.
+  ///
+  /// Backing out of the opponent list cancels the whole flow rather than
+  /// falling back to a default opponent: a game against somebody the player
+  /// did not choose is worse than no game (ticket 011).
   Future<void> _newGame() async {
     final l10n = AppLocalizations.of(context)!;
     final mode = await showModalBottomSheet<GameMode>(
@@ -101,11 +104,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (mode == null || !mounted) return;
 
+    BotConfig? bot;
+    if (mode == GameMode.vsComputer) {
+      bot = await Navigator.of(context).push<BotConfig>(
+        MaterialPageRoute<BotConfig>(
+          builder: (_) => OpponentScreen(playerRating: _summary.computerRating),
+        ),
+      );
+      if (bot == null || !mounted) return;
+    }
+
     final game = await widget.repository.createGame(
       mode: mode,
-      opponent:
-          mode == GameMode.vsComputer ? botOpponent(pebble.id) : kGuestOpponent,
-      opponentRating: mode == GameMode.vsComputer ? pebble.rating : null,
+      opponent: bot == null ? kGuestOpponent : botOpponent(bot.id),
+      opponentRating: bot?.rating,
       startingSeat: (widget.random ?? Random()).nextInt(2),
     );
     if (!mounted) return;

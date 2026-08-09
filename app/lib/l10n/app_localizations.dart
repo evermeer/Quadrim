@@ -518,6 +518,48 @@ abstract class AppLocalizations {
   /// **'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.'**
   String get strategyCredit;
 
+  /// Title of the screen listing all twenty computer opponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an opponent'**
+  String get chooseOpponent;
+
+  /// Shown on the opponent list so the choice can be made against the player's own strength.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rating: {rating}'**
+  String yourRating(int rating);
+
+  /// Neither side is heavily favoured. Paired with a visual cue that does not rely on colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Even match'**
+  String get matchEven;
+
+  /// No description provided for @matchStronger.
+  ///
+  /// In en, this message translates to:
+  /// **'Above your level'**
+  String get matchStronger;
+
+  /// No description provided for @matchWeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Below your level'**
+  String get matchWeaker;
+
+  /// The whole of one opponent row, announced as a single unit so a screen reader user hears name, tier and strength together rather than swiping through four fragments.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}. {tier}. Rating {rating}. {match}. {blurb}'**
+  String opponentSemantics(
+    String name,
+    String tier,
+    int rating,
+    String match,
+    String blurb,
+  );
+
   /// Difficulty tier. Opponent names are never translated; tier labels are.
   ///
   /// In en, this message translates to:

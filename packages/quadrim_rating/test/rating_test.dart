@@ -170,4 +170,56 @@ void main() {
       }
     });
   });
+
+  group('matchBalance', () {
+    test('equal ratings are an even match', () {
+      expect(matchBalance(own: 1200, opponent: 1200), MatchBalance.even);
+    });
+
+    test('the bands are symmetric', () {
+      // Whatever gap makes an opponent far stronger must make the mirror of it
+      // far weaker, or the screen would call a pairing fair from one side and
+      // lopsided from the other.
+      for (var gap = 0; gap <= 600; gap += 25) {
+        final up = matchBalance(own: 1200, opponent: 1200 + gap);
+        final down = matchBalance(own: 1200, opponent: 1200 - gap);
+        if (up == MatchBalance.opponentStronger) {
+          expect(down, MatchBalance.opponentWeaker, reason: 'gap $gap');
+        } else {
+          expect(down, MatchBalance.even, reason: 'gap $gap');
+        }
+      }
+    });
+
+    test('the band means the same thing at both ends of the ladder', () {
+      // Expressed as an expected score rather than a rating gap, so the same
+      // pairing shape reads identically for a beginner and an expert.
+      expect(
+        matchBalance(own: 600, opponent: 800),
+        matchBalance(own: 2200, opponent: 2400),
+      );
+      expect(
+        matchBalance(own: 600, opponent: 1000),
+        matchBalance(own: 2000, opponent: 2400),
+      );
+    });
+
+    test('a quarter expected score is where lopsided begins', () {
+      // 190 points is the documented boundary; either side of it must differ,
+      // or the constant is not doing what its comment claims.
+      expect(matchBalance(own: 1200, opponent: 1200 + 191),
+          MatchBalance.opponentStronger);
+      expect(matchBalance(own: 1200, opponent: 1200 + 180), MatchBalance.even);
+    });
+
+    test('the whole catalogue range resolves for a seeded player', () {
+      // A new player sits on the seed. Pebble at 600 and Prime at 2400 must
+      // land in the outer bands, and something near the seed must not.
+      expect(matchBalance(own: kSeedRating, opponent: 600),
+          MatchBalance.opponentWeaker);
+      expect(matchBalance(own: kSeedRating, opponent: 2400),
+          MatchBalance.opponentStronger);
+      expect(matchBalance(own: kSeedRating, opponent: 1250), MatchBalance.even);
+    });
+  });
 }

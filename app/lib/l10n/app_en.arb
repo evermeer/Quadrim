@@ -176,6 +176,32 @@
   "@strategyCredit": {
     "description": "Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app."
   },
+  "chooseOpponent": "Choose an opponent",
+  "@chooseOpponent": {
+    "description": "Title of the screen listing all twenty computer opponents."
+  },
+  "yourRating": "Your rating: {rating}",
+  "@yourRating": {
+    "description": "Shown on the opponent list so the choice can be made against the player's own strength.",
+    "placeholders": { "rating": { "type": "int" } }
+  },
+  "matchEven": "Even match",
+  "@matchEven": {
+    "description": "Neither side is heavily favoured. Paired with a visual cue that does not rely on colour."
+  },
+  "matchStronger": "Above your level",
+  "matchWeaker": "Below your level",
+  "opponentSemantics": "{name}. {tier}. Rating {rating}. {match}. {blurb}",
+  "@opponentSemantics": {
+    "description": "The whole of one opponent row, announced as a single unit so a screen reader user hears name, tier and strength together rather than swiping through four fragments.",
+    "placeholders": {
+      "name": { "type": "String" },
+      "tier": { "type": "String" },
+      "rating": { "type": "int" },
+      "match": { "type": "String" },
+      "blurb": { "type": "String" }
+    }
+  },
   "tierNovice": "Novice",
   "@tierNovice": {
     "description": "Difficulty tier. Opponent names are never translated; tier labels are."

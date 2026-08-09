@@ -91,3 +91,37 @@ int ratingFrom(Iterable<RatedGame> games) {
   );
   return (before: before, after: after);
 }
+
+/// How lopsided a pairing is, from the player's side.
+///
+/// Ticket 011 asks that opponents far above or below the player be
+/// distinguishable from a fair match. That is a rating question, not a
+/// presentation one, so it is answered here where it can be tested without a
+/// widget — and answered in terms of [expectedScore] rather than a rating gap,
+/// so the bands mean the same thing at 600 as at 2400 (D185).
+enum MatchBalance {
+  /// Neither side is heavily favoured; both results are plausible.
+  even,
+
+  /// The opponent is far enough ahead that the player is not expected to win.
+  opponentStronger,
+
+  /// The player is far enough ahead that the game is not much of a test.
+  opponentWeaker,
+}
+
+/// Below this expected score the opponent counts as far stronger, and above
+/// its mirror image as far weaker.
+///
+/// A quarter is about 190 rating points, which is nearly two rungs of this
+/// ladder — comfortably past "a hard game" and into "a different league".
+/// Tighter bands would mark most of the roster as a mismatch and tell the
+/// player nothing.
+const double kLopsidedExpectedScore = 0.25;
+
+MatchBalance matchBalance({required int own, required int opponent}) {
+  final expected = expectedScore(own, opponent);
+  if (expected <= kLopsidedExpectedScore) return MatchBalance.opponentStronger;
+  if (expected >= 1 - kLopsidedExpectedScore) return MatchBalance.opponentWeaker;
+  return MatchBalance.even;
+}

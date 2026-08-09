@@ -1639,6 +1639,52 @@ Android adaptive icons were skipped for the same reason they are not in the tick
 
 ---
 
+## 41. Ticket 011 — opponent selection
+
+### D185 — A fair match is an expected score, not a rating gap
+**Question:** The ticket asks that opponents far above or below the player be visually distinguishable from a fair match. Distinguishable by what rule? The obvious one is a rating difference — say, 200 points.
+
+**Decision:** `matchBalance` lives in `quadrim_rating` and is defined on `expectedScore`: at or below 0.25 the opponent is far stronger, at or above 0.75 far weaker, and in between the match is even.
+
+**Rationale:** A gap in points does not mean the same thing everywhere it is measured, but an expected score does — it is the probability the player scores, which is exactly the question "is this a fair game?" asks. Two hundred points is two hundred points at either end of the ladder, and phrasing the rule that way would have been *accidentally* right here only because ELO's own curve is what makes it so. Saying it in the currency the rating system already speaks removes the coincidence: `matchBalance(600, 800)` and `matchBalance(2200, 2400)` are the same answer by construction, and there is a test that says so.
+
+It also put the rule somewhere it can be tested without a widget. This is a presentation *decision* but a rating *calculation*, and the pure package is where calculations live in this project — five tests cover the bands, their symmetry, and the boundary, none of which needed Flutter to run.
+
+A quarter was chosen over a third: it is about 190 rating points, nearly two rungs of this ladder. At a third the bands would be roughly 120 points and most of the roster would be marked a mismatch for most players, which tells them nothing.
+
+**The cue is never colour alone.** Each row carries an icon and a phrase as well as a colour, because roughly one man in twelve would not see a red-versus-green distinction, and the criterion is that the difference be *distinguishable* rather than merely present. That is the same reasoning as the avatars ([D182](#d182--avatars-are-drawn-from-the-opponents-id-not-shipped-as-files)) and it will be audited again in ticket 021.
+
+### D186 — One opponent, one announcement
+**Question:** Each row shows a name, a tier, a rating, a blurb and a match cue. A screen reader meets those as five separate nodes by default. Is that right?
+
+**Decision:** The row is a single semantics node whose label is `{name}. {tier}. Rating {rating}. {match}. {blurb}`, with its children excluded.
+
+**Rationale:** Five nodes per opponent is a hundred stops to read a list of twenty, and the pieces do not mean anything apart — "Club" and "1650" are only useful attached to the name they belong to. The composite is a translated message with placeholders rather than a string built in code, so a language that orders those facts differently can say so.
+
+This is the same shape the rating card on the home screen already uses, and the reason is the same one recorded there: a container label plus `ExcludeSemantics` beats letting the framework improvise.
+
+### D187 — Backing out of the opponent list cancels the game
+**Question:** The player taps "New game", chooses "Play the computer", reaches the list of twenty, and presses back. What should exist afterwards?
+
+**Decision:** Nothing. The flow cancels and no game is stored.
+
+**Rationale:** The alternative — falling back to a default opponent so that the tap is not wasted — creates a game against somebody the player did not choose, which then appears in their history and moves their rating. That is worse than no game. It also removes the only sensible way out of the list for a player who opened it to browse.
+
+The previous behaviour was the opposite by accident: before this ticket the mode sheet created a Pebble game immediately, because there was no list to send anybody to. A test asserted that, and it was updated rather than deleted — the behaviour it described was real and is now deliberately different.
+
+### D188 — A fixed-height strip under an app bar title is a text-scale trap
+**Question:** The player's rating sits below the screen title, in the `AppBar`'s `bottom` slot, at a reserved height of 28 logical pixels. What happens at the 200% font size Android's accessibility slider offers?
+
+**Decision:** The reserved height scales with the text: `Size.fromHeight(MediaQuery.textScalerOf(context).scale(28))`. A test measures the title and rating rectangles at 1.0, 1.5 and 2.0 and fails if the title leaves the screen or the two collide.
+
+**Rationale:** Measured, because the failure is silent. At 200% the text inside the strip is 40 pixels in a 28-pixel slot; the `AppBar` grows upward to fit it, and the title's top edge lands at **-1** — clipped by the screen — while the two strings overlap by half a pixel. **No overflow error is raised.** Neither widget is a flex, so Flutter does not consider anything overconstrained; it simply paints one over the other. The yellow-and-black stripe that normally announces this class of bug never appears, and a developer whose own font size is 100% will never see it.
+
+That is what makes it worth a decision entry rather than a quiet fix. The whole category — fixed heights holding scalable text — fails without a diagnostic, so it cannot be found by running the app and looking. It has to be measured, and the measurement has to be kept. The test asserts positions rather than the absence of an exception for exactly that reason, and it was checked against the unfixed code before being believed: it reports `title clipped off the top at scale 2.0`.
+
+Ticket 021 owns the accessibility audit and will sweep for the rest of the category. This one is fixed here because this ticket introduced it.
+
+---
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

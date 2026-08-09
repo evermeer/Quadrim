@@ -251,6 +251,34 @@ class AppLocalizationsNl extends AppLocalizations {
       'Perfect spel uit Oren Patashniks Qubic-strategieboek (1980), in de vorm die Ken Thompson het in 1978 gaf. Gebruikt met toestemming, zetten ongewijzigd.';
 
   @override
+  String get chooseOpponent => 'Kies een tegenstander';
+
+  @override
+  String yourRating(int rating) {
+    return 'Jouw rating: $rating';
+  }
+
+  @override
+  String get matchEven => 'Gelijkwaardig';
+
+  @override
+  String get matchStronger => 'Boven jouw niveau';
+
+  @override
+  String get matchWeaker => 'Onder jouw niveau';
+
+  @override
+  String opponentSemantics(
+    String name,
+    String tier,
+    int rating,
+    String match,
+    String blurb,
+  ) {
+    return '$name. $tier. Rating $rating. $match. $blurb';
+  }
+
+  @override
   String get tierNovice => 'Beginner';
 
   @override
