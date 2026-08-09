@@ -143,6 +143,7 @@ Then use the skill design:design-handoff to create a design handoff document for
 ```
 
 Start implementation.
+
 **Prompt**
 ```
 Now that the spec and tickets are finalized, start implementing the game according to the tickets in the ./doc/tickets folder.
@@ -153,10 +154,34 @@ Commit the code to the main branch after each ticket is completed and reviewed.
 ```
 
 After it stoped half way (4 times): Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
+
 **Prompt**
 ```
 Continue implementing the game according to the tickets in the ./doc/tickets folder.
 The goal is to have all tickets implemented so that there is a complete testable 0.1 version..
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+After each ticket run the skill code-review-expert 
+Commit the code to the main branch after each ticket is completed and reviewed.
+```
+
+After being notified obout problems with the implementation of the computer player, 
+I asked for a reevaluation with updated specs.
+
+**Prompt**
+```
+do an evaluation rewrite of thicket 026. On a device a move should be done within 20 seconds. 
+I don't want to ship more than 50MB of data with the app. While the computer player is thinking 
+the player should see a clear indication that it is thinking so that it is clear what the player 
+is waiting for.
+```
+
+Found the perfect play data.
+
+**Prompt**
+```
+I found the Patashnic data plus an okay to use it. See the data plus sample code 
+at https://github.com/kogorman/qubic start the implementation of the perfect play and then us it 
+to fix the other tiers.
 Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
