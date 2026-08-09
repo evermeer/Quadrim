@@ -112,9 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
     await _openGame(game.id);
   }
 
-  Future<void> _openPlaceholder(String title) async {
+  Future<void> _openPlaceholder(String title, {bool credit = false}) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => _PlaceholderScreen(title: title)),
+      MaterialPageRoute<void>(
+        builder: (_) => _PlaceholderScreen(title: title, credit: credit),
+      ),
     );
   }
 
@@ -148,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.settings,
-            onPressed: () => _openPlaceholder(l10n.settings),
+            onPressed: () => _openPlaceholder(l10n.settings, credit: true),
           ),
         ],
       ),
@@ -403,19 +405,42 @@ class _SectionHeading extends StatelessWidget {
 /// settings with 028, both of which replace this route rather than add one
 /// (D159).
 class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
+  const _PlaceholderScreen({required this.title, this.credit = false});
 
   final String title;
+
+  /// Whether to carry the strategy-dictionary attribution.
+  ///
+  /// Not decoration and not deferrable: the dictionary's terms permit its use
+  /// only if its source is credited, and it is the built app that reaches
+  /// people. It lives on this placeholder until ticket 028 builds the real
+  /// settings screen, so that there is never a build in which the credit is
+  /// merely planned (D174).
+  final bool credit;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(l10n.comingSoon, textAlign: TextAlign.center),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.comingSoon, textAlign: TextAlign.center),
+              if (credit) ...[
+                const SizedBox(height: 32),
+                Text(
+                  l10n.strategyCredit,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

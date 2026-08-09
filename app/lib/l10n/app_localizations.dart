@@ -475,6 +475,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sable'**
   String get botSable;
+
+  /// No description provided for @botQuartz.
+  ///
+  /// In en, this message translates to:
+  /// **'Quartz'**
+  String get botQuartz;
+
+  /// No description provided for @botCorvus.
+  ///
+  /// In en, this message translates to:
+  /// **'Corvus'**
+  String get botCorvus;
+
+  /// No description provided for @botLyra.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyra'**
+  String get botLyra;
+
+  /// No description provided for @botTitan.
+  ///
+  /// In en, this message translates to:
+  /// **'Titan'**
+  String get botTitan;
+
+  /// No description provided for @botOracle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oracle'**
+  String get botOracle;
+
+  /// No description provided for @botQuadrimPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Quadrim Prime'**
+  String get botQuadrimPrime;
+
+  /// Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.'**
+  String get strategyCredit;
 }
 
 class _AppLocalizationsDelegate

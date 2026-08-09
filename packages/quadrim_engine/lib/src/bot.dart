@@ -13,6 +13,7 @@ import 'dart:math';
 
 import 'engine.dart';
 import 'search.dart';
+import 'strategy_book.dart';
 import 'winning_lines.g.dart';
 
 /// The four rules that make an opponent look like it is paying attention
@@ -38,6 +39,13 @@ final class BotConfig {
     required this.rating,
     this.searchDepth = 0,
     this.threatSearchDepth = 0,
+    this.defenceSearchDepth = 0,
+    this.usesBook = false,
+    this.nodeBudget = 0,
+    this.maxSearchDepth = 0,
+    this.exactEmpties = 0,
+    this.canonicalPlies = 0,
+    this.forcingBudget = kForcingBudget,
     this.rules = const <StrategicRule>{},
     this.blunderRate = 0,
     this.centreBias = 0,
@@ -54,7 +62,12 @@ final class BotConfig {
         assert(aggression >= 0 && aggression <= 1),
         assert(tieBreakRandomness >= 0 && tieBreakRandomness <= 1),
         assert(searchDepth >= 0),
-        assert(threatSearchDepth >= 0);
+        assert(threatSearchDepth >= 0),
+        assert(defenceSearchDepth >= 0),
+        assert(nodeBudget >= 0),
+        assert(maxSearchDepth >= 0),
+        assert(exactEmpties >= 0),
+        assert(canonicalPlies >= 0);
 
   /// Stable identifier, stored in a game document as `bot:<id>`. Never
   /// translated, and never renamed once a game has referenced it.
@@ -76,6 +89,56 @@ final class BotConfig {
   /// sees only replies the opponent has no choice about and so goes much
   /// further for much less work (D151).
   final int threatSearchDepth;
+
+  /// How many of the *opponent's* forcing moves this opponent will follow when
+  /// checking that a move it is about to play does not hand over a forced win.
+  /// 0 means it never looks, and walks into forced wins it could have seen.
+  ///
+  /// A separate number from [threatSearchDepth] rather than the same one,
+  /// because seeing your own wins and seeing your opponent's are different
+  /// skills that improve at different times — a club player spots their own
+  /// combination long before they stop losing to someone else's. Splitting
+  /// them gives the ladder a dimension that raising the node budget did not
+  /// (D169).
+  final int defenceSearchDepth;
+
+  /// Whether this opponent plays from Patashnik's strategy dictionary.
+  ///
+  /// The book is a proof that Qubic is a first-player win, so an opponent that
+  /// consults it **cannot be beaten when it opens** — no search, no depth, no
+  /// budget, just the move the proof names. It says nothing about playing
+  /// second, where such an opponent falls back to searching like any other
+  /// (D172).
+  final bool usesBook;
+
+  /// Nodes this opponent may visit choosing one move. Above zero it searches
+  /// by iterative deepening under that budget instead of to [searchDepth].
+  ///
+  /// A budget in **nodes rather than milliseconds** is what keeps an opponent
+  /// the same opponent on a fast phone and a slow one, in debug and in
+  /// release, in CI and on a device (ticket 025). The wall clock each budget
+  /// buys is measured and recorded in D162, not compiled in.
+  ///
+  /// The ceiling these are sized against is twenty seconds a move on a device
+  /// (D164), spent as a ladder: the tiers below this one answer in
+  /// milliseconds, and only the Master tier goes near the ceiling.
+  final int nodeBudget;
+
+  /// The deepest iteration a budgeted search will attempt.
+  final int maxSearchDepth;
+
+  /// Nodes the forcing search may visit. Bounded for the same reason the main
+  /// search is: without it a deep forcing search is minutes rather than
+  /// milliseconds on the positions where it fans out (D168).
+  final int forcingBudget;
+
+  /// Below this many empty cells the opponent stops estimating and proves the
+  /// result. 0 leaves the endgame to the heuristic like everything else.
+  final int exactEmpties;
+
+  /// How many plies from the root are cached by canonical form rather than by
+  /// the position as it stands. Worth it only near an empty board — see D161.
+  final int canonicalPlies;
 
   final Set<StrategicRule> rules;
 
@@ -306,6 +369,139 @@ const BotConfig sable = BotConfig(
   lineBias: 0.25,
 );
 
+// ---------------------------------------------------------------------------
+// The Expert tier. The first opponents whose budget is expressed in nodes
+// rather than plies, because how deep a budget reaches depends on the
+// position and iterative deepening takes whatever it can finish.
+// ---------------------------------------------------------------------------
+
+/// Iterative deepening under a transposition table.
+const BotConfig quartz = BotConfig(
+  id: 'quartz',
+  rating: 1800,
+  nodeBudget: 500000,
+  maxSearchDepth: 8,
+  threatSearchDepth: 9,
+  rules: _allRules,
+  blunderRate: 0.015,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// Quartz with a longer look, and the first opponent that checks what its own
+/// move hands over (D169).
+const BotConfig corvus = BotConfig(
+  id: 'corvus',
+  rating: 1900,
+  nodeBudget: 900000,
+  maxSearchDepth: 8,
+  threatSearchDepth: 11,
+  defenceSearchDepth: 5,
+  rules: _allRules,
+  blunderRate: 0.01,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// A budget large enough to reach the middle of the ticket's depth range, and
+/// two more moves of defence than Corvus.
+const BotConfig lyra = BotConfig(
+  id: 'lyra',
+  rating: 2000,
+  nodeBudget: 1800000,
+  maxSearchDepth: 10,
+  threatSearchDepth: 13,
+  defenceSearchDepth: 7,
+  rules: _allRules,
+  blunderRate: 0.005,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// Lyra plus exact endgame solving, defence as deep as it repays, and no
+/// deliberate blunders at all.
+///
+/// Once ten cells remain it stops estimating: the result it returns is proved,
+/// not judged, and no heuristic overrides it. The forcing budget is five times
+/// the default because it is shared out among the candidates being checked,
+/// and an unstarved defence measured 36-24 against a starved one (D170).
+const BotConfig titan = BotConfig(
+  id: 'titan',
+  rating: 2100,
+  nodeBudget: 2500000,
+  maxSearchDepth: 10,
+  threatSearchDepth: 15,
+  defenceSearchDepth: 9,
+  forcingBudget: 1000000,
+  exactEmpties: 10,
+  rules: _allRules,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+// ---------------------------------------------------------------------------
+// The Master tier. The first opponents that stop estimating and start knowing:
+// they play Patashnik's proof from the opening, and search only once it runs
+// out. Unbeatable when they open, merely very strong when they do not (D172).
+// ---------------------------------------------------------------------------
+
+/// Unbeatable when it opens; ordinary-strong when it does not.
+///
+/// Oracle and Quadrim Prime play the identical book, so in the games they open
+/// they are the same opponent and neither can be beaten. Everything that
+/// separates them lives in the **second seat**, where there is no proof to play
+/// and both fall back on searching (D173) — Oracle with the Expert tier's
+/// machinery, Prime with the largest configuration in the catalogue.
+///
+/// This is the honest place to put the difference, and it was arrived at by
+/// eliminating the alternatives rather than by design. A blunder rate was tried
+/// and rejected: it would have made a higher-rated opponent blunder more than
+/// the one below it, which the catalogue forbids and a player would notice. A
+/// shallower forcing search was tried and **measured as no difference at all** —
+/// byte-identical results over 200 games — because the forced wins that follow
+/// the book are short enough that eleven moves of search find them as reliably
+/// as twenty (D176).
+const BotConfig oracle = BotConfig(
+  id: 'oracle',
+  rating: 2300,
+  usesBook: true,
+  nodeBudget: 1800000,
+  maxSearchDepth: 10,
+  threatSearchDepth: 13,
+  defenceSearchDepth: 5,
+  forcingBudget: 500000,
+  rules: _allRules,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// The proof, played straight.
+///
+/// No blunder rate, the deepest forcing search in the catalogue, and the book
+/// from move one. When Quadrim Prime opens, the game is decided before it is
+/// played: Patashnik proved in 1980 that the first player wins, and this is
+/// that proof with a board attached. Beating it requires it to move second.
+const BotConfig quadrimPrime = BotConfig(
+  id: 'quadrim_prime',
+  rating: 2400,
+  usesBook: true,
+  nodeBudget: 3000000,
+  maxSearchDepth: 12,
+  threatSearchDepth: 20,
+  defenceSearchDepth: 9,
+  forcingBudget: 2000000,
+  exactEmpties: 12,
+  rules: _allRules,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
 /// Every shipped opponent, weakest first.
 const List<BotConfig> opponentCatalogue = [
   pebble,
@@ -322,6 +518,12 @@ const List<BotConfig> opponentCatalogue = [
   vireo,
   onyx,
   sable,
+  quartz,
+  corvus,
+  lyra,
+  titan,
+  oracle,
+  quadrimPrime,
 ];
 
 BotConfig? botById(String id) {
@@ -344,15 +546,22 @@ Cell chooseMove(GameState state, BotConfig config, Random random) {
   if (moves.isEmpty) throw StateError('no legal move: the game is over');
 
   final me = state.sideToMove;
-  var candidates = _forcedWin(state, config, me) ??
+  var candidates = _bookMove(state, config, me) ??
+      _forcedWin(state, config, me) ??
       _ruleCandidates(state, config, random, me) ??
       moves;
+
+  // Before anything else weighs the candidates: drop the ones that lose. A
+  // move that hands the opponent a forced win is not a move worth scoring, and
+  // no amount of positional merit redeems it.
+  candidates = _safeCandidates(state, config, me, candidates);
 
   // Search narrows the candidates to those it cannot separate; the positional
   // ladder then decides among them exactly as it does without search. Two
   // moves the evaluation scores alike are genuinely alike to this opponent,
   // and picking the more central of them is better than picking at random.
-  if (config.searchDepth > 0 && candidates.length > 1) {
+  if (candidates.length > 1 &&
+      (config.searchDepth > 0 || config.nodeBudget > 0)) {
     candidates = _searchBest(state, config, me, candidates);
   }
 
@@ -373,6 +582,22 @@ Cell chooseMove(GameState state, BotConfig config, Random random) {
   return chosen;
 }
 
+/// The strategic move Patashnik's dictionary gives for this position, when
+/// this opponent consults it and the position is in it.
+///
+/// The dictionary's own header prescribes the order this sits in: win
+/// immediately if you can, otherwise block, otherwise play the book move,
+/// otherwise execute a forced win. The first two are already inside
+/// [_ruleCandidates], so the gate here is the same one [_forcedWin] uses —
+/// neither side one move from completing a line.
+List<Cell>? _bookMove(GameState state, BotConfig config, Player me) {
+  if (!config.usesBook) return null;
+  if (_immediateWins(state, me).isNotEmpty) return null;
+  if (_immediateWins(state, me.opponent).isNotEmpty) return null;
+  final move = bookMove(state, me);
+  return move == null ? null : [move];
+}
+
 /// The single move that begins a forced win, when this opponent looks for
 /// one and one exists.
 ///
@@ -383,8 +608,53 @@ List<Cell>? _forcedWin(GameState state, BotConfig config, Player me) {
   if (config.threatSearchDepth == 0) return null;
   if (_immediateWins(state, me).isNotEmpty) return null;
   if (_immediateWins(state, me.opponent).isNotEmpty) return null;
-  final move = threatSpaceWin(state, me, config.threatSearchDepth);
+  final move = threatSpaceWin(state, me, config.threatSearchDepth,
+      nodeBudget: config.forcingBudget);
   return move == null ? null : [move];
+}
+
+/// [candidates] with the losing ones removed: those after which the opponent
+/// can force a win.
+///
+/// This is the same threat-space search [_forcedWin] runs, pointed the other
+/// way. Pointing it the other way is most of what it is worth: finding your
+/// own forced win only pays in the positions where you have one, while seeing
+/// the opponent's pays in every position where you were about to allow one
+/// — and in Qubic one allowed forcing sequence is the whole game.
+///
+/// Returns [candidates] unchanged when every move loses. A lost position is
+/// still played out: resigning is the human's move to make, not the
+/// opponent's, and a losing move played on is how the opponent finds out
+/// whether this one can actually finish it.
+List<Cell> _safeCandidates(
+  GameState state,
+  BotConfig config,
+  Player me,
+  List<Cell> candidates,
+) {
+  if (config.defenceSearchDepth == 0 || candidates.length < 2) {
+    return candidates;
+  }
+  // The budget is shared out, not handed to each in turn, so that checking
+  // thirty candidates costs what checking one costs — the ceiling is per
+  // move (D164), not per question asked about it.
+  final each = config.forcingBudget ~/ candidates.length;
+  if (each < 1) return candidates;
+
+  final safe = <Cell>[];
+  for (final cell in candidates) {
+    final after = applyMove(state, cell);
+    // A move that wins outright is not open to refutation.
+    if (outcome(after) is Win) return [cell];
+    final reply = threatSpaceWin(
+      after,
+      me.opponent,
+      config.defenceSearchDepth,
+      nodeBudget: each,
+    );
+    if (reply == null) safe.add(cell);
+  }
+  return safe.isEmpty ? candidates : safe;
 }
 
 /// The candidates the search cannot separate: those scoring the maximum.
@@ -394,8 +664,21 @@ List<Cell> _searchBest(
   Player me,
   List<Cell> candidates,
 ) {
-  final scores = searchScores(state, me, candidates, config.searchDepth,
-      defence: config.defence);
+  final scores = config.nodeBudget > 0
+      ? deepSearch(
+          state,
+          me,
+          candidates,
+          SearchLimits(
+            nodeBudget: config.nodeBudget,
+            maxDepth: config.maxSearchDepth,
+            defence: config.defence,
+            exactEmpties: config.exactEmpties,
+            canonicalPlies: config.canonicalPlies,
+          ),
+        ).scores
+      : searchScores(state, me, candidates, config.searchDepth,
+          defence: config.defence);
   final best = scores.reduce(max);
   return [
     for (var i = 0; i < candidates.length; i++)

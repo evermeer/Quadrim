@@ -165,5 +165,15 @@
   "botMarlin": "Marlin",
   "botVireo": "Vireo",
   "botOnyx": "Onyx",
-  "botSable": "Sable"
+  "botSable": "Sable",
+  "botQuartz": "Quartz",
+  "botCorvus": "Corvus",
+  "botLyra": "Lyra",
+  "botTitan": "Titan",
+  "botOracle": "Oracle",
+  "botQuadrimPrime": "Quadrim Prime",
+  "strategyCredit": "Perfect play from Oren Patashnik's Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.",
+  "@strategyCredit": {
+    "description": "Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app."
+  }
 }

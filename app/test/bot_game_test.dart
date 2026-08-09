@@ -39,7 +39,9 @@ void main() {
       'human', (tester) async {
     _phone(tester);
     final repo = await _repository();
-    await tester.pumpWidget(QuadrimApp(repository: repo));
+    // A seeded source so the opening seat is fixed rather than a coin flip.
+    await tester.pumpWidget(QuadrimApp(repository: repo, random: Random(1)));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('New game'));
     await tester.pumpAndSettle();
@@ -47,7 +49,11 @@ void main() {
     expect(find.text('Pass and play'), findsOneWidget);
 
     await tester.tap(find.text('Play the computer'));
-    await tester.pumpAndSettle();
+    // Bounded pumps rather than pumpAndSettle: when the opponent opens, the
+    // thinking indicator animates indefinitely and the frame scheduler never
+    // goes idle (D166). Long enough to clear the opponent's visible pause.
+    await tester.pump();
+    await tester.pump(kBotMoveDelay + const Duration(milliseconds: 50));
 
     final games = await repo.watchActiveGames().first;
     expect(games.single.mode, GameMode.vsComputer);
@@ -252,6 +258,34 @@ void main() {
     final stored = await repo.watchGame(game.id).first;
     expect(stored!.status, GameStatus.complete);
     expect(stored.moves, isEmpty, reason: 'the stale move must be dropped');
+  });
+
+  testWidgets('a thinking opponent shows a moving indicator, not just text', (
+    tester,
+  ) async {
+    _phone(tester);
+    final repo = await _repository();
+    // Seat 1 opens, so the opponent is thinking from the first frame.
+    final game = await repo.createGame(
+      mode: GameMode.vsComputer,
+      opponent: botOpponent(pebble.id),
+      opponentRating: pebble.rating,
+      startingSeat: 1,
+    );
+    await tester.pumpWidget(_harness(repo, game.id, Random(3)));
+    await tester.pump();
+
+    // A move may take twenty seconds on a device (D164); static text alone
+    // would be indistinguishable from a frozen app (D166).
+    expect(find.text('Pebble is thinking…'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(kBotMoveDelay);
+    await tester.pumpAndSettle();
+
+    // And it goes away once the turn is the player's again.
+    expect(find.text('Your turn'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
 }

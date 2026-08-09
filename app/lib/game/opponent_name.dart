@@ -26,9 +26,16 @@ String botName(AppLocalizations l10n, String opponent) => switch (opponent) {
       'bot:vireo' => l10n.botVireo,
       'bot:onyx' => l10n.botOnyx,
       'bot:sable' => l10n.botSable,
-      // The Expert and Master tiers arrive with tickets 025 and 026. Showing
-      // the raw key is deliberate: it is obviously wrong on screen, which is
-      // better than a plausible-looking name for an opponent that does not
-      // exist yet.
+      'bot:quartz' => l10n.botQuartz,
+      'bot:corvus' => l10n.botCorvus,
+      'bot:lyra' => l10n.botLyra,
+      'bot:titan' => l10n.botTitan,
+      'bot:oracle' => l10n.botOracle,
+      'bot:quadrim_prime' => l10n.botQuadrimPrime,
+      // Showing the raw key for anything else is deliberate: it is obviously
+      // wrong on screen, which is better than a plausible-looking name for an
+      // opponent that does not exist. A stored game can name an opponent this
+      // build has never heard of — an older catalogue, or a newer one after a
+      // downgrade — and that is the case this arm is for.
       _ => opponent,
     };

@@ -27,6 +27,17 @@ if grep -rnE "Text\(\s*['\"][^'\"]*[A-Za-z]" app/lib --include='*.dart' | grep -
   echo "FAIL: hardcoded user-facing string(s) above - route them through l10n"; fail=1
 fi
 
+echo "== the strategy dictionary's attribution is still in the app =="
+# Its terms permit use only "as long as its source is credited", and it is the
+# built app that reaches people. A grep, because the alternative is trusting
+# that nobody deletes a line (D174).
+if ! grep -rq 'l10n\.strategyCredit' app/lib --include='*.dart'; then
+  echo "FAIL: nothing in app/lib renders l10n.strategyCredit."
+  echo "      Patashnik's dictionary may only be used if its source is"
+  echo "      credited in the shipped app - see third_party/patashnik/NOTICE.md"
+  fail=1
+fi
+
 [ $fail -ne 0 ] && exit 1
 
 echo "== generated sources are not stale =="
@@ -35,6 +46,17 @@ if ! git diff --exit-code -- \
     packages/quadrim_engine/lib/src/winning_lines.g.dart \
     packages/quadrim_engine/test/fixtures/corpus.json; then
   echo "FAIL: generated files are stale - commit the output of tools/linegen"
+  exit 1
+fi
+
+# Regenerating the strategy book also verifies the vendored dictionary's
+# SHA-256, which is how "its moves are unchanged" stops being a promise and
+# starts being a check (third_party/patashnik/NOTICE.md).
+echo "== the strategy book matches the dictionary it came from =="
+(cd packages/quadrim_engine && dart pub get --offline >/dev/null 2>&1 || dart pub get >/dev/null
+ dart run tool/bookgen.dart >/dev/null)
+if ! git diff --exit-code -- packages/quadrim_engine/lib/src/strategy_book.g.dart; then
+  echo "FAIL: the strategy book is stale - commit the output of tool/bookgen.dart"
   exit 1
 fi
 

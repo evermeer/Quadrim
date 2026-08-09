@@ -1,5 +1,9 @@
 * text=auto
 *.sh text eol=lf
+
+# Vendored verbatim under terms that require its moves to be unchanged. Any
+# line-ending conversion would change the file's hash, so it is never touched.
+third_party/patashnik/qubic.dictionary -text
 *.png binary
 *.jpg binary
 *.zip binary

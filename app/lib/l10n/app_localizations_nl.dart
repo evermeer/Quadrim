@@ -227,4 +227,26 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get botSable => 'Sable';
+
+  @override
+  String get botQuartz => 'Quartz';
+
+  @override
+  String get botCorvus => 'Corvus';
+
+  @override
+  String get botLyra => 'Lyra';
+
+  @override
+  String get botTitan => 'Titan';
+
+  @override
+  String get botOracle => 'Oracle';
+
+  @override
+  String get botQuadrimPrime => 'Quadrim Prime';
+
+  @override
+  String get strategyCredit =>
+      'Perfect spel uit Oren Patashniks Qubic-strategieboek (1980), in de vorm die Ken Thompson het in 1978 gaf. Gebruikt met toestemming, zetten ongewijzigd.';
 }

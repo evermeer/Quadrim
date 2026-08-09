@@ -1260,6 +1260,311 @@ The shipped ladder, at the sample sizes the tests use, holds across three indepe
 
 **Consequence:** One new string, `comingSoon`, which must be gone from both `.arb` files by ticket 022. Nobody outside this repository sees it before then: ticket 016's closed test is blocked by both 018 and 028.
 
+### D160 — The symmetry group is constructed and proved, not tabulated
+**Question:** The board has 192 automorphisms. Where do they come from — a generated table, like the 76 lines, or code?
+
+**Decision:** Constructed at load from a closed-form rule, and verified exhaustively by tests. A permutation of `{0,1,2,3}` may be applied to every axis at once exactly when it commutes with reversal — eight of the twenty-four qualify, because a plane's anti-diagonal `(t, 3−t)` survives only then. The y and z maps may each differ from the x map by a reversal, and the three axes may be permuted: 8 × 2 × 2 × 6 = 192.
+
+**Rationale:** A hand-written table would be 12,288 numbers nobody could check by reading, and a generated one would need the same construction anyway. What matters is the proof, and that is what the tests are: exactly 192 members, every one a permutation of all 64 cells, every one mapping the 76 lines onto the 76 lines, closed under composition, closed under inverses, and preserving each cell's degree.
+
+**Consequence:** Two independent facts fall out and are asserted rather than assumed — the group has exactly two orbits, of sizes 16 and 48, matching the known cell degrees; and an empty board has exactly **two** distinct opening moves, which is Idea-final §2.3's claim reproduced from first principles rather than quoted.
+
+### D161 — Canonicalisation pays in the opening and nowhere else
+**Question:** Ticket 025 calls canonicalising positions before caching them "the difference between a table that fits on a phone and one that does not". Is it?
+
+**Decision:** Implemented, verified, and **switched off by default**. `SearchLimits.canonicalPlies` chooses how many plies from the root are keyed by canonical form; every shipped opponent leaves it at zero.
+
+**Rationale:** Measured, not assumed.
+- Maintaining one Zobrist hash per automorphism costs **540 ns a move** against roughly 10 ns of actual node work — the collapse has to earn two orders of magnitude.
+- From an **empty** root it does: canonicalising the top four plies reached depth 5 in 71 ms where the plain table reached depth 4 in 89 ms. The opening's positions genuinely share classes — the 4,032 two-piece positions collapse to about 21.
+- From a root with **four or more pieces** it does not. Those pieces break the symmetry: a position with two or more pieces already has all 192 images distinct, so its symmetric twins are boards the search never visits. Measured hit rate was unchanged at 3.0% and the search took **4× longer**.
+
+**Consequence:** The ticket's claim is true of a *stored strategy book* — where positions are indexed globally and symmetric ones genuinely recur — and false of a per-move transposition table beyond the first few moves. The machinery stays because 1.0's solver needs exactly this, and because an opening book would use it tomorrow. The criterion "positions are canonicalised before being cached" is met by the code and provable by its tests; what changed is which opponents ask for it, which is a configuration.
+
+### D162 — The Expert tier's budgets, and the reference device that is still missing
+**Question:** Ticket 025 requires every budget in nodes, the wall-clock equivalent measured against a **named reference device**, and responsiveness judged on that device.
+
+**Decision:** Budgets are in nodes — Quartz 175,000, Corvus 260,000, Lyra 400,000, Titan 550,000 — and the wall clock is recorded against the **development machine** (Windows 11, Dart VM JIT), because no phone has been measured yet:
+
+| | nodes | mean | worst |
+|---|---|---|---|
+| Quartz | 175k | 53 ms | 151 ms |
+| Corvus | 260k | 74 ms | 200 ms |
+| Lyra | 400k | 101 ms | 453 ms |
+| Titan | 550k | 228 ms | 762 ms |
+
+**Rationale:** A node budget is the same number everywhere; a millisecond budget is not, and would make an opponent play differently on a fast phone than a slow one, in release than in debug, in CI than on a device — breaking spec E7 everywhere except the machine it was written on.
+
+**Consequence:** **The named-reference-device criterion is not met**, and cannot be from here: the development machine is a stand-in. Against [D152](#d152--the-computers-move-budget-and-where-the-time-is-spent)'s 250 ms mean and 1 s worst, Quartz through Lyra have room and Titan does not — at two to four times slower, a phone puts Titan around 600 ms mean and 2.5 s worst. Ticket 016's first device run must measure all four and either confirm these budgets or cut them; this decision is the record of what to check.
+
+### D163 — Eight plies is not affordable, and depth is not the reason these opponents are strong
+**Question:** Idea-final §6.4 gives the Expert tier 6-ply and 8-ply searches. Does the engine reach them?
+
+**Decision:** No, and the roster's depths are not what ships. The four are separated by node budget and forcing-search depth; the depth each reaches is whatever its budget buys, typically **five to six plies** in the middlegame.
+
+**Rationale:** Measured with table-move and killer ordering in place, from a ten-piece root: 100k nodes reaches depth 4, 500k reaches depth 6, 2M reaches depth 6. Each further ply costs roughly seven times the last, so eight plies is around 25M nodes — about fifteen seconds here and a minute on a phone. Adding the transposition table, iterative deepening, best-move ordering and killer moves took the reachable depth from 4 to 6 at a fixed budget; that is what this machinery bought, and it is not enough for 8.
+
+**Consequence:** This is the third measurement pointing the same way, after [D154](#d154--the-club-tier-was-retuned-to-what-self-play-actually-measures) and [D156](#d156--two-search-defects-the-ladder-measurement-exposed): **the evaluation, not the depth, is what limits this engine.** The Master tier (ticket 026) is specified as "full-strength search", and on this evidence buying it more nodes will not produce a 2300-rated opponent. That ticket should begin by improving the evaluation — the current one counts line ownership and nothing else, with no notion of forks, tempo, or which threats are actually reachable.
+
+### D164 — The real move budget is twenty seconds on device, not a quarter of a second
+**Question:** [D152](#d152--the-computers-move-budget-and-where-the-time-is-spent) set the computer's think time at 250 ms mean and 1 s worst. That number was inferred from "feels responsive", not given.
+
+**Decision (product owner):** **A move must complete within twenty seconds on a device.** That is a ceiling, not a target.
+
+**Rationale:** Given directly, and it supersedes the inferred budget. D152's number was chosen by an engineer guessing at what a player would tolerate, and every tuning decision in tickets 010 and 025 was made under it — including the conclusion that Titan was over budget, which on the real number it is not, by a factor of about thirty.
+
+**Consequence:** The ceiling belongs to the strongest opponents alone. A twenty-second think from a 1500-rated opponent would be a defect, not a feature, so the budget is spent as a ladder: the Novice, Casual and Club tiers stay in single-digit milliseconds, the Expert tier moves into the low seconds, and only the Master tier goes near the ceiling. [D162](#d162--the-experts-tier-budgets-and-the-reference-device-that-is-still-missing)'s node budgets were sized against the wrong number and are raised accordingly. The ceiling is still a *device* number that no device has yet produced — ticket 016 must confirm the conversion from nodes.
+
+### D165 — The whole app ships in fifty megabytes
+**Question:** Idea-final leaves the size of a stored strategy book open (OI-02), and the Master tier's Quadrim Prime is described as following a proven winning strategy.
+
+**Decision (product owner):** **No more than 50 MB of data ships with the app.**
+
+**Rationale:** Given directly. It is the first hard number OI-02 has had.
+
+**Consequence:** It is a generous bound for a *strategic* book — Patashnik's published solution is around 2,929 positions, which is kilobytes — and a tight one for anything resembling a tablebase. It also changes what [D161](#d161--canonicalisation-pays-in-the-opening-and-nowhere-else) is for: canonicalisation buys nothing in a per-move search table, but a stored book keyed by canonical form holds up to 192 times as many positions in the same 50 MB. That is the use the symmetry machinery was really built for, and it now has a budget to be measured against.
+
+### D166 — A thinking opponent must be visibly thinking
+**Question:** With a twenty-second ceiling, what does the player see?
+
+**Decision (product owner):** While the computer is deciding, the player must see a **clear indication that it is thinking**, so that it is obvious what they are waiting for.
+
+**Rationale:** Given directly. The existing treatment — a line of text reading "{bot} is thinking…" — was designed against a 550 ms pause, where it is ample. At twenty seconds a static line of text is indistinguishable from a frozen app.
+
+**Consequence:** The game screen needs a visible, moving indicator for the duration, and the board must read as deliberately inactive rather than unresponsive. Ticket 025's "search runs off the interface thread and is abandoned cleanly if the player leaves" is what makes that honest: the indicator can animate only because the search is not on the interface thread ([D153](#d153--the-search-runs-in-a-background-isolate-injected-as-a-function)). Built as part of this ticket rather than deferred, because it is the difference between a slow opponent and a broken one. One side effect: an indefinite animation means `pumpAndSettle` never settles, so widget tests covering the opponent's turn must use bounded pumps.
+
+### D167 — Teaching the evaluation about forks did not make it stronger
+**Question:** [D163](#d163--eight-plies-is-not-affordable-and-depth-is-not-the-reason-these-opponents-are-strong) concluded the evaluation, not the search, is what limits this engine, and the obvious gap was that it counted line *ownership* and so could not tell two threats sharing a cell — one block kills both — from two on different cells, which is a won game. Does closing that gap help?
+
+**Decision:** The evaluation now counts **distinct threatened cells** and pays `forkBonus` for the second and each further one, maintained incrementally at no per-node cost. The weight is configurable, defaulting to 3000. **It is kept, but it is not the improvement it was meant to be.**
+
+**Rationale:** Measured by playing fork-aware against fork-blind at identical node budgets, which is the only question that matters:
+
+| | result |
+|---|---|
+| 30k nodes, 30 games | 15–15 |
+| 120k nodes, 30 games | 19–11 |
+| 120k nodes, 120 games, bonus 1000 | 63–57 |
+| 120k nodes, 120 games, bonus 3000 | 63–57 |
+
+The encouraging 19–11 did not survive a larger sample. At 120 games, 63–57 is 52.5% — half a standard deviation, indistinguishable from a coin. Then a third weight, 9000, returned **byte-identical** 63–57. Three weights spanning nine times the range cannot produce the same games by chance, so before publishing the result the knob itself was put on trial:
+
+- The reference evaluation does see forks: a position with light threatening at both cell 3 and cell 19 scores 3042, the bonus plainly included.
+- The weight does reach the search: over 286 random positions, weight 0 and weight 9000 produce **different score vectors in 79** of them.
+- But over 84 positions from real games between two searchers, the weight changed the scores 20 times and the **chosen move zero times**.
+
+**Consequence:** That is the finding, and it is sharper than "the term is weak". When a fork is available, the move that creates it is *already* ranked first for other reasons — the three-in-a-line weight of 40, the quiescence check that returns a win score outright, and the forcing search that proves the win before the evaluation is consulted at all. The bonus adds 3000 to a move that was already winning the argmax. A static evaluation term can only change play by changing which move is best, and this one never does.
+
+It is kept because it is free, correct, and proved consistent with the reference definition, and because a future evaluation that *does* change play will want the counter. It is recorded here as a **negative result** so that nobody spends the same week twice. What limits the evaluation is therefore something else: it has no notion of tempo, and no notion of which lines are actually reachable rather than merely alive. Those are the next things to try, and the fork term is evidence that "obvious gap" is not the same as "binding constraint" — the gap was real, and closing it changed nothing, because the search was already covering it by another route.
+
+**One thing the rewrite did buy:** holding the incremental evaluation to the from-scratch definition exposed a real bug in make/unmake. `_adjust` reads the piece counts *and* the board to find where a threat lands, and the single interleaved loop left a cell occupied while its counts still said otherwise. The old evaluation never noticed because it only read counts.
+
+### D168 — The forcing search had no budget, and took five minutes on one move
+**Question:** Ticket 025 requires that every search budget be expressed in nodes. The threat-space search was given a *depth* in forcing moves and nothing else.
+
+**Decision:** `threatSpaceWin` takes a node budget, defaulting to 200,000, and claims nothing when it runs out.
+
+**Rationale:** Found by measuring, not by reading. A forcing search is narrow but not bounded — its fan-out is the number of cells that create a threat, which in a rich position is dozens. At Corvus's eleven forcing moves that produced a **worst case of 323,696 ms for a single move**, against a mean of 10.5 s. With the budget: 2,250 ms worst, 629 ms mean.
+
+**Consequence:** This was a shipping defect against [D164](#d164--the-real-move-budget-is-twenty-seconds-on-device-not-a-quarter-of-a-second)'s twenty-second ceiling by a factor of sixteen, and it existed from ticket 010 — it went unseen because the Club tier's forcing depths are small enough never to reach the explosion. Worst-case timing, not mean, is what the ceiling is about, and only the raised budgets of D164 made it visible.
+
+---
+
+### D169 — Pointing the forcing search at the opponent is the largest strength gain measured
+**Question:** [D163](#d163--eight-plies-is-not-affordable-and-depth-is-not-the-reason-these-opponents-are-strong) and [D167](#d167--teaching-the-evaluation-about-forks-did-not-make-it-stronger) both ended in negative results: neither deeper search nor a better static evaluation moved the ladder. The one component that had ever moved it was the forcing search, which Sable used to beat Onyx 52–8. But it was only ever asked one question — *can I force a win?* — and never the other one.
+
+**Decision:** `BotConfig` gains `defenceSearchDepth`. Above zero, every candidate move is tested by running the same threat-space search for the **opponent** in the position that move creates, and any move that hands over a forced win is dropped before anything else scores it. When every move loses, the unfiltered list is returned and the game is played out.
+
+**Rationale:** Measured as a duel between the same configuration with and without it, 60 games, both seats:
+
+| pairing | result |
+|---|---|
+| `vireo+d3` vs `vireo` | 29–31 |
+| `onyx+d6` vs `onyx` | 45–15 |
+| `sable+d9` vs `sable` | 47–12 |
+| `corvus+d11` vs `corvus` (30 games) | 20–10 |
+
+Finding your own forced win only pays in the positions where you have one. Seeing the opponent's pays in every position where you were about to allow one — and in Qubic one allowed forcing sequence is the whole game.
+
+Applied to the Expert tier, which is where the ladder had gone flat, the same adjacent pairs that could not be told apart on node budget alone now separate (30 games each):
+
+| pairing | before, budget only | after, with defence |
+|---|---|---|
+| Corvus vs Quartz | 5–5 | 19–11 |
+| Lyra vs Corvus | 4–6 | 20–10 |
+
+Worst move time at the top of that: Lyra 4,974 ms, inside the twenty-second ceiling with room to spare.
+
+**Consequence:** This is a **separate number** from `threatSearchDepth`, not the same one, for two reasons. It is the ladder dimension that raising the node budget failed to provide — the Expert tier went flat at 5-5 and 4-6 when the only dial was budget, whereas the table above spans roughly 300 rating points on this dial alone. And it is honest as difficulty: seeing your own combination and stopping others' are different skills that improve at different times, which is what a weak-but-tactical opponent should feel like. `vireo+d3` measuring as nothing also fixes the bottom of the range: below about four moves of defence there is nothing to gain, so the Novice and Casual tiers stay at zero and should.
+
+---
+
+### D170 — The forcing search now runs on the search's own board
+**Question:** Defence multiplies the cost of the forcing search by the number of candidate moves — up to about fifty. The budget is shared out among them (the twenty-second ceiling of [D164](#d164--the-real-move-budget-is-twenty-seconds-on-device-not-a-quarter-of-a-second) is per *move*, not per question asked about it), so each candidate got roughly 4,000 nodes instead of 200,000 and missed wins a full-budget search finds. Buy the budget back, or accept a starved defence?
+
+**Decision:** Buy it back. `threatSpaceWin` now runs on `_Board` — the search's incremental board — instead of on `GameState`. The original is kept as `threatSpaceWinNaively` and a test holds the two to identical answers over 1,500 positions at three depths.
+
+**Rationale:** The naive version copied a 64-cell board twice and rescanned all 76 lines four times **per node**, to answer questions the board already tracks: "can the opponent win next move" is `_threat[1] > 0`, and "how many distinct cells do I threaten" is `_distinctThreats[0]`. Measured on the same 60-game duel:
+
+| | worst move | mean |
+|---|---|---|
+| `sable+d9`, naive | 1,102 ms | 20 ms |
+| `sable+d9`, on `_Board` | 175 ms | 10 ms |
+
+The duel result was **47–12 both times, with the same single draw** — the rewrite changed the speed and nothing else, which is what the agreement test asserts and what makes the number above a clean measurement rather than two different opponents.
+
+**Consequence:** Identical answers is a stronger requirement than identical verdicts, and the test asserts the stronger one: the positional ladder picks among tied candidates, so a forcing search that returned a different first move would be a different opponent even when both moves win. The naive version stays in the package for exactly this reason — a definition written the obvious way is worth keeping when something fast has to be checked against it.
+
+---
+
+### D171 — What the ladder is tuned with
+**Question:** Every claim in D167, D169 and D170 is a duel result. Where does the instrument live?
+
+**Decision:** `packages/quadrim_engine/tool/duel.dart`. It plays two configurations over N games from both seats and reports the result plus worst, median and mean move times. Opponent names accept modifiers — `sable+d9+b3000` is Sable with nine moves of defensive forcing search and a three-million-node forcing budget — so a knob can be measured without editing the catalogue.
+
+**Rationale:** Under `tool/`, not `lib/`, which is what lets it use a clock: the purity gate scans `lib` only, and timing is the entire point of the thing. Keeping it in the repository rather than in a scratch directory is the difference between a ladder that was measured and a ladder that was measured once by someone who has since forgotten how.
+
+**Consequence:** Ticket 014's calibration harness builds on this rather than starting over. It is not a shipped artefact and does not count against the 50 MB of [D165](#d165--fifty-megabytes-is-the-download-ceiling).
+
+---
+
+### D172 — Perfect play comes from Patashnik's dictionary, and nothing else comes from that repository
+**Question:** Idea-final §14 left the top of the ladder resting on an open research question: is a perfect-play strategy obtainable, and on what terms? A copy was found at `github.com/kogorman/qubic`. That repository is **GPL-2.0**, which if it applied to what Quadrim takes would force Quadrim to be GPL-2.0 as well.
+
+**Decision:** Take **`qubic.dictionary` and nothing else.** The file carries its own terms in its own header, quoted verbatim:
+
+> Copyright 1988, all rights reserved. […] Anyone may use this dictionary as long its moves are unchanged and as long as its source is credited.
+
+That is a permissive grant from the data's own copyright notice, and it predates the repository by decades. The GPL-2.0 covers Kevin O'Gorman's C++ under `qval/`, which Quadrim does not use: no line of it was read or adapted, and the move-generation procedure is implemented from the description in the dictionary's own header and from Patashnik's published article. The separation is recorded in `third_party/patashnik/NOTICE.md` with instructions to preserve it on any future refresh.
+
+**Rationale:** Two obligations, both mechanised rather than promised. *Moves unchanged*: the file is vendored byte for byte, `.gitattributes` marks it `-text` so no line-ending conversion can touch it, and `tool/bookgen.dart` verifies its SHA-256 on every run of `tool/check.sh`. *Source credited*: see [D174](#d174--the-attribution-is-a-property-of-the-built-app-not-of-the-repository).
+
+**Consequence:** This closes Idea-final §14 and OI-02's first half. The strategy book exists, it is 54,745 bytes, and it costs nothing against the fifty-megabyte ceiling of [D165](#d165--fifty-megabytes-is-the-download-ceiling). The solver sub-project OI-02 contemplated is not needed: Patashnik did it in 1976-77.
+
+**This is not legal advice, and the licensing judgement above is the owner's to confirm.** What is recorded here is what the file says and what the code does about it.
+
+---
+
+### D173 — Perfect play is first-player play, and the perfect opponent still has to play second
+**Question:** Qubic is a **first-player win** — that is what Patashnik proved, and the dictionary is the proof. There is therefore no such thing as perfect second-player play. What does the perfect opponent do when the player opens?
+
+**Decision:** It falls back to searching, like any other opponent. One catalogue entry, both seats: unbeatable when it opens, merely the strongest thing in the catalogue when it does not. `bookMove` returns null for anything but the first player, and says so in its own gate rather than relying on a caller to remember.
+
+**Rationale:** The alternatives were to let the perfect opponent always take the opening move, or to ship two entries. Both spend something real — the player's choice of seat, or two of the twenty opponent slots — to buy a claim that is only true half the time anyway. Falling back is honest: the opponent is exactly as strong as it can be in each seat, and nothing in the interface promises more.
+
+**Consequence:** "Unbeatable" is a property of the *games it opens*, and any description of Quadrim Prime must say so. Verified rather than asserted: 200 games with Prime opening against random replies, **won 200, drawn 0, lost 0**, plus four games against Titan with the same result. The instructive number is that **0 of those moves fell through to the ordinary search** — 636 came from the book, 202 from the forcing search, 203 were an immediate win or block. The dictionary's header promises that past the book "a forced win must exist"; across 200 games it always did.
+
+---
+
+### D174 — The attribution is a property of the built app, not of the repository
+**Question:** The dictionary may be used "as long as its source is credited". A NOTICE file in the repository credits it. Is that enough?
+
+**Decision:** No. The credit goes **in the app**, as `l10n.strategyCredit`, in English and Dutch, and `tool/check.sh` fails if nothing in `app/lib` renders it.
+
+**Rationale:** It is the built app that reaches people, and a repository nobody installs is not where a credit discharges an obligation. It currently sits on the settings placeholder, which is the screen ticket 028 will replace — deliberately, so that there is never a build in which the credit is merely planned. The check exists because the alternative is trusting that nobody deletes a line during that replacement.
+
+**Consequence:** Ticket 028 inherits a requirement, not a suggestion: the settings screen it builds must carry this string, and the check will fail until it does. Ticket 022's release readiness should confirm it is visible in a release build, not only a debug one.
+
+---
+
+### D175 — The book is stored in canonical form, and the move has to be turned back with it
+**Question:** 2929 entries cannot cover the positions a game reaches. The dictionary's header says why they can: "you will need (1) a canonical-form routine (there are 192 automorphisms of the Qubic board)". How is that stored?
+
+**Decision:** Each entry is keyed by the canonical form of its position — the smallest of the 192 images — with the move rewritten into that same orientation. `canonicalise` now returns the automorphism alongside the key, and `CanonicalForm.cellFromCanonical` turns the stored move back onto the real board.
+
+**Rationale:** This is the same defect the ticket-025 review found in the transposition table, where a canonically-keyed entry carried an orientation-dependent best move and was quietly useless for ordering. There it cost only pruning; here it would be a wrong move, so the machinery to invert the automorphism had to be built rather than skipped. `symmetry.dart` — flagged in that review as having no production caller — is now load-bearing.
+
+**Consequence:** Two independent checks that the keying is sound. The generator refuses to build if two dictionary lines that are the same position up to symmetry disagree about the move: **2929 entries produced 2929 distinct canonical positions, no conflicts.** And the book's twelve entries at ply 2 are exactly the twelve orbits of the remaining 63 cells under the stabiliser of the opening cell, which the engine's own automorphism table reproduces independently.
+
+A subtlety worth keeping, because it made the first version of the test wrong: when a position has a non-trivial stabiliser, the canonical form is reached by more than one automorphism, and they can disagree about *which* of several interchangeable cells the stored move names. The test asserts that turning the board gives the same **resulting position**, not the same cell index. Same move in every way the game can tell.
+
+---
+
+### D176 — Two book opponents can only differ in the seat the book does not cover
+**Question:** The Master tier is two opponents, Oracle at 2300 and Quadrim Prime at 2600. Both play the same book, and the book makes its holder unbeatable in the games it opens ([D173](#d173--perfect-play-is-first-player-play-and-the-perfect-opponent-still-has-to-play-second)). What can possibly separate them?
+
+**Decision:** Only the **second seat**. Oracle searches with the Expert tier's machinery there — 1.8M nodes, five moves of defensive forcing search, no exact endgame. Prime uses the largest configuration in the catalogue — 3M nodes, nine moves of defence, a twelve-cell exact endgame. In the games they open they are the same opponent and neither can be beaten, and the catalogue text has to say so.
+
+**Rationale:** Arrived at by eliminating two alternatives, both of which were built before being measured.
+
+*A blunder rate.* Oracle first shipped with `blunderRate: 0.002` as a deliberate human-sized crack. An existing test caught it within the hour: the catalogue requires that blunder rate never rise as rating rises, and Oracle at 2300 was blundering more than Titan at 2100. The invariant is right and the design was wrong — a player who beats Titan and then meets a *more* generous opponent has been told something false about the ladder.
+
+*A shallower forcing search.* The replacement gave Oracle eleven moves of forcing search against Prime's twenty, and a budget a sixth the size, on the theory that it would sometimes fail to finish what the book started. Measured over 200 games opening against random replies, the result was **byte-identical to Prime's**: same 636 book moves, 202 forcing-search moves, 203 immediate wins or blocks, same zero fall-throughs, same 200-0. The forced wins that follow the book are short enough that eleven moves find them exactly as reliably as twenty.
+
+**Consequence:** This is the third negative result in a row from the same family — [D163](#d163--eight-plies-is-not-affordable-and-depth-is-not-the-reason-these-opponents-are-strong) (depth), [D167](#d167--teaching-the-evaluation-about-forks-did-not-make-it-stronger) (evaluation), and now forcing depth past the book. The pattern is consistent and worth stating plainly: **once an opponent can find short forced wins, giving it more of the same buys nothing.** What has ever moved this ladder is a different *kind* of knowledge — the defensive question ([D169](#d169--pointing-the-forcing-search-at-the-opponent-is-the-largest-strength-gain-measured)), and now the book.
+
+It also means the 300 points between Oracle and Prime are a claim about half the games, and can only be earned by measurement in that half. Measured against Titan, twelve games each, alternating seats:
+
+| pairing | result | the half that matters |
+|---|---|---|
+| Titan vs Oracle | 6-6 | Oracle's second seat won **0 of 6** |
+| Titan vs Quadrim Prime | 3-9 | Prime's second seat won **3 of 6** |
+
+Both book players win every game they open, so the aggregate score says nothing; the second-seat column is the whole measurement, and it separates them in the direction the design intended. Six games apiece is a small sample and the gap it supports is not precisely 300 points — but it is a real difference arising from a real mechanism (nine moves of defensive forcing search against five, which the Expert tier measured at 19-11 and 20-10 on its own), rather than the byte-identical non-difference the previous two designs produced. Ticket 014 turns the direction into a number.
+
+The same run settles the move-time question the review raised, because the second seat is where the book stops answering and the whole budget gets spent: **Prime worst 7,017 ms, Oracle worst 7,543 ms, Titan worst 10,379 ms** — all inside the twenty-second ceiling of [D164](#d164--the-real-move-budget-is-twenty-seconds-on-device-not-a-quarter-of-a-second), with the largest configuration in the catalogue not being the slowest one in it.
+
+**Quadrim Prime's rating moved from 2600 to 2400 on this evidence**, and the number is still generous. Measured against two anchors, twenty games each against Corvus:
+
+| Prime against | aggregate score | implied rating |
+|---|---|---|
+| Corvus (1900) | 16-4, 80% | ≈ 2140 |
+| Titan (2100) | 9-3, 75% | ≈ 2290 |
+
+The two disagree by 150 points, and the disagreement is structural rather than noise. A rating predicts a single expected score, but this opponent has two modes: it cannot lose the games it opens, and it is a strong searcher in the others. Its second seat scored 6/10 against Corvus and 3/6 against Titan — sensible, monotone, and the only part of it that varies with the opposition. Against a *perfect* opponent the aggregate would be exactly 50%, which is to say Prime's rating is the ceiling of the ladder and anyone who reaches it draws.
+
+**Oracle measures at 2100, not 2300**: 6-6 against Titan and 15-5 (75%, implied 2091) against Corvus — two anchors that agree closely. Its stated rating is the one in the catalogue least supported by measurement, and it is flagged for ticket 014 rather than changed here.
+
+---
+
+### D177 — The gate had quietly become a two-hour job, and the cause was a filter that never existed
+**Question:** `tool/check.sh` had grown from minutes to roughly two hours. A gate nobody can afford to run is not a gate. Where did the time go?
+
+**Decision:** Two fixes, one in the tests and one in the engine.
+
+1. **`strategic_bot_test.dart`'s legality sweep is filtered to the opponents that decide in microseconds.** It iterated `opponentCatalogue` entire, 400 positions each. That was free when every opponent was rule-based; ticket 025 added four opponents budgeted in nodes and ticket 026 added two more, so the sweep became six searching opponents times four hundred positions times seconds a move.
+2. **`deepSearch` stops deepening once the root is inside the exact-solving window.** Iterative deepening ran the same full exact solve at every depth, proving the identical result each time, because a proven answer cannot improve with depth.
+
+**Rationale:** Measured rather than guessed, and the first two guesses were both wrong. Per-node allocation in `_orderedMoves` was the first suspect and is not the cost. The redundant exact solves were the second, and are real — but a single twelve-empty solve was measured at **155 ms**, so eighty of them could not account for the time either.
+
+The mistake underneath both wrong guesses was misreading the test reporter. `dart test` runs files concurrently and prints the elapsed time of the **suite** against whichever test is currently active, so a line reading `106:45 … exact endgame solving` says the suite has been running 107 minutes, not that this test has. The slow thing was in another file entirely.
+
+| | engine tests |
+|---|---|
+| before | 106+ minutes |
+| after | 108 tests in 2 min 26 s |
+
+**Consequence:** This is the second sweep in three days found running opponents it was written to exclude. The first, in `bot_test.dart`, filtered on `searchDepth == 0` — a condition that stopped meaning anything the moment `nodeBudget` became the alternative way to spend a search. The second had no filter at all. Both were written when every opponent in the catalogue was cheap, and neither was revisited when that stopped being true.
+
+The remedy applied to the surviving sweeps is to **derive the set from the catalogue rather than list it**: `deep_search_test.dart` now sweeps `opponentCatalogue.where((b) => b.nodeBudget > 0)` and asserts the result is not suspiciously small, so an opponent added later cannot escape it — which is exactly how the cheap sweep came to swallow the expensive ones.
+
+The engine half of the fix is not only about tests. Titan and Quadrim Prime solve the endgame exactly in real play, and both were re-solving it once per iteration of the deepening loop.
+
+---
+
+### D178 — The engine suite had never finished, and a hang is not a failure
+**Question:** Every full check in this session was started and never seen to complete. The logs told the story only in hindsight: of ten runs, exactly one wrote an exit line, and that one failed early on app tests before it ever reached the engine. Why did nobody notice?
+
+**Decision:** Three fixes, and a change of habit.
+
+1. **`SearchLimits` now asserts `exactEmpties <= 16`.** A test passed **64** — "always solve exactly" — from a six-move position with **58 cells empty**. Exact solving has no horizon and no budget it will abandon; that request is an instruction to solve Qubic, and it never returns.
+2. **The test asks for something finishable.** It now takes endgames of ten empty cells, checks the score is a proof rather than an estimate, agrees with the independent solver, and asserts `depthReached == 1` — which also pins the [D177](#d177--the-gate-had-quietly-become-a-two-hour-job-and-the-cause-was-a-filter-that-never-existed) fix in place.
+3. **`_endgames` tries 1500 times instead of 60.** A position with ten cells left and no completed line means neither side won for fifty-four plies, which Ember rarely allows. Sixty attempts yielded one or two where the callers wanted five, and the resulting assertion failures read as complaints about the solver rather than about the fixture. Each attempt is one fast self-play game.
+
+**Rationale:** The habit is the real finding. **A hang produces no failure to read.** A failing test announces itself; a hanging one looks exactly like a slow one, and every instinct — wait a bit longer, the endgame tests are expensive — points away from the truth. It survived from ticket 025 through five more tickets because the run never got far enough to produce a verdict, and "still running" was accepted as a state rather than investigated as one.
+
+Three wrong diagnoses were reached before the right one, and each was wrong in a way worth remembering:
+
+- *Per-node allocation in `_orderedMoves`.* Plausible, unmeasured, wrong.
+- *Redundant exact solves under iterative deepening.* Real, and fixed as D177 — but a single twelve-empty solve measures at **155 ms**, so eighty of them could never have explained hours. A true finding that was not the finding.
+- *Orphaned processes exhausting the machine.* Thirteen were cleared; the next run wedged at the identical point. Reproducibility was the clue that should have come first.
+
+What finally worked was refusing to read the reporter as prose. `dart test` prints the **suite's** elapsed time against whichever test is currently active, so `106:45 … exact endgame solving` says the suite has been running 107 minutes and that this test is the one running now — not that this test took 107 minutes, and not that the previous line's test was to blame.
+
+**Consequence:** Every long-running command now carries a hard `timeout`, so a wedge ends as a non-zero exit rather than as silence. The engine suite went from never finishing to **19 tests in 22 seconds**, and `tool/check.sh` reached `ALL CHECKS PASSED` for the first time since ticket 025.
+
+The uncomfortable part is worth writing down plainly: several tickets were reviewed, decided, and recorded on the strength of a suite that was never observed to pass. The tests themselves were sound — when finally run, three genuine fixture failures surfaced immediately and were fixed — but the confidence placed in them during that period was not earned.
+
 ---
 
 ## Appendix — session tooling

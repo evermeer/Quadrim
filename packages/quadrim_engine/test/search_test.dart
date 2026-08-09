@@ -258,6 +258,75 @@ void main() {
       expect(threatSpaceWin(state, Player.second, 6), isNull);
       expect(threatSpaceWin(state, Player.first, 0), isNull);
     });
+
+    test('the fast version answers exactly what the naive one does', () {
+      // The fast version reads counters the board maintains rather than
+      // rescanning; the naive one is the definition written out. Same move,
+      // not merely the same verdict — the ladder picks among tied candidates,
+      // so a different first move is a different opponent.
+      final random = Random(77);
+      var claims = 0;
+      for (var i = 0; i < 1500; i++) {
+        final state = _randomPosition(random);
+        final me = state.sideToMove;
+        for (final depth in const [1, 2, 5]) {
+          final fast = threatSpaceWin(state, me, depth);
+          final naive = threatSpaceWinNaively(state, me, depth);
+          expect(fast?.index, naive?.index,
+              reason: 'depth $depth disagreed on ${state.moves}');
+          if (fast != null) claims++;
+        }
+      }
+      expect(claims, greaterThan(50), reason: 'too few forced wins sampled');
+    });
+  });
+
+  group('the same search pointed at the opponent', () {
+    // No rules, no search, no blunders: with everything else switched off,
+    // any move this config avoids is one the defensive forcing search
+    // rejected, and nothing else can be taking the credit.
+    //
+    // The budget is deliberately 64× the default: it is shared out among the
+    // candidates, so this guarantees every one of them gets at least the
+    // [kForcingBudget] the check below spends on it. A shipped opponent runs
+    // starved by comparison and misses wins this finds — see D170.
+    const defender = BotConfig(
+      id: 'test-defender',
+      rating: 1500,
+      defenceSearchDepth: 6,
+      forcingBudget: 64 * kForcingBudget,
+    );
+
+    test('never plays into a forced win when a safe move exists', () {
+      final random = Random(31337);
+      var exercised = 0;
+      for (var trial = 0; trial < 400 && exercised < 40; trial++) {
+        final state = _randomPosition(random);
+        final me = state.sideToMove;
+
+        final safe = [
+          for (final move in legalMoves(state))
+            if (_survives(state, move, me)) move,
+        ];
+        if (safe.isEmpty) continue; // every move loses: nothing to get right
+        if (safe.length == legalMoves(state).length) continue; // nothing to dodge
+        exercised++;
+
+        final chosen = chooseMove(state, defender, random);
+        expect(safe.map((c) => c.index), contains(chosen.index),
+            reason: 'walked into a forced win from ${state.moves}');
+      }
+      expect(exercised, greaterThan(10),
+          reason: 'too few positions where the choice mattered');
+    });
+
+    test('still plays on when every move loses', () {
+      // A lost position is played out. The alternative — no move — would make
+      // the caller handle a null it can do nothing with.
+      final random = Random(11);
+      final state = _darkThreatensAtThree;
+      expect(() => chooseMove(state, defender, random), returnsNormally);
+    });
   });
 
   group('the Club tier', () {
@@ -394,4 +463,12 @@ GameState _randomPosition(Random random) {
   }
   if (outcome(state) is! Ongoing) return _randomPosition(random);
   return state;
+}
+
+/// Whether [me] playing [move] leaves the opponent without a forced win,
+/// measured at the same depth the defender searches.
+bool _survives(GameState state, Cell move, Player me) {
+  final after = applyMove(state, move);
+  if (outcome(after) is! Ongoing) return true;
+  return threatSpaceWin(after, me.opponent, 6) == null;
 }

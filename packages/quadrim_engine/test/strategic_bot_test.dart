@@ -282,8 +282,18 @@ void main() {
 
   test('every opponent returns only legal moves over thousands of positions',
       () {
+    // The opponents that decide in microseconds. The budgeted ones cost up to
+    // seconds a move and are swept in deep_search_test.dart at a sample that
+    // fits the suite's runtime.
+    //
+    // Filtered on *both* budgets: ticket 025 introduced `nodeBudget` as the
+    // alternative to `searchDepth`, and an unfiltered sweep of the whole
+    // catalogue at 400 positions each turned this file into roughly two hours
+    // of work — six searching opponents times four hundred positions times
+    // seconds a move (D177).
     final random = Random(20260811);
-    for (final bot in opponentCatalogue) {
+    for (final bot in opponentCatalogue
+        .where((b) => b.searchDepth == 0 && b.nodeBudget == 0)) {
       for (var i = 0; i < 400; i++) {
         final state = _randomPosition(random);
         final move = chooseMove(state, bot, random);

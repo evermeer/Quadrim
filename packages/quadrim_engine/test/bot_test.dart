@@ -60,9 +60,16 @@ void main() {
       // Every catalogue entry that decides in microseconds, over randomly
       // generated reachable positions. The searching opponents cost
       // milliseconds a move and are swept separately, at a sample size that
-      // fits the suite's runtime (search_test.dart).
+      // fits the suite's runtime (search_test.dart, deep_search_test.dart).
+      //
+      // Both budgets, not just `searchDepth`: ticket 025 introduced
+      // `nodeBudget` as the *alternative* way to spend a search, so the
+      // Expert tier reads as `searchDepth == 0` and this sweep silently
+      // started running four iterative-deepening opponents three thousand
+      // times each.
       final random = Random(20260811);
-      for (final bot in opponentCatalogue.where((b) => b.searchDepth == 0)) {
+      for (final bot in opponentCatalogue
+          .where((b) => b.searchDepth == 0 && b.nodeBudget == 0)) {
         for (var i = 0; i < 3000; i++) {
           final state = _randomPosition(random);
           final move = chooseMove(state, bot, random);

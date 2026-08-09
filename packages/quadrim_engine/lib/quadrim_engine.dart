@@ -9,4 +9,7 @@ library;
 export 'src/bot.dart';
 export 'src/engine.dart';
 export 'src/search.dart';
+export 'src/strategy_book.dart';
+export 'src/symmetry.dart';
+export 'src/transposition.dart';
 export 'src/winning_lines.g.dart';

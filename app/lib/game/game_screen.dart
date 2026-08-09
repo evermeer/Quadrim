@@ -301,6 +301,12 @@ class _GameBody extends StatelessWidget {
     final over = game.status == GameStatus.complete;
     final highlight = o is Win ? o.line : const <int>[];
     final lightToMove = state.sideToMove == Player.first;
+    // Derived from the game rather than from the screen's `_busy` flag: the
+    // banner should say "thinking" for the whole of the opponent's turn,
+    // including the moment before the move is dispatched.
+    final thinking = !over &&
+        game.mode == GameMode.vsComputer &&
+        game.seatToMove != game.playerSeat;
 
     return Column(
       children: [
@@ -312,6 +318,7 @@ class _GameBody extends StatelessWidget {
                 text: _statusText(l10n, game, o, lightToMove),
                 lightToMove: !over && lightToMove,
                 over: over,
+                thinking: thinking,
               ),
               const SizedBox(height: 2),
               Text(
@@ -481,11 +488,18 @@ class _TurnBanner extends StatelessWidget {
     required this.text,
     required this.lightToMove,
     required this.over,
+    this.thinking = false,
   });
 
   final String text;
   final bool lightToMove;
   final bool over;
+
+  /// True while a computer opponent is deciding. A move may take up to twenty
+  /// seconds on a device (D164), and against that a line of static text is
+  /// indistinguishable from a frozen app — so the stone the banner already
+  /// shows is replaced by something that visibly moves (D166).
+  final bool thinking;
 
   @override
   Widget build(BuildContext context) {
@@ -496,21 +510,31 @@ class _TurnBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (!over) ...[
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  center: const Alignment(-0.35, -0.45),
-                  colors: lightToMove
-                      ? const [Color(0xFFFFFFFF), Color(0xFFC3C3C8)]
-                      : const [Color(0xFF4A4A52), Color(0xFF050507)],
+            if (thinking)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: theme.colorScheme.primary,
                 ),
-                border: Border.all(
-                    color: theme.colorScheme.outline, width: 0.5),
+              )
+            else
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: const Alignment(-0.35, -0.45),
+                    colors: lightToMove
+                        ? const [Color(0xFFFFFFFF), Color(0xFFC3C3C8)]
+                        : const [Color(0xFF4A4A52), Color(0xFF050507)],
+                  ),
+                  border: Border.all(
+                      color: theme.colorScheme.outline, width: 0.5),
+                ),
               ),
-            ),
             const SizedBox(width: 8),
           ],
           Flexible(

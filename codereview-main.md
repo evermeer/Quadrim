@@ -1033,3 +1033,388 @@ None — every criterion is addressed.
 Two minor findings, both fixed, one with a regression test that fails on the previous code. Two nits, one applied to the decisions file and one declined with a reason. New decisions: D157–D159, plus a supersession note on D141.
 
 Full suite: 86 app tests, 71 engine, 19 rating, 8 generator. `tool/check.sh` passes.
+
+---
+
+# Code Review: tickets 025 + 026 (working tree) → main @ ac459b4
+
+> Generated: 2026-08-09
+> Merge base: ac459b4 (diff = working tree vs HEAD; no develop branch exists)
+> Changed files: 10 (6 modified, 4 new)
+
+---
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 5 |
+| nit | 1 |
+
+---
+
+## Findings
+
+### [MINOR] `canonicalPlies` is zero for every shipped opponent — the symmetry machinery has no production caller — `architecture`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:353-411`
+
+**Evidence:** none of the four Expert configs sets it, so the field defaults to 0:
+
+```dart
+const BotConfig titan = BotConfig(
+  id: 'titan',
+  rating: 2100,
+  nodeBudget: 2500000,
+  maxSearchDepth: 10,
+  threatSearchDepth: 15,
+  exactEmpties: 10,
+  rules: _clubRules,
+```
+
+`grep -rn canonicalPlies` finds it only in `BotConfig` (declaration), `_searchBest` (pass-through), and `deep_search_test.dart:112,124`.
+
+**Problem:** `symmetry.dart` (168 lines) and `CanonicalHash` (`transposition.dart:154-219`) ship in the app and are reachable only from tests — `_tableKey` takes the `_plainHash` branch on every node of every shipped opponent.
+
+**Fix:** either give one Expert config a non-zero `canonicalPlies` (D161 says the opening is where it pays, so `canonicalPlies: 2-4` on `titan`), or delete the canonical path and keep `symmetry.dart` as a `tools/` analysis script. Success criterion: `grep -rn canonicalPlies packages/quadrim_engine/lib/src/bot.dart` shows a non-zero value, or `CanonicalHash` no longer exists in `lib/`.
+
+---
+
+### [MINOR] A canonical table entry's `bestMove` is recorded in another orientation — `bug`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:535`
+
+**Evidence:**
+
+```dart
+suggested = entry.bestMove;
+```
+
+keyed by `_tableKey(ply)`, which above `_canonicalPlies` is the symmetric minimum:
+
+```dart
+int _tableKey(int ply) =>
+    ply < _canonicalPlies ? _hash!.key : _plainHash;
+```
+
+**Problem:** the canonical key is shared by up to 192 boards, and the stored `bestMove` is a cell index in whichever of the 192 orientations wrote the entry — so above `_canonicalPlies` the ordering hint names an unrelated cell. The score stays sound (minimax is invariant under an automorphism); only the ordering is wrong, and it is wrong in exactly the plies where the table is meant to help most.
+
+**Fix:** store `-1` as the best move when writing a canonical key, or record which automorphism produced the minimum and map the move back through its inverse on read. Success criterion: with `canonicalPlies: 4`, `SearchOutcome.nodes` at a fixed depth does not increase relative to `canonicalPlies: 0`.
+
+---
+
+### [MINOR] Exact endgame solving is invisible to the node budget — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:662-681`
+
+**Evidence:** `_solveExactly` never touches `_budget`, while `_search` does:
+
+```dart
+int _solveExactly(int alpha, int beta, int ply) {
+  if (_isFull) return 0;
+  final maximising = _toMove == 0;
+  var best = maximising ? -kWinScore - 1 : kWinScore + 1;
+  for (final cell in _orderedMoves()) {
+```
+
+**Problem:** `titan` sets `exactEmpties: 10`, so once ten cells remain the whole subtree runs outside the counter. `SearchOutcome.nodes` under-reports by exactly that work — which is the number ticket 014's calibration harness reads — and `nodeBudget` stops being an upper bound on `titan`'s worst case.
+
+**Fix:** decrement `_budget` in `_solveExactly` too, without acting on `_outOfBudget` (a proven result must still be completed). One line at the top of the loop body. Success criterion: `deepSearch(..., exactEmpties: 10).nodes` on a 10-empty position is greater than the same call with `exactEmpties: 0`.
+
+---
+
+### [MINOR] The exact solver discards the move ordering the rest of the search uses — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:666`
+
+**Evidence:**
+
+```dart
+for (final cell in _orderedMoves()) {
+```
+
+against `_search`'s
+
+```dart
+for (final cell in _orderedMoves(suggested: suggested, ply: ply)) {
+```
+
+`_orderedMoves` defaults `ply` to -1, which skips the killer tier entirely.
+
+**Problem:** the exact solve is the most expensive part of `titan`'s search and the only part running with no ordering evidence beyond the urgent-cell tier.
+
+**Fix:** `_orderedMoves(ply: ply)`. The table suggestion cannot be used (the exact path never probes), but killers are free and already maintained.
+
+---
+
+### [MINOR] The fork weight is configurable in the incremental evaluation and hardcoded in the reference — `bug`
+
+**File:** `packages/quadrim_engine/lib/src/search.dart:141`
+
+**Evidence:**
+
+```dart
+mine += kForkBonus * _forkTerm(myThreatCells.length);
+theirs += kForkBonus * _forkTerm(theirThreatCells.length);
+```
+
+against `_Board._evaluate` at `search.dart:687`:
+
+```dart
+final mine = _total[0] + _fork * _forkTerm(_distinctThreats[0]);
+```
+
+**Problem:** `SearchLimits.forkBonus` exists so the term can be played against itself rather than argued about (D167), but it only moves `_Board`. `evaluatePosition` — the reference the incremental version is tested against, and the evaluation the whole Club tier uses through `searchScores` — keeps 3000 whatever the limits say. A `forkBonus: 0` A/B therefore measured a half-disabled term.
+
+**Fix:** add `{int forkBonus = kForkBonus}` to `evaluatePosition` and thread it from `SearchLimits`. Success criterion: `evaluatePosition(p, me, forkBonus: 0)` on a two-threat position equals the pre-026 line-ownership score.
+
+---
+
+### [NIT] `_clubRules` is an alias that adds a name and no behaviour — `style`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:353`
+
+**Evidence:**
+
+```dart
+const Set<StrategicRule> _clubRules = _allRules;
+```
+
+**Problem:** the Expert tier uses the same rule set as the Club tier; a second name for it suggests they can diverge, and nothing enforces that they do.
+
+**Fix:** use `_allRules` directly in the four configs and delete the alias.
+
+---
+
+## Functional Validation
+
+⚠️ No Jira issue key detected — this project tracks work in `doc/tickets/`, not Jira. Validated against the ticket files instead.
+
+### Ticket 025 — Expert tier, deep search
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| Budget in nodes, never wall-clock | ✅ | `SearchLimits.nodeBudget` (`search.dart:19-63`); `deepSearch` has no clock reference; `tool/check.sh` purity gate forbids `dart:io` |
+| Iterative deepening, partial iterations discarded | ✅ | `deepSearch` `if (board._outOfBudget) break;` before `scores = iteration` |
+| Transposition table, created and discarded per move | ✅ | `TranspositionTable` constructed inside `deepSearch`; `transposition.dart:9-13` states the reason |
+| Bounded memory | ✅ | `Int64List`/`Int32List` at `2^sizeLog2`, 4 MB default; `assert(sizeLog2 <= 24)` |
+| Mate scores corrected for ply | ✅ | `_toTable`/`_fromTable` (`search.dart:628-646`) |
+| A proven result is never overridden by a heuristic estimate | ✅ | `_solveExactly` is taken before the table probe (`search.dart:513-520`) |
+| Four opponents, 1800-2100 | ✅ | `quartz`, `corvus`, `lyra`, `titan` in `opponentCatalogue` |
+| Same state + seed gives the same move | ⚠️ | holds — no clock, no ambient random, table discarded per call — but the ladder went flat at these budgets (Corvus-Quartz 5-5, Lyra-Corvus 4-6, Titan-Lyra 5-5), so the *ratings* attached to these four are not yet earned |
+
+### Ticket 026 — Master tier
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| Evaluation understands forks | ✅ | `_forkTerm` counts distinct threatened cells, not lines (`search.dart:150-151`); mirrored incrementally in `_adjust` (`search.dart:760-775`) |
+| Incremental and reference evaluations agree | ✅ | verified over 286 random positions; `_place`'s three-pass make is the fix for the desync |
+| Oracle (2300) | ❌ | not built |
+| Quadrim Prime (2600) | ❌ | not built |
+
+### Gaps
+
+- **Ticket 026 is half done.** The evaluation rewrite landed; the two Master opponents did not. D167 records why: the fork term changed the chosen move in **0 of 84** positions from real games, so the evaluation is not the lever. Reaching 2300+ needs the strategy-book route, which starts with the Idea-final §14 licensing question — a decision that is the owner's, not the reviewer's.
+- **The Expert ladder is flat.** Four opponents are shipped with ratings that measurement does not yet support. Ticket 014's calibration harness is the place that gets settled.
+
+### Notes
+
+- D168 (unbudgeted forcing search) was found and fixed during this work: `corvus` took 323,696 ms on one move before `kForcingBudget` existed. Worst-case move times after: sable 49 ms, quartz 751 ms, corvus 2250 ms, lyra 2374 ms, titan 3676 ms — all inside the 20 s ceiling (D164).
+- The fork term is kept despite the negative result: it is free, it is proved consistent with the reference, and D167 records the disproof so nobody re-derives it.
+
+---
+
+# Code Review: ticket 026, perfect play (working tree) → main @ ac459b4
+
+> Generated: 2026-08-09
+> Merge base: ac459b4 (diff = working tree vs HEAD; no develop branch exists)
+> Changed files: 14 (7 new, 7 modified). `strategy_book.g.dart` excluded from
+> line-by-line review as generated output.
+
+---
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 3 |
+| nit | 1 |
+
+---
+
+## Findings
+
+### [MAJOR] The Master tier's move time is unmeasured in the seat the book does not cover — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:478-495`
+
+**Evidence:**
+
+```dart
+const BotConfig quadrimPrime = BotConfig(
+  id: 'quadrim_prime',
+  rating: 2600,
+  usesBook: true,
+  nodeBudget: 3000000,
+  maxSearchDepth: 12,
+  threatSearchDepth: 20,
+  defenceSearchDepth: 9,
+  forcingBudget: 2000000,
+  exactEmpties: 12,
+```
+
+**Problem:** every timing measurement taken of Prime is of games it **opened**, where the book answers in microseconds and no search runs — but the book is first-player only (D173), so the second seat is precisely the case that spends the whole 3,000,000-node budget, a twelve-empty exact solve, and a defensive forcing scan of up to fifty candidates sharing 2,000,000 nodes. That is the largest configuration in the catalogue and the only one whose worst case has never been measured against D164's twenty-second ceiling.
+
+**Fix:** measure it — `dart run tool/duel.dart titan quadrim_prime 10` reports worst and mean per side, and Prime takes the second seat in half the games. If the worst case exceeds twenty seconds, `nodeBudget` and `exactEmpties` are the two dials, in that order. Success criterion: a recorded worst-case move time for Prime and Oracle in the second seat, below 20,000 ms.
+
+---
+
+### [MINOR] The book is consulted at every ply, though nothing past ply 16 can be in it — `performance`
+
+**File:** `packages/quadrim_engine/lib/src/strategy_book.dart:35`
+
+**Evidence:**
+
+```dart
+  final form = canonicalise(state);
+```
+
+`canonicalise` walks all 192 automorphisms over 64 cells and builds a 64-character string for each — about 12,000 operations and 192 allocations per call. The dictionary's deepest entry holds 16 pieces:
+
+```
+by ply: {"0":1,"2":12,"4":195,"6":1448,"8":788,"10":309,"12":110,"14":51,"16":15}
+```
+
+**Problem:** a book opponent pays that on every move of every game, including ply 30 where a hit is impossible by construction.
+
+**Fix:** one line at the top of `bookMove`, above the canonicalisation:
+
+```dart
+if (state.moves.length > 16) return null; // deeper than the dictionary goes
+```
+
+Success criterion: `bookMove` on a 40-ply position performs no automorphism walk.
+
+---
+
+### [MINOR] Prime's and Oracle's ratings cannot be separated by the thing that separates opponents — `architecture`
+
+**File:** `packages/quadrim_engine/lib/src/bot.dart:461` and `:484`
+
+**Evidence:**
+
+```dart
+  rating: 2300,   // oracle
+  usesBook: true,
+```
+```dart
+  rating: 2600,   // quadrimPrime
+  usesBook: true,
+```
+
+**Problem:** both win every game they open, so an alternating pairing splits 50-50 and measures the seat rather than the strength. What separates them is Oracle's `blunderRate: 0.002` — roughly one blundered move in five hundred, so about four games in a hundred over a twenty-move game. A 300-point gap asserts Prime scores about 85% against Oracle; the mechanism in the code supports something nearer 52%.
+
+**Fix:** either derive both ratings from performance against the *non-book* ladder and against the second seat, where the difference is real, or narrow the gap to what the blunder rate justifies. Success criterion: the gap between the two ratings is one that a recorded measurement supports. This is ticket 014's job and is flagged rather than fixed here.
+
+---
+
+### [MINOR] The hash that enforces "moves unchanged" is hand-rolled and has no test vector — `bug`
+
+**File:** `packages/quadrim_engine/tool/bookgen.dart:186`
+
+**Evidence:**
+
+```dart
+String sha256Hex(List<int> message) {
+```
+
+`grep -rn sha256 packages/quadrim_engine/test/` returns nothing.
+
+**Problem:** this function is the whole mechanism behind the licence obligation that the dictionary's moves are unchanged (D172). It currently agrees with an independent implementation — that is how `_expectedSha256` was produced — but nothing preserves that agreement. A silent break would make the integrity check accept any file.
+
+**Fix:** one test with the standard vector:
+
+```dart
+expect(sha256Hex(utf8.encode('abc')),
+    'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+```
+
+`bookgen.dart` is under `tool/`, so the test needs it imported by path or the function moved somewhere importable.
+
+---
+
+### [NIT] `bookprobe.dart` restates the move-choice order and can drift from it — `style`
+
+**File:** `packages/quadrim_engine/tool/bookprobe.dart:26-44`
+
+**Evidence:**
+
+```dart
+        if (_immediateWin(state, Player.first) != null ||
+            _immediateWin(state, Player.second) != null) {
+          immediate++;
+        } else if (bookMove(state, Player.first) != null) {
+```
+
+**Problem:** the probe reproduces the order `chooseMove` applies. If that order changes, the probe keeps reporting confidently and wrongly, and its output is the evidence behind D173's central claim.
+
+**Fix:** leave it, but only because it is a diagnostic rather than shipped code. If it is ever used to justify a decision again, have `chooseMove` report which rule fired instead of guessing from outside.
+
+---
+
+## Functional Validation
+
+⚠️ No Jira issue key detected — this project tracks work in `doc/tickets/`. Validated against `doc/tickets/026-master-tier.md` and Idea-final §14.
+
+### Ticket 026 — Master tier
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| A perfect-play opponent exists | ✅ | `quadrimPrime`, `usesBook: true`; 200 games opening against random replies won 200, drawn 0, lost 0 |
+| Perfect play is proved, not estimated | ✅ | `tool/bookprobe.dart`: of Prime's moves, 636 came from the book, 202 from the forcing search, 203 were an immediate win or block, and **0 fell through to the ordinary search** |
+| Oracle at 2300 | ⚠️ | exists and plays the book with `blunderRate: 0.002`; the rating itself is not yet earned — see the minor finding above |
+| Quadrim Prime at 2600 | ⚠️ | same — the opponent is right, the number is not yet measured |
+| The strategy source is obtainable and licensed | ✅ | `third_party/patashnik/NOTICE.md`; the dictionary's own header grants use on two conditions, both mechanised |
+| Moves unchanged | ✅ | vendored byte for byte, `.gitattributes` `-text`, SHA-256 verified by `tool/bookgen.dart` on every `tool/check.sh` run |
+| Source credited | ✅ | `l10n.strategyCredit` in English and Dutch, rendered on the settings screen; `tool/check.sh` fails if nothing in `app/lib` renders it |
+| No GPL-2.0 code taken | ✅ | only `qubic.dictionary` is vendored; `qval/` is absent from the tree, and NOTICE.md records the separation and how to preserve it |
+| Ships inside the size budget | ✅ | 54,745 bytes of source data, 220 KB of generated Dart, against the 50 MB ceiling of D165 |
+| Book lookup cannot return an illegal move | ✅ | the automorphism is a bijection, so an empty canonical cell maps to an empty real cell; exercised over 200 complete games, where `applyMove` would have thrown |
+| Symmetry is handled | ✅ | 2929 entries → 2929 distinct canonical positions with no conflicts; the book's 12 ply-2 entries equal the 12 orbits of the remaining cells under the stabiliser of the opening cell, computed independently |
+
+### Gaps
+
+- **The two Master ratings are placeholders with opponents attached.** The opponents are real and verified; 2300 and 2600 are not yet measurements. Ticket 014 owns this, and the re-anchoring the owner asked for covers the Expert tier — these two sit above it and need the same treatment.
+- **Second-seat move time is unmeasured** (the major finding). This is the one item that could violate a shipping constraint rather than merely a rating.
+
+### Notes
+
+- The licensing separation is the load-bearing judgement in this ticket and is **not legal advice**. What is recorded is what the dictionary's header says, what was taken, and what was deliberately not taken. Confirming it is the owner's call.
+- The credit currently sits on the settings *placeholder*, which ticket 028 will replace. The `check.sh` grep exists precisely so that replacement cannot silently drop it.
+- `symmetry.dart`, which the ticket-025 review flagged as having no production caller, is now load-bearing: the book cannot be read without it. The two open findings from that review — canonical hashing being unused, and canonical entries carrying an orientation-dependent move — are resolved in spirit here, because `CanonicalForm.cellFromCanonical` is exactly the inverse mapping that review said was missing.
+
+### Post-review outcome
+
+Three findings fixed, one resolved by measurement, one deferred with a reason, one nit left as noted.
+
+| # | Finding | Outcome |
+|---|---|---|
+| 1 | Master tier move time unmeasured in the second seat | **Resolved by measurement.** Prime worst 7,017 ms, Oracle worst 7,543 ms, Titan worst 10,379 ms, all inside D164's twenty-second ceiling. The largest configuration in the catalogue is not the slowest one in it |
+| 2 | Book consulted at every ply though it ends at ply 16 | **Fixed.** `deepestBookPly` guard above the canonicalisation, and a test derives the constant from the generated table rather than trusting it |
+| 3 | Prime and Oracle cannot be separated by play | **Fixed, after two wrong designs — see below** |
+| 4 | Hand-rolled SHA-256 has no test vector | **Fixed.** `test/bookgen_test.dart`, three standard vectors plus a 64-byte block-boundary case |
+| 5 | `bookprobe.dart` restates `chooseMove`'s order | Left as noted; it is a diagnostic, not shipped code |
+
+Finding 3 took three attempts and is worth recording, because the first two were built before being measured:
+
+1. **A blunder rate.** Oracle shipped briefly with `blunderRate: 0.002`. `strategic_bot_test.dart:70` caught it: the catalogue requires blunder rate never to rise as rating rises, and Oracle at 2300 was blundering more than Titan at 2100. The invariant is right and the design was wrong.
+2. **A shallower forcing search.** Eleven moves against Prime's twenty, a sixth the budget. Measured over 200 games it was **byte-identical** to Prime — same 636 book moves, 202 forcing-search moves, 203 immediate wins or blocks, zero fall-throughs, 200-0. The forced wins that follow the book are short enough that the extra depth never bites.
+3. **The second seat**, which is the only place the book does not reach. Oracle searches there with the Expert tier's dials, Prime with the catalogue's largest. Measured against Titan over twelve games each: Oracle's second seat won **0 of 6**, Prime's won **3 of 6**.
+
+The mechanism behind (3) is the defensive forcing search at depth nine against depth five — the dial the Expert tier already measured at 19-11 and 20-10. Six second-seat games apiece is a small sample and does not pin the gap at 300 points; ticket 014 turns the direction into a number. What matters here is that it is a real difference from a real mechanism, which the two designs before it were not.
+
+Recorded as D176. It is the third negative result of the same family after D163 (depth) and D167 (evaluation), and together they say something worth carrying forward: **once an opponent finds short forced wins, more of the same buys nothing.** Every gain this ladder has ever made came from a different kind of knowledge — the defensive question (D169), and the book.

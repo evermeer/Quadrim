@@ -226,4 +226,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botSable => 'Sable';
+
+  @override
+  String get botQuartz => 'Quartz';
+
+  @override
+  String get botCorvus => 'Corvus';
+
+  @override
+  String get botLyra => 'Lyra';
+
+  @override
+  String get botTitan => 'Titan';
+
+  @override
+  String get botOracle => 'Oracle';
+
+  @override
+  String get botQuadrimPrime => 'Quadrim Prime';
+
+  @override
+  String get strategyCredit =>
+      'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.';
 }
