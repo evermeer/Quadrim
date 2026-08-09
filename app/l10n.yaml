@@ -1,3 +1,7 @@
 arb-dir: lib/l10n
 template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
+# Written on every gen-l10n run and checked by tool/check.sh. Without it a key
+# added to app_en.arb and not to app_nl.arb costs nothing: gen-l10n prints a
+# suggestion, exits 0, and the app quietly serves English to a Dutch player.
+untranslated-messages-file: untranslated.json

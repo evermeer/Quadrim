@@ -88,7 +88,7 @@ What 0.3b does ship is the thing that has to work first: **can two people actual
 
 **What that costs.** This is a real scope increase to a release that was already growing. Most of it is cheap: opponents are configurations of one engine, so fourteen more is largely fourteen more catalogue entries. What is genuinely new is the machinery the upper tiers need — threat-space search, a transposition table, iterative deepening, and exact endgame solving. That is two additional tickets of engine work, not a data change.
 
-**Quadrim Prime is present but not yet perfect.** It ships on rung 2 of Idea-final.md §6.5's fallback ladder — exact endgame plus the deepest achievable search — and is advertised as extremely strong rather than perfect until the solver lands at 1.0. Its rating is recalibrated then, which is cheap because computer ratings are device-local.
+**Quadrim Prime ships with the strategy book, and is unbeatable when it opens.** The dictionary was obtained and verified during ticket 026 rather than waiting for 1.0. It proves a first-player win only, so Prime defends by search from the second seat and is advertised as unbeatable moving first rather than as perfect (D181). Its anchor moved from 2600 to 2400 on measured evidence, which is cheap because computer ratings are device-local.
 
 ### 4.2 Release 0.1 — in scope
 
@@ -424,9 +424,11 @@ What matters to implementation is which engine capability each tier requires, be
 
 Fourteen of the twenty are catalogue entries over capabilities the lower tiers already establish. The genuinely new engine work sits in the Club, Expert and Master rows.
 
-**Quadrim Prime ships without the strategy book** and is therefore not yet perfect — see §4.1. Its catalogue entry must describe what it currently is, not what it becomes at 1.0.
+**Quadrim Prime ships with the strategy book.** The dataset was obtained, verified and licence-checked during ticket 026 rather than deferred to 1.0 — 2,929 positions, solved independently twice since 1976 (Idea-final.md §6.5.1). Both Master opponents hold it.
 
-That book is now known to be a small, published dataset rather than something to be computed from scratch — about 2,929 positions, solved independently twice since 1976 (Idea-final.md §6.5.1). It is still not shipped until it has been obtained, verified and licence-checked, but the odds of Prime reaching genuine perfection at 1.0 are considerably better than when this plan was written.
+It proves a **first-player win** and nothing else, so Oracle and Prime are unbeatable only when they open and defend by search from the second seat. No catalogue entry or player-facing string may call either of them perfect without that qualification (D181).
+
+**Tier is stored on each catalogue entry, not derived from its rating** (D179). The five tiers occupy contiguous rating bands today, which makes deriving them tempting and wrong: a recalibration would then silently reclassify an opponent, and an opponent whose number is not yet trustworthy could not show its tier alone.
 
 All twenty are calibrated together before release, which is the reason they all ship at once.
 
@@ -744,7 +746,7 @@ What remains is smaller and still worth stating plainly in the app rather than d
 
 - **Nothing offline ever syncs.** Statistics, history and the computer rating follow the *device*, via Android backup, not the account. A player moving to a different platform starts that ladder again. A player who subscribes at 0.3b keeps their offline history locally and begins their human record empty.
 - **The two ratings never mix.** Beating Quadrim Prime says nothing about a player's human rating, and the interface must not imply otherwise by placing them where they read as one number.
-- **Quadrim Prime is not yet perfect** and must not be described as though it were until the solver lands.
+- **Quadrim Prime is unbeatable only when it moves first** and must never be described as perfect without that qualification — the proof it plays from covers the opening player alone (D181).
 
 ### 12.3 Calibrating twenty opponents at once
 

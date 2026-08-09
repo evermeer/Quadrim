@@ -62,6 +62,16 @@ fi
 
 echo "== analyze + test =="
 (cd app && flutter gen-l10n && flutter analyze && flutter test)
+
+# gen-l10n reports untranslated messages and still exits 0, so without this a
+# string can ship in English to a Dutch player and nothing objects. The file is
+# written by the run above; `[]` or `{}` means every locale is complete.
+echo "== every user-facing string exists in both languages =="
+if [ -s app/untranslated.json ] && grep -q '"' app/untranslated.json; then
+  echo "FAIL: strings missing a Dutch translation:"
+  cat app/untranslated.json
+  exit 1
+fi
 for pkg in packages/quadrim_engine packages/quadrim_rating tools/linegen; do
   echo "-- $pkg"
   (cd "$pkg" && dart pub get --offline >/dev/null 2>&1 || dart pub get >/dev/null

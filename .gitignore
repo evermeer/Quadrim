@@ -19,3 +19,7 @@ build/
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+
+# Written by flutter gen-l10n and read by tool/check.sh. Regenerated on every
+# run, so committing it would only ever preserve a stale answer.
+app/untranslated.json

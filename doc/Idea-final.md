@@ -276,8 +276,8 @@ Twenty opponents across five tiers. **The ratings below are fixed** — they are
 
 | Name | Rating | Behaviour |
 |---|---|---|
-| Oracle | 2300 | Full-strength search plus exact endgame solving, with varied opening choices among proven-strong moves. Beatable by an excellent human. |
-| Quadrim Prime | 2600 | Perfect. Follows a proven winning strategy and plays optimal defence. |
+| Oracle | 2300 | Opens from the strategy book, so it cannot be beaten when it moves first. Falls back to a shallower search than Prime's from the second seat, which is the only place the two differ. |
+| Quadrim Prime | 2400 | The strongest opponent. Unbeatable when it moves first; defends by the deepest search in the game when it moves second. **Not perfect** — the proof it follows covers the opening player only (D181). |
 
 Every bot has a shipped avatar and a one-line personality blurb, translated into every supported language. Bot names are not translated.
 

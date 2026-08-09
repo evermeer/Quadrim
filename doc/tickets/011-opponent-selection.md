@@ -16,7 +16,7 @@ Twenty is enough that presentation matters. A flat list of twenty is a wall; gro
 - [ ] Opponents are grouped by tier and ordered by strength within it, so a list of twenty stays navigable
 - [ ] The player's own computer rating is visible on this screen, so the choice can be made against it
 - [ ] Opponents far above or below the player's rating are visually distinguishable from a fair match
-- [ ] Quadrim Prime is described as extremely strong, **not perfect** — it ships without the strategy book
+- [ ] Quadrim Prime is described as **unbeatable when it moves first**, not as perfect — the strategy book it plays from proves a first-player win and says nothing about the second seat (D181)
 - [ ] Selecting an opponent starts a game against it
 - [ ] The list is driven by the opponent catalogue, so a configuration or rating change needs no change to this screen
 - [ ] Tier and rating are rendered independently, so an opponent whose number is not yet trustworthy can show its tier alone — a data change, not a code change

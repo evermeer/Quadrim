@@ -32,11 +32,22 @@ enum StrategicRule {
   blockDoubleThreat,
 }
 
+/// Which band of the ladder an opponent belongs to (spec §8.5).
+///
+/// Stored rather than derived from [BotConfig.rating], even though the five
+/// tiers happen to occupy contiguous rating bands today. A tier is what an
+/// opponent *is* and a rating is how strong it measured; tying them together
+/// would mean a recalibration silently reclassified an opponent, and would
+/// take away the ability to show a tier for one whose number is not yet
+/// trustworthy — which is exactly what ticket 011 asks for (D179).
+enum BotTier { novice, casual, club, expert, master }
+
 /// One opponent. Everything that distinguishes the twenty is in here.
 final class BotConfig {
   const BotConfig({
     required this.id,
     required this.rating,
+    this.tier = BotTier.club,
     this.searchDepth = 0,
     this.threatSearchDepth = 0,
     this.defenceSearchDepth = 0,
@@ -76,6 +87,16 @@ final class BotConfig {
   /// The anchor rating this opponent is calibrated to. **Fixed** — when
   /// measurement disagrees, the configuration below is what changes (D144).
   final int rating;
+
+  /// Which band of the ladder this opponent sits in. Independent of [rating]
+  /// on purpose — see [BotTier].
+  ///
+  /// Defaulted rather than required because a tier is catalogue metadata that
+  /// nothing in this package reads: the synthetic configurations tests and
+  /// `tool/` build are not on the ladder, and `required` would only force them
+  /// to name a band, not to name the right one. What pins the twenty that do
+  /// matter is a test over the catalogue itself (D179).
+  final BotTier tier;
 
   /// Plies of adversarial search, counting this opponent's own move. 0 means
   /// the rules and the positional ladder decide alone.
@@ -212,11 +233,12 @@ const Set<StrategicRule> _allRules = {
 // ---------------------------------------------------------------------------
 
 /// Purely random legal moves. Never notices a threat.
-const BotConfig pebble = BotConfig(id: 'pebble', rating: 600);
+const BotConfig pebble = BotConfig(id: 'pebble', tier: BotTier.novice, rating: 600);
 
 /// Random, but takes an immediate win when one is available.
 const BotConfig twig = BotConfig(
   id: 'twig',
+  tier: BotTier.novice,
   rating: 700,
   rules: {StrategicRule.winNow},
 );
@@ -224,6 +246,7 @@ const BotConfig twig = BotConfig(
 /// Wins and blocks when it sees them — which is most of the time it does not.
 const BotConfig mote = BotConfig(
   id: 'mote',
+  tier: BotTier.novice,
   rating: 800,
   rules: {StrategicRule.winNow, StrategicRule.blockNow},
   blunderRate: 0.40,
@@ -232,6 +255,7 @@ const BotConfig mote = BotConfig(
 /// Wins and blocks, blunders a fifth of the time, drawn to corners.
 const BotConfig clover = BotConfig(
   id: 'clover',
+  tier: BotTier.novice,
   rating: 900,
   rules: {StrategicRule.winNow, StrategicRule.blockNow},
   blunderRate: 0.20,
@@ -241,6 +265,7 @@ const BotConfig clover = BotConfig(
 /// All four rules, no positional sense at all.
 const BotConfig bramble = BotConfig(
   id: 'bramble',
+  tier: BotTier.casual,
   rating: 1000,
   rules: _allRules,
   blunderRate: 0.15,
@@ -249,6 +274,7 @@ const BotConfig bramble = BotConfig(
 /// All four rules with a strong pull to the centre.
 const BotConfig finch = BotConfig(
   id: 'finch',
+  tier: BotTier.casual,
   rating: 1100,
   rules: _allRules,
   blunderRate: 0.12,
@@ -259,6 +285,7 @@ const BotConfig finch = BotConfig(
 /// the opponent's double threats through.
 const BotConfig kestrel = BotConfig(
   id: 'kestrel',
+  tier: BotTier.casual,
   rating: 1200,
   rules: _allRules,
   blunderRate: 0.11,
@@ -269,6 +296,7 @@ const BotConfig kestrel = BotConfig(
 /// Defensive: denies before it builds.
 const BotConfig willow = BotConfig(
   id: 'willow',
+  tier: BotTier.casual,
   rating: 1250,
   rules: _allRules,
   blunderRate: 0.10,
@@ -278,6 +306,7 @@ const BotConfig willow = BotConfig(
 /// All four rules cleanly applied, no positional heuristic.
 const BotConfig ember = BotConfig(
   id: 'ember',
+  tier: BotTier.casual,
   rating: 1300,
   rules: _allRules,
   blunderRate: 0.08,
@@ -292,6 +321,7 @@ const BotConfig ember = BotConfig(
 /// (0.00 … 0.25), and the building term decides within each class.
 const BotConfig basalt = BotConfig(
   id: 'basalt',
+  tier: BotTier.club,
   rating: 1400,
   rules: _allRules,
   blunderRate: 0.06,
@@ -307,6 +337,7 @@ const BotConfig basalt = BotConfig(
 /// Two plies, weighted towards its own structure.
 const BotConfig marlin = BotConfig(
   id: 'marlin',
+  tier: BotTier.club,
   rating: 1500,
   searchDepth: 2,
   rules: _allRules,
@@ -326,6 +357,7 @@ const BotConfig marlin = BotConfig(
 /// nothing at all in a game of 76 competing lines (D154).
 const BotConfig vireo = BotConfig(
   id: 'vireo',
+  tier: BotTier.club,
   rating: 1550,
   searchDepth: 3,
   threatSearchDepth: 3,
@@ -345,6 +377,7 @@ const BotConfig vireo = BotConfig(
 /// separate opponents at all (D154, D156).
 const BotConfig onyx = BotConfig(
   id: 'onyx',
+  tier: BotTier.club,
   rating: 1650,
   searchDepth: 3,
   threatSearchDepth: 6,
@@ -359,6 +392,7 @@ const BotConfig onyx = BotConfig(
 /// beyond that horizon.
 const BotConfig sable = BotConfig(
   id: 'sable',
+  tier: BotTier.club,
   rating: 1700,
   searchDepth: 4,
   threatSearchDepth: 9,
@@ -378,6 +412,7 @@ const BotConfig sable = BotConfig(
 /// Iterative deepening under a transposition table.
 const BotConfig quartz = BotConfig(
   id: 'quartz',
+  tier: BotTier.expert,
   rating: 1800,
   nodeBudget: 500000,
   maxSearchDepth: 8,
@@ -393,6 +428,7 @@ const BotConfig quartz = BotConfig(
 /// move hands over (D169).
 const BotConfig corvus = BotConfig(
   id: 'corvus',
+  tier: BotTier.expert,
   rating: 1900,
   nodeBudget: 900000,
   maxSearchDepth: 8,
@@ -409,6 +445,7 @@ const BotConfig corvus = BotConfig(
 /// two more moves of defence than Corvus.
 const BotConfig lyra = BotConfig(
   id: 'lyra',
+  tier: BotTier.expert,
   rating: 2000,
   nodeBudget: 1800000,
   maxSearchDepth: 10,
@@ -430,6 +467,7 @@ const BotConfig lyra = BotConfig(
 /// and an unstarved defence measured 36-24 against a starved one (D170).
 const BotConfig titan = BotConfig(
   id: 'titan',
+  tier: BotTier.expert,
   rating: 2100,
   nodeBudget: 2500000,
   maxSearchDepth: 10,
@@ -467,6 +505,7 @@ const BotConfig titan = BotConfig(
 /// as twenty (D176).
 const BotConfig oracle = BotConfig(
   id: 'oracle',
+  tier: BotTier.master,
   rating: 2300,
   usesBook: true,
   nodeBudget: 1800000,
@@ -488,6 +527,7 @@ const BotConfig oracle = BotConfig(
 /// that proof with a board attached. Beating it requires it to move second.
 const BotConfig quadrimPrime = BotConfig(
   id: 'quadrim_prime',
+  tier: BotTier.master,
   rating: 2400,
   usesBook: true,
   nodeBudget: 3000000,

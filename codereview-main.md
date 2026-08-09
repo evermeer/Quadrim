@@ -1418,3 +1418,221 @@ Finding 3 took three attempts and is worth recording, because the first two were
 The mechanism behind (3) is the defensive forcing search at depth nine against depth five — the dial the Expert tier already measured at 19-11 and 20-10. Six second-seat games apiece is a small sample and does not pin the gap at 300 points; ticket 014 turns the direction into a number. What matters here is that it is a real difference from a real mechanism, which the two designs before it were not.
 
 Recorded as D176. It is the third negative result of the same family after D163 (depth) and D167 (evaluation), and together they say something worth carrying forward: **once an opponent finds short forced wins, more of the same buys nothing.** Every gain this ladder has ever made came from a different kind of knowledge — the defensive question (D169), and the book.
+
+---
+
+# Code Review: ticket 029 — placeholder art and opponent content
+
+> Generated: 2026-08-09T20:24:11Z
+> Base: 813dd26 (working tree vs HEAD, changes uncommitted at review time)
+> Changed files: 25 (19 modified, 6 new)
+
+Scope is ticket 029 only. `app/lib/l10n/app_localizations*.dart` are excluded as
+generated output.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 3 |
+| nit | 1 |
+
+Three of the four questions put to this review came back clean and are recorded
+below the findings, because "we checked and it holds" is worth as much here as a
+defect.
+
+---
+
+## Findings
+
+### [MINOR] The avatar legibility floor is set to the value the sparsest avatar already has — `test-coverage`
+
+**File:** `app/test/opponent_avatar_test.dart:31`
+
+**Evidence:**
+```dart
+expect(density, greaterThanOrEqualTo(0.2), reason: '$id is nearly blank');
+```
+
+Measured across the twenty: the sparsest avatar is **Mote at exactly 3/15 =
+0.200**, the next two are Ember and Kestrel at 5/15. The densest is 11/15.
+
+**Problem:** The lower bound equals the minimum the current roster produces, so
+the assertion has zero margin and cannot fail on anything shipping today — it
+was fitted to the data rather than to a judgement about what is legible. Mote's
+avatar draws three cells in the master columns, six after mirroring, on a 5×5
+grid at 44 logical pixels.
+
+**Fix:** Decide the floor from legibility, not from the sample — `0.27` (4/15)
+is the next value up and would currently fail exactly one opponent, which is the
+useful outcome: either Mote's avatar is too sparse and the seed should be salted
+(`avatarSeed('$id-avatar')`), or 3/15 is genuinely fine and the comment should
+say so rather than the number implying a margin that is not there.
+
+---
+
+### [MINOR] A Dutch string can go missing without failing anything — `test-coverage`
+
+**File:** `app/l10n.yaml:1`
+
+**Evidence:** `l10n.yaml` sets `arb-dir`, `template-arb-file` and
+`output-localization-file`, and no `untranslated-messages-file`. Verified by
+adding one key to `app_en.arb` only and running the gate's own command:
+
+```
+untranslated-messages-file: desiredFileName.txt
+<other option>: <other selection>
+This will generate a JSON format file containing all messages that
+need to be translated.
+gen-l10n status: 0
+```
+
+**Problem:** `flutter gen-l10n` *suggests* the option and exits **0**, so
+`tool/check.sh` passes with an untranslated key and the app silently falls back
+to English at runtime for that string. Ticket 029's own forty strings are
+covered by `opponent_content_test.dart:31` and `:44`, but that test enumerates
+`opponentCatalogue` — it protects blurbs and tier labels specifically, not the
+next string anybody adds. Tickets 021 and 028 both add many.
+
+**Fix:** Add `untranslated-messages-file: untranslated.json` to `app/l10n.yaml`
+and fail the gate when it is non-empty:
+
+```bash
+[ -s app/untranslated.json ] && { echo "FAIL: untranslated strings"; cat app/untranslated.json; exit 1; }
+```
+
+---
+
+### [MINOR] `icongen.py` fails with a raw traceback when run from anywhere but the repo root — `correctness`
+
+**File:** `tool/icongen.py:72`
+
+**Evidence:**
+```python
+root = "app/android/app/src/main/res"
+```
+Run from `tool/`:
+```
+Traceback (most recent call last):
+  File "C:\D\Quadrim\tool\icongen.py", line 73, in main
+    draw(size).save(path)
+FileNotFoundError
+```
+
+**Problem:** Every path is relative to the repo root with nothing asserting the
+working directory, so the obvious invocation — `cd tool && python icongen.py` —
+dies in the Pillow save with a traceback that does not name the real cause. The
+sibling generator handles this: `tool/bookgen.dart:33` checks and prints
+`not found: ... (run from packages/quadrim_engine)`.
+
+**Fix:** Resolve paths from the script's own location instead of the caller's:
+
+```python
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent.parent
+...
+path = ROOT / f"app/android/app/src/main/res/mipmap-{density}/ic_launcher.png"
+```
+
+---
+
+### [NIT] The "avatars announce nothing" test cannot fail — `test-coverage`
+
+**File:** `app/test/opponent_avatar_test.dart:78`
+
+**Evidence:**
+```dart
+expect(
+  find.descendant(
+    of: find.byType(OpponentAvatar),
+    matching: find.byType(Semantics),
+  ),
+  findsNothing,
+);
+```
+
+**Problem:** A bare `CustomPaint` with no `semanticsBuilder` contributes no
+semantics node whether or not it is wrapped in `ExcludeSemantics`, so this
+assertion passes identically with the wrapper deleted. It documents the
+intention but verifies nothing — and the intention is the part that would
+break, if some later change gave the painter a `semanticsBuilder`.
+
+**Fix:** Assert against the merged semantics of the subtree instead, which does
+change when the wrapper is removed:
+
+```dart
+final node = tester.getSemantics(find.byType(OpponentAvatar));
+expect(node.label, isEmpty);
+```
+
+Or delete the test and keep the comment on `ExcludeSemantics`; a test that
+cannot fail is worse than no test, because it reads as coverage.
+
+---
+
+## Questions asked of this review that came back clean
+
+**Can a wrong tier ship now that `tier` is defaulted rather than required?**
+No. `packages/quadrim_engine/test/catalogue_test.dart:31` compares the
+catalogue's id set against a hand-written map, so a twenty-first opponent fails
+the suite until the map names it; `:39` then compares each opponent's `tier`
+against that map, so an entry that forgets `tier:` and silently takes the
+`BotTier.club` default fails too. Both failure modes were traced through. The
+default is safe **because** the test is exhaustive over the catalogue — the two
+are a pair, and removing either one removes the guarantee.
+
+**Can the avatar hash collide?**
+Not on the current roster: all twenty signatures are distinct, and
+`opponent_avatar_test.dart:16` fails the build if two ever match. Headroom is
+smaller than the 4 × 2¹⁵ = 131,072 signature space suggests — a synthetic sweep
+found its first collision at the **153rd** id, because the pattern window
+`(col * 5 + row + (seed & 7)) % 30` reads overlapping bits and its offset comes
+from the same seed. That is ample for a roster of twenty and would still be
+caught, loudly, by the existing test at any size.
+
+**Does any player-facing string still overclaim Quadrim Prime?**
+No. The only remaining occurrences of "perfect" in the arb files are
+`strategyCredit`, which describes Patashnik's dictionary rather than the
+opponent, and two `@`-prefixed metadata descriptions, which are never rendered.
+Both Master blurbs state the first-player qualification, and
+`opponent_content_test.dart:80` fails if either stops doing so.
+
+---
+
+## Outcome — all four applied
+
+| # | Finding | What was done |
+|---|---|---|
+| 1 | Avatar legibility floor fitted to the sample | Metric replaced, salt added, band widened |
+| 2 | A missing Dutch string fails nothing | `untranslated-messages-file` + gate in `check.sh` |
+| 3 | `icongen.py` traceback from the wrong cwd | Paths resolved from `__file__` |
+| 4 | Semantics test cannot fail | Rewritten twice, mutation-checked |
+
+**Finding 1 was worse than the review said.** Rendering the twenty as a contact
+sheet showed Mote as a bare vertical bar of three marks. The cause was not the
+threshold but the measure: `avatarDensity` counted cells in the three master
+columns, and the last of those is the mirror spine, which paints once where the
+other two paint twice. Mote's three lit cells all fell on the spine, so it
+scored the same 0.2 as any other three-cell avatar while drawing barely half the
+ink. `avatarInkCells` now counts what is painted; the band is 6–21 of 25, set
+as a judgement about a 5×5 face rather than read off the roster; a salt
+(`avatar-v1`) moves the roster off the pattern set containing the unusable one.
+The twenty now span **7 to 19**, with margin at both ends.
+
+**Finding 4 took three attempts, and the first two fixes were also untestable.**
+`find.byType(Semantics)` as a descendant matches structure, not announced
+content. `tester.getSemantics` walks *up* to an ancestor node, so a label
+attached to the avatar itself is never seen — that version passed unchanged with
+the avatar deliberately given `Semantics(label: 'probe')`. Only
+`find.bySemanticsLabel` goes red. Each version was mutation-checked before being
+believed, which is the only reason the first two were caught.
+
+**Finding 2 was verified in both directions** before being committed: red with a
+deliberately untranslated key naming it in `untranslated.json`, green once
+removed. `app/untranslated.json` is gitignored — it is regenerated on every run,
+so committing it would only preserve a stale answer.
+
+Gate after the fixes: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
+App 100 tests, engine 120, rating 19, linegen 8.

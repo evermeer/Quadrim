@@ -175,5 +175,42 @@
   "strategyCredit": "Perfect play from Oren Patashnik's Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.",
   "@strategyCredit": {
     "description": "Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app."
+  },
+  "tierNovice": "Novice",
+  "@tierNovice": {
+    "description": "Difficulty tier. Opponent names are never translated; tier labels are."
+  },
+  "tierCasual": "Casual",
+  "tierClub": "Club",
+  "tierExpert": "Expert",
+  "tierMaster": "Master",
+  "blurbPebble": "Drops pieces wherever they fall. Has never noticed a threat.",
+  "@blurbPebble": {
+    "description": "One-line personality blurb shown in the opponent list. Describes what a player will observe at the board, not how the opponent is implemented."
+  },
+  "blurbTwig": "Plays at random, but takes a win that is staring at it.",
+  "blurbMote": "Sees wins and blocks — when it happens to be paying attention.",
+  "blurbClover": "Watches for wins and blocks, loves a corner, and still slips often.",
+  "blurbBramble": "Knows all the basics, and plays them with no feel for the board.",
+  "blurbFinch": "Crowds the middle of the cube and answers the obvious threats.",
+  "blurbKestrel": "Attacks from the corners, and would rather build than block.",
+  "blurbWillow": "Cautious. Shuts your threats down before it starts its own.",
+  "blurbEmber": "Solid on the fundamentals and rarely gives anything away.",
+  "blurbBasalt": "Plays for good squares as well as good moves. The first real test.",
+  "blurbMarlin": "Looks a move ahead, and spends it on attack.",
+  "blurbVireo": "Looks a move ahead, and spends it on defence.",
+  "blurbOnyx": "Reads several moves deep. Punishes a careless answer.",
+  "blurbSable": "Hunts for the double threat that cannot be answered.",
+  "blurbQuartz": "Calculates hard, and remembers what it has already worked out.",
+  "blurbCorvus": "Takes the centre early, then goes looking for a forcing line.",
+  "blurbLyra": "Thinks further ahead the longer it is given. Hard to surprise.",
+  "blurbTitan": "Searches deeply and plays the endgame out exactly, never guessing.",
+  "blurbOracle": "Opens from a proven winning strategy and cannot be beaten when it moves first. Moving second, it is only very strong.",
+  "@blurbOracle": {
+    "description": "Oracle and Quadrim Prime both play from a strategy proven for the first player only. The blurb must state that asymmetry rather than claim perfection outright (D181)."
+  },
+  "blurbQuadrimPrime": "The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.",
+  "@blurbQuadrimPrime": {
+    "description": "Must not claim to be perfect without qualification — the proof it follows covers the first player only (D181)."
   }
 }

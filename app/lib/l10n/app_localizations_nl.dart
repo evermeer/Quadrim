@@ -249,4 +249,97 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get strategyCredit =>
       'Perfect spel uit Oren Patashniks Qubic-strategieboek (1980), in de vorm die Ken Thompson het in 1978 gaf. Gebruikt met toestemming, zetten ongewijzigd.';
+
+  @override
+  String get tierNovice => 'Beginner';
+
+  @override
+  String get tierCasual => 'Recreatief';
+
+  @override
+  String get tierClub => 'Club';
+
+  @override
+  String get tierExpert => 'Expert';
+
+  @override
+  String get tierMaster => 'Meester';
+
+  @override
+  String get blurbPebble =>
+      'Legt stenen neer waar ze maar vallen. Heeft nog nooit een dreiging opgemerkt.';
+
+  @override
+  String get blurbTwig =>
+      'Speelt willekeurig, maar pakt een winst die voor het grijpen ligt.';
+
+  @override
+  String get blurbMote => 'Ziet winst en blokkades — als het toevallig oplet.';
+
+  @override
+  String get blurbClover =>
+      'Let op winst en blokkades, is dol op hoeken, en vergist zich nog vaak.';
+
+  @override
+  String get blurbBramble =>
+      'Kent alle basisregels en speelt ze zonder enig gevoel voor het bord.';
+
+  @override
+  String get blurbFinch =>
+      'Verdringt zich in het midden van de kubus en pareert de duidelijke dreigingen.';
+
+  @override
+  String get blurbKestrel =>
+      'Valt aan vanuit de hoeken en bouwt liever dan dat het blokkeert.';
+
+  @override
+  String get blurbWillow =>
+      'Voorzichtig. Legt jouw dreigingen stil voordat het aan zijn eigen begint.';
+
+  @override
+  String get blurbEmber => 'Degelijk in de basis en geeft zelden iets weg.';
+
+  @override
+  String get blurbBasalt =>
+      'Speelt om goede velden en niet alleen om goede zetten. De eerste echte test.';
+
+  @override
+  String get blurbMarlin =>
+      'Kijkt één zet vooruit en gebruikt dat om aan te vallen.';
+
+  @override
+  String get blurbVireo =>
+      'Kijkt één zet vooruit en gebruikt dat om te verdedigen.';
+
+  @override
+  String get blurbOnyx =>
+      'Rekent een paar zetten diep. Straft een slordig antwoord af.';
+
+  @override
+  String get blurbSable =>
+      'Jaagt op de dubbele dreiging die niet te beantwoorden is.';
+
+  @override
+  String get blurbQuartz =>
+      'Rekent hard en onthoudt wat het al heeft uitgerekend.';
+
+  @override
+  String get blurbCorvus =>
+      'Neemt vroeg het centrum en gaat dan op zoek naar een forcerende variant.';
+
+  @override
+  String get blurbLyra =>
+      'Denkt verder vooruit naarmate het meer tijd krijgt. Moeilijk te verrassen.';
+
+  @override
+  String get blurbTitan =>
+      'Zoekt diep en speelt het eindspel exact uit, zonder ooit te gokken.';
+
+  @override
+  String get blurbOracle =>
+      'Opent volgens een bewezen winnende strategie en is niet te verslaan als het begint. Als tweede speler is het alleen heel sterk.';
+
+  @override
+  String get blurbQuadrimPrime =>
+      'De sterkste tegenstander hier. Onverslaanbaar als het begint; speelt het als tweede, dan verdedigt het met de diepste berekening in het spel.';
 }

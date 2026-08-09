@@ -1567,6 +1567,78 @@ The uncomfortable part is worth writing down plainly: several tickets were revie
 
 ---
 
+## 40. Ticket 029 — placeholder art and opponent content
+
+### D179 — Tier is stored on the opponent, not computed from its rating
+**Question:** The five tiers occupy contiguous rating bands: Novice 600–900, Casual 1000–1300, Club 1400–1700, Expert 1800–2100, Master 2300–2400. A one-line function of `rating` would produce the tier for all twenty and need no data at all. Why carry a field?
+
+**Decision:** `BotTier` is a stored field on `BotConfig`, defaulted rather than required, and the twenty are pinned by `catalogue_test.dart`.
+
+**Rationale:** The bands are contiguous *today*, and the whole point of ticket 014 is that they might not stay that way. Deriving the tier would mean a recalibration silently reclassifies an opponent — move Titan to 2150 and it is still Expert, move it to 2250 and it has quietly become a Master without anybody deciding so. Ticket 011 also asks that tier and rating render independently, so that an opponent whose number is not yet trustworthy can show its tier alone; a derived tier cannot do that, because it *is* the number.
+
+The field was briefly `required`, which broke thirteen call sites — every one of them a synthetic configuration in a test or in `tool/`, none of them on the ladder. That is the signal that `required` was the wrong instrument: it forces a fixture to name a band that means nothing for it, and it only guarantees that a catalogue entry names *a* tier, never the right one. What guarantees the right one is a test that writes the expected mapping out by hand and compares. So the field is defaulted and the test is the gate.
+
+The test deliberately does not derive its expectation from `opponentCatalogue`; a test built from the thing it is checking agrees with itself forever. It also asserts the tier *counts* separately from the per-opponent mapping, because a pair of compensating typos would satisfy the mapping alone.
+
+### D180 — The book belongs to the Master tier and nowhere else
+**Question:** `usesBook` is a flag any catalogue entry could set. What stops a future edit from handing the dictionary to a mid-ladder opponent?
+
+**Decision:** A catalogue test asserts that every book-holding opponent is in `BotTier.master`, and that exactly two hold it.
+
+**Rationale:** An opponent with the book cannot be beaten in the games it opens. On the Master tier that is the point; on the Club tier it would mean a player rated 1400 meets something unbeatable half the time and has no way to understand why. The ladder stops being a ladder. This is the kind of invariant that is obvious while it is being written and invisible six months later, which is exactly the kind worth spending three lines of test on.
+
+### D181 — Oracle and Prime say "unbeatable when it moves first", never "perfect"
+**Question:** Both Master opponents now hold a dictionary that proves a first-player win. Three tickets, the specification and the design handoff all still said Prime must be described as "extremely strong, not perfect" — wording written when the book was expected to arrive at 1.0. The book arrived early. What should the player be told?
+
+**Decision:** The blurbs state the asymmetry outright. Oracle: *"Opens from a proven winning strategy and cannot be beaten when it moves first. Moving second, it is only very strong."* Prime: *"The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game."* Every document carrying the old wording was corrected to match.
+
+**Rationale:** Three descriptions were possible and two of them are wrong. "Perfect", flatly, is **false** — the proof covers the opening player only ([D173](#d173--perfect-play-is-first-player-play-and-the-perfect-opponent-still-has-to-play-second)), and a tester who takes the first move and beats Prime has caught the app lying about itself. "Extremely strong", the old wording, is now merely **incomplete**: it hides something true, interesting, and discoverable — a player who loses every single game as second player deserves to know that this is a property of the opponent rather than of their own play.
+
+Stating the asymmetry also makes the seat a real decision. Choosing who opens is already in the game; against these two it becomes the difference between a contest and a demonstration.
+
+The stale wording had spread to five files — tickets 011, 026 and 029, specification §4.2, §8.5 and §11.7, and the design handoff — which is the ordinary cost of a plan changing under documents that describe it. It is recorded here rather than quietly fixed because the same thing will happen again the next time an open item resolves early. The decision log's own history was left alone: entries record what was decided when, and rewriting them would destroy the only account of how the project got here.
+
+### D182 — Avatars are drawn from the opponent's id, not shipped as files
+**Question:** Twenty placeholder avatars, at closed-test quality and no higher. Twenty PNGs at several densities, or something generated?
+
+**Decision:** Drawn at run time by a `CustomPainter` from an FNV-1a hash of the opponent id — a mirrored 5×5 identicon whose glyph shape also varies. No asset files.
+
+**Rationale:** Zero binary assets to commission, store, or keep in step with the catalogue: an opponent has an avatar the moment it has an id, and no avatar can drift out of sync with the roster because there is nothing to drift. It is also unmistakably placeholder, which the ticket asks for twice.
+
+Identity is carried by **pattern and glyph, not colour** — the ticket requires avatars to be distinguishable without relying on colour, and a hue-only scheme fails that for the roughly one man in twelve with a colour vision deficiency. The tier is the one thing colour encodes, and it encodes it as a ring *width* as well as a hue, so the five bands survive greyscale too.
+
+`String.hashCode` was not used: it is unspecified across Dart releases, so every avatar in the app could change when the toolchain did, and the resulting bug report would be unreproducible. FNV-1a is eight lines and pinned by a test with literal expected values.
+
+Two properties are tested rather than eyeballed: that no two of the twenty produce the same pattern, and that none is nearly blank or nearly solid. Distinctness alone is not legibility — one lit cell and twenty-four lit cells are technically different and both unreadable. The bit arithmetic lives in one top-level function that both the painter and the tests call, because a duplicated copy would let the tests keep passing while checking a pattern nobody sees.
+
+**Both legibility measures were wrong on the first attempt, and the review caught them.** The metric counted cells in the three *master* columns, but the last of those is the mirror spine and paints once where the other two paint twice. Mote's three lit cells all fell on the spine, so it scored 0.20 — identical to any other three-cell avatar — while drawing **three** marks on a face of twenty-five against a busiest of nineteen. Rendering the twenty as a contact sheet and looking at them is what exposed it; no amount of staring at the number would have.
+
+The floor was wrong in a second, more embarrassing way: it was set to `0.2`, which is exactly what the sparsest avatar measured. An assertion fitted to its own sample cannot fail, and this one could not. It read as a safety margin and was not one.
+
+Both are fixed. `avatarInkCells` counts what is painted, weighting the spine at one and the mirrored columns at two; the band is 6 to 21 of 25, chosen as a judgement about a 5×5 face rather than read off the roster, and the twenty now span 7 to 19 with real margin at both ends. A salt, `avatar-v1`, moves the roster off the pattern set that contained the unusable one — it is a tuning constant, and it is explicitly **not** what makes the avatars legible. The test is. If a future opponent lands outside the band, the test fails and the constant gets picked again.
+
+### D184 — A missing Dutch string now fails the build
+**Question:** `tool/check.sh` runs `flutter gen-l10n`, and ticket 029 added forty translated strings. What happens if the next ticket adds one to `app_en.arb` and forgets `app_nl.arb`?
+
+**Decision:** `l10n.yaml` gains `untranslated-messages-file: untranslated.json`, and the gate fails when that file names anything.
+
+**Rationale:** Verified rather than assumed: adding one key to English only and running the gate's own command, `gen-l10n` prints a suggestion that the option exists and **exits 0**. Nothing else objects, and a Dutch player is silently served English for that string — the failure is invisible in every language the developer reads.
+
+Ticket 029's own strings were already safe, because `opponent_content_test.dart` enumerates `opponentCatalogue` and demands a blurb per opponent per language. But that protects blurbs, not strings in general, and tickets 021 and 028 each add many. A gate that covers the category is worth more than a test that covers this ticket.
+
+The check was proved in both directions before being committed — red with a deliberately untranslated key naming it, green once removed. A gate nobody has watched fail is not known to be a gate; that lesson is [D178](#d178--the-engine-suite-had-never-finished-and-a-hang-is-not-a-failure) and it applies to checks as much as to suites. Two other assertions written this session went the same way: the "avatars announce nothing" test passed unchanged when the avatar was deliberately given a spoken label, twice, in two different wrong forms — `find.byType(Semantics)` as a descendant matched structure rather than content, and `tester.getSemantics` walks *up* to an ancestor node and so never saw a label attached below it. Only `find.bySemanticsLabel` actually goes red. Every assertion added here was mutation-checked before it was believed.
+
+### D183 — The icon generator runs by hand, and is not in the gate
+**Question:** `tool/check.sh` verifies that every generated file is current. The app icon is now generated too. Should it join them?
+
+**Decision:** No. `tool/icongen.py` is run by hand, its output is committed, and the gate does not check it.
+
+**Rationale:** The other generators are Dart and run on the toolchain CI already installs. This one needs Python and Pillow. Adding them to CI would trade a real check for a new way for the build to fail, and the thing being guarded barely moves — the icon changes when somebody decides it should, which is roughly never, and 0.2 replaces it with real art regardless. The script is committed so the icon is reproducible rather than a mystery PNG.
+
+Android adaptive icons were skipped for the same reason they are not in the ticket: the Play Store requires a 512×512 listing icon and launcher icons at five densities, and that is what exists. Adaptive icons are a recommendation, and 0.2 owns real art.
+
+---
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

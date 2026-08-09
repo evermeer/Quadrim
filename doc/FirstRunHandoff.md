@@ -23,7 +23,7 @@ Four things in the delivered design contradict the specification. Implement the 
 
 | Delivered design | Implement instead | Why |
 |---|---|---|
-| Opponents named Pip, Dott, Cubby … Meridian, rated 620–2400 | The roster in [Idea-final.md](Idea-final.md) §6.4 — Pebble … Quadrim Prime, 600–2600 | The roster drives eight tickets and the calibration about to measure it (D122) |
+| Opponents named Pip, Dott, Cubby … Meridian, rated 620–2400 | The roster in [Idea-final.md](Idea-final.md) §6.4 — Pebble … Quadrim Prime, 600–2400 | The roster drives eight tickets and the calibration about to measure it (D122) |
 | Three categories: Easy / Medium / Hard | Five tiers: Novice, Casual, Club, Expert, Master | Twenty in three groups is ~7 per accordion; five averages four and reads as a ladder (D123) |
 | Rating tag reads "Unrated" | A live computer rating, seeded 1200 | "Unrated practice" is the pre-D92 model, superseded when ratings split (D128) |
 | "Step N / 5" with six progress segments | Step count and segment count must match | The design contradicts itself; the tutorial has four parts (tickets 018–020) plus a welcome |
@@ -154,7 +154,7 @@ Additional requirements from ticket 011:
 
 - The player's **own computer rating is visible on this screen**, so the choice can be made against it.
 - Opponents far above or below the player are visually distinguishable from a fair match.
-- **Quadrim Prime is described as extremely strong, not perfect** — it ships without the strategy book (§6.5).
+- **Quadrim Prime is described as unbeatable when it moves first, not as perfect** — it ships with the strategy book, which proves a first-player win and nothing more (D181).
 - Tier and rating render independently, so an opponent whose number is not yet trustworthy can show its tier alone.
 - The list is driven by the catalogue: a rating change is data, not a code change.
 

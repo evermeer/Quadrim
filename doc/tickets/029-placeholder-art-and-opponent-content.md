@@ -18,6 +18,6 @@ The writing is not placeholder. Twenty personality blurbs are what make the rost
 - [ ] A plain app icon exists at every size both stores require
 - [ ] Each of the twenty has a one-line personality blurb describing how it plays, in English and Dutch — forty strings
 - [ ] Blurbs describe observable behaviour, so that what a player reads matches what they meet at the board
-- [ ] Quadrim Prime's blurb says extremely strong, **not perfect** — it ships without the strategy book
+- [ ] Oracle's and Quadrim Prime's blurbs say **unbeatable when they move first** and no more than that — the strategy they follow is proven for the opening player only, so an unqualified claim of perfection would be false in half their games (D181)
 - [ ] Opponent names are not translated; blurbs and tier labels are
 - [ ] A note is carried into 0.2's scope: twenty real avatars, a real icon, and store graphics, with a make-or-commission decision and a cost

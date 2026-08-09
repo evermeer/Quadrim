@@ -248,4 +248,97 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get strategyCredit =>
       'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.';
+
+  @override
+  String get tierNovice => 'Novice';
+
+  @override
+  String get tierCasual => 'Casual';
+
+  @override
+  String get tierClub => 'Club';
+
+  @override
+  String get tierExpert => 'Expert';
+
+  @override
+  String get tierMaster => 'Master';
+
+  @override
+  String get blurbPebble =>
+      'Drops pieces wherever they fall. Has never noticed a threat.';
+
+  @override
+  String get blurbTwig =>
+      'Plays at random, but takes a win that is staring at it.';
+
+  @override
+  String get blurbMote =>
+      'Sees wins and blocks — when it happens to be paying attention.';
+
+  @override
+  String get blurbClover =>
+      'Watches for wins and blocks, loves a corner, and still slips often.';
+
+  @override
+  String get blurbBramble =>
+      'Knows all the basics, and plays them with no feel for the board.';
+
+  @override
+  String get blurbFinch =>
+      'Crowds the middle of the cube and answers the obvious threats.';
+
+  @override
+  String get blurbKestrel =>
+      'Attacks from the corners, and would rather build than block.';
+
+  @override
+  String get blurbWillow =>
+      'Cautious. Shuts your threats down before it starts its own.';
+
+  @override
+  String get blurbEmber =>
+      'Solid on the fundamentals and rarely gives anything away.';
+
+  @override
+  String get blurbBasalt =>
+      'Plays for good squares as well as good moves. The first real test.';
+
+  @override
+  String get blurbMarlin => 'Looks a move ahead, and spends it on attack.';
+
+  @override
+  String get blurbVireo => 'Looks a move ahead, and spends it on defence.';
+
+  @override
+  String get blurbOnyx =>
+      'Reads several moves deep. Punishes a careless answer.';
+
+  @override
+  String get blurbSable =>
+      'Hunts for the double threat that cannot be answered.';
+
+  @override
+  String get blurbQuartz =>
+      'Calculates hard, and remembers what it has already worked out.';
+
+  @override
+  String get blurbCorvus =>
+      'Takes the centre early, then goes looking for a forcing line.';
+
+  @override
+  String get blurbLyra =>
+      'Thinks further ahead the longer it is given. Hard to surprise.';
+
+  @override
+  String get blurbTitan =>
+      'Searches deeply and plays the endgame out exactly, never guessing.';
+
+  @override
+  String get blurbOracle =>
+      'Opens from a proven winning strategy and cannot be beaten when it moves first. Moving second, it is only very strong.';
+
+  @override
+  String get blurbQuadrimPrime =>
+      'The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.';
 }

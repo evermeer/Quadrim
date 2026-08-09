@@ -517,6 +517,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.'**
   String get strategyCredit;
+
+  /// Difficulty tier. Opponent names are never translated; tier labels are.
+  ///
+  /// In en, this message translates to:
+  /// **'Novice'**
+  String get tierNovice;
+
+  /// No description provided for @tierCasual.
+  ///
+  /// In en, this message translates to:
+  /// **'Casual'**
+  String get tierCasual;
+
+  /// No description provided for @tierClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get tierClub;
+
+  /// No description provided for @tierExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert'**
+  String get tierExpert;
+
+  /// No description provided for @tierMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Master'**
+  String get tierMaster;
+
+  /// One-line personality blurb shown in the opponent list. Describes what a player will observe at the board, not how the opponent is implemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops pieces wherever they fall. Has never noticed a threat.'**
+  String get blurbPebble;
+
+  /// No description provided for @blurbTwig.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays at random, but takes a win that is staring at it.'**
+  String get blurbTwig;
+
+  /// No description provided for @blurbMote.
+  ///
+  /// In en, this message translates to:
+  /// **'Sees wins and blocks — when it happens to be paying attention.'**
+  String get blurbMote;
+
+  /// No description provided for @blurbClover.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches for wins and blocks, loves a corner, and still slips often.'**
+  String get blurbClover;
+
+  /// No description provided for @blurbBramble.
+  ///
+  /// In en, this message translates to:
+  /// **'Knows all the basics, and plays them with no feel for the board.'**
+  String get blurbBramble;
+
+  /// No description provided for @blurbFinch.
+  ///
+  /// In en, this message translates to:
+  /// **'Crowds the middle of the cube and answers the obvious threats.'**
+  String get blurbFinch;
+
+  /// No description provided for @blurbKestrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attacks from the corners, and would rather build than block.'**
+  String get blurbKestrel;
+
+  /// No description provided for @blurbWillow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cautious. Shuts your threats down before it starts its own.'**
+  String get blurbWillow;
+
+  /// No description provided for @blurbEmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid on the fundamentals and rarely gives anything away.'**
+  String get blurbEmber;
+
+  /// No description provided for @blurbBasalt.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays for good squares as well as good moves. The first real test.'**
+  String get blurbBasalt;
+
+  /// No description provided for @blurbMarlin.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks a move ahead, and spends it on attack.'**
+  String get blurbMarlin;
+
+  /// No description provided for @blurbVireo.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks a move ahead, and spends it on defence.'**
+  String get blurbVireo;
+
+  /// No description provided for @blurbOnyx.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads several moves deep. Punishes a careless answer.'**
+  String get blurbOnyx;
+
+  /// No description provided for @blurbSable.
+  ///
+  /// In en, this message translates to:
+  /// **'Hunts for the double threat that cannot be answered.'**
+  String get blurbSable;
+
+  /// No description provided for @blurbQuartz.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculates hard, and remembers what it has already worked out.'**
+  String get blurbQuartz;
+
+  /// No description provided for @blurbCorvus.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes the centre early, then goes looking for a forcing line.'**
+  String get blurbCorvus;
+
+  /// No description provided for @blurbLyra.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinks further ahead the longer it is given. Hard to surprise.'**
+  String get blurbLyra;
+
+  /// No description provided for @blurbTitan.
+  ///
+  /// In en, this message translates to:
+  /// **'Searches deeply and plays the endgame out exactly, never guessing.'**
+  String get blurbTitan;
+
+  /// Oracle and Quadrim Prime both play from a strategy proven for the first player only. The blurb must state that asymmetry rather than claim perfection outright (D181).
+  ///
+  /// In en, this message translates to:
+  /// **'Opens from a proven winning strategy and cannot be beaten when it moves first. Moving second, it is only very strong.'**
+  String get blurbOracle;
+
+  /// Must not claim to be perfect without qualification — the proof it follows covers the first player only (D181).
+  ///
+  /// In en, this message translates to:
+  /// **'The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.'**
+  String get blurbQuadrimPrime;
 }
 
 class _AppLocalizationsDelegate
