@@ -474,5 +474,59 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tutorialRulesDoneBody =>
-      'Rijen, kolommen, de lijnen door de lagen en alle diagonalen — 76 in totaal. Meer heb je niet nodig om te beginnen.';
+      'Rijen, kolommen, de lijnen door de lagen en alle diagonalen — 76 in totaal. Meer heb je niet nodig om te beginnen. Hierna volgt hoe partijen echt gewonnen worden; dat kun je ook voor later bewaren.';
+
+  @override
+  String get tutorialFinishHere => 'Hier stoppen';
+
+  @override
+  String get tutorialCentreTitle => 'Het midden is het meest waard';
+
+  @override
+  String get tutorialCentreBody =>
+      'Vakjes zijn niet gelijkwaardig. De acht vakjes in het midden van de kubus — rij en kolom 2 en 3, in laag 2 en 3 — liggen elk op zeven verschillende lijnen. De meeste vakjes liggen op vier. Wie het midden vroeg pakt, heeft meer manieren om te winnen dan de tegenstander.';
+
+  @override
+  String get tutorialCentreBoard =>
+      'Acht vakjes gemarkeerd op een leeg bord: rij 2 en 3, kolom 2 en 3, in laag 2 en 3.';
+
+  @override
+  String get tutorialCornersTitle => 'Daarna de hoeken';
+
+  @override
+  String get tutorialCornersBody =>
+      'De acht hoeken van de kubus liggen ook elk op zeven lijnen — het zijn de enige andere vakjes waarvoor dat geldt. Daarom is een tegenstander die nergens op lijkt te spelen vaak stilletjes hoeken aan het verzamelen.';
+
+  @override
+  String get tutorialCornersBoard =>
+      'Acht vakjes gemarkeerd op een leeg bord: de hoeken op rij 1 en 4, kolom 1 en 4, in laag 1 en 4.';
+
+  @override
+  String get tutorialDoubleThreatTitle => 'Twee dreigingen tegelijk';
+
+  @override
+  String get tutorialDoubleThreatBody =>
+      'Eén lijn die nog één steen nodig heeft, kun je blokkeren. Twee niet. Licht heeft net de hoek gespeeld en maakte daarmee in één zet drie op een rij én drie in een kolom. Beide gemarkeerde vakjes winnen nu, en donker heeft één zet.';
+
+  @override
+  String get tutorialDoubleThreatBoard =>
+      'Licht heeft net laag 1, rij 1, kolom 1 gespeeld. Twee vakjes zijn gemarkeerd: laag 1 rij 1 kolom 4, en laag 1 rij 4 kolom 1. Beide winnen voor licht, en donker kan er maar één blokkeren.';
+
+  @override
+  String get tutorialBlockingTitle => 'Blokkeren voordat het te laat is';
+
+  @override
+  String get tutorialBlockingBody =>
+      'Hetzelfde werkt tegen jou. Donker heeft drie op een rij in laag 2 en heeft nog één vakje nodig. Licht moet het gemarkeerde vakje nu pakken — en letten op de zet die donker twee dreigingen zou geven, want dan is het al te laat.';
+
+  @override
+  String get tutorialBlockingBoard =>
+      'Donker heeft laag 2, rij 1, kolom 1 tot en met 3. Het gemarkeerde vakje is laag 2, rij 1, kolom 4, dat licht moet pakken.';
+
+  @override
+  String get tutorialStrategyDoneTitle => 'Zo spelen ze';
+
+  @override
+  String get tutorialStrategyDoneBody =>
+      'Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit.';
 }

@@ -473,5 +473,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialRulesDoneBody =>
-      'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing.';
+      'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing. What follows is how games are actually won, which you can leave for later.';
+
+  @override
+  String get tutorialFinishHere => 'Finish here';
+
+  @override
+  String get tutorialCentreTitle => 'The middle is worth most';
+
+  @override
+  String get tutorialCentreBody =>
+      'Squares are not equal. The eight in the middle of the cube — rows and columns 2 and 3, in layers 2 and 3 — each sit on seven different lines. Most squares sit on four. Taking the middle early gives you more ways to win than your opponent has.';
+
+  @override
+  String get tutorialCentreBoard =>
+      'Eight squares highlighted on an empty board: rows 2 and 3, columns 2 and 3, in layers 2 and 3.';
+
+  @override
+  String get tutorialCornersTitle => 'Then the corners';
+
+  @override
+  String get tutorialCornersBody =>
+      'The eight corners of the cube also sit on seven lines each — they are the only other squares that do. That is why an opponent that seems to be playing for nothing in particular is often quietly collecting corners.';
+
+  @override
+  String get tutorialCornersBoard =>
+      'Eight squares highlighted on an empty board: the corner of each layer, at rows 1 and 4, columns 1 and 4, in layers 1 and 4.';
+
+  @override
+  String get tutorialDoubleThreatTitle => 'Two threats at once';
+
+  @override
+  String get tutorialDoubleThreatBody =>
+      'One line needing one more piece can be blocked. Two of them cannot. Light has just played the corner, and it completed three of a row and three of a column in the same move. Both highlighted squares now win, and dark has one turn.';
+
+  @override
+  String get tutorialDoubleThreatBoard =>
+      'Light has just played layer 1, row 1, column 1. Two squares are highlighted: layer 1 row 1 column 4, and layer 1 row 4 column 1. Either one wins for light, and dark can block only one of them.';
+
+  @override
+  String get tutorialBlockingTitle => 'Blocking before it is too late';
+
+  @override
+  String get tutorialBlockingBody =>
+      'The same thing works against you. Dark holds three of a row in layer 2 and needs one more square. Light has to take the highlighted square now — and watch for the move that would give dark two threats, because by then it is already too late.';
+
+  @override
+  String get tutorialBlockingBoard =>
+      'Dark holds layer 2, row 1, columns 1 to 3. The highlighted square is layer 2, row 1, column 4, which light must take.';
+
+  @override
+  String get tutorialStrategyDoneTitle => 'That is how they play';
+
+  @override
+  String get tutorialStrategyDoneBody =>
+      'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead.';
 }

@@ -81,7 +81,11 @@ class _TutorialScreenState extends State<TutorialScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Progress(index: _index, total: steps.length),
+            _Progress(
+              index: _index,
+              total: steps.length,
+              title: steps[_index].title,
+            ),
             Expanded(
               // Swipeable as well as buttoned: "steps can be revisited" is
               // cheapest to honour by leaving the gesture the widget already
@@ -96,20 +100,39 @@ class _TutorialScreenState extends State<TutorialScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: _index == 0 ? null : () => _goTo(_index - 1),
-                      child: Text(l10n.tutorialBack),
+                  // At the end of a section, finishing is offered on a line of
+                  // its own rather than as a third button in the row below.
+                  // Three buttons abreast fit at a text scale of 1.0 and stop
+                  // fitting well before 2.0, which is the trap D188 already
+                  // cost this project once.
+                  if (steps[_index].endsSection)
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _finish,
+                        child: Text(l10n.tutorialFinishHere),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: last ? _finish : () => _goTo(_index + 1),
-                      child: Text(last ? l10n.tutorialDone : l10n.tutorialNext),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed:
+                              _index == 0 ? null : () => _goTo(_index - 1),
+                          child: Text(l10n.tutorialBack),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: last ? _finish : () => _goTo(_index + 1),
+                          child:
+                              Text(last ? l10n.tutorialDone : l10n.tutorialNext),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -122,13 +145,25 @@ class _TutorialScreenState extends State<TutorialScreen> {
 }
 
 /// How far through the tutorial the player is, said twice: as a bar for
-/// sighted players and as the same sentence for everyone else. A bare
+/// sighted players and as a sentence for everyone else. A bare
 /// [LinearProgressIndicator] announces nothing.
+///
+/// The announcement carries the new step's title as well as its number, and
+/// the visible text does not. Pressing Next moves focus nowhere, so a live
+/// region saying only "Step 8 of 12" tells a screen-reader user that something
+/// changed without telling them what — they then have to go looking for the
+/// heading. Two words in the label save that hunt on every one of twelve steps
+/// (D198). On screen the title is already the largest thing on the page.
 class _Progress extends StatelessWidget {
-  const _Progress({required this.index, required this.total});
+  const _Progress({
+    required this.index,
+    required this.total,
+    required this.title,
+  });
 
   final int index;
   final int total;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +174,7 @@ class _Progress extends StatelessWidget {
       child: Semantics(
         container: true,
         liveRegion: true,
-        label: label,
+        label: '$label. $title',
         child: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

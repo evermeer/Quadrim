@@ -194,7 +194,7 @@ void main() {
     // placeholder, and stays one until ticket 028.
     await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
     await tester.pumpAndSettle();
-    expect(find.text('Step 1 of 7'), findsOneWidget);
+    expect(find.text('Step 1 of 12'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 

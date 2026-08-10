@@ -1764,6 +1764,44 @@ This is a deliberate asymmetry with the game screen, and it holds only because a
 
 Both halves are pinned by tests that were checked to fail: removing the label leaves the sentence unfindable, and removing `ExcludeSemantics` makes the cell labels findable. A `findsNothing` assertion that passes because the string was never right is the specific way this project has wasted time before.
 
+### D196 — The strategy is a section of one tutorial, not a second tutorial
+**Question:** Ticket 019 adds five strategy steps to the seven from 018 and requires that "this part can be skipped by a player who only wants the rules". Two tutorials with two entry points, or one flow with a way out?
+
+**Decision:** One flow, twelve steps. The last rules step carries `endsSection`, which renders a full-width "Finish here" above the Back/Next row. Taking it marks the tutorial complete.
+
+**Rationale:** Two entry points would need two buttons on the main screen, two completion flags, and an answer to what happens when someone does the strategy without the rules. One flow with a marked exit needs a boolean on a step. The player who wants both never notices there was a seam.
+
+Finishing at the boundary counts as finishing, which is the part worth arguing. The alternative — the tutorial is only "complete" after all twelve — means a player who read the rules, decided that was enough, and left is offered the whole thing again on the next launch. That is the same nagging [D193](#d193--declining-the-tutorial-is-remembered-and-is-not-the-same-as-finishing-it) exists to prevent, and the ticket explicitly blesses stopping there. Completion records "this player has been through the tutorial", not "this player has read every word".
+
+The skip sits on its own line rather than becoming a third button in the row. Three buttons abreast fit at a text scale of 1.0 and stop fitting well before 2.0 — [D188](#d188--a-fixed-height-strip-under-an-app-bar-title-is-a-text-scale-trap) already charged this project once for assuming a row of chrome would hold.
+
+One consequence: `hasBoard` became `moves.isNotEmpty || line.isNotEmpty`, because the two steps about which squares are worth most highlight cells on an *empty* board. The point there is the geometry of the cube, and a demonstration game would have implied the answer depends on the position.
+
+### D197 — What the tutorial claims about strategy is asserted, not asserted-to
+**Question:** Ticket 019 requires that "the strategy shown matches the rules the computer opponents actually use, so what is taught transfers to real games". That is a claim about two things staying in step, and prose in a `.arb` file cannot stay in step with anything.
+
+**Decision:** Every factual claim in the strategy steps is pinned by a test against the thing it claims about — the generated line table for the positional claims, `threats()` for the tactical ones, and the opponent catalogue for the transfer claim.
+
+**Rationale:** The steps make four checkable assertions, and each is checked where it lives rather than restated:
+
+- *"The eight middle squares and the eight corners each sit on seven lines; most squares sit on four."* Counted out of `winningLines`, and the test additionally asserts that those sixteen are **all** the cells on seven lines — so a third family cannot be quietly omitted, and the two steps between them are provably exhaustive.
+- *"Two threats at once cannot both be blocked."* The position is handed to `threats(state, Player.first)` and asserted to yield exactly two, with the two empty cells the step highlights. Exactly two: one would make the caption wrong, three would make "dark has one turn" an understatement and the highlight incomplete. The opponent is asserted to have no threat of their own, or the position would be teaching a race rather than a fork.
+- *"Light has to block now."* Asserted to be the second player's only threat, and — the part that is easy to miss — that the first player has **no** threat available. A light win on the board would make "has to block" false, because taking the win beats blocking.
+- *"This is what the computer opponents are doing."* Every member of `StrategicRule` is asserted to be used by at least one catalogue entry, and the centre and corner biases to be non-zero somewhere. Deleting a rule or zeroing the biases now fails a tutorial test, which is the right place for it to fail: the tutorial would have become fiction.
+
+The cost is that these tests reach into the engine from an app test, which the layering otherwise discourages. That is accepted: the claim being tested is precisely that the app's words and the engine's behaviour agree, and a test that could not see both could not check it.
+
+### D198 — The step announcement carries the title, and the visible text does not
+**Question:** The progress line is a live region so that changing step announces itself. It said "Step 8 of 12" — which reports that something changed without saying what.
+
+**Decision:** The live region's label is "Step 8 of 12. Two threats at once". The text drawn on screen stays the bare number.
+
+**Rationale:** Pressing Next moves focus nowhere. A sighted player's eye lands on the new heading — it is the largest thing on the page — while a screen-reader user hears the live region fire and then has to go looking for the heading themselves. Twelve steps, twelve hunts. Two words in the label remove all of them.
+
+The label and the visible text deliberately diverge, which is usually a smell. It is right here because they are answering different questions: on screen the title is *already there*, a foot above the progress bar, so repeating it in the bar would be noise. The announcement is the only channel where the two facts have to arrive together.
+
+The step titles are the same strings the headings use, so there is no second set of text to keep in step, and no new `.arb` key.
+
 ---
 
 ## Appendix — session tooling

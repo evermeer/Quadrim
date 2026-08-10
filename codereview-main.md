@@ -2071,3 +2071,114 @@ Both applied.
 - `assert` added at `app/lib/tutorial/tutorial_steps.dart:80`.
 
 148 app tests still green, `flutter analyze` clean.
+
+---
+
+# Ticket 019 — Tutorial: basic strategy
+
+> Reviewed: working tree against `730be24` on `main`.
+> Changed: `app/lib/tutorial/tutorial_steps.dart`, `app/lib/tutorial/tutorial_screen.dart`,
+> both `.arb` files (+ generated), `app/test/tutorial_test.dart`,
+> `app/test/home_screen_test.dart` (step count), `doc/idea-decisions.md` (D196–D198).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] Changing step announced the number but not the step — `accessibility`
+
+**File:** `app/lib/tutorial/tutorial_screen.dart:130` (before the fix)
+
+**Evidence:**
+```dart
+final label = l10n.tutorialStepOf(index + 1, total);
+return Padding(
+  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+  child: Semantics(
+    container: true,
+    liveRegion: true,
+    label: label,
+```
+
+**Problem:** Pressing Next moves focus nowhere, so a screen-reader user heard
+"Step 8 of 12" — that something changed, but not what — and then had to hunt
+for the heading. Twelve steps, twelve hunts. The criterion is that every step
+be *comprehensible* by screen reader, and this is the same failure D195 fixed
+for the board, one level up.
+
+**Fix:** `label: '$label. $title'`, with the title passed in from the step the
+`PageView` is on. No new string: the titles are the ones the headings already
+use.
+
+### [NIT] The 200% text-scale test only ever saw step 1 — `test-coverage`
+
+**File:** `app/test/tutorial_test.dart` (accessibility group)
+
+**Evidence:** the sole scale test opened the tutorial and asserted on `The goal`,
+which is the step with the *least* chrome. Ticket 019 then added a step carrying
+progress + board + a full-width "Finish here" + the Back/Next row.
+
+**Problem:** the step most likely to overflow was the one step never checked at
+scale.
+
+**Fix:** a second test pinning the section boundary at 360×780dp — the shortest
+screen `kMinSupportedHeight` claims support for — at a text scale of 2.0.
+**Probed before writing it: the layout already holds.** No code change; this
+closes a coverage hole rather than a defect, which is why it is a nit.
+
+## Not findings, checked and cleared
+
+- **The strategy positions are what the captions say they are.** Not by
+  inspection — by handing each to the engine. `kDoubleThreatMoves` yields
+  exactly two first-player threats whose empty cells are the two highlighted,
+  the opponent has none, and the game is `Ongoing`. `kBlockingMoves` yields
+  exactly one second-player threat at the highlighted cell, *and no first-player
+  threat at all* — a light win on the board would make "light has to block"
+  false, since taking the win beats blocking.
+- **The centre and corner claims are counted, not asserted.** Each of the
+  sixteen cells is confirmed to lie on seven lines, and the set of all cells on
+  seven lines is confirmed to be exactly those sixteen — so the two steps are
+  provably exhaustive and no third family is being omitted.
+- **"This is what the opponents do" cannot rot silently.** Every
+  `StrategicRule` is asserted to be used by some catalogue entry and both biases
+  to be non-zero somewhere; deleting a rule now fails a tutorial test.
+- **`endsSection` is on exactly one step, and not the last.** Asserted as a
+  list, so a second boundary or a boundary on step 12 — which would stack
+  "Finish here" above "Done" — fails.
+- **Skipping the strategy marks the tutorial complete, deliberately.** Ticket
+  019 blesses stopping after the rules; not recording it would re-offer the
+  whole thing next launch, which is the nagging D193 exists to prevent.
+- **`_finish` is reached from both "Done" and "Finish here"**, so the
+  re-entrancy guard added in ticket 018 covers the new path too.
+
+## Functional Validation
+
+⚠️ No Jira issue key — validated against `doc/tickets/019-tutorial-strategy.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Value of the central 2×2×2 explained and shown | ✅ | step 8, `kCentreCells`; "the highlighted squares are the ones on seven lines" |
+| 2 | Value of the corners explained and shown | ✅ | step 9, `kCornerCells`; same test |
+| 3 | Double threat on a real position, why it cannot be blocked | ✅ | step 10; "the double threat really is one, and really cannot be blocked" |
+| 4 | Blocking a developing threat demonstrated | ✅ | step 11; "the blocking position has exactly one threat, and it is dark's" |
+| 5 | Strategy matches what the opponents use | ✅ | "the taught strategy is what the opponents actually do" |
+| 6 | Positions on the real board component | ✅ | "shows the strategy on real positions too" reads `highlight` off `BoardView` |
+| 7 | Skippable by a player who only wants the rules | ✅ | `endsSection`; "the strategy half can be skipped, and that still counts as finishing" |
+| 8 | Every step navigable by screen reader | ✅ | headers, described boards, live region now carrying the title |
+| 9 | All new strings in English and Dutch | ✅ | Dutch walk-through to step 10; `check.sh` fails on any untranslated key |
+
+### Gaps
+
+None — all nine criteria are addressed.
+
+### Outcome
+
+Both applied. Live-region label now carries the step title (D198); section-boundary
+scale test added. 157 app tests green, `flutter analyze` clean.

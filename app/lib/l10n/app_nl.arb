@@ -129,5 +129,20 @@
   "tutorialCubeDiagonalBody": "Vier lijnen lopen dwars door het midden van de kubus, van de ene hoek naar de tegenoverliggende. Ze zijn het moeilijkst te zien en het makkelijkst om aan te verliezen.",
   "tutorialCubeDiagonalBoard": "Gemarkeerd van rij 1 kolom 1 in laag 1 naar rij 4 kolom 4 in laag 4, met elke laag één rij en één kolom verder.",
   "tutorialRulesDoneTitle": "Dat is het hele spel",
-  "tutorialRulesDoneBody": "Rijen, kolommen, de lijnen door de lagen en alle diagonalen — 76 in totaal. Meer heb je niet nodig om te beginnen."
+  "tutorialRulesDoneBody": "Rijen, kolommen, de lijnen door de lagen en alle diagonalen — 76 in totaal. Meer heb je niet nodig om te beginnen. Hierna volgt hoe partijen echt gewonnen worden; dat kun je ook voor later bewaren.",
+  "tutorialFinishHere": "Hier stoppen",
+  "tutorialCentreTitle": "Het midden is het meest waard",
+  "tutorialCentreBody": "Vakjes zijn niet gelijkwaardig. De acht vakjes in het midden van de kubus — rij en kolom 2 en 3, in laag 2 en 3 — liggen elk op zeven verschillende lijnen. De meeste vakjes liggen op vier. Wie het midden vroeg pakt, heeft meer manieren om te winnen dan de tegenstander.",
+  "tutorialCentreBoard": "Acht vakjes gemarkeerd op een leeg bord: rij 2 en 3, kolom 2 en 3, in laag 2 en 3.",
+  "tutorialCornersTitle": "Daarna de hoeken",
+  "tutorialCornersBody": "De acht hoeken van de kubus liggen ook elk op zeven lijnen — het zijn de enige andere vakjes waarvoor dat geldt. Daarom is een tegenstander die nergens op lijkt te spelen vaak stilletjes hoeken aan het verzamelen.",
+  "tutorialCornersBoard": "Acht vakjes gemarkeerd op een leeg bord: de hoeken op rij 1 en 4, kolom 1 en 4, in laag 1 en 4.",
+  "tutorialDoubleThreatTitle": "Twee dreigingen tegelijk",
+  "tutorialDoubleThreatBody": "Eén lijn die nog één steen nodig heeft, kun je blokkeren. Twee niet. Licht heeft net de hoek gespeeld en maakte daarmee in één zet drie op een rij én drie in een kolom. Beide gemarkeerde vakjes winnen nu, en donker heeft één zet.",
+  "tutorialDoubleThreatBoard": "Licht heeft net laag 1, rij 1, kolom 1 gespeeld. Twee vakjes zijn gemarkeerd: laag 1 rij 1 kolom 4, en laag 1 rij 4 kolom 1. Beide winnen voor licht, en donker kan er maar één blokkeren.",
+  "tutorialBlockingTitle": "Blokkeren voordat het te laat is",
+  "tutorialBlockingBody": "Hetzelfde werkt tegen jou. Donker heeft drie op een rij in laag 2 en heeft nog één vakje nodig. Licht moet het gemarkeerde vakje nu pakken — en letten op de zet die donker twee dreigingen zou geven, want dan is het al te laat.",
+  "tutorialBlockingBoard": "Donker heeft laag 2, rij 1, kolom 1 tot en met 3. Het gemarkeerde vakje is laag 2, rij 1, kolom 4, dat licht moet pakken.",
+  "tutorialStrategyDoneTitle": "Zo spelen ze",
+  "tutorialStrategyDoneBody": "Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit."
 }

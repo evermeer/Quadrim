@@ -147,6 +147,68 @@ void main() {
       }
     });
 
+    test('the double threat really is one, and really cannot be blocked', () {
+      final state = GameState.fromMoves(kDoubleThreatMoves);
+      // The step's whole claim. Two threats, two different answers, and the
+      // opponent has one move: if the engine found one threat or three, the
+      // caption would be teaching something the board does not show.
+      final light = threats(state, Player.first);
+      expect(light.length, 2);
+      expect(light.map((t) => t.emptyCell.index).toSet(),
+          kDoubleThreatCells.toSet());
+      // Not already won, or there would be nothing left to demonstrate.
+      expect(outcome(state), isA<Ongoing>());
+      // And the second player has no threat of their own to muddy it.
+      expect(threats(state, Player.second), isEmpty);
+    });
+
+    test('the blocking position has exactly one threat, and it is dark\'s', () {
+      final state = GameState.fromMoves(kBlockingMoves);
+      final dark = threats(state, Player.second);
+      expect(dark.length, 1);
+      expect(dark.single.emptyCell.index, kBlockingCell.single);
+      // Light must have nothing better to do. A light win available here would
+      // make "light has to take it now" false — taking the win beats blocking.
+      expect(threats(state, Player.first), isEmpty);
+      expect(outcome(state), isA<Ongoing>());
+      // Six moves played, so it is light's turn to make the block.
+      expect(state.moves.length.isEven, isTrue);
+    });
+
+    test('the highlighted squares are the ones on seven lines', () {
+      // The centre and corner steps claim these eight cells each sit on seven
+      // lines while most sit on four. That is a fact about the generated line
+      // table, so it is checked against the table rather than restated.
+      int linesThrough(int cell) =>
+          winningLines.where((l) => l.contains(cell)).length;
+
+      for (final cell in [...kCentreCells, ...kCornerCells]) {
+        expect(linesThrough(cell), 7, reason: 'cell $cell');
+      }
+      expect(kCentreCells.length, 8);
+      expect(kCornerCells.length, 8);
+      // Exactly sixteen such cells exist, so the two steps between them show
+      // every one — no third family is being quietly left out.
+      final onSeven = [
+        for (var c = 0; c < 64; c++)
+          if (linesThrough(c) == 7) c
+      ];
+      expect(onSeven.toSet(), {...kCentreCells, ...kCornerCells});
+    });
+
+    test('the taught strategy is what the opponents actually do', () {
+      // Ticket 019 requires what is taught to transfer to real games. Each
+      // lesson is pinned to the mechanism in the catalogue that realises it,
+      // so deleting a rule or zeroing the biases fails here rather than
+      // silently turning the tutorial into fiction.
+      for (final rule in StrategicRule.values) {
+        expect(opponentCatalogue.any((b) => b.rules.contains(rule)), isTrue,
+            reason: '$rule is taught but no opponent uses it');
+      }
+      expect(opponentCatalogue.any((b) => b.centreBias > 0), isTrue);
+      expect(opponentCatalogue.any((b) => b.cornerBias > 0), isTrue);
+    });
+
     test('the placing position is mid-game, with light to move', () {
       final state = GameState.fromMoves(kPlacingMoves);
       expect(outcome(state), isA<Ongoing>());
@@ -204,7 +266,7 @@ void main() {
       _phone(tester);
       await _openFromHome(tester, await _repository(offered: true));
       expect(find.text('The goal'), findsOneWidget);
-      expect(find.text('Step 1 of 7'), findsOneWidget);
+      expect(find.text('Step 1 of 12'), findsOneWidget);
     });
 
     testWidgets('advances, goes back, and reports where it is', (tester) async {
@@ -213,12 +275,12 @@ void main() {
 
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 2 of 7'), findsOneWidget);
+      expect(find.text('Step 2 of 12'), findsOneWidget);
       expect(find.text('Four layers, one cube'), findsOneWidget);
 
       await tester.tap(find.text('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 1 of 7'), findsOneWidget);
+      expect(find.text('Step 1 of 12'), findsOneWidget);
       expect(find.text('The goal'), findsOneWidget);
     });
 
@@ -253,8 +315,64 @@ void main() {
         await tester.tap(find.text('Next'));
         await tester.pumpAndSettle();
       }
-      // The last step is the summary, and carries no board.
+      // Step 7 is the section boundary, and carries no board.
       expect(find.byType(BoardView), findsNothing);
+    });
+
+    testWidgets('shows the strategy on real positions too', (tester) async {
+      _phone(tester);
+      await _openFromHome(tester, await _repository(offered: true));
+      for (var i = 0; i < 7; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      const expected = [
+        kCentreCells,
+        kCornerCells,
+        kDoubleThreatCells,
+        kBlockingCell,
+      ];
+      for (var step = 0; step < expected.length; step++) {
+        final board = tester.widget<BoardView>(find.byType(BoardView));
+        expect(board.highlight, expected[step], reason: 'strategy step $step');
+        expect(board.enabled, isFalse);
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('That is how they play'), findsOneWidget);
+    });
+
+    testWidgets('the strategy half can be skipped, and that still counts as '
+        'finishing', (tester) async {
+      _phone(tester);
+      final repo = await _repository(offered: true);
+      await _openFromHome(tester, repo);
+      for (var i = 0; i < 6; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('That is the whole game'), findsOneWidget);
+
+      await tester.tap(find.text('Finish here'));
+      await tester.pumpAndSettle();
+      expect(find.text('New game'), findsOneWidget, reason: 'back on home');
+      // A player who only wanted the rules has finished what they came for,
+      // so they are not asked again (ticket 019).
+      expect((await repo.loadSettings()).tutorialCompleted, isTrue);
+    });
+
+    testWidgets('offers to finish only at the section boundary',
+        (tester) async {
+      _phone(tester);
+      await _openFromHome(tester, await _repository(offered: true));
+      for (var step = 0; step < 12; step++) {
+        expect(find.text('Finish here'), step == 6 ? findsOneWidget : findsNothing,
+            reason: 'step ${step + 1}');
+        if (step < 11) {
+          await tester.tap(find.text('Next'));
+          await tester.pumpAndSettle();
+        }
+      }
     });
 
     testWidgets('leaving early does not mark it complete', (tester) async {
@@ -278,7 +396,7 @@ void main() {
       final repo = await _repository(offered: true, store: store);
       await _openFromHome(tester, repo);
       await _toLastStep(tester);
-      expect(find.text('Step 7 of 7'), findsOneWidget);
+      expect(find.text('Step 12 of 12'), findsOneWidget);
 
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
@@ -310,10 +428,24 @@ void main() {
         find.bySemanticsLabel(RegExp(r'four light pieces filling the row')),
         findsOneWidget,
       );
-      expect(find.bySemanticsLabel('Step 1 of 7'), findsOneWidget);
+      // The number and the title together: a live region that says only
+      // "Step 8 of 12" reports that something changed without saying what.
+      expect(find.bySemanticsLabel('Step 1 of 12. The goal'), findsOneWidget);
 
       final title = tester.getSemantics(find.text('The goal')).flagsCollection;
       expect(title.isHeader, isTrue);
+      handle.dispose();
+    });
+
+    testWidgets('announces the step it has moved to, not just the number',
+        (tester) async {
+      _phone(tester);
+      final handle = tester.ensureSemantics();
+      await _openFromHome(tester, await _repository(offered: true));
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Step 2 of 12. Four layers, one cube'),
+          findsOneWidget);
       handle.dispose();
     });
 
@@ -322,6 +454,27 @@ void main() {
       await _openFromHome(tester, await _repository(offered: true));
       expect(tester.takeException(), isNull);
       expect(find.text('The goal'), findsOneWidget);
+    });
+
+    testWidgets('the section boundary survives it too, on the shortest screen',
+        (tester) async {
+      // The step with the most chrome — progress, board, a skip button and the
+      // Back/Next row — on the smallest screen the board is supported at
+      // (kMinSupportedHeight) and the largest font setting. If any step
+      // overflows, it is this one, and the general test above only sees step 1.
+      tester.view.physicalSize = const Size(1080, 2340); // 360x780dp
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await _openFromHome(tester, await _repository(offered: true));
+      for (var i = 0; i < 6; i++) {
+        await tester.tap(find.text('Next'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Finish here'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -333,15 +486,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Het doel'), findsOneWidget);
-    expect(find.text('Stap 1 van 7'), findsOneWidget);
+    expect(find.text('Stap 1 van 12'), findsOneWidget);
     expect(find.text('Verder'), findsOneWidget);
     expect(find.text('The goal'), findsNothing);
+
+    // Including the strategy half, which is where the newest strings are.
+    for (var i = 0; i < 9; i++) {
+      await tester.tap(find.text('Verder'));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Twee dreigingen tegelijk'), findsOneWidget);
   });
 
-  test('the catalogue is seven steps, six of which show a board', () {
+  test('the catalogue is twelve steps, ten of which show a board', () {
     final steps = tutorialSteps(AppLocalizationsEn());
-    expect(steps.length, 7);
-    expect(steps.where((s) => s.hasBoard).length, 6);
+    expect(steps.length, 12);
+    expect(steps.where((s) => s.hasBoard).length, 10);
+    // Exactly one place to stop early, and it is not the last step — a
+    // section end on the final step would render "Finish here" above "Done".
+    final sectionEnds = [
+      for (var i = 0; i < steps.length; i++)
+        if (steps[i].endsSection) i
+    ];
+    expect(sectionEnds, [6]);
     // A step with a board and no description would be silent to a screen
     // reader, which is the failure the whole boardLabel field exists to stop.
     for (final step in steps.where((s) => s.hasBoard)) {

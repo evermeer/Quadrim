@@ -881,8 +881,98 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialRulesDoneBody.
   ///
   /// In en, this message translates to:
-  /// **'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing.'**
+  /// **'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing. What follows is how games are actually won, which you can leave for later.'**
   String get tutorialRulesDoneBody;
+
+  /// Ends the tutorial at the boundary between the rules and the strategy. Counts as completing it: a player who only wanted the rules has finished what they came for (ticket 019).
+  ///
+  /// In en, this message translates to:
+  /// **'Finish here'**
+  String get tutorialFinishHere;
+
+  /// No description provided for @tutorialCentreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The middle is worth most'**
+  String get tutorialCentreTitle;
+
+  /// No description provided for @tutorialCentreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Squares are not equal. The eight in the middle of the cube — rows and columns 2 and 3, in layers 2 and 3 — each sit on seven different lines. Most squares sit on four. Taking the middle early gives you more ways to win than your opponent has.'**
+  String get tutorialCentreBody;
+
+  /// No description provided for @tutorialCentreBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Eight squares highlighted on an empty board: rows 2 and 3, columns 2 and 3, in layers 2 and 3.'**
+  String get tutorialCentreBoard;
+
+  /// No description provided for @tutorialCornersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Then the corners'**
+  String get tutorialCornersTitle;
+
+  /// No description provided for @tutorialCornersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The eight corners of the cube also sit on seven lines each — they are the only other squares that do. That is why an opponent that seems to be playing for nothing in particular is often quietly collecting corners.'**
+  String get tutorialCornersBody;
+
+  /// No description provided for @tutorialCornersBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Eight squares highlighted on an empty board: the corner of each layer, at rows 1 and 4, columns 1 and 4, in layers 1 and 4.'**
+  String get tutorialCornersBoard;
+
+  /// No description provided for @tutorialDoubleThreatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two threats at once'**
+  String get tutorialDoubleThreatTitle;
+
+  /// No description provided for @tutorialDoubleThreatBody.
+  ///
+  /// In en, this message translates to:
+  /// **'One line needing one more piece can be blocked. Two of them cannot. Light has just played the corner, and it completed three of a row and three of a column in the same move. Both highlighted squares now win, and dark has one turn.'**
+  String get tutorialDoubleThreatBody;
+
+  /// No description provided for @tutorialDoubleThreatBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Light has just played layer 1, row 1, column 1. Two squares are highlighted: layer 1 row 1 column 4, and layer 1 row 4 column 1. Either one wins for light, and dark can block only one of them.'**
+  String get tutorialDoubleThreatBoard;
+
+  /// No description provided for @tutorialBlockingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking before it is too late'**
+  String get tutorialBlockingTitle;
+
+  /// No description provided for @tutorialBlockingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The same thing works against you. Dark holds three of a row in layer 2 and needs one more square. Light has to take the highlighted square now — and watch for the move that would give dark two threats, because by then it is already too late.'**
+  String get tutorialBlockingBody;
+
+  /// No description provided for @tutorialBlockingBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark holds layer 2, row 1, columns 1 to 3. The highlighted square is layer 2, row 1, column 4, which light must take.'**
+  String get tutorialBlockingBoard;
+
+  /// No description provided for @tutorialStrategyDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'That is how they play'**
+  String get tutorialStrategyDoneTitle;
+
+  /// No description provided for @tutorialStrategyDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead.'**
+  String get tutorialStrategyDoneBody;
 }
 
 class _AppLocalizationsDelegate
