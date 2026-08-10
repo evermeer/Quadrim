@@ -120,7 +120,6 @@
   "@computerRatingHeading": {
     "description": "Label above the computer rating. Must not read as a universal rating: a separate rating against people arrives at 0.3b."
   },
-  "yourRecord": "Your record",
   "recordLine": "{wins} won · {losses} lost · {draws} drawn",
   "@recordLine": {
     "placeholders": {
@@ -184,6 +183,11 @@
   "@yourRating": {
     "description": "Shown on the opponent list so the choice can be made against the player's own strength.",
     "placeholders": { "rating": { "type": "int" } }
+  },
+  "opponentCount": "{count}",
+  "@opponentCount": {
+    "description": "How many opponents a collapsed tier holds. A bare number, routed through l10n like ratingValue so it is formatted for the locale rather than interpolated in code.",
+    "placeholders": { "count": { "type": "int" } }
   },
   "matchEven": "Even match",
   "@matchEven": {

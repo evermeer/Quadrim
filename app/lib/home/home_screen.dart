@@ -8,6 +8,7 @@ import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../data/home_summary.dart';
 import '../game/game_screen.dart';
+import '../game/opponent_avatar.dart';
 import '../game/opponent_name.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
@@ -180,9 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     sliver: SliverList.list(
                       children: [
-                        _RatingCard(rating: _summary.computerRating),
-                        const SizedBox(height: 16),
-                        _RecordSection(summary: _summary),
+                        _RatingCard(summary: _summary),
                         if (_summary.byOpponent.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           _OpponentSection(records: _summary.byOpponent),
@@ -244,61 +243,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// The computer rating, in a card of its own.
+/// The computer rating and the record that produced it, in a card of its own.
 ///
 /// Its own card because a second rating — against people — arrives at 0.3b,
 /// and the two must never read as one number (criterion 21). A labelled card
 /// takes a sibling; a bare number in a row of statistics does not.
+///
+/// The record sits inside the card rather than under a heading of its own: it
+/// is the same fold over the same games that produced the number above it, and
+/// a "Your record" heading over a single line was a heading for nothing (D192).
 class _RatingCard extends StatelessWidget {
-  const _RatingCard({required this.rating});
-
-  final int rating;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Semantics(
-          container: true,
-          label: '${l10n.computerRatingHeading}: $rating. '
-              '${l10n.computerRatingNote}',
-          child: ExcludeSemantics(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.computerRatingHeading,
-                    style: theme.textTheme.labelLarge),
-                Text(l10n.ratingValue(rating),
-                    style: theme.textTheme.displaySmall),
-                Text(l10n.computerRatingNote, style: theme.textTheme.bodySmall),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RecordSection extends StatelessWidget {
-  const _RecordSection({required this.summary});
+  const _RatingCard({required this.summary});
 
   final HomeSummary summary;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeading(l10n.yourRecord),
-        Text(summary.played == 0
-            ? l10n.recordEmpty
-            : l10n.recordLine(summary.wins, summary.losses, summary.draws)),
-      ],
+    final theme = Theme.of(context);
+    final record = summary.played == 0
+        ? l10n.recordEmpty
+        : l10n.recordLine(summary.wins, summary.losses, summary.draws);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Semantics(
+          container: true,
+          label: '${l10n.computerRatingHeading}: ${summary.computerRating}. '
+              '$record. ${l10n.computerRatingNote}',
+          child: ExcludeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.computerRatingHeading,
+                    style: theme.textTheme.labelLarge),
+                Text(l10n.ratingValue(summary.computerRating),
+                    style: theme.textTheme.displaySmall),
+                Text(record, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 4),
+                Text(l10n.computerRatingNote, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -319,9 +307,13 @@ class _OpponentSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // The same slot the game rows use, so the two sections share a
+                // left edge for their names rather than stepping in and out.
+                _OpponentAvatarSlot(opponent: record.opponent),
+                const SizedBox(width: 12),
                 Expanded(child: Text(botName(l10n, record.opponent))),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     l10n.opponentRecord(record.wins, record.losses,
@@ -347,10 +339,9 @@ class _ActiveGameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(_opponentLabel(l10n, game)),
-      subtitle: Text(l10n.movesPlayed(game.moves.length)),
+    return _GameRow(
+      game: game,
+      trailing: l10n.movesPlayed(game.moves.length),
       onTap: onTap,
     );
   }
@@ -365,11 +356,107 @@ class _FinishedGameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(_opponentLabel(l10n, game)),
-      subtitle: Text(_resultLabel(l10n, game)),
+    return _GameRow(
+      game: game,
+      trailing: _resultLabel(l10n, game),
       onTap: onTap,
+    );
+  }
+}
+
+/// The avatar slot used by every row on this screen that names an opponent.
+///
+/// One widget rather than two copies, because the game rows and the
+/// by-opponent breakdown have to line up: the names beside them share a left
+/// edge, and that only holds while the slot is the same width in both. It also
+/// puts the "there is nobody to draw" case — pass-and-play, and an opponent
+/// this build does not know — in one place instead of two (D189, D191).
+class _OpponentAvatarSlot extends StatelessWidget {
+  const _OpponentAvatarSlot({required this.opponent});
+
+  /// A stored `opponent` field: `bot:<id>`, or the guest.
+  final String opponent;
+
+  /// Small enough to ride a single line of text without setting its height.
+  static const double size = 28;
+
+  @override
+  Widget build(BuildContext context) {
+    final bot = botConfigFor(opponent);
+    return SizedBox(
+      width: size,
+      height: size,
+      child: bot == null
+          ? Icon(
+              Icons.people_outline,
+              size: size * 0.8,
+              color: Theme.of(context).colorScheme.outline,
+            )
+          : OpponentAvatar(id: bot.id, tier: bot.tier, size: size),
+    );
+  }
+}
+
+/// One game on one line: avatar, who it was against, and its state at the end.
+///
+/// The same shape as the by-opponent rows above it — name left, fact right —
+/// so a screen that already lists opponents that way does not switch layouts
+/// halfway down. Two-line `ListTile`s made a list of a dozen games longer than
+/// the screen for no extra information (D189).
+class _GameRow extends StatelessWidget {
+  const _GameRow({
+    required this.game,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  final GameDocument game;
+
+  /// The right-hand fact: moves played, or how the game ended.
+  final String trailing;
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final label = _opponentLabel(l10n, game);
+
+    return InkWell(
+      onTap: onTap,
+      child: Semantics(
+        button: true,
+        label: '$label. $trailing',
+        child: ExcludeSemantics(
+          // Constrained, not just padded. `ListTile` — which this replaced —
+          // enforces a 48dp minimum; hand-rolling the row dropped it to 44,
+          // under the minimum touch target Android and Material both specify.
+          // A constraint holds at any text scale where a fixed padding would
+          // only hold at 1.0 (D189).
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  _OpponentAvatarSlot(opponent: game.opponent),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(label)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      trailing,
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

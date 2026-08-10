@@ -74,6 +74,18 @@ String? botBlurb(AppLocalizations l10n, String opponent) => switch (opponent) {
       _ => null,
     };
 
+/// The catalogue entry behind a stored `opponent` field, or null for
+/// pass-and-play and for an opponent this build has never heard of.
+///
+/// The prefix is stripped here rather than at each call site so that the one
+/// place that knows a stored opponent looks like `bot:<id>` stays the one
+/// place — [botOpponent] writes it and this reads it.
+BotConfig? botConfigFor(String opponent) {
+  const prefix = 'bot:';
+  if (!opponent.startsWith(prefix)) return null;
+  return botById(opponent.substring(prefix.length));
+}
+
 /// The translated name of a difficulty tier. Names are not translated; tiers
 /// are (ticket 029).
 String tierLabel(AppLocalizations l10n, BotTier tier) => switch (tier) {

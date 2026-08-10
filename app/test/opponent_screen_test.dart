@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,49 +9,144 @@ import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
 
+const _delegates = <LocalizationsDelegate<Object>>[
+  AppLocalizations.delegate,
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+];
+
 Widget _app({int playerRating = kSeedRating, Locale? locale}) => MaterialApp(
       locale: locale,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      localizationsDelegates: _delegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: OpponentScreen(playerRating: playerRating),
     );
 
-/// Pumps the screen into a viewport tall enough to build all twenty rows.
-///
-/// A `ListView` only builds what is visible, so on a phone-sized surface any
-/// assertion about the seventh opponent is really an assertion about scrolling.
-/// Making the surface tall keeps these tests about the list's *content*;
-/// scrolling behaviour is Flutter's, and not this ticket's to prove.
+/// Pumps the screen into a viewport tall enough to build an open section in
+/// full. A `ListView` only builds what is visible, so on a phone-sized surface
+/// an assertion about the fifth opponent in a section is really an assertion
+/// about scrolling — which is Flutter's behaviour, not this ticket's.
 Future<void> _pumpTall(
   WidgetTester tester, {
   int playerRating = kSeedRating,
   Locale? locale,
 }) async {
-  tester.view.physicalSize = const Size(1200, 6000);
+  tester.view.physicalSize = const Size(1200, 4000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(_app(playerRating: playerRating, locale: locale));
   await tester.pumpAndSettle();
 }
 
+String _name(String id) => switch (id) {
+      'quadrim_prime' => 'Quadrim Prime',
+      _ => id[0].toUpperCase() + id.substring(1),
+    };
+
+const _tierLabels = {
+  BotTier.novice: 'Novice',
+  BotTier.casual: 'Casual',
+  BotTier.club: 'Club',
+  BotTier.expert: 'Expert',
+  BotTier.master: 'Master',
+};
+
+Future<void> _openTier(WidgetTester tester, BotTier tier) async {
+  await tester.tap(find.text(_tierLabels[tier]!));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('every one of the twenty is listed', (tester) async {
+  group('the accordion', () {
+    testWidgets('opens the tier nearest the player and no other',
+        (tester) async {
+      // A seeded player at 1200 sits on Kestrel exactly, so Casual opens.
+      await _pumpTall(tester, playerRating: kSeedRating);
+      expect(find.text('Kestrel'), findsOneWidget);
+      expect(find.text('Pebble'), findsNothing, reason: 'Novice must be shut');
+      expect(find.text('Titan'), findsNothing, reason: 'Expert must be shut');
+    });
+
+    testWidgets('every tier heading is present even when shut', (tester) async {
+      // The five headings are the ladder. Collapsing a section must not hide
+      // that it exists, or a beginner never learns there is anything above.
+      await _pumpTall(tester);
+      for (final label in _tierLabels.values) {
+        expect(find.text(label), findsOneWidget, reason: '$label heading');
+      }
+    });
+
+    testWidgets('a weak player opens on Novice, a strong one on Master',
+        (tester) async {
+      await _pumpTall(tester, playerRating: 620);
+      expect(find.text('Pebble'), findsOneWidget);
+      expect(find.text('Quadrim Prime'), findsNothing);
+
+      await _pumpTall(tester, playerRating: 2400);
+      expect(find.text('Quadrim Prime'), findsOneWidget);
+      expect(find.text('Pebble'), findsNothing);
+    });
+
+    testWidgets('opening one closes the one that was open', (tester) async {
+      await _pumpTall(tester);
+      expect(find.text('Kestrel'), findsOneWidget);
+
+      await _openTier(tester, BotTier.master);
+      expect(find.text('Oracle'), findsOneWidget);
+      expect(find.text('Kestrel'), findsNothing,
+          reason: 'Casual should have closed when Master opened');
+
+      await _openTier(tester, BotTier.novice);
+      expect(find.text('Pebble'), findsOneWidget);
+      expect(find.text('Oracle'), findsNothing);
+    });
+
+    testWidgets('tapping the open tier closes it', (tester) async {
+      await _pumpTall(tester);
+      expect(find.text('Kestrel'), findsOneWidget);
+      await _openTier(tester, BotTier.casual);
+      expect(find.text('Kestrel'), findsNothing);
+      // All five headings survive with nothing open.
+      for (final label in _tierLabels.values) {
+        expect(find.text(label), findsOneWidget);
+      }
+    });
+
+    testWidgets('each heading says how many it holds', (tester) async {
+      // 4 / 5 / 5 / 4 / 2 — so a shut section still tells you its size.
+      await _pumpTall(tester);
+      for (final tier in BotTier.values) {
+        final count = opponentCatalogue.where((b) => b.tier == tier).length;
+        expect(
+          find.descendant(
+            of: find.ancestor(
+              of: find.text(_tierLabels[tier]!),
+              matching: find.byType(Row),
+            ),
+            matching: find.text('$count'),
+          ),
+          findsWidgets,
+          reason: '${_tierLabels[tier]} should show $count',
+        );
+      }
+    });
+  });
+
+  testWidgets('every one of the twenty is reachable', (tester) async {
     await _pumpTall(tester);
-    for (final bot in opponentCatalogue) {
-      expect(find.text(_expectedName(bot.id)), findsOneWidget,
-          reason: '${bot.id} is missing from the list');
+    for (final tier in BotTier.values) {
+      await _openTier(tester, tier);
+      for (final bot in opponentCatalogue.where((b) => b.tier == tier)) {
+        expect(find.text(_name(bot.id)), findsOneWidget,
+            reason: '${bot.id} is missing from ${_tierLabels[tier]}');
+      }
     }
   });
 
   testWidgets('each opponent shows an avatar, a rating and a blurb',
       (tester) async {
-    await tester.pumpWidget(_app());
-    // Pebble is first, so it is on screen without scrolling.
+    await _pumpTall(tester, playerRating: 620);
     expect(find.text('Pebble'), findsOneWidget);
     expect(find.text('600'), findsOneWidget);
     expect(find.textContaining('Has never noticed a threat'), findsOneWidget);
@@ -62,42 +159,32 @@ void main() {
     );
   });
 
-  testWidgets('opponents are grouped under their tier headings',
-      (tester) async {
-    await tester.pumpWidget(_app());
-    for (final label in ['Novice', 'Casual']) {
-      expect(find.text(label), findsOneWidget, reason: '$label heading');
-    }
-    // Novice must come before Casual on screen, or the ladder reads backwards.
-    final novice = tester.getTopLeft(find.text('Novice')).dy;
-    final casual = tester.getTopLeft(find.text('Casual')).dy;
-    expect(novice, lessThan(casual));
-  });
-
   testWidgets('the player sees their own rating on this screen',
       (tester) async {
-    await tester.pumpWidget(_app(playerRating: 1179));
+    await _pumpTall(tester, playerRating: 1179);
     expect(find.textContaining('1179'), findsOneWidget);
   });
 
   testWidgets('a mismatch is distinguishable from a fair match',
       (tester) async {
-    // A seeded player at 1200 meets all three bands in one roster: Pebble at
-    // 600 is far below, Finch at 1100 is even, Quadrim Prime at 2400 is far
-    // above. All three cues must appear, and differ.
+    // One tier is open at a time, so the three bands are checked where each
+    // actually occurs for a seeded player: Novice is far below, Casual is
+    // even, Master is far above.
     await _pumpTall(tester, playerRating: kSeedRating);
-    expect(find.text('Below your level'), findsWidgets);
     expect(find.text('Even match'), findsWidgets);
-    expect(find.text('Above your level'), findsWidgets);
-    expect(find.byIcon(Icons.trending_down), findsWidgets);
     expect(find.byIcon(Icons.balance), findsWidgets);
+
+    await _openTier(tester, BotTier.novice);
+    expect(find.text('Below your level'), findsWidgets);
+    expect(find.byIcon(Icons.trending_down), findsWidgets);
+
+    await _openTier(tester, BotTier.master);
+    expect(find.text('Above your level'), findsWidgets);
     expect(find.byIcon(Icons.trending_up), findsWidgets);
   });
 
   testWidgets('the cue does not depend on colour alone', (tester) async {
-    await tester.pumpWidget(_app());
-    // Every balance cue carries an icon and a word beside its colour. Finding
-    // the words is what proves a colour-blind player is not left guessing.
+    await _pumpTall(tester);
     final words = find.byWidgetPredicate(
       (w) =>
           w is Text &&
@@ -111,12 +198,7 @@ void main() {
     BotConfig? chosen;
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        localizationsDelegates: _delegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
@@ -137,24 +219,18 @@ void main() {
     );
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Twig'));
+    // Kestrel is in the tier that opens for a seeded player.
+    await tester.tap(find.text('Kestrel'));
     await tester.pumpAndSettle();
-    expect(chosen?.id, 'twig');
-    expect(chosen?.rating, 700);
+    expect(chosen?.id, 'kestrel');
+    expect(chosen?.rating, 1200);
   });
 
   testWidgets('backing out chooses nobody', (tester) async {
-    // The flow must cancel rather than fall back to a default opponent: a game
-    // against somebody the player did not pick is worse than no game.
     var returned = 'unset';
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        localizationsDelegates: _delegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
@@ -184,17 +260,41 @@ void main() {
   testWidgets('each opponent announces name, tier and strength as one unit',
       (tester) async {
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(_app(playerRating: kSeedRating));
-    // One node per opponent carrying all four facts, rather than four nodes a
-    // screen reader user must swipe through separately.
+    await _pumpTall(tester, playerRating: 620);
     expect(
       find.bySemanticsLabel(RegExp(r'Pebble\. Novice\. Rating 600\.')),
       findsOneWidget,
     );
+    // At 620 the player is level with Pebble, so the announcement says so —
+    // the band is a real comparison, not a decoration that always reads
+    // "below" for the weakest opponent.
+    expect(
+      find.bySemanticsLabel(RegExp(r'Pebble\..*Even match')),
+      findsOneWidget,
+    );
+
+    // The same opponent, announced to a seeded player, is far below them.
+    await _pumpTall(tester, playerRating: kSeedRating);
+    await _openTier(tester, BotTier.novice);
     expect(
       find.bySemanticsLabel(RegExp(r'Pebble\..*Below your level')),
       findsOneWidget,
     );
+    handle.dispose();
+  });
+
+  testWidgets('a shut tier announces itself as collapsed', (tester) async {
+    // Otherwise a screen reader user meets five words and no way to know a
+    // list is behind them.
+    final handle = tester.ensureSemantics();
+    await _pumpTall(tester, playerRating: kSeedRating);
+    // Tristate, not a bool: `none` would mean the header claims no expandable
+    // state at all, which is the failure worth catching — a screen reader user
+    // would then meet five words with no hint that lists are behind them.
+    final expert = tester.getSemantics(find.text('Expert')).flagsCollection;
+    expect(expert.isExpanded, Tristate.isFalse);
+    final casual = tester.getSemantics(find.text('Casual')).flagsCollection;
+    expect(casual.isExpanded, Tristate.isTrue);
     handle.dispose();
   });
 
@@ -207,12 +307,7 @@ void main() {
     for (final scale in [1.0, 1.5, 2.0]) {
       await tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+          localizationsDelegates: _delegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: MediaQueryData(textScaler: TextScaler.linear(scale)),
@@ -231,18 +326,36 @@ void main() {
   });
 
   testWidgets('the screen renders in Dutch', (tester) async {
-    await tester.pumpWidget(_app(locale: const Locale('nl')));
+    await _pumpTall(tester, locale: const Locale('nl'));
     expect(find.text('Kies een tegenstander'), findsOneWidget);
     expect(find.text('Beginner'), findsOneWidget);
-    // Names are never translated.
-    expect(find.text('Pebble'), findsOneWidget);
+    expect(find.text('Kestrel'), findsOneWidget);
+  });
+
+  group('tierNearest', () {
+    test('picks the tier of the closest opponent, not a rating band', () {
+      // Not a band table: tier is stored precisely so a recalibration cannot
+      // reclassify anybody (D179), and a band here would reintroduce that
+      // coupling. Asking who is nearest needs no table.
+      expect(tierNearest(600), BotTier.novice);
+      expect(tierNearest(1200), BotTier.casual);
+      expect(tierNearest(1650), BotTier.club);
+      expect(tierNearest(2100), BotTier.expert);
+      expect(tierNearest(2400), BotTier.master);
+    });
+
+    test('a rating outside the catalogue clamps to an end', () {
+      // The rating floor is 100 and nothing stops a player climbing past
+      // Prime, so both ends must resolve rather than throw.
+      expect(tierNearest(kRatingFloor), BotTier.novice);
+      expect(tierNearest(0), BotTier.novice);
+      expect(tierNearest(9999), BotTier.master);
+    });
+
+    test('the midpoint between two tiers resolves without throwing', () {
+      // 1350 is exactly between Ember (1300) and Basalt (1400). Whichever it
+      // picks, it must pick one — the first wins on a tie, which is Casual.
+      expect(tierNearest(1350), BotTier.casual);
+    });
   });
 }
-
-/// Opponent names are proper nouns and identical in both locales, so the
-/// English catalogue id maps to the displayed name by capitalisation alone —
-/// except Quadrim Prime, whose id carries an underscore.
-String _expectedName(String id) => switch (id) {
-      'quadrim_prime' => 'Quadrim Prime',
-      _ => id[0].toUpperCase() + id.substring(1),
-    };

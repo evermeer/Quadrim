@@ -326,12 +326,6 @@ abstract class AppLocalizations {
   /// **'Against the computer'**
   String get computerRatingHeading;
 
-  /// No description provided for @yourRecord.
-  ///
-  /// In en, this message translates to:
-  /// **'Your record'**
-  String get yourRecord;
-
   /// No description provided for @recordLine.
   ///
   /// In en, this message translates to:
@@ -529,6 +523,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your rating: {rating}'**
   String yourRating(int rating);
+
+  /// How many opponents a collapsed tier holds. A bare number, routed through l10n like ratingValue so it is formatted for the locale rather than interpolated in code.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String opponentCount(int count);
 
   /// Neither side is heavily favoured. Paired with a visual cue that does not rely on colour.
   ///

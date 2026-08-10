@@ -141,9 +141,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get computerRatingHeading => 'Against the computer';
 
   @override
-  String get yourRecord => 'Your record';
-
-  @override
   String recordLine(int wins, int losses, int draws) {
     return '$wins won · $losses lost · $draws drawn';
   }
@@ -255,6 +252,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String yourRating(int rating) {
     return 'Your rating: $rating';
+  }
+
+  @override
+  String opponentCount(int count) {
+    return '$count';
   }
 
   @override

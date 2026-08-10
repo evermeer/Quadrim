@@ -1685,6 +1685,52 @@ Ticket 021 owns the accessibility audit and will sweep for the rest of the categ
 
 ---
 
+## 42. Interface revisions after seeing the screens on a device
+
+### D189 — A game is one line, with the face of who it was against
+**Question:** The main screen listed each game as a two-line `ListTile` — opponent on top, moves or result underneath — while the by-opponent breakdown directly above it put name and record on a single line. Two layouts, one screen.
+
+**Decision:** Games use the by-opponent shape: avatar, name, and the game's state on one line. The avatar is 28 logical pixels, against 44 on the selection screen.
+
+**Rationale:** The second line never carried anything the first could not hold. "3 moves played" and "Won" are short, they belong to the name beside them, and stacking them doubled the height of a list that has no upper bound — a dozen games ran past the bottom of the screen for no extra information. Matching the section above it also means the screen stops changing layout halfway down.
+
+The avatar is deliberately smaller than the selection screen's. It rides a single line of text, and at 44 it would set the row height itself, which would undo the change that motivated this. A test asserts both that it is smaller than the selection default and that it does not drive the row height.
+
+**Pass-and-play has no avatar.** There is no opponent behind the guest seat, so the slot falls back to a neutral icon rather than inventing a face for somebody who does not exist. The same applies to a stored game naming an opponent this build has never heard of — an older catalogue, or a newer one after a downgrade — which now has a test of its own, because the row resolves a configuration that can be null and would otherwise be a crash rather than a blank.
+
+### D190 — The opponent list is an accordion, opened where the player stands
+**Question:** Twenty opponents in five sections is a long scroll, and the ticket's own note says twenty is enough that presentation matters. Which section should be open when the screen appears?
+
+**Decision:** One section at a time. It opens on the tier of the catalogue entry **nearest the player's rating**, and opening another closes the one that was open. Tapping the open one closes it, collapsing the screen to five lines.
+
+**Rationale:** The five headings are the ladder, and a collapsed accordion shows the whole of it at once — which a twenty-row scroll does not. Opening on the player's own tier means the opponents they can actually get a game out of are the ones already on screen, and the rungs above and below are one tap away.
+
+**The tier is found by asking who is nearest, not by a rating band.** A band table would have been the obvious way to write it and would have quietly undone [D179](#d179--tier-is-stored-on-the-opponent-not-computed-from-its-rating): tier is stored rather than derived precisely so a recalibration cannot reclassify an opponent, and a table of bands here would have to be kept in step with twenty ratings by hand. "Which opponent is closest to this number" needs no table and cannot fall out of step. It also behaves at both ends without special cases — the rating floor lands on Novice, and a player past Prime lands on Master.
+
+Writing the tests found a real defect in the first version. `late BotTier? _open = tierNearest(widget.playerRating)` runs its initialiser once, so when Flutter reused the `State` with a different rating the section stayed where the *first* rating had put it. Today the screen is always pushed fresh and the rating cannot change underneath it, so nothing visible was wrong — but the widget was not honouring its own input, and `didUpdateWidget` now makes it. A latent bug of that shape is worth five lines: it fails silently and only under a rebuild nobody is looking at.
+
+### D191 — One avatar slot, shared by every row that names an opponent
+**Question:** The by-opponent breakdown sits directly above the game list and names the same opponents. Should it carry avatars too, and if so, should it build its own?
+
+**Decision:** Yes, and no. Both sections use one `_OpponentAvatarSlot` widget.
+
+**Rationale:** The two sections are stacked on the same screen and name the same opponents, so a face in one and not the other reads as an inconsistency rather than a distinction. More practically, the names have to share a left edge: two independently written slots drift apart the first time one changes, and the columns step in and out between sections that touch. A single widget makes that alignment structural instead of a coincidence, and a test asserts both left edges are one value.
+
+It also puts the "there is nobody to draw" case in one place. Pass-and-play has no bot behind the guest seat, and a stored game can name an opponent this build has never heard of — an older catalogue, or a newer one after a downgrade. Both resolve to a null configuration, and the fallback icon belongs in the slot rather than duplicated at each call site.
+
+### D192 — The record belongs in the rating card, not under a heading of its own
+**Question:** The main screen had a "Your record" heading over a single line — "16 won · 3 lost · 0 drawn" — directly beneath a card showing the computer rating. Two blocks, one subject.
+
+**Decision:** The record line moves inside the rating card, under the number. The heading goes.
+
+**Rationale:** They are the same fold over the same games. The rating *is* what that record produced, and putting the two side by side says so; separating them implied a distinction that does not exist. A heading over one line of text is also a heading for nothing — it cost a section header, a gap above it, and a gap below, to introduce eleven words.
+
+Two consequences worth recording. The card's screen-reader announcement had to grow to carry the record, or the line would have been spoken by nobody: it was already a `Semantics` container with `ExcludeSemantics` beneath it, so a string that moves inside without joining the label becomes silent. The test now asserts the announcement contains both the number and the record.
+
+And `yourRecord` was deleted from both locale files rather than left behind. An unused key still gets read, translated and maintained, and the next person to see it has to work out whether it is dead or merely not rendered yet. Two lines are cheap to restore if a later screen wants the heading back.
+
+---
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

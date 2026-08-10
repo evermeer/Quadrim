@@ -187,3 +187,6 @@ Ask clarifying questions if anything is unclear and add the decissions to the fi
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
 ```
+
+Requested some small UI tweaks.
+

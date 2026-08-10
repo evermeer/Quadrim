@@ -17,12 +17,49 @@ import 'opponent_name.dart';
 /// Nothing here enumerates opponents itself: the sections come from
 /// [opponentCatalogue] in tier order, so adding an opponent or moving one
 /// between tiers is a data change and this file does not move (criterion 21).
-class OpponentScreen extends StatelessWidget {
+class OpponentScreen extends StatefulWidget {
   const OpponentScreen({super.key, required this.playerRating});
 
   /// The player's computer rating, so each opponent can be shown as a fair
   /// match or a mismatch relative to it (criterion 17).
   final int playerRating;
+
+  @override
+  State<OpponentScreen> createState() => _OpponentScreenState();
+}
+
+/// The tier a player of [rating] belongs beside: the tier of the catalogue
+/// entry closest to them in strength.
+///
+/// Deliberately *not* a rating-band lookup. Tier is stored rather than derived
+/// precisely so that a recalibration cannot reclassify an opponent
+/// ([D179](doc/idea-decisions.md)), and a band table here would reintroduce
+/// exactly the coupling that decision removed — it would have to be kept in
+/// step with twenty ratings by hand. Asking which opponent is nearest needs no
+/// table and stays right by construction (D190).
+BotTier tierNearest(int rating) {
+  var best = opponentCatalogue.first;
+  for (final bot in opponentCatalogue) {
+    if ((bot.rating - rating).abs() < (best.rating - rating).abs()) best = bot;
+  }
+  return best.tier;
+}
+
+class _OpponentScreenState extends State<OpponentScreen> {
+  late BotTier? _open = tierNearest(widget.playerRating);
+
+  @override
+  void didUpdateWidget(OpponentScreen old) {
+    super.didUpdateWidget(old);
+    // A `late` initialiser runs once, so without this the section stays where
+    // the *first* rating put it when the same State is reused with a new one.
+    // Today the screen is always pushed fresh and the rating cannot change
+    // underneath it; this keeps the widget honest about its own input rather
+    // than relying on that (D190).
+    if (old.playerRating != widget.playerRating) {
+      _open = tierNearest(widget.playerRating);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +91,7 @@ class OpponentScreen extends StatelessWidget {
             child: Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(
-                l10n.yourRating(playerRating),
+                l10n.yourRating(widget.playerRating),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -66,13 +103,23 @@ class OpponentScreen extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 16),
           children: [
             for (final entry in sections.entries) ...[
-              _TierHeading(tier: entry.key),
-              for (final bot in entry.value)
-                _OpponentTile(
-                  bot: bot,
-                  playerRating: playerRating,
-                  onTap: () => Navigator.of(context).pop(bot),
+              _TierHeading(
+                tier: entry.key,
+                count: entry.value.length,
+                expanded: entry.key == _open,
+                // Tapping the open section closes it, so the list can be
+                // collapsed to five lines and scanned as a ladder.
+                onTap: () => setState(
+                  () => _open = entry.key == _open ? null : entry.key,
                 ),
+              ),
+              if (entry.key == _open)
+                for (final bot in entry.value)
+                  _OpponentTile(
+                    bot: bot,
+                    playerRating: widget.playerRating,
+                    onTap: () => Navigator.of(context).pop(bot),
+                  ),
             ],
           ],
         ),
@@ -81,21 +128,57 @@ class OpponentScreen extends StatelessWidget {
   }
 }
 
+/// One accordion header: the tier's name, how many it holds, and a chevron
+/// that turns to face the way tapping will move it.
 class _TierHeading extends StatelessWidget {
-  const _TierHeading({required this.tier});
+  const _TierHeading({
+    required this.tier,
+    required this.count,
+    required this.expanded,
+    required this.onTap,
+  });
 
   final BotTier tier;
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-      child: Semantics(
-        header: true,
-        child: Text(
-          tierLabel(l10n, tier),
-          style: Theme.of(context).textTheme.titleMedium,
+    final theme = Theme.of(context);
+    return Semantics(
+      header: true,
+      button: true,
+      // Announced so a screen reader user knows a collapsed section exists and
+      // holds something, rather than meeting five words and no list.
+      expanded: expanded,
+      label: '${tierLabel(l10n, tier)}, $count',
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    tierLabel(l10n, tier),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                Text(l10n.opponentCount(count),
+                    style: theme.textTheme.labelMedium),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Icon(Icons.expand_more,
+                      color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

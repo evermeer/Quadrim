@@ -1792,3 +1792,129 @@ Gate after the fixes: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
 App 111 tests, engine 120, rating 24, linegen 8. Verified on an emulator as
 well: all twenty render grouped by tier, with three distinct match cues and
 both Master blurbs stating the first-player qualification in place.
+
+---
+
+# Code Review: interface revisions after device review
+
+> Generated: 2026-08-10T04:20:00Z
+> Base: e7b5727 (working tree vs HEAD, changes uncommitted at review time)
+> Changed files: 9 (all modified)
+
+Three user-requested revisions, not a ticket: one-line game rows with avatars,
+avatars in the by-opponent breakdown, and a single-open accordion on the
+opponent list. `app/lib/l10n/app_localizations*.dart` excluded as generated.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 0 |
+
+---
+
+## Findings
+
+### [MINOR] Game rows lost the minimum tap target when they stopped being ListTiles — `accessibility`
+
+**File:** `app/lib/home/home_screen.dart:398`
+
+**Evidence:**
+```dart
+child: Padding(
+  padding: const EdgeInsets.symmetric(vertical: 8),
+```
+
+Measured by walking every `InkWell` on a rendered home screen at 1080×2400:
+
+```
+INKWELL height=44.0 width=400   <- the game row
+INKWELL height=40.0 width=400   <- New game button (Material 3 default)
+INKWELL height=40.0 width=400   <- Tutorial button
+INKWELL height=40.0 width=40    <- settings icon button
+```
+
+**Problem:** The row is **44 dp** tall — 28 dp of avatar plus 8 dp of padding
+either side. `ListTile`, which this replaced, enforces a minimum of 48 dp;
+hand-rolling the row silently dropped that. Android's own accessibility
+guidance and Material both specify 48 dp as the minimum touch target, and WCAG
+2.5.8 sets 24 CSS px as the floor with 44 as the AA target size. The rows are
+the primary way into a saved game, so this is the control most often missed.
+
+For contrast, the accordion headers added in the same change measure **52 dp**
+and are fine.
+
+**Fix:** Constrain the row rather than padding it, so it holds at any text
+scale rather than only at 1.0:
+
+```dart
+child: ConstrainedBox(
+  constraints: const BoxConstraints(minHeight: 48),
+  child: Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+```
+
+---
+
+## Questions asked of this review that came back clean
+
+**Can `botConfigFor` misparse a stored opponent string?** No.
+`opponent_name.dart:44` checks the `bot:` prefix before stripping it, so
+`guest` returns null rather than slicing into a short string, and `bot:` with
+an empty id reaches `botById('')` which returns null. Both fall through to the
+neutral icon, and both have tests.
+
+**Can the accordion strand the player with nothing open?** No. Tapping the open
+section closes it, but all five headings stay on screen with their counts and
+chevrons, and any of them reopens. `opponent_screen_test.dart:105` asserts the
+headings survive with nothing open — that collapsed state is deliberate, since
+it shows the whole ladder at once.
+
+**Is `tierNearest` right at the boundaries?** Yes, and it is tested at all of
+them: the rating floor and 0 land on Novice, 9999 lands on Master, and 1350 —
+exactly between Ember at 1300 and Basalt at 1400 — resolves to the first of the
+two rather than throwing. It walks the catalogue rather than consulting a band
+table, which is what keeps it from re-coupling tier to rating (D179).
+
+**Does the shared avatar slot throw for a guest or an unknown opponent?** No.
+Both produce a null configuration and render the fallback icon;
+`home_screen_test.dart` covers pass-and-play and a stored `bot:nonesuch`
+separately, the latter asserting the row renders at all rather than crashing.
+
+**Do collapsed sections break lazy building?** No, and they improve it. The
+finished-games list is still a `SliverList.builder`, and its
+"a long history does not build every row" test still passes over sixty games.
+The opponent list builds only the open section — five tiles at most, where
+before it built all twenty.
+
+**Any semantics regression from dropping `ListTile`?** No. Measured on a
+rendered row: the node carrying the label `"Ember. Won"` is also the node with
+the tap action and the button flag — Flutter merges the `InkWell`'s gesture
+semantics with the `Semantics` wrapper rather than producing a labelled node
+and a separate tappable one, which was the failure worth checking for.
+
+## Outcome — applied, plus a fourth revision
+
+The tap-target finding is fixed with a `ConstrainedBox(minHeight: 48)` rather
+than more padding, so it holds at any text scale instead of only at 1.0. Pinned
+by a test that was checked against the unconstrained code first, where it
+reports `Expected: a value greater than or equal to <48> / Actual: <44.0>`.
+
+A fourth revision arrived mid-review and is included here: the "Your record"
+heading is gone and its won-lost-drawn line now sits inside the rating card,
+under the number (D192). Two knock-on effects were handled rather than
+discovered later:
+
+- **The card's announcement had to grow.** It is a `Semantics` container over
+  `ExcludeSemantics`, so a string moved inside it is silent unless the label
+  takes it too. The test now asserts the announcement carries both the rating
+  and the record.
+- **`yourRecord` was deleted from both locale files.** An orphaned key still
+  gets translated and maintained, and the next reader cannot tell dead from
+  not-yet-rendered.
+
+Gate after all four: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
+App 129 tests, engine 120, rating 24, linegen 8.

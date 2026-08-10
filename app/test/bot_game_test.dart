@@ -58,6 +58,11 @@ void main() {
     expect(await repo.watchActiveGames().first, isEmpty,
         reason: 'no game exists until an opponent is picked');
 
+    // The list is an accordion opened on the tier nearest the player, and a
+    // player with no games sits on the seed — so Novice is shut and has to be
+    // opened to reach Pebble.
+    await tester.tap(find.text('Novice'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Pebble'));
     // Bounded pumps rather than pumpAndSettle: when the opponent opens, the
     // thinking indicator animates indefinitely and the frame scheduler never
