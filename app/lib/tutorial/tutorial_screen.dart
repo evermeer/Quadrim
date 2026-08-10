@@ -6,6 +6,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 import '../data/game_repository.dart';
 import '../game/board_view.dart';
 import '../l10n/app_localizations.dart';
+import 'practice_screen.dart';
 import 'tutorial_steps.dart';
 
 /// The tutorial: one idea per page, each shown on the board the game is
@@ -53,6 +54,19 @@ class _TutorialScreenState extends State<TutorialScreen> {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
+
+  /// Hands the player a real game against a real opponent, and finishes the
+  /// tutorial if they see it through.
+  ///
+  /// Abandoning it returns false and changes nothing: the ticket asks that
+  /// leaving the practice game not block completion, and the player is put
+  /// back on the last step with Done still in front of them.
+  Future<void> _practice() async {
+    final finished = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const PracticeScreen()),
+    );
+    if (finished == true && mounted) await _finish();
+  }
 
   Future<void> _finish() async {
     if (_finishing) return;
@@ -113,6 +127,16 @@ class _TutorialScreenState extends State<TutorialScreen> {
                       child: TextButton(
                         onPressed: _finish,
                         child: Text(l10n.tutorialFinishHere),
+                      ),
+                    ),
+                  // The same slot on the last step: the practice game is the
+                  // optional extra there, and Done stays the plain way out.
+                  if (last)
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _practice,
+                        child: Text(l10n.practicePlay),
                       ),
                     ),
                   Row(

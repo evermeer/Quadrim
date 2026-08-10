@@ -1802,6 +1802,45 @@ The label and the visible text deliberately diverge, which is usually a smell. I
 
 The step titles are the same strings the headings use, so there is no second set of text to keep in step, and no new `.arb` key.
 
+### D199 — A hint is the opponents' own rule ladder, run for the player
+**Question:** Ticket 020 requires hints "derived from real threat detection on the current position, not from scripted text", each naming "an available win, a threat that must be blocked, or a strong developing move". What decides which, and in what order?
+
+**Decision:** `hintFor(state, player)` checks four things in order — take a win, block a loss, make a fork, otherwise play the best square — using the same `threats()` the opponents use. The fork is found by *playing* each legal move and counting the threats that result, not by pattern-matching.
+
+**Rationale:** That order is `StrategicRule`'s order, and deliberately so. A hint that advised something the opponents neither reward nor punish would be teaching a different game from the one being played; running the same ladder means the advice is right, or wrong, for the same reasons their moves are. Ticket 019's whole claim was that what is taught transfers, and this is where it either does or does not.
+
+Two details are load-bearing. **A win outranks a block**, and the test that pins it constructs a position where both are available: blocking there loses the game it was trying to save. **The fork is verified by playing it** — `threats(applyMove(state, move), player).length >= 2` — so the hint cannot claim a fork the board will not then show; the check and the claim are the same computation.
+
+The fourth rung, "no threats yet", falls back to the cell on the most winning lines, centre before corner on a tie. That is exactly the ladder [D197](#d197--what-the-tutorial-claims-about-strategy-is-asserted-not-asserted-to)'s strategy steps taught and the same order the opponents' `centreBias`/`cornerBias` realise. The half-point that separates centre from corner exists because both sit on seven lines, so line count alone cannot order them.
+
+A hint that named an occupied square would be advice the player cannot take. Rather than assert that on a handful of fixtures, the test walks a whole game to its end and checks every hint along the way.
+
+### D200 — The practice game is never written down, and that is structural
+**Question:** Ticket 020 requires that the practice game "never reaches the repository — it lives in memory for the tutorial's duration and is never stored", so that it stays out of statistics and the completed-games list.
+
+**Decision:** `PracticeScreen` has no repository. The position is a `GameState` field, and there is no `GameRepository` in scope to hand it to.
+
+**Rationale:** The alternative the ticket explicitly rejects is a `GameMode.practice` on `GameDocument`, and it rejects it for the right reason: every later reader of a stored game — the statistics fold, the rating fold, the per-opponent breakdown, the main screen's two lists, ticket 023's milestones — would have to remember to filter it out, and the one that forgot would be a bug nobody noticed until a player's rating moved after a tutorial. Not having the dependency cannot be forgotten.
+
+It costs the obvious thing: the practice game does not survive backgrounding the app. That is the right trade for a game whose purpose is finished the moment it ends.
+
+The test asserts the absence three ways after playing a game through to a result — no completed games, no active games, and the main screen still reading "No games yet." The last one matters most: it is the assertion a future `GameMode.practice` would fail.
+
+**On the opponent.** Mote, straight from the catalogue, with a fixed seed. Not a script — the ticket asks for a configuration rather than a second code path, and a catalogue member is what stops a "practice opponent" being quietly forked off later and drifting from the twenty. Mote takes a win, blocks one, and blunders two moves in five, which is beatable by somebody who has just been shown the double threat and not beatable by accident. The seed is fixed so that the tutorial is the same tutorial for everybody, and so a test can play the whole game.
+
+That test does play it, by following the hints move after move, and asserts the player **wins**. If following the tutorial's own advice lost to the opponent the tutorial chose, the closing lesson would be that the lessons do not work.
+
+### D201 — A live region attaches to the message, not to the space reserved for it
+**Question:** The practice screen keeps a permanently reserved line for the hint so that asking for one does not resize the board under the player's finger. The reserved line was a live region whether or not it held anything.
+
+**Decision:** The `SizedBox` stays; the `Semantics(liveRegion: true)` is attached only when there is a hint.
+
+**Rationale:** An empty live region is not nothing — it is a semantics node with an empty label, and a screen reader lands on it. Between the status line and the board there was a focus stop that read as silence. This was measured rather than reasoned about: walking the semantics tree returned `[Your turn]` and `[]`, and returns only `[Your turn]` now.
+
+The test that guards it walks the tree and collects live-region labels, because the bug is a node with *no* label and no `find.bySemanticsLabel` can match one. Reaching the semantics owner is more awkward than it looks — since Flutter's multi-view work it hangs off a child of the root pipeline owner, and the one-liner that still reaches it directly is deprecated, which `check.sh` rejects. The helper finds it by walking.
+
+The general lesson is worth keeping: reserved space and announced content are different things, and the placeholder that exists purely for layout should be invisible to everything except layout. Ticket 021's audit should expect more of these.
+
 ---
 
 ## Appendix — session tooling

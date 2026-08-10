@@ -971,8 +971,68 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialStrategyDoneBody.
   ///
   /// In en, this message translates to:
-  /// **'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead.'**
+  /// **'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead. Try it out below, against one of the gentler ones.'**
   String get tutorialStrategyDoneBody;
+
+  /// The tutorial's closing game. It is never stored, so it never appears in statistics or the finished-games list (ticket 020).
+  ///
+  /// In en, this message translates to:
+  /// **'Practice game'**
+  String get practiceTitle;
+
+  /// No description provided for @practicePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a practice game'**
+  String get practicePlay;
+
+  /// No description provided for @practiceLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the practice game'**
+  String get practiceLeave;
+
+  /// No description provided for @practiceFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the tutorial'**
+  String get practiceFinish;
+
+  /// Asks for advice about the position on screen. Nothing is shown until it is pressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get practiceHint;
+
+  /// Where a hint is pointing, in the same words the board's own cell labels use, so a screen reader user can find it.
+  ///
+  /// In en, this message translates to:
+  /// **'layer {layer}, row {row}, column {column}'**
+  String practiceHintWhere(int layer, int row, int column);
+
+  /// Hints name a concrete reason, never generic encouragement. where comes from practiceHintWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'You can win now — {where} completes a line.'**
+  String practiceHintWin(String where);
+
+  /// No description provided for @practiceHintBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block at {where}, or your opponent completes a line there on their next move.'**
+  String practiceHintBlock(String where);
+
+  /// No description provided for @practiceHintFork.
+  ///
+  /// In en, this message translates to:
+  /// **'Play {where}. It leaves two lines each needing one more piece, and only one of them can be blocked.'**
+  String practiceHintFork(String where);
+
+  /// No description provided for @practiceHintBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.'**
+  String practiceHintBuild(String where);
 }
 
 class _AppLocalizationsDelegate

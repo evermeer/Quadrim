@@ -308,5 +308,42 @@
   "tutorialBlockingBody": "The same thing works against you. Dark holds three of a row in layer 2 and needs one more square. Light has to take the highlighted square now — and watch for the move that would give dark two threats, because by then it is already too late.",
   "tutorialBlockingBoard": "Dark holds layer 2, row 1, columns 1 to 3. The highlighted square is layer 2, row 1, column 4, which light must take.",
   "tutorialStrategyDoneTitle": "That is how they play",
-  "tutorialStrategyDoneBody": "Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead."
+  "tutorialStrategyDoneBody": "Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead. Try it out below, against one of the gentler ones.",
+  "practiceTitle": "Practice game",
+  "@practiceTitle": {
+    "description": "The tutorial's closing game. It is never stored, so it never appears in statistics or the finished-games list (ticket 020)."
+  },
+  "practicePlay": "Play a practice game",
+  "practiceLeave": "Leave the practice game",
+  "practiceFinish": "Finish the tutorial",
+  "practiceHint": "Hint",
+  "@practiceHint": {
+    "description": "Asks for advice about the position on screen. Nothing is shown until it is pressed."
+  },
+  "practiceHintWhere": "layer {layer}, row {row}, column {column}",
+  "@practiceHintWhere": {
+    "description": "Where a hint is pointing, in the same words the board's own cell labels use, so a screen reader user can find it.",
+    "placeholders": {
+      "layer": {"type": "int"},
+      "row": {"type": "int"},
+      "column": {"type": "int"}
+    }
+  },
+  "practiceHintWin": "You can win now — {where} completes a line.",
+  "@practiceHintWin": {
+    "description": "Hints name a concrete reason, never generic encouragement. where comes from practiceHintWhere.",
+    "placeholders": {"where": {"type": "String"}}
+  },
+  "practiceHintBlock": "Block at {where}, or your opponent completes a line there on their next move.",
+  "@practiceHintBlock": {
+    "placeholders": {"where": {"type": "String"}}
+  },
+  "practiceHintFork": "Play {where}. It leaves two lines each needing one more piece, and only one of them can be blocked.",
+  "@practiceHintFork": {
+    "placeholders": {"where": {"type": "String"}}
+  },
+  "practiceHintBuild": "Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.",
+  "@practiceHintBuild": {
+    "placeholders": {"where": {"type": "String"}}
+  }
 }

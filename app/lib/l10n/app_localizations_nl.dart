@@ -528,5 +528,45 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tutorialStrategyDoneBody =>
-      'Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit.';
+      'Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit. Probeer het hieronder meteen uit, tegen een van de zachtaardige.';
+
+  @override
+  String get practiceTitle => 'Oefenpartij';
+
+  @override
+  String get practicePlay => 'Speel een oefenpartij';
+
+  @override
+  String get practiceLeave => 'Oefenpartij verlaten';
+
+  @override
+  String get practiceFinish => 'Uitleg afronden';
+
+  @override
+  String get practiceHint => 'Tip';
+
+  @override
+  String practiceHintWhere(int layer, int row, int column) {
+    return 'laag $layer, rij $row, kolom $column';
+  }
+
+  @override
+  String practiceHintWin(String where) {
+    return 'Je kunt nu winnen — $where maakt een lijn af.';
+  }
+
+  @override
+  String practiceHintBlock(String where) {
+    return 'Blokkeer op $where, anders maakt je tegenstander daar bij de volgende zet een lijn af.';
+  }
+
+  @override
+  String practiceHintFork(String where) {
+    return 'Speel $where. Dat levert twee lijnen op die elk nog één steen nodig hebben, en er kan er maar één geblokkeerd worden.';
+  }
+
+  @override
+  String practiceHintBuild(String where) {
+    return 'Er wordt nog niets bedreigd. $where ligt op meer lijnen dan elk ander vrij vakje en geeft je dus de meeste manieren om te winnen.';
+  }
 }

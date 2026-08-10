@@ -527,5 +527,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialStrategyDoneBody =>
-      'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead.';
+      'Take a win, block a loss, build two threats, and stop your opponent building them — over squares that sit on the most lines. That is not a simplification for the tutorial: it is what the computer opponents are doing, from the weakest up. The stronger ones just see further ahead. Try it out below, against one of the gentler ones.';
+
+  @override
+  String get practiceTitle => 'Practice game';
+
+  @override
+  String get practicePlay => 'Play a practice game';
+
+  @override
+  String get practiceLeave => 'Leave the practice game';
+
+  @override
+  String get practiceFinish => 'Finish the tutorial';
+
+  @override
+  String get practiceHint => 'Hint';
+
+  @override
+  String practiceHintWhere(int layer, int row, int column) {
+    return 'layer $layer, row $row, column $column';
+  }
+
+  @override
+  String practiceHintWin(String where) {
+    return 'You can win now — $where completes a line.';
+  }
+
+  @override
+  String practiceHintBlock(String where) {
+    return 'Block at $where, or your opponent completes a line there on their next move.';
+  }
+
+  @override
+  String practiceHintFork(String where) {
+    return 'Play $where. It leaves two lines each needing one more piece, and only one of them can be blocked.';
+  }
+
+  @override
+  String practiceHintBuild(String where) {
+    return 'Nothing is threatened yet. $where sits on more lines than any other free square, so it gives you the most ways to win.';
+  }
 }

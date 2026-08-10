@@ -2182,3 +2182,126 @@ None — all nine criteria are addressed.
 
 Both applied. Live-region label now carries the step title (D198); section-boundary
 scale test added. 157 app tests green, `flutter analyze` clean.
+
+---
+
+# Ticket 020 — Tutorial: interactive practice game
+
+> Reviewed: working tree against `185e27c` on `main`.
+> New: `app/lib/tutorial/practice_hint.dart`, `app/lib/tutorial/practice_screen.dart`,
+> `app/test/practice_test.dart`. Modified: `tutorial_screen.dart`, both `.arb`
+> files (+ generated), `doc/idea-decisions.md` (D199–D201).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] The reserved hint line was a live region even when empty — `accessibility`
+
+**File:** `app/lib/tutorial/practice_screen.dart:124` (before the fix)
+
+**Evidence:** walking the semantics tree on the opened practice screen, before
+any hint is requested:
+
+```
+LIVE REGIONS: [[Your turn], []]
+```
+
+**Problem:** the hint line holds its height so the board does not jump when a
+hint appears, but wrapping the *empty* placeholder in `Semantics(liveRegion:
+true)` put an unlabelled focus stop between the status line and the board. A
+screen reader lands on it and reads nothing.
+
+**Fix:** keep the `SizedBox`, attach the `Semantics` only when `_hint != null`.
+Re-measured after: `LIVE REGIONS: [[Your turn]]`.
+
+**Note on the test.** No `find.bySemanticsLabel` can catch this — the defect is
+a node with *no* label. The guard walks the tree and collects live-region
+labels. Reaching the semantics owner turned out to be its own small problem:
+since Flutter's multi-view work it hangs off a *child* of the root pipeline
+owner, and `tester.binding.pipelineOwner`, which still reaches it in one line,
+is deprecated and would fail `check.sh`. The helper walks to find it.
+
+### [NIT] `_bestSquare` built the legal-move list twice — `performance`
+
+**File:** `app/lib/tutorial/practice_hint.dart:60`
+
+**Evidence:**
+```dart
+var best = legalMoves(state).first;
+var bestScore = _score(best);
+for (final cell in legalMoves(state)) {
+```
+
+**Problem:** two allocations of a list of up to 64 `Cell`s per hint press. Not
+measurable; it is untidy rather than slow.
+
+**Fix:** hoist to a local, with a comment recording why `.first` is safe —
+`hintFor` has already returned null for a finished game, and a full board is a
+finished game.
+
+## Not findings, checked and cleared
+
+- **Hints are the opponents' own ladder.** `hintFor` runs win → block → fork →
+  best square using the same `threats()` the bots use. A test builds a position
+  where a win *and* a block are both available and asserts the win is named:
+  blocking there loses the game it was trying to save.
+- **The fork claim is verified the way it is made.** `threats(applyMove(state,
+  move), player).length >= 2` — the check and the claim are the same
+  computation, so a hint cannot promise a fork the board will not show.
+- **No hint can name an occupied square.** Not asserted on fixtures: a test
+  walks a whole game to its end and checks every hint on the way.
+- **The practice game cannot reach storage, structurally.** `PracticeScreen`
+  takes no repository — there is nothing in scope to write to. Asserted three
+  ways after a full game: no completed games, no active games, and the main
+  screen still reading "No games yet." The last is the assertion a future
+  `GameMode.practice` would fail.
+- **The opponent is a catalogue member, not a script.** Asserted to be *in*
+  `opponentCatalogue`, which is what stops a "practice opponent" being forked
+  off later and drifting from the twenty. Fixed seed, so the tutorial is the
+  same game for everybody and a test can play it through.
+- **Following the advice actually wins.** The play-it-out test follows the hints
+  move after move and asserts `You win!`. If the tutorial's own advice lost to
+  the opponent the tutorial chose, the closing lesson would be that the lessons
+  do not work.
+- **No re-entrancy window in `_play`.** The move, the over-check and
+  `_thinking = true` are all synchronous with no await between them, and the
+  hint button and board are both gated on `_playerToMove`.
+- **`botOpponent(kPracticeOpponent.id)` is not a smell.** `botName` keys on the
+  stored `bot:<id>` form by design; this is the intended call, not a round trip.
+
+## Functional Validation
+
+⚠️ No Jira issue key — validated against `doc/tickets/020-tutorial-interactive-practice.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Guided game against a deliberately beatable opponent | ✅ | `kPracticeOpponent = mote` (blunders 2 in 5); "is a real opponent configuration" asserts novice tier and a non-zero blunder rate |
+| 2 | A configuration with a fixed seed, not a separate code path | ✅ | `kPracticeSeed`; asserted to be a member of `opponentCatalogue` |
+| 3 | A hint can be requested at any point | ✅ | Hint button, enabled whenever it is the player's move |
+| 4 | Hints from real threat detection, not scripted text | ✅ | `practice_hint.dart` calls `threats()`; seven unit tests over constructed positions |
+| 5 | A hint names a concrete reason | ✅ | Four `HintKind`s, four distinct strings, each naming the square |
+| 6 | The player can decline hints entirely | ✅ | Nothing shows until pressed; "shows nothing until a hint is asked for" asserts an empty highlight |
+| 7 | A discouraged move is allowed and play continues | ✅ | "a move the hint discouraged is allowed, and play continues" plays elsewhere and checks the opponent still replied |
+| 8 | Abandonable without blocking completion | ✅ | Close returns false; the test then finishes from the last step anyway |
+| 9 | Completing it marks the tutorial finished | ✅ | "playing it out finishes the tutorial" |
+| 10 | Never reaches the repository | ✅ | No repository in scope; asserted three ways |
+| 11 | Hints announced by screen reader | ✅ | Live region carrying layer/row/column in the board's own words |
+| 12 | All new strings in English and Dutch | ✅ | Dutch walk-through to a rendered hint; `check.sh` gate |
+
+### Gaps
+
+None — all twelve criteria are addressed.
+
+### Outcome
+
+Both applied. Live region now attaches to the message rather than the reserved
+space (D201), with a tree-walking guard; `legalMoves` hoisted. 175 app tests
+green, `flutter analyze` clean.

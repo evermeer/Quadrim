@@ -144,5 +144,15 @@
   "tutorialBlockingBody": "Hetzelfde werkt tegen jou. Donker heeft drie op een rij in laag 2 en heeft nog één vakje nodig. Licht moet het gemarkeerde vakje nu pakken — en letten op de zet die donker twee dreigingen zou geven, want dan is het al te laat.",
   "tutorialBlockingBoard": "Donker heeft laag 2, rij 1, kolom 1 tot en met 3. Het gemarkeerde vakje is laag 2, rij 1, kolom 4, dat licht moet pakken.",
   "tutorialStrategyDoneTitle": "Zo spelen ze",
-  "tutorialStrategyDoneBody": "Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit."
+  "tutorialStrategyDoneBody": "Pak een winst, blokkeer een verlies, bouw twee dreigingen en verhinder dat je tegenstander dat doet — op de vakjes die op de meeste lijnen liggen. Dat is geen vereenvoudiging voor de uitleg: het is precies wat de computertegenstanders doen, van de zwakste af. De sterkere kijken alleen verder vooruit. Probeer het hieronder meteen uit, tegen een van de zachtaardige.",
+  "practiceTitle": "Oefenpartij",
+  "practicePlay": "Speel een oefenpartij",
+  "practiceLeave": "Oefenpartij verlaten",
+  "practiceFinish": "Uitleg afronden",
+  "practiceHint": "Tip",
+  "practiceHintWhere": "laag {layer}, rij {row}, kolom {column}",
+  "practiceHintWin": "Je kunt nu winnen — {where} maakt een lijn af.",
+  "practiceHintBlock": "Blokkeer op {where}, anders maakt je tegenstander daar bij de volgende zet een lijn af.",
+  "practiceHintFork": "Speel {where}. Dat levert twee lijnen op die elk nog één steen nodig hebben, en er kan er maar één geblokkeerd worden.",
+  "practiceHintBuild": "Er wordt nog niets bedreigd. {where} ligt op meer lijnen dan elk ander vrij vakje en geeft je dus de meeste manieren om te winnen."
 }
