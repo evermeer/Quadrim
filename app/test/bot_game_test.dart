@@ -13,6 +13,10 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 Future<LocalGameRepository> _repository() async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
   addTearDown(repository.dispose);
+  // Not a fresh player: the first-launch tutorial offer would open over the
+  // main screen this test is about to drive.
+  await repository
+      .saveSettings(const SettingsDocument(tutorialOffered: true));
   return repository;
 }
 
@@ -40,7 +44,8 @@ void main() {
     _phone(tester);
     final repo = await _repository();
     // A seeded source so the opening seat is fixed rather than a coin flip.
-    await tester.pumpWidget(QuadrimApp(repository: repo, random: Random(1)));
+    await tester.pumpWidget(
+        QuadrimApp(repository: repo, settings: repo, random: Random(1)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('New game'));

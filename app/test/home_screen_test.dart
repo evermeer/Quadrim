@@ -11,9 +11,13 @@ import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
 
+/// A repository whose first-launch tutorial offer has already been made, so
+/// the dialog does not open over the screen under test.
 Future<LocalGameRepository> _repository() async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
   addTearDown(repository.dispose);
+  await repository
+      .saveSettings(const SettingsDocument(tutorialOffered: true));
   return repository;
 }
 
@@ -33,7 +37,8 @@ Finder _rowContaining(String text) =>
     find.ancestor(of: find.text(text), matching: find.byType(Row)).first;
 
 Future<void> _pumpHome(WidgetTester tester, LocalGameRepository repo) async {
-  await tester.pumpWidget(QuadrimApp(repository: repo, random: Random(1)));
+  await tester.pumpWidget(
+      QuadrimApp(repository: repo, settings: repo, random: Random(1)));
   await tester.pumpAndSettle();
 }
 
@@ -185,10 +190,12 @@ void main() {
     _phone(tester);
     await _pumpHome(tester, await _repository());
 
-    await tester.tap(find.text('Tutorial'));
+    // The tutorial is real since ticket 018; settings is still the
+    // placeholder, and stays one until ticket 028.
+    await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
     await tester.pumpAndSettle();
-    expect(find.text('Arrives in a later build.'), findsOneWidget);
-    await tester.pageBack();
+    expect(find.text('Step 1 of 7'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Settings'));
@@ -259,6 +266,7 @@ void main() {
     await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
     await tester.pumpWidget(QuadrimApp(
       repository: repo,
+      settings: repo,
       locale: const Locale('nl'),
       random: Random(1),
     ));

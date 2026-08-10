@@ -1918,3 +1918,156 @@ discovered later:
 
 Gate after all four: `ALL CHECKS PASSED`, exit 0 captured without a pipe.
 App 129 tests, engine 120, rating 24, linegen 8.
+
+---
+
+# Ticket 018 — Tutorial: rules and controls
+
+> Reviewed: working tree against `8fd4592` on `main` (changes uncommitted, so the
+> working tree *is* the diff — `git diff MERGE_BASE HEAD` is empty).
+> Changed: 13 tracked files + `app/lib/tutorial/` and `app/test/tutorial_test.dart`.
+> `app/lib/l10n/app_localizations*.dart` excluded from line-by-line review: `flutter gen-l10n` output.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] `_finish()` has no re-entrancy guard, and the harness cannot catch it — `bug`
+
+**File:** `app/lib/tutorial/tutorial_screen.dart:47`
+
+**Evidence:**
+```dart
+Future<void> _finish() async {
+  final settings = await widget.settings.loadSettings();
+  await widget.settings
+      .saveSettings(settings.copyWith(tutorialCompleted: true));
+  if (mounted) Navigator.of(context).pop();
+}
+```
+
+**Problem:** The button stays live across both awaits, and `mounted` stays true
+for the route's ~300ms exit transition, so two "Done" taps inside the settings
+write can each reach `Navigator.pop()` — the second one pops the home screen.
+
+**Reproduction attempted and failed, which is the interesting part.** A probe
+that taps `Done` twice in a single frame does *not* trigger it: with
+`MemoryDocumentStore` the first `_finish` resolves in a microtask and the second
+tap fails hit-testing (`would not hit test on the specified widget`). The window
+only exists when `saveSettings` does real file I/O, which is exactly the store
+every widget test is forbidden from using — `testWidgets` runs in a fake-async
+zone that never completes real file I/O. So no widget test can ever demonstrate
+this, and the absence of a failing test is not evidence of absence.
+
+**Fix:**
+```dart
+bool _finishing = false;
+
+Future<void> _finish() async {
+  if (_finishing) return;
+  _finishing = true;
+  ...
+}
+```
+
+### [NIT] `demoMoves` indexes the filler pool without checking it is long enough — `bug`
+
+**File:** `app/lib/tutorial/tutorial_steps.dart:78`
+
+**Evidence:**
+```dart
+List<int> demoMoves(List<int> line) {
+  final filler = _fillers.where((c) => !line.contains(c)).toList();
+  final moves = <int>[];
+  for (var i = 0; i < line.length; i++) {
+    moves.add(line[i]);
+    if (i < line.length - 1) moves.add(filler[i]);
+  }
+```
+
+**Problem:** `filler[i]` throws `RangeError` if a caller passes a line that
+shares four or more cells with the six-cell `_fillers` pool. No current line
+does — the test asserts it for all five — but `demoMoves` is public and tickets
+019 and 020 will add positions.
+
+**Fix:** `assert(filler.length >= line.length - 1, 'filler pool exhausted by $line');`
+
+## Not findings, checked and cleared
+
+- **The offer cannot be shown twice, and cannot be shown to a finished player.**
+  `_offerTutorial` (`app/lib/home/home_screen.dart:81`) returns early on either
+  flag and writes `tutorialOffered` before the dialog opens. Four tests cover
+  never-asked / already-offered / already-completed / declined-then-recorded.
+- **Recording before showing is a deliberate trade, not an oversight.** An
+  `AlertDialog` is barrier-dismissible, and a dismissal returns `null`;
+  recording afterwards would make the clearest "not now" gesture the one that
+  guarantees the question returns (D193). Cost — a kill between the write and
+  the dialog consumes that launch's offer — is one dialog, not the feature.
+- **`context` is never used across an await unguarded.** `_offerTutorial` checks
+  `mounted` before `showTutorialOffer(context)` and again before `_openTutorial`;
+  `await X && mounted` parses as `(await X) && mounted`, which is what was meant.
+- **No demonstration can render a non-line or end early.** All five lines are
+  asserted to be members of `winningLines`, and separately asserted by *shape*
+  (which coordinates are fixed and which vary) so a plausible-looking index
+  typo that turns a diagonal into a row still fails. Filler is three pieces,
+  which cannot complete a line, and each `demoMoves` output is replayed and
+  asserted to end in `Win(Player.first, line)`.
+- **The accessibility swap leaves nothing unreachable.** Both halves of D195
+  were mutation-checked: removing the `Semantics` label leaves the sentence
+  unfindable, removing `ExcludeSemantics` makes `Layer 1, row 1, column 1`
+  findable. Every step's title is a header, body text is plain, and the six
+  board steps all carry a non-empty `boardLabel` (asserted over the catalogue).
+- **The four repository helpers that now pre-set `tutorialOffered` weaken
+  nothing.** They only suppress a dialog that would otherwise open over the
+  screen under test; no assertion in `smoke_test`, `home_screen_test`,
+  `bot_game_test` or `game_screen_test` depends on settings state. The
+  first-launch path they stop exercising is covered directly in
+  `tutorial_test.dart`.
+
+## Functional Validation
+
+⚠️ No Jira issue key detected (no `.jira.json`, none in the branch name or
+commits) — validated against `doc/tickets/018-tutorial-rules-and-controls.md`
+instead.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Offered automatically on first launch | ✅ | `home_screen.dart:69` post-frame callback; `tutorial_test.dart` "is made to a player who has never been asked" |
+| 2 | Restartable at any time from the main screen | ✅ | `home_screen.dart:233`; "can be restarted from the main screen" |
+| 3 | Exitable at any point without completing | ✅ | `tutorial_screen.dart:63` close button; "leaving early does not mark it complete" |
+| 4 | Completion persisted, survives restart, not re-offered | ✅ | `documents.dart:231`; "reaching the end marks it complete and survives a restart" re-reads via a second repository over the same store |
+| 5 | Objective explained in a single screen | ✅ | step 1, `tutorialGoalTitle`/`Body` |
+| 6 | One example from each of the four line families | ✅ | `tutorial_steps.dart:39-53`; "each family is represented, and they are distinct" asserts the shape of all four, not the indices |
+| 7 | Examples on the real board component | ✅ | `tutorial_screen.dart:186` uses `BoardView`; "shows every family of winning line on a real board" reads `board.highlight` off the widget |
+| 8 | Four parallelograms → one cube explained explicitly | ✅ | step 2, `tutorialLayersBody`, over the through-the-layers line |
+| 9 | Player is shown how to place a piece | ⚠️ | step 3 explains tapping over a mid-game position, but the player cannot try it here — the interactive board is ticket 020 |
+| 10 | Progress visible, steps revisitable | ✅ | `_Progress`; Back button and `PageView` swipe; "advances, goes back, and reports where it is" |
+| 11 | Every step navigable by screen reader | ✅ | header flag, described board, live-region progress; both mutation-checked |
+| 12 | All new strings in English and Dutch | ✅ | "every tutorial string exists in Dutch"; `check.sh` fails on any untranslated key (D184) |
+
+### Gaps
+
+- **Criterion 9 is partial by design.** "Shown how to place a piece" is
+  satisfied as instruction, not as practice. Ticket 020 adds the interactive
+  game and is the natural home for a hands-on version; nothing here needs to
+  change unless 020 slips.
+
+Gate: `ALL CHECKS PASSED`, exit 0, captured without a pipe.
+App 148 tests, engine 120, rating 24, linegen 8.
+
+### Outcome
+
+Both applied.
+
+- `_finishing` guard added at `app/lib/tutorial/tutorial_screen.dart:34`, with a
+  comment recording *why* no test guards it — the harness structurally cannot.
+- `assert` added at `app/lib/tutorial/tutorial_steps.dart:80`.
+
+148 app tests still green, `flutter analyze` clean.

@@ -217,6 +217,7 @@ class SettingsDocument {
     this.locale = 'system',
     this.theme = 'system',
     this.tutorialCompleted = false,
+    this.tutorialOffered = false,
     this.schemaVersion = kSchemaVersion,
   });
 
@@ -230,15 +231,24 @@ class SettingsDocument {
 
   final bool tutorialCompleted;
 
+  /// Whether the first-launch offer has been made. Separate from
+  /// [tutorialCompleted] because declining is not the same as having learnt
+  /// the game: one boolean would have to lie about one of the two, and the
+  /// alternative — asking again every launch until the player gives in — is
+  /// the behaviour nobody wants (D193).
+  final bool tutorialOffered;
+
   SettingsDocument copyWith({
     String? locale,
     String? theme,
     bool? tutorialCompleted,
+    bool? tutorialOffered,
   }) =>
       SettingsDocument(
         locale: locale ?? this.locale,
         theme: theme ?? this.theme,
         tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
+        tutorialOffered: tutorialOffered ?? this.tutorialOffered,
       );
 
   Map<String, Object?> toJson() => {
@@ -246,6 +256,7 @@ class SettingsDocument {
         'locale': locale,
         'theme': theme,
         'tutorialCompleted': tutorialCompleted,
+        'tutorialOffered': tutorialOffered,
       };
 
   /// Null when unreadable — see [GameDocument.fromJson]. The caller falls back
@@ -258,6 +269,11 @@ class SettingsDocument {
       locale: json['locale'] as String? ?? 'system',
       theme: json['theme'] as String? ?? 'system',
       tutorialCompleted: json['tutorialCompleted'] as bool? ?? false,
+      // Absent in documents written before this field existed. Defaulting to
+      // false re-offers the tutorial once to an existing player, which is the
+      // safe direction: the cost is one dismissable dialog, where defaulting
+      // true would silently deny it to everyone who upgrades.
+      tutorialOffered: json['tutorialOffered'] as bool? ?? false,
     );
   }
 }

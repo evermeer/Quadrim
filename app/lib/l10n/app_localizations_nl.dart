@@ -372,4 +372,107 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get blurbQuadrimPrime =>
       'De sterkste tegenstander hier. Onverslaanbaar als het begint; speelt het als tweede, dan verdedigt het met de diepste berekening in het spel.';
+
+  @override
+  String tutorialStepOf(int current, int total) {
+    return 'Stap $current van $total';
+  }
+
+  @override
+  String get tutorialNext => 'Verder';
+
+  @override
+  String get tutorialBack => 'Terug';
+
+  @override
+  String get tutorialDone => 'Klaar';
+
+  @override
+  String get tutorialClose => 'Uitleg sluiten';
+
+  @override
+  String get tutorialOfferTitle => 'Voor het eerst hier?';
+
+  @override
+  String get tutorialOfferBody =>
+      'Een korte uitleg laat zien hoe de kubus werkt en hoe je wint. Het duurt een paar minuten en je kunt op elk moment stoppen.';
+
+  @override
+  String get tutorialOfferAccept => 'Laat maar zien';
+
+  @override
+  String get tutorialOfferDecline => 'Nu niet';
+
+  @override
+  String get tutorialGoalTitle => 'Het doel';
+
+  @override
+  String get tutorialGoalBody =>
+      'Leg vier van jouw stenen op een rechte lijn en je wint. Lijnen lopen in elke richting door de kubus; er zijn er 76.';
+
+  @override
+  String get tutorialGoalBoard =>
+      'Laag 1, rij 1: vier lichte stenen die de rij vullen, gemarkeerd als voltooide lijn.';
+
+  @override
+  String get tutorialLayersTitle => 'Vier lagen, één kubus';
+
+  @override
+  String get tutorialLayersBody =>
+      'Het bord is een kubus: vier vakjes breed, vier diep en vier hoog. Het wordt getekend als vier lagen onder elkaar, met laag 1 vooraan en laag 4 achteraan. Dezelfde rij en kolom in alle vier de lagen vormt één rechte lijn door de kubus.';
+
+  @override
+  String get tutorialLayersBoard =>
+      'Rij 2, kolom 2 van elke laag, gemarkeerd: één lijn die van de voorkant van de kubus naar de achterkant loopt.';
+
+  @override
+  String get tutorialPlacingTitle => 'Aan zet';
+
+  @override
+  String get tutorialPlacingBody =>
+      'Tik op een leeg vakje om een steen te leggen. Licht begint, daarna wisselen de spelers elkaar af. Een steen verplaatst nooit meer, en het spel stopt zodra iemand een lijn maakt.';
+
+  @override
+  String get tutorialPlacingBoard =>
+      'In laag 2 liggen twee lichte stenen en één donkere steen, in laag 3 één donkere steen; alle andere vakjes zijn leeg.';
+
+  @override
+  String get tutorialLayerDiagonalTitle => 'Diagonalen binnen een laag';
+
+  @override
+  String get tutorialLayerDiagonalBody =>
+      'Een lijn kan van hoek tot hoek door één laag lopen. Beide diagonalen van elk van de vier lagen tellen mee.';
+
+  @override
+  String get tutorialLayerDiagonalBoard =>
+      'Laag 2, gemarkeerd van hoek tot hoek: rij 1 kolom 1, rij 2 kolom 2, rij 3 kolom 3, rij 4 kolom 4.';
+
+  @override
+  String get tutorialSliceDiagonalTitle => 'Diagonalen door de lagen heen';
+
+  @override
+  String get tutorialSliceDiagonalBody =>
+      'Neem een plak door de kubus — één rij, vier lagen diep — en die heeft ook eigen diagonalen. Dit zijn de lijnen die nieuwe spelers over het hoofd zien.';
+
+  @override
+  String get tutorialSliceDiagonalBoard =>
+      'Rij 1 van elke laag, gemarkeerd: kolom 1 in laag 1, kolom 2 in laag 2, kolom 3 in laag 3, kolom 4 in laag 4.';
+
+  @override
+  String get tutorialCubeDiagonalTitle => 'Van hoek tot hoek';
+
+  @override
+  String get tutorialCubeDiagonalBody =>
+      'Vier lijnen lopen dwars door het midden van de kubus, van de ene hoek naar de tegenoverliggende. Ze zijn het moeilijkst te zien en het makkelijkst om aan te verliezen.';
+
+  @override
+  String get tutorialCubeDiagonalBoard =>
+      'Gemarkeerd van rij 1 kolom 1 in laag 1 naar rij 4 kolom 4 in laag 4, met elke laag één rij en één kolom verder.';
+
+  @override
+  String get tutorialRulesDoneTitle => 'Dat is het hele spel';
+
+  @override
+  String get tutorialRulesDoneBody =>
+      'Rijen, kolommen, de lijnen door de lagen en alle diagonalen — 76 in totaal. Meer heb je niet nodig om te beginnen.';
 }

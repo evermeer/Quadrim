@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/data/document_store.dart';
+import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/game/board_view.dart';
 import 'package:quadrim/main.dart';
@@ -19,7 +20,10 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 Future<LocalGameRepository> _pumpGame(WidgetTester tester) async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
   addTearDown(repository.dispose);
-  await tester.pumpWidget(QuadrimApp(repository: repository));
+  await repository
+      .saveSettings(const SettingsDocument(tutorialOffered: true));
+  await tester.pumpWidget(
+      QuadrimApp(repository: repository, settings: repository));
   // The main screen's one primary button opens a chooser; ticket 011 replaces
   // the chooser with the opponent list, and this route stays the same.
   await tester.tap(find.text('New game'));

@@ -20,18 +20,20 @@ Future<void> main() async {
   final store =
       await FileDocumentStore.open(Directory('${support.path}/quadrim'));
   final repository = await LocalGameRepository.open(store);
-  runApp(QuadrimApp(repository: repository));
+  runApp(QuadrimApp(repository: repository, settings: repository));
 }
 
 class QuadrimApp extends StatelessWidget {
   const QuadrimApp({
     super.key,
     required this.repository,
+    required this.settings,
     this.locale,
     this.random,
   });
 
   final GameRepository repository;
+  final SettingsRepository settings;
 
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
@@ -55,7 +57,11 @@ class QuadrimApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: HomeScreen(repository: repository, random: random),
+      home: HomeScreen(
+        repository: repository,
+        settings: settings,
+        random: random,
+      ),
     );
   }
 }

@@ -1729,6 +1729,41 @@ Two consequences worth recording. The card's screen-reader announcement had to g
 
 And `yourRecord` was deleted from both locale files rather than left behind. An unused key still gets read, translated and maintained, and the next person to see it has to work out whether it is dead or merely not rendered yet. Two lines are cheap to restore if a later screen wants the heading back.
 
+### D193 — Declining the tutorial is remembered, and is not the same as finishing it
+**Question:** Ticket 018 asks for the tutorial to be offered automatically on first launch, and for completion to be persisted so it is not offered again. It says nothing about the player who is offered it and says no. `SettingsDocument` had one boolean, `tutorialCompleted`.
+
+**Decision:** A second boolean, `tutorialOffered`. The offer is made when neither is set, and recorded before the dialog is shown rather than after. Declining sets `tutorialOffered` only; reaching the last step sets `tutorialCompleted`.
+
+**Rationale:** One boolean cannot say both things without lying about one of them. Setting `tutorialCompleted` on a decline would tell every later reader — the settings screen at ticket 028, the milestones at 023 — that a player who has never seen the tutorial has finished it. Leaving it unset means asking again on every single launch until the player gives in, which is the behaviour that trains people to dismiss dialogs without reading them.
+
+Recording the offer *before* showing it is the part worth spelling out. An `AlertDialog` can be dismissed by tapping outside it, which returns no answer at all — neither accepted nor declined. Recording afterwards on the strength of the returned value means that dismissal re-arms the offer, so the one gesture that most clearly means "not now" is the one that guarantees the question comes back. The cost is that a crash between the write and the dialog loses that launch's offer; the tutorial is a button on the main screen, so the loss is one dialog, not the feature.
+
+A document written before this field existed reads `tutorialOffered` as false, which re-offers the tutorial once to an existing player. That is the safe direction of the two: the cost of defaulting false is a dismissable dialog, where defaulting true would silently deny the tutorial to everyone who upgrades. No schema bump — the reader already defaults absent fields (spec §8.7).
+
+### D194 — The tutorial draws on the real board, and pays for it in layout
+**Question:** Ticket 018 requires the winning-line examples to be "drawn on the real board component rather than as static pictures". `BoardView` was built to fill a game screen: it needs about 780dp of height to keep its cells at the audited floor, and here it has to share a page with a heading and a paragraph.
+
+**Decision:** `BoardView` it is. Each step is a scrolling page; the board takes 55% of the viewport height with a 240dp floor, and the cells come out around 20dp — well under [D135](#d135)'s touch-target floor.
+
+**Rationale:** The floor exists so that cells can be *tapped*. Nothing on a tutorial board is tappable — `enabled` is false, and the position is the lesson, so a stray tap that changed it would make the caption above it a lie. Legibility, not reachability, is the constraint that survives, and 20dp cells are legible.
+
+What the real component buys is that the thing the player learns to read is pixel for pixel the thing they will be looking at in a game: the same shear, the same four stacked parallelograms, the same layer captions. A drawn diagram would have been easier to lay out and would have taught a board that does not exist.
+
+It also forces a useful discipline. `GameState` is only constructible from a move list, so every position the tutorial shows has to be reachable by legal alternating play — there is no hand-set board to fake one with. The second player's pieces in each demonstration are filler, scattered rather than clustered so that three dark stones beside the line being taught do not read as a second, nearly-complete threat. Three pieces can never complete a line, so no filler choice can end the demonstration early; it can only distract.
+
+The share-of-viewport is a fraction rather than a fixed height because the page scrolls. At a 200% text scale the paragraph grows and the player scrolls, instead of the board being squeezed to a smear — the failure [D188](#d188--a-fixed-height-strip-under-an-app-bar-title-is-a-text-scale-trap) already cost this project once.
+
+### D195 — A demonstration board is described in one sentence, not sixty-four
+**Question:** Every cell of `BoardView` is its own semantics node, which is right in a game: a screen reader user has to be able to find and play any square. A tutorial board highlights four cells out of sixty-four and is not playable at all.
+
+**Decision:** Demonstration boards are wrapped in a `Semantics` container carrying one sentence and an `ExcludeSemantics` that silences the cells beneath it. Each step ships an explicit `boardLabel` string, in both languages.
+
+**Rationale:** The criterion is that every step be *comprehensible* by screen reader, and swiping through sixty-four "Layer 1, row 1, column 1, empty" nodes hunting for four that differ is not comprehension — it is the accessible equivalent of being handed the board and told to spot the difference. One sentence saying which cells are highlighted and how they relate conveys the whole lesson in the time the swiping would take to start.
+
+This is a deliberate asymmetry with the game screen, and it holds only because a tutorial board cannot be played. The moment a board becomes interactive — ticket 020's practice game — the cells must come back, and they do.
+
+Both halves are pinned by tests that were checked to fail: removing the label leaves the sentence unfindable, and removing `ExcludeSemantics` makes the cell labels findable. A `findsNothing` assertion that passes because the string was never right is the specific way this project has wasted time before.
+
 ---
 
 ## Appendix — session tooling

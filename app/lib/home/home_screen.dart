@@ -12,6 +12,7 @@ import '../game/opponent_avatar.dart';
 import '../game/opponent_name.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../tutorial/tutorial_screen.dart';
 
 /// The app's home: what the player has done, what they are in the middle of,
 /// and the one button that starts something new.
@@ -21,9 +22,19 @@ import '../l10n/app_localizations.dart';
 /// stored — a stored total is a second copy of what the games already say, and
 /// the two drift the first time one is deleted.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.repository, this.random});
+  const HomeScreen({
+    super.key,
+    required this.repository,
+    required this.settings,
+    this.random,
+  });
 
   final GameRepository repository;
+
+  /// Read on first frame to decide whether to offer the tutorial, and written
+  /// once the offer has been made. Separate from [repository] because they are
+  /// separate contracts, even though 0.1's one implementation satisfies both.
+  final SettingsRepository settings;
 
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
@@ -55,6 +66,32 @@ class _HomeScreenState extends State<HomeScreen> {
         _summary = HomeSummary.from(games);
       });
     });
+    // After the first frame, not during it: showing a dialog needs a Navigator
+    // above this widget, and there is none until the tree is built.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _offerTutorial());
+  }
+
+  /// Offers the tutorial the first time the app is opened, once.
+  ///
+  /// The offer is recorded before it is shown rather than after. The player
+  /// can dismiss this dialog by tapping outside it, which returns no answer at
+  /// all; recording afterwards would mean that dismissal re-armed the offer for
+  /// the next launch, and repeating a question the player has already waved
+  /// away is the failure mode worth designing out (D193).
+  Future<void> _offerTutorial() async {
+    final settings = await widget.settings.loadSettings();
+    if (settings.tutorialOffered || settings.tutorialCompleted) return;
+    await widget.settings.saveSettings(settings.copyWith(tutorialOffered: true));
+    if (!mounted) return;
+    if (await showTutorialOffer(context) && mounted) await _openTutorial();
+  }
+
+  Future<void> _openTutorial() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TutorialScreen(settings: widget.settings),
+      ),
+    );
   }
 
   @override
@@ -229,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: () => _openPlaceholder(l10n.tutorial),
+                      onPressed: _openTutorial,
                       child: Text(l10n.tutorial),
                     ),
                   ),

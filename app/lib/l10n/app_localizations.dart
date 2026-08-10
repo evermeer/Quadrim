@@ -709,6 +709,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.'**
   String get blurbQuadrimPrime;
+
+  /// Tutorial progress. Also the screen-reader label for the progress bar, which carries no meaning on its own.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String tutorialStepOf(int current, int total);
+
+  /// No description provided for @tutorialNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tutorialNext;
+
+  /// No description provided for @tutorialBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tutorialBack;
+
+  /// Finishes the tutorial from its last step. Distinct from leaving early, which does not mark it complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get tutorialDone;
+
+  /// Tooltip on the exit button. The tutorial can be left at any step.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the tutorial'**
+  String get tutorialClose;
+
+  /// No description provided for @tutorialOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New to Quadrim?'**
+  String get tutorialOfferTitle;
+
+  /// Shown once, on first launch. Says the tutorial can be left so the offer does not read as a commitment.
+  ///
+  /// In en, this message translates to:
+  /// **'A short tutorial explains the cube and how a game is won. It takes a couple of minutes, and you can leave at any point.'**
+  String get tutorialOfferBody;
+
+  /// No description provided for @tutorialOfferAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me'**
+  String get tutorialOfferAccept;
+
+  /// No description provided for @tutorialOfferDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get tutorialOfferDecline;
+
+  /// No description provided for @tutorialGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The goal'**
+  String get tutorialGoalTitle;
+
+  /// No description provided for @tutorialGoalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.'**
+  String get tutorialGoalBody;
+
+  /// Screen-reader description of one tutorial board. The board itself is silenced and described as a whole, because swiping through 64 cells to find four highlighted ones is not comprehension (D195).
+  ///
+  /// In en, this message translates to:
+  /// **'Layer 1, row 1: four light pieces filling the row, highlighted as a completed line.'**
+  String get tutorialGoalBoard;
+
+  /// No description provided for @tutorialLayersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Four layers, one cube'**
+  String get tutorialLayersTitle;
+
+  /// No description provided for @tutorialLayersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The board is a cube: four squares wide, four deep, four tall. It is drawn as four layers, one under the other, with layer 1 at the front and layer 4 at the back. The same row and column in all four layers is one straight line through the cube.'**
+  String get tutorialLayersBody;
+
+  /// No description provided for @tutorialLayersBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Row 2, column 2 of every layer, highlighted: one line running from the front of the cube to the back.'**
+  String get tutorialLayersBoard;
+
+  /// No description provided for @tutorialPlacingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking a turn'**
+  String get tutorialPlacingTitle;
+
+  /// No description provided for @tutorialPlacingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any empty square to place a piece. Light goes first, then the players alternate. A piece never moves once it is placed, and the game ends the moment somebody makes a line.'**
+  String get tutorialPlacingBody;
+
+  /// No description provided for @tutorialPlacingBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer 2 holds two light pieces and one dark piece, layer 3 holds one dark piece, and every other square is empty.'**
+  String get tutorialPlacingBoard;
+
+  /// No description provided for @tutorialLayerDiagonalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonals inside a layer'**
+  String get tutorialLayerDiagonalTitle;
+
+  /// No description provided for @tutorialLayerDiagonalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A line can run corner to corner across a single layer. Both diagonals of each of the four layers count.'**
+  String get tutorialLayerDiagonalBody;
+
+  /// No description provided for @tutorialLayerDiagonalBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer 2, highlighted corner to corner: row 1 column 1, row 2 column 2, row 3 column 3, row 4 column 4.'**
+  String get tutorialLayerDiagonalBoard;
+
+  /// No description provided for @tutorialSliceDiagonalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagonals through the layers'**
+  String get tutorialSliceDiagonalTitle;
+
+  /// No description provided for @tutorialSliceDiagonalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a slice through the cube — one row, all four layers deep — and it has diagonals of its own. These are the lines new players miss.'**
+  String get tutorialSliceDiagonalBody;
+
+  /// No description provided for @tutorialSliceDiagonalBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Row 1 of every layer, highlighted: column 1 in layer 1, column 2 in layer 2, column 3 in layer 3, column 4 in layer 4.'**
+  String get tutorialSliceDiagonalBoard;
+
+  /// No description provided for @tutorialCubeDiagonalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Corner to corner'**
+  String get tutorialCubeDiagonalTitle;
+
+  /// No description provided for @tutorialCubeDiagonalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Four lines run right through the middle of the cube, from one corner to the opposite one. They are the hardest to see and the easiest to lose to.'**
+  String get tutorialCubeDiagonalBody;
+
+  /// No description provided for @tutorialCubeDiagonalBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlighted from row 1 column 1 of layer 1 to row 4 column 4 of layer 4, moving one row and one column with every layer.'**
+  String get tutorialCubeDiagonalBoard;
+
+  /// No description provided for @tutorialRulesDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'That is the whole game'**
+  String get tutorialRulesDoneTitle;
+
+  /// No description provided for @tutorialRulesDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing.'**
+  String get tutorialRulesDoneBody;
 }
 
 class _AppLocalizationsDelegate

@@ -371,4 +371,107 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get blurbQuadrimPrime =>
       'The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.';
+
+  @override
+  String tutorialStepOf(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialBack => 'Back';
+
+  @override
+  String get tutorialDone => 'Done';
+
+  @override
+  String get tutorialClose => 'Close the tutorial';
+
+  @override
+  String get tutorialOfferTitle => 'New to Quadrim?';
+
+  @override
+  String get tutorialOfferBody =>
+      'A short tutorial explains the cube and how a game is won. It takes a couple of minutes, and you can leave at any point.';
+
+  @override
+  String get tutorialOfferAccept => 'Show me';
+
+  @override
+  String get tutorialOfferDecline => 'Not now';
+
+  @override
+  String get tutorialGoalTitle => 'The goal';
+
+  @override
+  String get tutorialGoalBody =>
+      'Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.';
+
+  @override
+  String get tutorialGoalBoard =>
+      'Layer 1, row 1: four light pieces filling the row, highlighted as a completed line.';
+
+  @override
+  String get tutorialLayersTitle => 'Four layers, one cube';
+
+  @override
+  String get tutorialLayersBody =>
+      'The board is a cube: four squares wide, four deep, four tall. It is drawn as four layers, one under the other, with layer 1 at the front and layer 4 at the back. The same row and column in all four layers is one straight line through the cube.';
+
+  @override
+  String get tutorialLayersBoard =>
+      'Row 2, column 2 of every layer, highlighted: one line running from the front of the cube to the back.';
+
+  @override
+  String get tutorialPlacingTitle => 'Taking a turn';
+
+  @override
+  String get tutorialPlacingBody =>
+      'Tap any empty square to place a piece. Light goes first, then the players alternate. A piece never moves once it is placed, and the game ends the moment somebody makes a line.';
+
+  @override
+  String get tutorialPlacingBoard =>
+      'Layer 2 holds two light pieces and one dark piece, layer 3 holds one dark piece, and every other square is empty.';
+
+  @override
+  String get tutorialLayerDiagonalTitle => 'Diagonals inside a layer';
+
+  @override
+  String get tutorialLayerDiagonalBody =>
+      'A line can run corner to corner across a single layer. Both diagonals of each of the four layers count.';
+
+  @override
+  String get tutorialLayerDiagonalBoard =>
+      'Layer 2, highlighted corner to corner: row 1 column 1, row 2 column 2, row 3 column 3, row 4 column 4.';
+
+  @override
+  String get tutorialSliceDiagonalTitle => 'Diagonals through the layers';
+
+  @override
+  String get tutorialSliceDiagonalBody =>
+      'Take a slice through the cube — one row, all four layers deep — and it has diagonals of its own. These are the lines new players miss.';
+
+  @override
+  String get tutorialSliceDiagonalBoard =>
+      'Row 1 of every layer, highlighted: column 1 in layer 1, column 2 in layer 2, column 3 in layer 3, column 4 in layer 4.';
+
+  @override
+  String get tutorialCubeDiagonalTitle => 'Corner to corner';
+
+  @override
+  String get tutorialCubeDiagonalBody =>
+      'Four lines run right through the middle of the cube, from one corner to the opposite one. They are the hardest to see and the easiest to lose to.';
+
+  @override
+  String get tutorialCubeDiagonalBoard =>
+      'Highlighted from row 1 column 1 of layer 1 to row 4 column 4 of layer 4, moving one row and one column with every layer.';
+
+  @override
+  String get tutorialRulesDoneTitle => 'That is the whole game';
+
+  @override
+  String get tutorialRulesDoneBody =>
+      'Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing.';
 }

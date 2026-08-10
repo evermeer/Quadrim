@@ -242,5 +242,53 @@
   "blurbQuadrimPrime": "The strongest opponent here. Unbeatable when it moves first; when it moves second it defends by the deepest calculation in the game.",
   "@blurbQuadrimPrime": {
     "description": "Must not claim to be perfect without qualification — the proof it follows covers the first player only (D181)."
-  }
+  },
+  "tutorialStepOf": "Step {current} of {total}",
+  "@tutorialStepOf": {
+    "description": "Tutorial progress. Also the screen-reader label for the progress bar, which carries no meaning on its own.",
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "tutorialNext": "Next",
+  "tutorialBack": "Back",
+  "tutorialDone": "Done",
+  "@tutorialDone": {
+    "description": "Finishes the tutorial from its last step. Distinct from leaving early, which does not mark it complete."
+  },
+  "tutorialClose": "Close the tutorial",
+  "@tutorialClose": {
+    "description": "Tooltip on the exit button. The tutorial can be left at any step."
+  },
+  "tutorialOfferTitle": "New to Quadrim?",
+  "tutorialOfferBody": "A short tutorial explains the cube and how a game is won. It takes a couple of minutes, and you can leave at any point.",
+  "@tutorialOfferBody": {
+    "description": "Shown once, on first launch. Says the tutorial can be left so the offer does not read as a commitment."
+  },
+  "tutorialOfferAccept": "Show me",
+  "tutorialOfferDecline": "Not now",
+  "tutorialGoalTitle": "The goal",
+  "tutorialGoalBody": "Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.",
+  "tutorialGoalBoard": "Layer 1, row 1: four light pieces filling the row, highlighted as a completed line.",
+  "@tutorialGoalBoard": {
+    "description": "Screen-reader description of one tutorial board. The board itself is silenced and described as a whole, because swiping through 64 cells to find four highlighted ones is not comprehension (D195)."
+  },
+  "tutorialLayersTitle": "Four layers, one cube",
+  "tutorialLayersBody": "The board is a cube: four squares wide, four deep, four tall. It is drawn as four layers, one under the other, with layer 1 at the front and layer 4 at the back. The same row and column in all four layers is one straight line through the cube.",
+  "tutorialLayersBoard": "Row 2, column 2 of every layer, highlighted: one line running from the front of the cube to the back.",
+  "tutorialPlacingTitle": "Taking a turn",
+  "tutorialPlacingBody": "Tap any empty square to place a piece. Light goes first, then the players alternate. A piece never moves once it is placed, and the game ends the moment somebody makes a line.",
+  "tutorialPlacingBoard": "Layer 2 holds two light pieces and one dark piece, layer 3 holds one dark piece, and every other square is empty.",
+  "tutorialLayerDiagonalTitle": "Diagonals inside a layer",
+  "tutorialLayerDiagonalBody": "A line can run corner to corner across a single layer. Both diagonals of each of the four layers count.",
+  "tutorialLayerDiagonalBoard": "Layer 2, highlighted corner to corner: row 1 column 1, row 2 column 2, row 3 column 3, row 4 column 4.",
+  "tutorialSliceDiagonalTitle": "Diagonals through the layers",
+  "tutorialSliceDiagonalBody": "Take a slice through the cube — one row, all four layers deep — and it has diagonals of its own. These are the lines new players miss.",
+  "tutorialSliceDiagonalBoard": "Row 1 of every layer, highlighted: column 1 in layer 1, column 2 in layer 2, column 3 in layer 3, column 4 in layer 4.",
+  "tutorialCubeDiagonalTitle": "Corner to corner",
+  "tutorialCubeDiagonalBody": "Four lines run right through the middle of the cube, from one corner to the opposite one. They are the hardest to see and the easiest to lose to.",
+  "tutorialCubeDiagonalBoard": "Highlighted from row 1 column 1 of layer 1 to row 4 column 4 of layer 4, moving one row and one column with every layer.",
+  "tutorialRulesDoneTitle": "That is the whole game",
+  "tutorialRulesDoneBody": "Rows, columns, the lines through the layers, and every diagonal — 76 in all. That is everything you need to start playing."
 }
