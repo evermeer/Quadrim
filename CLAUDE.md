@@ -55,8 +55,10 @@ packages/quadrim_engine/    Rules, search, opponents, strategy book. Pure Dart.
 packages/quadrim_rating/    ELO maths. Pure Dart.
 tools/linegen/              Build-time generator for the 76 winning lines.
 third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
-doc/tickets/                029 tickets; the unit of work and of commits.
-doc/idea-decisions.md       D01–D178. Every non-obvious choice, with its cost.
+doc/tickets/                The 11 tickets still open; the unit of work and of commits.
+doc/tickets/done/           The 18 finished ones. A ticket moves here once it is
+                            committed AND its review section is in codereview-main.md.
+doc/idea-decisions.md       D01–D202. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -96,7 +98,7 @@ The standing instruction for this repo:
 > Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D178.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D202.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.
@@ -105,4 +107,5 @@ The standing instruction for this repo:
 
 - Oracle is rated 2300 but measures ~2100 against two independent anchors. Quadrim Prime is 2400 with evidence centring 2200–2300. Ticket 014 (rating and calibration harness) owns resolving these.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
+- Ticket 027 (computer rating) is **not** in `done/`, and looks like it should be. Most of what it asks for shipped incidentally with 013 — `quadrim_rating`, `rating_fold.dart`, the rating on the main screen, the delta on the result screen — but it was never worked or reviewed as a ticket, and its blocker 014 is open, so its anchors are the ones known to be mis-calibrated. Verify its criteria before moving it rather than assuming.
 - Tickets that need the user's Google account or decisions and cannot be done by an agent: 015, 016, 024, parts of 022.
