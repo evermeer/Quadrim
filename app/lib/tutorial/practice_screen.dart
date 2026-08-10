@@ -123,8 +123,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // A permanently reserved line, so asking for a hint does not
-                  // resize the board underneath the player's finger.
+                  // One reserved line, which absorbs a one-line hint. Longer
+                  // ones still push the board down and shrink it — measured on
+                  // a device, where every hint written so far runs to three
+                  // lines, so in practice the board always moves (D202).
                   //
                   // The live region is attached only when there is something
                   // to say. Wrapping the empty placeholder too puts an

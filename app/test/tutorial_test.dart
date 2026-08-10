@@ -319,6 +319,30 @@ void main() {
       expect(find.byType(BoardView), findsNothing);
     });
 
+    testWidgets('the board sits where a game puts it, against the right edge',
+        (tester) async {
+      // D194's claim is that the tutorial board is pixel for pixel the one the
+      // player will see in a game, and D137 puts that one against the right
+      // edge. Without a width the box shrank to the board's own narrow width
+      // and the enclosing Column dropped it against the left — which shipped
+      // through every other test in this file and was only caught on a device.
+      _phone(tester);
+      await _openFromHome(tester, await _repository(offered: true));
+      final page = tester.getRect(find.byType(Scaffold).last);
+      // The rendered cells, not the BoardView box: the box is full width by
+      // design and right-aligns its layers inside itself. Cell 3 is the top
+      // row of layer 1, which the shear pushes furthest right of anything.
+      // Not an exact match: each layer reserves the width the shear needs, so
+      // the rightmost cell sits a few pixels inside the box it is aligned in.
+      // The regression this guards is gross — before the fix this cell's right
+      // edge was at 92 on a 432dp page, because the layers were at the far left.
+      final rightmost = tester.getRect(find.byKey(const ValueKey('cell-3')));
+      expect(rightmost.right, greaterThan(page.left + page.width * 0.6),
+          reason: 'layers against the right edge, not the left');
+      expect(rightmost.right, lessThanOrEqualTo(page.right - 16),
+          reason: 'and inside the page padding');
+    });
+
     testWidgets('shows the strategy on real positions too', (tester) async {
       _phone(tester);
       await _openFromHome(tester, await _repository(offered: true));

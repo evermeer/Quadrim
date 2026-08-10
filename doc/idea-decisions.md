@@ -1841,6 +1841,23 @@ The test that guards it walks the tree and collects live-region labels, because 
 
 The general lesson is worth keeping: reserved space and announced content are different things, and the placeholder that exists purely for layout should be invisible to everything except layout. Ticket 021's audit should expect more of these.
 
+### D202 — Two things the tutorial got wrong that only a device showed
+**Question:** Both were found by opening the app on the emulator after ticket 020 was committed and every test was green. Recorded together because they have the same cause.
+
+**Decision:** The board box on a tutorial step is now `width: double.infinity`. The claim that the practice screen's reserved hint line stops the board moving is withdrawn — the line absorbs a one-line hint and nothing longer.
+
+**Rationale:**
+
+**The board was on the wrong side of the screen.** `SizedBox` with only a height passes its width constraint through loosely, so the box shrank to the board's own narrow width, and the enclosing `Column`'s `CrossAxisAlignment.start` put it against the *left* edge. Every game puts it against the right ([D137](#d137)), and [D194](#d194--the-tutorial-draws-on-the-real-board-and-pays-for-it-in-layout)'s entire argument for using the real component is that what the player learns to read is what they will be looking at. Twelve steps taught the mirror image of the game screen, and twenty-six tests passed.
+
+They passed because every one of them asked what the board *contained* — `highlight`, `enabled`, the state — and none asked where it *was*. The new test asserts on the rendered rectangle of the cell the shear pushes furthest right. It is deliberately a coarse threshold rather than an exact edge: the layers reserve the width the shear needs, so the rightmost cell sits a few pixels inside the box, and pinning that arithmetic would be pinning the shear constant twice. Before the fix that cell's right edge was at 92 on a 432dp page; the guard is "past 60% of the width", which no left-aligned layout can reach.
+
+The board share of the page went from 0.55 to 0.72 at the same time. At 0.55 the cells came out around 15dp with a third of the page empty below them — legible, but needlessly small.
+
+**The reserved hint line does not do what its comment said.** It reserves one line; every hint string written so far wraps to three, so pressing Hint moves the board down and shrinks it. The design is still right — a hint that appeared with no reserved space at all would jump further — but the comment claimed the board does not move, and it does. Reserving three lines would cost two lines of dead space on a screen where the board is already tight, and would still be a guess in a language whose strings are longer.
+
+The honest general point: a widget test can pin what a screen *says* and what it *holds*, and this project has got good at that. It cannot tell you the layout is a mirror image of the one it is supposed to match. Ticket 021's audit is on a device for a reason, and this is the second and third thing on its list.
+
 ---
 
 ## Appendix — session tooling

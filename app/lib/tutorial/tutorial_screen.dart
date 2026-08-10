@@ -225,7 +225,7 @@ class _StepView extends StatelessWidget {
   /// large text scale the paragraph grows without squeezing the board down to
   /// nothing, and the player scrolls instead. The floor keeps a board that
   /// shares a page with six lines of text from collapsing to a smear.
-  static const _boardShare = 0.55;
+  static const _boardShare = 0.72;
   static const _minBoardHeight = 240.0;
 
   @override
@@ -249,6 +249,12 @@ class _StepView extends StatelessWidget {
               if (step.hasBoard) ...[
                 const SizedBox(height: 16),
                 SizedBox(
+                  // Full width, or the box shrinks to the board's own narrow
+                  // width and the enclosing Column's start-alignment drops it
+                  // against the left edge — where a game never puts it (D137).
+                  // Only visible on a device; every widget test passed with the
+                  // board on the wrong side of the screen.
+                  width: double.infinity,
                   height: boardHeight,
                   child: Semantics(
                     container: true,
