@@ -2570,3 +2570,74 @@ None survived verification. One candidate was investigated and cleared.
   make that switch. Ticket 021 gets a better tool than it had.
 
 Gate: `ALL CHECKS PASSED`, exit 0. App 210 tests, engine 120, rating 24, linegen 8.
+
+---
+
+# Flash the last move of each side
+
+> Reviewed: working tree against `37683c0` on `main`. Not a ticket — a
+> correction after playing the game.
+> Changed: `app/lib/game/board_view.dart` (`flashCells`),
+> `app/test/board_flash_test.dart`, `app/test/game_screen_test.dart`,
+> `doc/idea-decisions.md` (D206).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None. The change is four lines in one function; the work was in the
+investigation of the second report.
+
+## Investigated: "the win line does not flash"
+
+Reported alongside the change above. It **does** flash — established three
+ways rather than by re-reading the code:
+
+1. A widget test that samples the *painted* gradient rather than the flash
+   list, immediately after a winning move and deliberately without
+   `pumpAndSettle` (which would run the four seconds to completion before
+   anything could be observed). All four cells of the line return
+   `#fff4ffef,#ffb8eda4,#ff7fc96b` — full flash — against `#ff4a4a52,...`
+   for a resting piece.
+2. On the emulator, a light win: four bright green pieces plus the borders.
+3. On the emulator, a dark win: four dark-green pieces, clearly distinct from
+   the resting black. This was the case worth checking, since a dark-green
+   flash on a black piece is inherently lower contrast than a light-green one
+   on white.
+
+The prior test asserted only that `BoardView.flash` *contained* the winning
+line, which is why it could not have caught a rendering failure. That gap is
+now closed by (1).
+
+Timing, not logic, is the likely explanation for the report: the flash starts
+at the instant the result panel animates in and the board resizes, and four
+seconds is short when attention has just been pulled elsewhere. Recorded in
+D206 as a real complaint about a real experience, with the remedy — a longer
+or repeating flash for the winning line — left as the user's call, since four
+seconds is a duration they chose.
+
+## Not findings, checked and cleared
+
+- **Two green cells are not ambiguous.** Light and dark flash to greens of
+  their own lightness, so both being lit at once still reads as one piece each.
+  The D124 luminance assertion already covers it and needed no change.
+- **The scrubber gets it for free.** `flashCells` is shared, so stepping now
+  shows the move stepped to *and* the one before it — the exchange rather than
+  a single lit cell.
+- **`state.moves.sublist` is safe at every length.** Lengths 0, 1 and 2 return
+  the list itself; only longer positions slice. Covered by tests at each.
+- **Parity trap in the game-screen test.** Adding a third assertion tap flipped
+  which side completed the line and the win never happened. Caught by the test
+  failing rather than by review — the assertion moved to the pure `flashCells`
+  test where parity is explicit.
+
+### Outcome
+
+Shipped. 211 app tests green, `ALL CHECKS PASSED` exit 0.

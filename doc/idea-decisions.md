@@ -1935,6 +1935,23 @@ Three test-harness facts learned the hard way and worth keeping:
 - **`tester.getSemantics` walks *up*** from the widget it is given, so on a merged subtree like a `RadioListTile` it does not reliably land on the node carrying the flags. Walking down and matching on the label does.
 - **`isChecked` is a `CheckedState` enum, not a bool**, and `expect(..., isTrue)` against it fails in a way that reads like the widget being wrong.
 
+### D206 — The flash marks the last move of *each* side, not the last move
+**Question:** [D203](#d203--the-move-just-played-flashes-green-and-so-does-the-line-that-wins) flashed one cell: the move just played. Playing real games showed the gap — against a computer opponent the player's own piece stopped being marked the moment the opponent answered, which is about half a second. The one move a player never saw flash was their own.
+
+**Decision:** `flashCells` returns the last *two* moves while a game is running. Turns alternate, so that is exactly one from each side.
+
+**Rationale:** The point of the flash was never "here is the newest cell" — it was "here is what just changed". Two moves change between one turn of yours and the next, and showing only one of them answered half the question. It also makes the scrubber read properly: stepping through a game now shows the move you stepped to *and* the one before it, so the exchange is visible rather than one lit cell at a time.
+
+Both being green at once is not ambiguous, because light and dark flash to greens of their own lightness ([D124](#d124), D203). That constraint was already load-bearing and this leans on it harder.
+
+**On "the win line does not flash", which was reported at the same time.** It does. This was investigated rather than accepted or dismissed, because the report was specific and the tests said otherwise:
+
+- The widget test samples the *painted* gradient rather than the flash list, and returns full green on all four cells of the line.
+- On a device, a light win: four bright green pieces plus the borders.
+- On a device, a dark win: four dark-green pieces, clearly distinct from the resting black.
+
+So it fires in both directions, for both colours. The likeliest explanation for the report is timing rather than logic: the flash starts at the exact instant the result panel animates in and the board resizes to make room for it, and four seconds is a short window when attention has just been pulled somewhere else. That is a real complaint about a real experience even though the mechanism works — the fix, if it is wanted, is a longer or repeating flash for the winning line specifically, and that is a change to a duration the user chose, so it is theirs to make rather than mine to assume.
+
 ---
 
 ## Appendix — session tooling

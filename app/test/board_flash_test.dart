@@ -79,8 +79,16 @@ void main() {
       expect(flashCells(GameState.initial()), isEmpty);
     });
 
-    test('the move just played, while the game is running', () {
-      expect(flashCells(GameState.fromMoves([21, 22, 26])), [26]);
+    test('the last move of each side, while the game is running', () {
+      // Both, not just the most recent. Turns alternate, so the last two are
+      // one apiece — and a player whose own piece stopped being marked the
+      // instant the opponent answered never saw their own move flash (D206).
+      expect(flashCells(GameState.fromMoves([21, 22, 26])), [22, 26]);
+      expect(flashCells(GameState.fromMoves([21, 22, 26, 42])), [26, 42]);
+    });
+
+    test('one move is all there is to flash after the opening', () {
+      expect(flashCells(GameState.fromMoves([21])), [21]);
     });
 
     test('the whole line once one is completed', () {

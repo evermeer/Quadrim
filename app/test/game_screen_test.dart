@@ -44,8 +44,8 @@ void main() {
   // A phone-sized surface so the whole board lays out.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('the board is told to flash the move just played, then the '
-      'whole winning line', (tester) async {
+  testWidgets('the board is told to flash the last move of each side, then '
+      'the whole winning line', (tester) async {
     tester.view.physicalSize = const Size(1080, 2280);
     tester.view.devicePixelRatio = 2.5;
     addTearDown(tester.view.reset);
@@ -57,9 +57,11 @@ void main() {
     expect(flashing(), isEmpty, reason: 'nothing has been played yet');
 
     await _tapCell(tester, 21);
-    expect(flashing(), [21]);
+    expect(flashing(), [21], reason: 'only one move exists yet');
     await _tapCell(tester, 32);
-    expect(flashing(), [32], reason: "the reply, not the move before it");
+    // Both, not just the reply: marking only the newest meant a player's own
+    // piece stopped being marked the instant the opponent answered (D206).
+    expect(flashing(), [21, 32]);
 
     // Light completes {0,1,2,3}. Dark's four are scattered on purpose: the
     // obvious fillers 40-43 are themselves a row, and dark wins with them

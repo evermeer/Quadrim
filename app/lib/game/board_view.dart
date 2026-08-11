@@ -30,15 +30,24 @@ double flashStrength(double t) {
 }
 
 /// The cells a board should flash: the completed line once there is one,
-/// otherwise the move just played.
+/// otherwise the last move of *each* side.
 ///
-/// One function rather than the same two lines in the game screen and the
+/// Both sides, not just the most recent move. Marking only the last move meant
+/// a player's own piece stopped being marked the moment the opponent answered
+/// — about half a second in a real game — so the one move they never got to
+/// see flash was their own. Turns alternate, so the last two moves are exactly
+/// one from each side, and light and dark flash to greens of their own
+/// lightness, which is what keeps them told apart while both are lit (D206).
+///
+/// One function rather than the same lines in the game screen and the
 /// tutorial's practice game, because the two must agree — a player who learns
 /// to read the flash in practice has to find it doing the same thing in a real
 /// game.
 List<int> flashCells(GameState state) => switch (outcome(state)) {
       Win(line: final line) => line,
-      _ => state.moves.isEmpty ? const <int>[] : [state.moves.last],
+      _ => state.moves.length <= 2
+          ? state.moves
+          : state.moves.sublist(state.moves.length - 2),
     };
 
 /// The 4x4x4 board as four sheared 4x4 grids stacked in one column, aligned
