@@ -2641,3 +2641,67 @@ seconds is a duration they chose.
 ### Outcome
 
 Shipped. 211 app tests green, `ALL CHECKS PASSED` exit 0.
+
+---
+
+# Widen both flash palettes
+
+> Reviewed: working tree against `86e36d2` on `main`. Not a ticket — a second
+> correction after playing the game.
+> Changed: `app/lib/game/board_view.dart` (`_Pebble._lightFlash`,
+> `_Pebble._darkFlash`), `app/test/board_flash_test.dart`,
+> `doc/idea-decisions.md` (D207).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None. Six colour constants and one test.
+
+## The finding is against the previous review, not this change
+
+The interesting part is that D203's palettes shipped through a review with a
+test suite that could not have caught the defect.
+
+**File:** `app/test/board_flash_test.dart:124` (as it stood before this change)
+
+```dart
+expect(light.computeLuminance(),
+    greaterThan(dark.computeLuminance() + 0.2));
+```
+
+**Problem:** every assertion about flash colour compared the two *flashing*
+pieces with each other. Nothing compared a flashing piece with a resting piece
+of its own colour — which is the only comparison a player makes. A palette
+where both pieces went green at exactly their resting lightness satisfies every
+one of them, and that is what shipped: the light piece moved 0.78 → 0.73 and
+the dark one 0.012 → 0.049.
+
+**Fix, applied:** a test that samples a flashing and a resting piece of the
+same colour from one board and pins the gap in the direction each moves.
+It fails on the shipped palettes.
+
+## Not findings, checked and cleared
+
+- **D124 still holds, with margin.** The two flashing pieces differ by 0.36
+  relative luminance, against the 0.2 the existing test demands. Verified by
+  that test passing unchanged rather than by recomputing it here.
+- **The margin is now the binding constraint** and D207 records it: a third
+  round of widening would have to move the audited floor or change the
+  mechanism, not the colours.
+- **Nothing else reads these constants.** The winning-line borders and the
+  cell backgrounds have their own colours; `_lightFlash`/`_darkFlash` are
+  private to `_Pebble` and referenced only in `_build`.
+- **Reduced motion is unaffected.** It selects between strength 1 and 0 on the
+  same lerp, so it inherits the new endpoints with no separate path.
+
+### Outcome
+
+Shipped. 212 app tests green, `ALL CHECKS PASSED` exit 0.

@@ -136,6 +136,30 @@ void main() {
           greaterThan(dark.computeLuminance() + 0.2));
     });
 
+    testWidgets('is far enough from its own resting colour to be seen',
+        (tester) async {
+      // The first version failed here rather than in the test above: both
+      // pieces went green, but the dark one landed almost exactly as dark as
+      // an untouched dark piece and the light one almost exactly as light, so
+      // on a phone neither read as a flash (D207). What the eye picks up is
+      // the change against the piece's own resting state — so that gap is
+      // what is pinned, not the greenness.
+      // Light holds 0 and 2, dark holds 1 and 3; 0 and 1 flash, 2 and 3 rest.
+      final state = GameState.fromMoves([0, 1, 2, 3]);
+      await tester.pumpWidget(_host(state, flash: const [0, 1]));
+
+      double lumaOf(int cell) => _piece(tester, cell)[1].computeLuminance();
+
+      // The light piece goes *darker*, the dark piece *lighter* — each away
+      // from where it sits at rest, which is the only direction with room.
+      expect(lumaOf(0), lessThan(lumaOf(2) - 0.15),
+          reason: 'a flashing light piece must be visibly darker than a '
+              'resting one');
+      expect(lumaOf(1), greaterThan(lumaOf(3) + 0.10),
+          reason: 'a flashing dark piece must be visibly lighter than a '
+              'resting one');
+    });
+
     testWidgets('restarts when a different cell is played', (tester) async {
       final first = GameState.fromMoves([0, 1, 2]);
       await tester.pumpWidget(_host(first, flash: const [0]));

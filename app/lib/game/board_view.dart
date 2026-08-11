@@ -394,20 +394,30 @@ class _Pebble extends StatelessWidget {
     Color(0xFFE4E4E6),
     Color(0xFFC3C3C8),
   ];
+  // Both flash palettes were widened after the first version was played:
+  // the dark one was barely visible and the light one shifted hue without
+  // shifting lightness, so neither read as a flash on a phone (D207). Each
+  // now moves *against* its own resting palette — the light piece goes
+  // darker, the dark piece much lighter — because what the eye picks up is
+  // the change from the piece's own resting state, not the greenness.
+  // Middle-stop relative luminance, which is what the gradient is mostly
+  // made of: light 0.78 at rest to 0.55 flashing, dark 0.012 to 0.19.
   static const _lightFlash = [
-    Color(0xFFF4FFEF),
-    Color(0xFFB8EDA4),
-    Color(0xFF7FC96A),
+    Color(0xFFDFF8CF),
+    Color(0xFF8FD870),
+    Color(0xFF5CAF45),
   ];
   static const _dark = [
     Color(0xFF4A4A52),
     Color(0xFF1C1C22),
     Color(0xFF050507),
   ];
+  // Still the darker of the two while lit (0.19 against 0.55), so D124's
+  // lightness distinction survives the flash rather than becoming a hue one.
   static const _darkFlash = [
-    Color(0xFF3E7A44),
-    Color(0xFF14481E),
-    Color(0xFF03200A),
+    Color(0xFF57B05E),
+    Color(0xFF2F8A3A),
+    Color(0xFF0F4A18),
   ];
 
   @override

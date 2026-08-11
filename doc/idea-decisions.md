@@ -1954,6 +1954,26 @@ So it fires in both directions, for both colours. The likeliest explanation for 
 
 ---
 
+### D207 — Each flash moves against its own resting colour, not just towards green
+**Question:** The dark flash was "almost not visible" on a device, and the light one was asked to be more distinctive too. The mechanism worked and the tests passed; it simply could not be seen.
+
+**Decision:** Both palettes widened. The light piece flashes to a *darker* green than before and the dark piece to a much lighter one. Middle-stop relative luminance, which is what a radial gradient is mostly made of:
+
+| | at rest | flashing, before | flashing, now |
+|---|---|---|---|
+| light piece | 0.78 | 0.73 | 0.55 |
+| dark piece | 0.012 | 0.049 | 0.19 |
+
+**Rationale:** The first version chose two greens that sat at roughly the lightness of the pieces they replaced, on the theory that keeping each piece near its own lightness is what keeps [D124](#d124) intact. That reasoning was sound and the conclusion was wrong: a light piece going from 0.78 to 0.73 is a hue shift with no lightness shift, and on a small pebble under a phone's glare a hue shift is nearly nothing. The dark piece had the same problem in the other direction — 0.049 against 0.012 is four times the luminance and still almost black.
+
+What the eye actually reads is the change from the piece's own resting state, so that is the axis with room in it. Each piece now moves *away* from where it sits: the light one down, the dark one up. They still differ from each other by 0.36 while lit, well clear of the 0.2 the D124 test demands, so the two sides remain told apart by lightness rather than by hue.
+
+**Cost:** The two flashing colours are closer together than they were, so the D124 margin is thinner — 0.36 rather than 0.69. It is still nearly double the audited floor, but this is now the constraint that bounds any further widening, and a third round of "make it more visible" would have to move the floor or change the mechanism instead of the colours.
+
+**What the tests had missed.** Every existing assertion compared the two flashing pieces *to each other*, so a flash that was invisible against its own resting piece passed all of them. The new test compares each flashing piece with a resting piece of the same colour — the gap the player actually sees — and would have failed on the shipped version.
+
+---
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.
