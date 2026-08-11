@@ -43,9 +43,13 @@ Measurement tools (not shipped; `tool/` is outside the purity scan, so these may
 
 ```bash
 cd packages/quadrim_engine && dart run tool/duel.dart onyx onyx+d9 120
+cd packages/quadrim_engine && dart run tool/calibrate.dart --games 30
+cd packages/quadrim_engine && dart run tool/calibrate.dart --only oracle
 ```
 
-`duel.dart` is the instrument. Every claim that one opponent is stronger than another should come from a run of it, not from an argument about the code. Names take `+dN` (defence depth), `+tN` (own forcing depth), `+bN` (node budget, thousands).
+`duel.dart` is the instrument for one pairing. Every claim that one opponent is stronger than another should come from a run of it, not from an argument about the code. Names take `+dN` (defence depth), `+tN` (own forcing depth), `+bN` (forcing budget, thousands).
+
+`calibrate.dart` is the instrument for the whole ladder: 19 adjacent pairs plus 10 cross-tier braces, budgets at 10%, about 6 minutes on an idle machine (D208). It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
 
 ## Layout
 
@@ -58,7 +62,7 @@ third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
 doc/tickets/                The 11 tickets still open; the unit of work and of commits.
 doc/tickets/done/           The 18 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-decisions.md       D01–D202. Every non-obvious choice, with its cost.
+doc/idea-decisions.md       D01–D210. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -98,14 +102,15 @@ The standing instruction for this repo:
 > Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D202.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D210.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.
 
 ## Known open items
 
-- Oracle is rated 2300 but measures ~2100 against two independent anchors. Quadrim Prime is 2400 with evidence centring 2200–2300. Ticket 014 (rating and calibration harness) owns resolving these.
+- **Two Casual-tier inversions await a decision that changes something published** (D210, ticket 014). Finch measures ~33 points above Kestrel and Kestrel ~50 above Willow. The cause is measured, not guessed: `aggression` is worth about 78 points, and the roster pins its direction — Kestrel "would rather build than block" (the stronger setting) is rated below Willow "shuts your threats down first" (the weaker one). No configuration change closes it. The options are to swap the anchors, rewrite a blurb, or accept the inversions for 0.1.
+- Calibration puts Oracle at 2323 against a published 2300 — the earlier ~2100 estimate does not survive a measured run. Quadrim Prime measures 2176 from a single readable pair, and it is the opponent the reduced budget hits hardest, so that number is a floor rather than a verdict; re-run `--only quadrim_prime --budget 1` before believing it.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
 - Ticket 027 (computer rating) is **not** in `done/`, and looks like it should be. Most of what it asks for shipped incidentally with 013 — `quadrim_rating`, `rating_fold.dart`, the rating on the main screen, the delta on the result screen — but it was never worked or reviewed as a ticket, and its blocker 014 is open, so its anchors are the ones known to be mis-calibrated. Verify its criteria before moving it rather than assuming.
 - Tickets that need the user's Google account or decisions and cannot be done by an agent: 015, 016, 024, parts of 022.

@@ -14,6 +14,7 @@
 import 'dart:math';
 
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_rating/quadrim_rating.dart';
 
 void main(List<String> args) {
   if (args.length < 2) {
@@ -24,6 +25,12 @@ void main(List<String> args) {
   final a = _parse(args[0]);
   final b = _parse(args[1]);
   final games = args.length > 2 ? int.parse(args[2]) : 60;
+  // Zero games has no score to imply a rating difference from, and the
+  // half-game correction below divides by it.
+  if (games <= 0) {
+    print('games must be at least 1');
+    return;
+  }
 
   var aWins = 0;
   var bWins = 0;
@@ -46,6 +53,14 @@ void main(List<String> args) {
   }
 
   print('${a.id} $aWins - $bWins ${b.id}  (draws $draws, games $games)');
+  // The score turned back into a rating gap, held half a game off the ends so
+  // a sweep still reports a floor rather than infinity.
+  final margin = 0.5 / games;
+  final score = ((aWins + draws / 2) / games).clamp(margin, 1 - margin);
+  final gap = impliedRatingDifference(score)!.round();
+  print('  implied difference: ${a.id} ${gap > 0 ? '+$gap' : '$gap'} '
+      'against ${b.id}${aWins == games || bWins == games ? ' (at least: '
+          'the sweep gives no upper bound)' : ''}');
   if (a.usesBook || b.usesBook) {
     print('  note: a book player wins every game it opens, so an alternating '
         'pairing of two of them measures the seat, not the strength.');

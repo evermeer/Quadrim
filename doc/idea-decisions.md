@@ -1974,6 +1974,81 @@ What the eye actually reads is the change from the piece's own resting state, so
 
 ---
 
+### D208 — The calibration run is a chain with cross-braces, at a tenth of the budget
+**Question:** Ticket 014 asks for a harness that measures whether the twenty opponents play at the strengths they advertise. Twenty opponents is 190 pairs, the expensive configurations are exactly the ones a round-robin makes meet everyone, and a full-budget round-robin does not finish in a working session.
+
+**Decision:** `tool/calibrate.dart` plays 29 pairs, not 190:
+
+- **19 adjacent pairs** — every opponent against the next one up. This is what establishes the ordering and the size of each gap, and it is also the cheapest arrangement, because each expensive configuration meets only its own neighbours.
+- **10 cross-tier pairs** — the middle opponent of each tier against the middle of every other. A chain of adjacent measurements can drift: nineteen small errors in the same direction accumulate into one large one, and nothing *inside* the chain would show it. These are the cross-braces.
+
+Every budget is multiplied by 0.1 for the run. Only budgets — depths, rules, biases and blunder rate are what make an opponent that opponent, while a budget is only how long it is allowed to think.
+
+**The reduction is not uniform, and the first version of this tool did not know it.** Not every opponent spends both budgets. The lower tiers have no search at all; the Club tier's searchers bound their main search in *plies* and spend nodes only on the forcing search; the Expert and Master tiers bound both in nodes. Scaling therefore leaves a rules-only opponent untouched, trims a ply-limited one, and takes nine tenths off a node-limited one. The first full run duly reported Sable (1700, four plies) beating Quartz (1800, 500k nodes cut to 50k), which reads as a catalogue defect and is nothing of the kind.
+
+The tool now classifies each opponent by which budgets it actually spends and flags any pair whose two sides differ. Such a pair is excluded from the measured estimates, and an inversion inside one is listed separately as *not readable at this budget — re-run at `--budget 1`*.
+
+A first attempt at that check tested `nodeBudget > 0 || forcingBudget > 0`, which is true of every opponent in the catalogue — `forcingBudget` has a non-zero default — so it would have flagged nothing while looking like it worked. What makes the difference is whether the opponent has a *search that spends* the budget, not whether the field is set.
+
+**Cost:** the pairs spanning those boundaries — Basalt/Marlin, Sable/Quartz and the cross-tier braces that cross them — are not measured by the cheap run at all and need a full-budget run of their own. That is a real reduction in what one command covers, and it is the honest one: before this, those pairs were being measured wrongly rather than not at all.
+
+**Tolerance is 150 points.** Thirty games leave about 70 points of sampling noise around an even result, so a smaller tolerance would report luck as a defect. The tool prints the noise figure next to the tolerance, so the two are never read apart.
+
+**Cost:** 29 pairs is not 190, so most opponents are measured against two or three others rather than nineteen. The summary prints each opponent's pair count for exactly that reason — a row built from one pair is a weaker claim than one built from six, and it says so.
+
+### D209 — The harness reports measured-against-published, and never fits a new scale
+**Question:** Pairwise results have to become a per-opponent number somehow. The obvious move is a least-squares Elo fit over the whole graph, which is what a rating system would do.
+
+**Decision:** Each pair yields one estimate per side — *the other side's published anchor, plus the measured gap* — and an opponent's measured rating is the mean of its estimates.
+
+**Rationale:** A global fit answers "what scale best explains these results", which is the wrong question here and a dangerous one to answer. The published ratings are fixed (D144); a fit would quietly move all twenty at once and produce a self-consistent ladder that no longer means what the player was told. Anchoring each estimate on the *other* side's published rating answers the question the ticket actually asks: does this opponent play at its anchor, against the roster as published. A disagreement then has exactly one legitimate repair — that opponent's configuration.
+
+**Two things the first version of this got wrong**, both found by running it rather than by reading it:
+
+- **A `--only` run printed a measured rating for all nineteen other opponents**, each derived from the single pair it had just played against the subject. Those are not measurements of them. A one-opponent run was turning into nineteen wrong claims. The summary is now scoped to the subject.
+- **A swept pair was averaged in as though it were a measurement.** A 30-0 result has no finite implied gap, so it is clamped half a game off the end — which understates whichever side did the sweeping. Contributing sweeps are now carried through to the summary, and a row built on one is marked `>` or `<` to show the number is a bound rather than a value.
+
+**Cost:** The mean is unweighted, so a pair against a badly mis-configured opponent pulls its neighbours' estimates with it. That is tolerable while errors are being hunted rather than corrected for, and the per-row pair count makes a thin estimate visible. If it ever matters, the fix is to iterate the estimate rather than to fit a scale.
+
+### D210 — What orders the Casual tier is good squares, not blunder rate
+**Question:** The first calibration run reported two inversions inside the Casual tier: Finch (1100) beat Kestrel (1200) 19-11, and Kestrel beat Willow (1250) 18-12. Neither side of either pair searches, so no budget artefact can explain them. Why was the tier ordered by neither of the two levers meant to order it?
+
+**Decision:** The tier is now built on **how many of the sixteen seven-line cells an opponent prefers**, and the blunder rate seconds it:
+
+| | prefers | blunder | aggression |
+|---|---|---|---|
+| Bramble 1000 | none of the sixteen | 0.15 | 0.5 |
+| Finch 1100 | the 8 centre cells | 0.13 | 0.5 |
+| Kestrel 1200 | all 16, corners first | 0.11 | 0.67 |
+| Willow 1250 | all 16, centres first | 0.10 | 0.30 |
+| Ember 1300 | all 16, centres first | 0.08 | 0.5 |
+
+The eight corners and the eight cells of the inner 2×2×2 each lie on seven of the 76 lines; every other cell lies on four. Preferring a group of eight is therefore worth much more than the percentage point of blunder rate separating neighbours — and the blunder rates *cannot* spread, because the roster requires them to fall as rating rises and the tier is bracketed by Bramble at 0.15 and Ember at 0.08. Seven hundredths across four rungs is all there is.
+
+Spec §8.4 gives the whole Casual tier "all four strategic rules; centre preference; aggression-versus-defence weighting", so giving Ember the centre preference it had been missing is the tier conforming to the spec rather than departing from it.
+
+**Three things measurement contradicted, each of which had looked obvious:**
+
+1. **"Corner-hungry is a weakness."** It is a strength. Corners are seven-line cells exactly as centres are, so Kestrel's corner preference was worth as much as Finch's centre preference — which is why the tier's third-strongest configuration kept beating the ones above it.
+2. **"Lowering a bias weakens the opponent."** It does nothing at all. With no `lineBias` there is nothing to compare bias magnitudes against, so only their *order* reaches the board. Changing Kestrel from (0.6 centre, 0.8 corner) to (0.35, 0.55) produced results identical byte for byte across 300 games — the same corner-then-centre ranking, so literally the same games.
+3. **"Raising a blunder rate is the safe lever."** It is bounded to near-uselessness here by the monotonicity the roster requires, and a first attempt at using it put Finch at 0.25 above Bramble's 0.15, which the catalogue test correctly rejected.
+
+**What is still open, and is not mine to decide.** Both inversions narrowed and neither closed. Finch still measures about 33 points above Kestrel over 300 games, down from 95, and Kestrel about 50 above Willow, down from 70.
+
+They have one root cause, and it is measured rather than inferred. With two configurations identical *in every respect except `aggression`*, the aggressive setting beats the defensive one by 28 points and the defensive one loses by 50 — about 78 points turning on that single number. In Qubic, building your own double threat beats denying the opponent's.
+
+That is a problem for the roster rather than for the configuration, because the roster pins that lever's direction and leaves nothing large enough to compensate:
+
+- **Kestrel** is published as "Attacks from the corners, and would rather build than block" — `aggression > 0.5`, which the board says is the *stronger* setting, yet it is rated below Willow.
+- **Willow** is published as "Cautious. Shuts your threats down before it starts its own" — `aggression < 0.5`, the weaker one, rated 50 points above.
+- **Finch** has no handicap at all, and the only lever that would give it one is the blunder rate, which must not exceed Bramble's 0.15.
+
+A configuration that *did* order Finch below Kestrel was found and rejected: it needed Finch at 0.25, above Bramble, which the catalogue test caught. Kestrel's extra eight preferred cells and its two hundredths of blunder rate buy it about 45 points, against the roughly 78 its aggression costs. The arithmetic does not close.
+
+The three ways out are to swap the affected anchors, to rewrite one of the blurbs, or to accept two ~40-point inversions between adjacent rungs as within the approximate strengths 0.1 states it ships with. All three change something published, so all three are the user's call. Recorded here; the ladder ships ordered at every other rung.
+
+---
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

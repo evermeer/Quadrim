@@ -271,45 +271,76 @@ const BotConfig bramble = BotConfig(
   blunderRate: 0.15,
 );
 
-/// All four rules with a strong pull to the centre.
+// What orders the Casual tier is how many of the sixteen seven-line cells an
+// opponent prefers, not its blunder rate (D210).
+//
+// The eight corners and the eight cells of the inner 2x2x2 each lie on seven
+// of the 76 lines; every other cell lies on four. Preferring one of those two
+// groups is worth far more than the percentage point of blunder rate that
+// separates neighbours here — and the blunder rates *cannot* spread, because
+// they must fall as rating rises and the tier is bracketed by Bramble at 0.15
+// and Ember at 0.08. So the ladder is: Bramble prefers none of the sixteen,
+// Finch and Kestrel prefer eight each, and Willow and Ember prefer all
+// sixteen. Spec 8.4 gives the whole tier a centre preference, so this is the
+// tier conforming to it rather than departing from it.
+//
+// Only the *order* of the bias weights reaches the board. With no lineBias
+// there is nothing to compare their magnitudes against, so an opponent that
+// ranks corners above centres above everything else plays identically at
+// (0.55, 0.35) and at (0.8, 0.6) — measured, byte for byte, when a first
+// attempt at this tried to weaken Kestrel by lowering both.
+
+/// All four rules and a strong pull to the middle of the cube.
 const BotConfig finch = BotConfig(
   id: 'finch',
   tier: BotTier.casual,
   rating: 1100,
   rules: _allRules,
-  blunderRate: 0.12,
-  centreBias: 0.9,
+  blunderRate: 0.13,
+  centreBias: 0.6,
 );
 
 /// Corner-hungry and aggressive: builds before it denies, and lets a third of
 /// the opponent's double threats through.
+///
+/// It sees the centre too, and ranks it below the corners — the extra eight
+/// good cells are what pay for a third of its denials going missing.
 const BotConfig kestrel = BotConfig(
   id: 'kestrel',
   tier: BotTier.casual,
   rating: 1200,
   rules: _allRules,
   blunderRate: 0.11,
-  cornerBias: 0.8,
+  centreBias: 0.5,
+  cornerBias: 0.7,
   aggression: 0.67,
 );
 
-/// Defensive: denies before it builds.
+/// Defensive: denies before it builds, and takes good squares while it does.
 const BotConfig willow = BotConfig(
   id: 'willow',
   tier: BotTier.casual,
   rating: 1250,
   rules: _allRules,
   blunderRate: 0.10,
+  centreBias: 0.7,
+  cornerBias: 0.5,
   aggression: 0.30,
 );
 
-/// All four rules cleanly applied, no positional heuristic.
+/// The tier's ceiling: all four rules cleanly applied, the full sixteen good
+/// squares, and nothing given away.
+///
+/// What Basalt adds on top is the building term — the cell on the most lines
+/// it is already working — which is a lever this one does not have at all.
 const BotConfig ember = BotConfig(
   id: 'ember',
   tier: BotTier.casual,
   rating: 1300,
   rules: _allRules,
   blunderRate: 0.08,
+  centreBias: 0.8,
+  cornerBias: 0.6,
 );
 
 /// The first opponent with a plan: all four rules plus the full positional

@@ -222,4 +222,43 @@ void main() {
       expect(matchBalance(own: kSeedRating, opponent: 1250), MatchBalance.even);
     });
   });
+
+  group('impliedRatingDifference', () {
+    test('inverts expectedScore exactly, across the catalogue range', () {
+      // Round-tripping rather than checking against copied constants: the two
+      // functions have to be each other's inverse, which is the property the
+      // calibration harness leans on when it turns a duel score back into a
+      // rating gap.
+      for (var gap = -900; gap <= 900; gap += 25) {
+        final score = expectedScore(1200 + gap, 1200);
+        expect(impliedRatingDifference(score), closeTo(gap, 1e-6),
+            reason: 'gap $gap');
+      }
+    });
+
+    test('an even score implies no gap at all', () {
+      expect(impliedRatingDifference(0.5), closeTo(0, 1e-9));
+    });
+
+    test('the documented example holds', () {
+      // 0.75 is about 190 points — the same number kLopsidedExpectedScore is
+      // built on, seen from the other side.
+      expect(impliedRatingDifference(0.75), closeTo(190.8, 0.1));
+      expect(impliedRatingDifference(0.25), closeTo(-190.8, 0.1));
+    });
+
+    test('is antisymmetric: a result reads the same from either seat', () {
+      for (final score in [0.1, 0.3, 0.45, 0.6, 0.9]) {
+        expect(impliedRatingDifference(score),
+            closeTo(-impliedRatingDifference(1 - score)!, 1e-9));
+      }
+    });
+
+    test('a sweep has no answer, and says so rather than guessing', () {
+      // Unbounded, not enormous. The caller knows the sample size, which is
+      // what turns "won them all" into a number; this function does not.
+      expect(impliedRatingDifference(1), isNull);
+      expect(impliedRatingDifference(0), isNull);
+    });
+  });
 }

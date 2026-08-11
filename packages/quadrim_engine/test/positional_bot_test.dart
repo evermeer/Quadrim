@@ -141,12 +141,19 @@ void main() {
       expect(basaltCentre, greaterThan(85),
           reason: 'Basalt took the centre win $basaltCentre/100');
 
-      // Ember has the same rule and no positional sense, so it splits.
-      final emberCentre = [
-        for (var s = 0; s < 100; s++) chooseMove(state, ember, Random(s)).index,
+      // Bramble has the same rule and no positional sense at all, so it
+      // splits. It is the control rather than Ember because the roster test
+      // pins its two biases at zero, where Ember only had them at zero by
+      // accident — and D210 gave Ember the centre preference spec 8.4 gives
+      // the whole Casual tier, which silently turned this control into a
+      // second copy of the assertion above it.
+      final brambleCentre = [
+        for (var s = 0; s < 100; s++)
+          chooseMove(state, bramble, Random(s)).index,
       ].where((c) => c == 21).length;
-      expect(emberCentre, lessThan(70),
-          reason: 'Ember should be choosing at random, got $emberCentre/100');
+      expect(brambleCentre, lessThan(70),
+          reason: 'Bramble should be choosing at random, '
+              'got $brambleCentre/100');
     });
 
     test('beats Ember over a significant number of self-play games', () {

@@ -39,6 +39,25 @@ int kFactor(int gamesPlayed) =>
 int updatedRating(int current, int k, double score, double expected) =>
     math.max(kRatingFloor, (current + k * (score - expected)).round());
 
+/// The rating gap an observed [score] implies, from the scoring side's view.
+///
+/// The exact inverse of [expectedScore]: a side that scores 0.75 over a long
+/// run measures about 190 points above what it played. Positive means stronger.
+///
+/// This is what turns a duel result into a number the calibration harness can
+/// compare against a published anchor (ticket 014). It says nothing about how
+/// *certain* that number is — thirty games leave roughly 70 points of sampling
+/// noise around it — so a caller reporting one should report the sample size
+/// beside it.
+///
+/// Null at 0 and 1, where the answer is unbounded. A clean sweep establishes
+/// only "at least this much", and what turns that into a number is the number
+/// of games it took, which this function is not told.
+double? impliedRatingDifference(double score) {
+  if (score <= 0 || score >= 1) return null;
+  return 400 * math.log(score / (1 - score)) / math.ln10;
+}
+
 /// One finished game, reduced to what the fold needs.
 ///
 /// Deliberately not the app's game document: this package may not know about

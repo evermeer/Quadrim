@@ -2705,3 +2705,162 @@ It fails on the shipped palettes.
 ### Outcome
 
 Shipped. 212 app tests green, `ALL CHECKS PASSED` exit 0.
+
+---
+
+# Ticket 014 — Rating maths and the self-play calibration harness
+
+> Reviewed: working tree against `02a753a` on `main`.
+> New: `packages/quadrim_engine/tool/calibrate.dart`.
+> Changed: `packages/quadrim_rating/lib/quadrim_rating.dart`,
+> `packages/quadrim_rating/test/rating_test.dart`,
+> `packages/quadrim_engine/tool/duel.dart`,
+> `packages/quadrim_engine/pubspec.yaml`,
+> `packages/quadrim_engine/lib/src/bot.dart` (the Casual tier),
+> `packages/quadrim_engine/test/positional_bot_test.dart`,
+> `CLAUDE.md`, `doc/idea-decisions.md` (D208–D210), the ticket.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 1 |
+
+All three were fixed during the review. Both `minor` findings were reproduced
+by running the tool, not by reading it.
+
+## Findings
+
+### [MINOR] A small `--budget` turns a searching opponent into a different opponent — `bug`
+
+**File:** `packages/quadrim_engine/tool/calibrate.dart:196`
+
+**Evidence** — before the fix:
+
+```dart
+nodeBudget: (config.nodeBudget * scale).round(),
+forcingBudget: (config.forcingBudget * scale).round(),
+```
+
+`chooseMove` switches on the budget being non-zero, in two places:
+
+```dart
+// bot.dart:635
+if (candidates.length > 1 &&
+    (config.searchDepth > 0 || config.nodeBudget > 0)) {
+// bot.dart:738
+final scores = config.nodeBudget > 0 ? deepSearch(...) : ...
+```
+
+**Problem:** rounding a non-zero budget to zero does not make an opponent think
+briefly — it stops it searching at all. Quartz through Quadrim Prime have
+`searchDepth: 0`, so they become rules-only opponents while the report still
+carries their names and ratings. Reproduced: `--only quartz --budget 0.0000001`
+printed `quartz vs corvus 1-1-0 measured 0` as a measurement of two opponents
+that were no longer searching. `SearchLimits` also asserts `nodeBudget > 0`
+(`search.dart:35`), so the forcing path is an assertion failure rather than a
+wrong answer.
+
+Not reachable at the default scale — the smallest real budget is 200,000 — but
+`--budget` is an advertised flag and the failure is silent.
+
+**Fix, applied:**
+
+```dart
+/// [budget] scaled, never crossing from "some" to "none".
+int _scaleBudget(int budget, double scale) =>
+    budget == 0 ? 0 : max(1, (budget * scale).round());
+```
+
+### [MINOR] `duel.dart` with zero games throws instead of complaining — `bug`
+
+**File:** `packages/quadrim_engine/tool/duel.dart:58`
+
+**Evidence:**
+
+```dart
+final margin = 0.5 / games;
+final score = ((aWins + draws / 2) / games).clamp(margin, 1 - margin);
+```
+
+**Problem:** introduced by this ticket's own change. At `games == 0`, `margin`
+is `Infinity` and `raw` is `NaN`, so `clamp` is called with
+`lowerLimit > upperLimit`. Reproduced:
+
+```
+mote 0 - 0 twig  (draws 0, games 0)
+Unhandled exception:
+Invalid argument(s): Infinity
+#1      main (file:///C:/D/Quadrim/packages/quadrim_engine/tool/duel.dart:53:47)
+```
+
+Before this ticket the same invocation printed a zero-game line and exited 0.
+`calibrate.dart` already guarded the equivalent case; `duel.dart` did not.
+
+**Fix, applied:** reject `games <= 0` with a message, above the arithmetic.
+
+### [NIT] `--seed` accepted junk and silently used 0 — `bug`
+
+**File:** `packages/quadrim_engine/tool/calibrate.dart:469`
+
+**Evidence** — before the fix:
+
+```dart
+case '--seed':
+  seed = int.tryParse(value) ?? 0;
+```
+
+**Problem:** `--games` and `--budget` reject an unparseable value; `--seed` did
+not. `--seed oops` ran with seed 0, so two runs the caller believed were
+independent would be identical.
+
+**Fix, applied:** `return null` on a parse failure, like its two neighbours.
+
+## Not findings, checked and cleared
+
+- **The dev dependency does not leak into the purity gate.** `check.sh` reads
+  the block between `dependencies:` and the next top-level key, and
+  `dev_dependencies:` matches its `^[a-z_]+:` terminator. Verified by running
+  the gate's own awk: both pure packages still report `[]`.
+- **No opponent can be paired with itself.** `_pairsFor` draws cross-tier
+  representatives only from tiers other than the subject's, and neighbours are
+  `index ± 1`.
+- **The catalogue invariants survive the Casual-tier rewrite.** Blunder rate is
+  still non-increasing with rating (0.15 / 0.13 / 0.11 / 0.10 / 0.08), Finch's
+  centre bias is still above 0.5, Kestrel's corner bias and aggression are
+  still above it, Willow's aggression still below, and Ember's blunder rate is
+  still exactly 0.08. The roster test asserts every one of these and passes.
+- **The swept-pair bound directions are right.** For a pair swept by `a`, `a`'s
+  estimate is a floor and `b`'s a ceiling, because the clamped gap understates
+  the sweeper. Traced through both branches.
+- **The inversion report now names the winner from the measurement**, not from
+  the catalogue. The first full run printed all three inversions backwards —
+  "kestrel beats finch" on a line reading `finch vs kestrel 19-11`. Fixed
+  before the second run, which named all three correctly.
+- **The control swap in `positional_bot_test.dart` is a strengthening.** Ember's
+  zero biases were incidental; Bramble's are pinned by the roster test
+  (`expect(bramble.centreBias, 0)`), so the control can no longer be
+  invalidated by a tuning change without a test failing.
+
+## What the reviewed run actually measured
+
+Second full run, after the Casual-tier rewrite: 29 pairs, 30 games each, 6m 28s.
+Sixteen of twenty opponents inside the 150-point tolerance. Four outside:
+Pebble (−485, from one pair), Twig (+205), Sable (+191, one readable pair),
+Quadrim Prime (−224, one readable pair and the opponent the reduced budget hits
+hardest). Two inversions remain and are a roster conflict rather than a
+configuration defect — see D210 and the note on the ticket.
+
+**A caution about the recorded runtime.** The first full run took 43m 55s and
+the second 6m 28s, same settings. The likeliest cause is that an Android
+emulator was running during the first. The figure in CLAUDE.md is the idle-machine
+one and is stated as such; anyone repeating the run on a busy machine should
+expect the larger number.
+
+### Outcome
+
+Shipped with one acceptance criterion deliberately left unticked. Gate:
+`ALL CHECKS PASSED`. Engine 120 tests, rating 29, app 212, linegen 8.

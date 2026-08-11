@@ -12,3 +12,8 @@ dependencies:
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.6
+  # tool/calibrate.dart only. A dev dependency, never a runtime one: the
+  # purity gate reads the `dependencies:` section above and this package must
+  # keep declaring nothing there (spec 9.2).
+  quadrim_rating:
+    path: ../quadrim_rating
