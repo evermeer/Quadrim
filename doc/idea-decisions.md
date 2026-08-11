@@ -2062,6 +2062,19 @@ The alternatives both cost more than they buy. Swapping Kestrel's and Willow's a
 
 **No test pins this.** A test asserting "Finch beats Kestrel" would codify a known defect as an expectation and would have to be deleted the moment it is fixed; a test asserting the *size* stays small would be a slow, noisy self-play run in the gate. The calibration tool is the instrument, and D210 plus this entry are the record.
 
+### D212 — "No network call" is enforced by the manifest, not by reading the code
+**Question:** Ticket 027 requires that no network call is made in computing, storing or displaying the computer rating, and D93 makes the same promise for all computer play in every release. How is a *negative* like that verified?
+
+**Decision:** `check.sh` fails if `app/android/app/src/main/AndroidManifest.xml` declares `android.permission.INTERNET`. Flutter's `debug` and `profile` manifests declare it for hot reload and are deliberately not checked.
+
+**Rationale:** The alternatives are weaker. Grepping `app/lib` for `HttpClient` and friends checks only the spellings someone thought of, and a transitive dependency could reach the network without any of them appearing. Reading the code proves it about the code that exists today. The permission is categorical: without it, Android refuses the call whatever the code asks for, including from a dependency nobody audited. It is also the thing a store listing shows a player, which makes it the promise that is actually visible.
+
+The app helps by having nothing to enforce against — its only runtime dependencies are `intl`, `path_provider`, and the two pure packages. But that is a fact about today's `pubspec.yaml`, and the guard is for tomorrow's.
+
+**Cost:** it checks the Android release manifest and nothing else, so it is exactly as complete as the platform list — which is one platform for 0.1. When 0.3a adds Firebase the app will need `INTERNET`, and this check will fail; that failure is the point. It should be narrowed then to a promise about *computer play* specifically, rather than quietly deleted.
+
+**A verification, not an implementation.** Ticket 027's code had shipped incidentally with 013, so the ticket was a pass over its criteria rather than new work. That pass was worth doing: the rating fold turned out to have two assertions covering it — the seed, and one `greaterThan` — while every rule the ticket names (the stored anchor, the K step, the draw, the floor, the seat, the ordering) was unproven. Code existing is not the same as a criterion being met, and the difference was eleven tests.
+
 ---
 
 ## Appendix — session tooling

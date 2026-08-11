@@ -59,10 +59,10 @@ packages/quadrim_engine/    Rules, search, opponents, strategy book. Pure Dart.
 packages/quadrim_rating/    ELO maths. Pure Dart.
 tools/linegen/              Build-time generator for the 76 winning lines.
 third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
-doc/tickets/                The 8 tickets still open; the unit of work and of commits.
-doc/tickets/done/           The 21 finished ones. A ticket moves here once it is
+doc/tickets/                The 7 tickets still open; the unit of work and of commits.
+doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-decisions.md       D01–D210. Every non-obvious choice, with its cost.
+doc/idea-decisions.md       D01–D212. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -102,7 +102,7 @@ The standing instruction for this repo:
 > Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D210.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D212.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.
@@ -112,5 +112,5 @@ The standing instruction for this repo:
 - **Two Casual-tier inversions are accepted for 0.1 and owned by the 1.0 roster revision** (D210, D211). Finch plays ~33 points above Kestrel and Kestrel ~50 above Willow. The cause is measured: `aggression` is worth about 78 points and the roster pins its direction — Kestrel "would rather build than block" (the stronger setting) is rated below Willow "shuts your threats down first" (the weaker one). No configuration change closes it, so the fix is a roster change, not a tuning pass. Do not "fix" this by editing a bot config; check it with `calibrate.dart --only kestrel`.
 - Calibration puts Oracle at 2323 against a published 2300 — the earlier ~2100 estimate does not survive a measured run. Quadrim Prime measures 2176 from a single readable pair, and it is the opponent the reduced budget hits hardest, so that number is a floor rather than a verdict; re-run `--only quadrim_prime --budget 1` before believing it.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
-- Ticket 027 (computer rating) is **not** in `done/`, and looks like it should be. Most of what it asks for shipped incidentally with 013 — `quadrim_rating`, `rating_fold.dart`, the rating on the main screen, the delta on the result screen — but it was never worked or reviewed as a ticket, and its blocker 014 is open, so its anchors are the ones known to be mis-calibrated. Verify its criteria before moving it rather than assuming.
+- **`check.sh` fails if the release manifest declares `INTERNET`** (D212). That is how "computer play makes no network call" is enforced — by the permission, not by reading the code. 0.3a's Firebase work will trip it; narrow the check to computer play then rather than deleting it.
 - Tickets that need the user's Google account or decisions and cannot be done by an agent: 015, 016, 024, parts of 022.

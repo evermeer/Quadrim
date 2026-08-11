@@ -27,6 +27,21 @@ if grep -rnE "Text\(\s*['\"][^'\"]*[A-Za-z]" app/lib --include='*.dart' | grep -
   echo "FAIL: hardcoded user-facing string(s) above - route them through l10n"; fail=1
 fi
 
+echo "== the shipped app cannot reach the network =="
+# D93 and spec S1/F13: computer play makes no network call, in any release.
+# The strongest available guarantee is not a code review but the permission
+# itself — without INTERNET in the *release* manifest, Android refuses the call
+# whatever the code asks for. Flutter's own debug and profile manifests declare
+# it for hot reload and are deliberately not checked; only what ships is
+# (ticket 027).
+if grep -q 'android.permission.INTERNET' app/android/app/src/main/AndroidManifest.xml; then
+  echo "FAIL: the release manifest declares INTERNET."
+  echo "      The computer rating and computer play are offline in every"
+  echo "      release (D93). If a later release genuinely needs the network,"
+  echo "      that is a spec change, not a manifest edit."
+  fail=1
+fi
+
 echo "== the strategy dictionary's attribution is still in the app =="
 # Its terms permit use only "as long as its source is credited", and it is the
 # built app that reaches people. A grep, because the alternative is trusting

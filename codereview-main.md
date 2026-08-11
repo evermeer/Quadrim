@@ -2867,3 +2867,92 @@ explicit decision (D211) rather than by shrugging: the Casual-tier inversions
 are a roster conflict that no configuration change closes, so they are owned by
 the 1.0 roster revision. Gate: `ALL CHECKS PASSED`. Engine 120 tests, rating 29,
 app 212, linegen 8.
+
+---
+
+# Ticket 027 — Rating against the computer
+
+> Reviewed: working tree against `eded7c2` on `main`.
+> New: `app/test/rating_fold_test.dart`.
+> Changed: `tool/check.sh` (release-manifest network guard),
+> `doc/idea-decisions.md` (D212), the ticket.
+>
+> A **verification** ticket: the implementation shipped incidentally with 013,
+> so what was reviewed is whether each criterion is actually met and actually
+> pinned — not new production code.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+### [MAJOR] Every rating rule the ticket names was unproven — `test-coverage`
+
+**File:** `app/lib/data/rating_fold.dart:42`
+
+**Evidence** — the entire coverage of the fold before this ticket, both
+assertions in `test/home_summary_test.dart`:
+
+```dart
+expect(summary.computerRating, kSeedRating);          // line 48, empty history
+expect(HomeSummary.from(games).computerRating,
+       greaterThan(kSeedRating));                     // line 167, two wins
+```
+
+**Problem:** `greaterThan(kSeedRating)` after two wins passes on almost any
+monotonic function of the game list. Nothing checked that the fold uses the
+**stored anchor** rather than the current catalogue rating — the one property
+that keeps a recalibration from silently rewriting a player's history, and the
+property most at risk this session, since ticket 014 had just changed four
+opponent configurations. Nothing checked the K step, the draw score, the floor,
+the player's seat, or that the fold depends on completion order at all.
+
+**Fix, applied:** `app/test/rating_fold_test.dart`, eleven tests at the
+document level, one per rule the ticket names.
+
+## Not findings, checked and cleared
+
+- **Criterion 12 has no code to test, so it is mechanised instead.** The
+  release manifest declares no `INTERNET` permission, so Android refuses a
+  network call whatever the code asks for. `check.sh` now fails if that
+  changes (D212). The guard was verified by adding the permission and watching
+  the gate fail, then reverting — a check nobody has seen fail is a check
+  nobody knows works.
+- **The app has nothing to make a call with.** Runtime dependencies are
+  `intl`, `path_provider`, `quadrim_engine`, `quadrim_rating`. That is a fact
+  about today's pubspec, which is why the guard is on the manifest.
+- **Criteria 10, 11, 13, 14 were already pinned.** The rating on the main
+  screen, its "against the computer, on this device only" note, the screen
+  reader announcement, and the result-screen delta are covered by
+  `home_screen_test.dart:78`, `:86`, `:238` and `result_screen_test.dart:88`.
+  Dutch strings for all four keys exist in `app_nl.arb`.
+- **Criterion 8 is covered twice**, once at the fold and once at the UI:
+  `result_screen_test.dart:122` asserts a pass-and-play result says plainly
+  that no rating changed.
+- **The ordering contract is not duplicated.** `repository_test.dart:158`
+  already pins that `loadCompletedGames` returns newest-first by `completedAt`;
+  the new test pins only that the fold *depends* on it.
+
+## One thing the new tests got wrong first
+
+The order-sensitivity control asserted that reversing two games changes the
+rating. It failed: a loss to 600 and a win over 2000 give **1201 either way**,
+because the two deltas very nearly cancel whichever order they fall in. The
+fixture could not serve as its own control. Replaced with twenty-one games,
+where the K change at the twentieth puts one result on the far side of the
+boundary and the order genuinely decides the answer.
+
+Worth recording because the failure mode is invisible when a control passes:
+had the two-game fixture happened to differ by a point, the test would have
+"passed" while proving nothing about order.
+
+### Outcome
+
+Shipped. All 14 acceptance criteria met. Gate: `ALL CHECKS PASSED`.
+App 223 tests, engine 120, rating 29, linegen 8.
