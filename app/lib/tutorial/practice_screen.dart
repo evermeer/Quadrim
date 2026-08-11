@@ -164,6 +164,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           Win(line: final l) => l,
                           _ => const <int>[],
                         },
+                  // The same flash as a real game. This is where a player
+                  // first meets it, so it has to be the thing they will then
+                  // recognise (D203).
+                  flash: flashCells(_state),
                 ),
               ),
             ),

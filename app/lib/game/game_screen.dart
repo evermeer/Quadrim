@@ -342,6 +342,11 @@ class _GameBody extends StatelessWidget {
                 enabled: enabled && !over,
                 onCellTap: onCellTap,
                 highlight: highlight,
+                // The move just played, or the whole line once one is
+                // completed. Against a computer opponent its reply otherwise
+                // simply appears somewhere in sixty-four cells, and finding it
+                // is the player's problem (D203).
+                flash: flashCells(state),
               ),
             ),
           ),

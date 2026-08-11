@@ -1858,6 +1858,31 @@ The board share of the page went from 0.55 to 0.72 at the same time. At 0.55 the
 
 The honest general point: a widget test can pin what a screen *says* and what it *holds*, and this project has got good at that. It cannot tell you the layout is a mirror image of the one it is supposed to match. Ticket 021's audit is on a device for a reason, and this is the second and third thing on its list.
 
+### D203 — The move just played flashes green, and so does the line that wins
+**Question:** Playing real games turned up something no test had: a computer opponent's reply simply appears somewhere among sixty-four cells, and finding it is the player's problem. The winning line had the same weakness in weaker form — a thin border on four cells, on a board where every cell already has a border.
+
+**Decision:** The piece just played pulses green for four seconds. Once a game is decided, the whole winning line pulses instead. A light piece goes to a light green and a dark piece to a dark green.
+
+**Rationale:**
+
+**It does not undo [D124](#d124).** Light and dark are told apart by *lightness*, never by hue, so that the distinction survives every colour vision deficiency — and a naive "flash the last move green" would have made both sides the same colour for four seconds out of every turn. Flashing each side to a green of its own lightness keeps the ordering intact while it is lit, and a test asserts the flashed light piece stays more than 0.2 luminance above the flashed dark one. The user asked for exactly this split, which is the reason it was never in danger.
+
+The deeper point is that hue is not carrying the signal at all. What a player reads is a *pulse over time*, and no colour vision deficiency touches motion. The green is what makes it findable at a glance; the pulse is what makes it unmissable.
+
+**Four seconds, four pulses — 1 Hz.** WCAG 2.3.1 puts the seizure-risk threshold at three flashes per second, so this sits at a third of the limit. That is not a coincidence to be grateful for: a pulse fast enough to worry about would also read as a strobe rather than as "look here", so the accessible rate and the legible rate are the same rate. The test counts peaks in the sampled curve and divides by the real duration rather than restating the constant — a test that recomputed `kFlashPulses / 4` would pass no matter what the curve did.
+
+The strength curve starts at full and is dragged to zero by a `1 - t` envelope. Starting full means the move is marked the instant it lands rather than half a pulse later; the envelope means it fades out rather than being cut off mid-pulse when the controller stops.
+
+**Reduced motion holds the green steady instead of pulsing.** `MediaQuery.disableAnimationsOf` is honoured by keeping the piece fully green for the four seconds and then dropping it. Someone who has asked the system for less movement still gets told which cell changed — they just do not get anything moving to tell them. Turning the flash off entirely would have taken the information away from the people most likely to need it.
+
+**The flash restarts on the *contents* of the cell list, not its identity.** Every rebuild hands the board a freshly built list, so a reference comparison restarts the animation on every frame and the piece pulses forever. Mutation-checked: swapping `listEquals` for `==` turns one test red.
+
+**Only the flashing pieces subscribe to the controller.** The animation is passed down as null for every cell that is not flashing, so a frame costs the one-to-four pieces that are pulsing rather than a rebuild of all sixty-four and their shear transforms.
+
+**Not on the tutorial's demonstration boards.** Those are static illustrations, and one of them highlights the eight central cells at once — pulsing all eight would be a strobe pretending to be a lesson. They keep the border. The tutorial's *practice game* does flash, through the same `flashCells` helper the real game uses, because that is where a player first meets it and it has to be the thing they will then recognise.
+
+**What it costs.** The winning line keeps its borders as well, because the flash is over after four seconds and the record of how the game ended should not be. The last move has no such persistent marker — look away for five seconds and it is gone, which is the honest limit of a transient cue. Every widget test that plays a move now advances four seconds of simulated time; measurable in the suite's runtime, not in anything a player sees.
+
 ---
 
 ## Appendix — session tooling

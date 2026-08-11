@@ -44,6 +44,35 @@ void main() {
   // A phone-sized surface so the whole board lays out.
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('the board is told to flash the move just played, then the '
+      'whole winning line', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2280);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    await _pumpGame(tester);
+
+    List<int> flashing() =>
+        tester.widget<BoardView>(find.byType(BoardView)).flash;
+
+    expect(flashing(), isEmpty, reason: 'nothing has been played yet');
+
+    await _tapCell(tester, 21);
+    expect(flashing(), [21]);
+    await _tapCell(tester, 32);
+    expect(flashing(), [32], reason: "the reply, not the move before it");
+
+    // Light completes {0,1,2,3}. Dark's four are scattered on purpose: the
+    // obvious fillers 40-43 are themselves a row, and dark wins with them
+    // before light gets its fourth piece down.
+    for (final move in [0, 47, 1, 53, 2, 58, 3]) {
+      await _tapCell(tester, move);
+    }
+    expect(find.text('Light wins!'), findsOneWidget);
+    // Not just the winning move: the whole line, so the player can see what
+    // it was that completed.
+    expect(flashing().toSet(), {0, 1, 2, 3});
+  });
+
   testWidgets('a full pass-and-play game reaches a win with the line shown',
       (tester) async {
     tester.view.physicalSize = const Size(1080, 2280);

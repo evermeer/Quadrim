@@ -2305,3 +2305,93 @@ None — all twelve criteria are addressed.
 Both applied. Live region now attaches to the message rather than the reserved
 space (D201), with a tree-walking guard; `legalMoves` hoisted. 175 app tests
 green, `flutter analyze` clean.
+
+---
+
+# Last-move and winning-line flash
+
+> Reviewed: working tree against `8191fe2` on `main`. Not a ticket — a change
+> asked for after playing the game.
+> Changed: `app/lib/game/board_view.dart`, `app/lib/game/game_screen.dart`,
+> `app/lib/tutorial/practice_screen.dart`, `app/test/board_flash_test.dart` (new),
+> `app/test/game_screen_test.dart`, `doc/idea-decisions.md` (D203).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 1 |
+
+## Findings
+
+### [NIT] `Cell.xyz(x, y, z)` was constructed three times per cell — `simplification`
+
+**File:** `app/lib/game/board_view.dart:200` (before the fix)
+
+**Evidence:**
+```dart
+child: _CellView(
+  cell: Cell.xyz(x, y, z),
+  ...
+  highlighted: highlight.contains(Cell.xyz(x, y, z).index),
+  flash: flash.contains(Cell.xyz(x, y, z).index) ? flashAnimation : null,
+```
+
+**Problem:** it was already twice before this change and the flash made it
+three. Nothing measurable — `Cell` is a value wrapper round an int — but the
+expression is now the noisiest thing in the loop.
+
+**Fix:** a `_cell(x, y)` method that builds the `Cell` once. The collection-for
+becomes `for (var x = 0; x < 4; x++) _cell(x, y)`.
+
+## Not findings, checked and cleared
+
+- **The flash cannot restart on every frame.** Every rebuild hands the board a
+  freshly built list, so the restart test is `listEquals`, not `==`.
+  Mutation-checked: swapping it turns "does not restart when the board rebuilds
+  for another reason" red.
+- **D124 survives.** A test asserts the flashed light piece stays more than 0.2
+  luminance above the flashed dark one, so going green cannot quietly convert a
+  lightness distinction into a hue one. Both are also asserted to actually be
+  green (`g > r`, `g > b`), so the test cannot pass by the flash doing nothing.
+- **The pulse rate is counted, not restated.** The test finds peaks in the
+  sampled curve and divides by the real duration — 1 Hz against WCAG 2.3.1's
+  three-per-second limit. Asserting `kFlashPulses / 4 < 3` would have passed
+  whatever the curve did.
+- **The colours are not copied into the test.** A flashing piece is compared
+  against another piece of the same side on the same board that is not
+  flashing, so the palette can change freely without touching the test.
+- **Reduced motion is handled, not ignored.** `MediaQuery.disableAnimationsOf`
+  holds the piece steadily green for the four seconds rather than pulsing —
+  same information, nothing moving. Turning the cue off would have removed it
+  from the people most likely to want it.
+- **No re-entrancy or leak.** The controller is disposed with the state, and
+  `didUpdateWidget` stops it when the flash list empties.
+- **Per-frame cost is bounded.** The animation is passed down as null for
+  non-flashing cells, so a frame rebuilds the one-to-four pulsing pieces rather
+  than all sixty-four cells and their shear transforms.
+- **The tutorial's demonstration boards do not flash.** They are static
+  illustrations and one highlights eight cells at once. The practice game does,
+  through the same `flashCells` helper the real game uses.
+- **Verified on a device, not only in tests.** A dark piece flashing dark green
+  in layer 1 against a resting black piece in layer 3, and a light piece
+  flashing light green in layer 4. This is a change about whether something is
+  visible; a passing test could not have answered that.
+
+## Known gap, not addressed
+
+- **A screen reader user still cannot find the opponent's last move.** The
+  flash is a purely visual cue, and the problem it solves — "where did that
+  piece go among sixty-four cells" — is worse without sight, not better. The
+  turn banner is already a live region and could carry "Ember played layer 4,
+  row 3, column 2", but that is a new string in two languages and a change to
+  what the banner says, which is past what was asked for here. Belongs to
+  ticket 021.
+
+### Outcome
+
+The nit applied. 189 app tests green, `flutter analyze` clean,
+`ALL CHECKS PASSED` exit 0.
