@@ -540,7 +540,7 @@ Everything else in this plan can be changed later. These cannot.
 
 | Decision | When | Why it is final |
 |---|---|---|
-| **Application id** | Before the first upload | Permanent once published to any track. Currently recorded as `PLACEHOLDER_APPLICATION_ID` |
+| **Application id** | Before the first upload | Permanent once published to any track. **Settled: `nl.evict.quadrim`** (D213, 2026-08-11), chosen before any upload |
 | **App signing key** | At Play App Signing enrolment | Google holds it and it cannot be replaced for an existing app |
 | **Firestore database location** | Before the first write at 0.3a | Fixed at creation. Cloud Functions must be pinned to a compatible region separately, and Firebase Auth cannot be region-pinned at all — user records are processed in the US regardless, which the privacy policy must state rather than claiming EU-only |
 

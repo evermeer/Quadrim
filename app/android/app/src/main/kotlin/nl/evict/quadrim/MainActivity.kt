@@ -1,4 +1,4 @@
-package com.example.quadrim
+package nl.evict.quadrim
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2075,6 +2075,19 @@ The app helps by having nothing to enforce against — its only runtime dependen
 
 **A verification, not an implementation.** Ticket 027's code had shipped incidentally with 013, so the ticket was a pass over its criteria rather than new work. That pass was worth doing: the rating fold turned out to have two assertions covering it — the seed, and one `greaterThan` — while every rule the ticket names (the stored anchor, the K step, the draw, the floor, the seat, the ordering) was unproven. Code existing is not the same as a criterion being met, and the difference was eleven tests.
 
+### D213 — The application id is `nl.evict.quadrim`
+**Question:** The scaffolding shipped `com.example.quadrim`. Play rejects the `com.example.*` prefix outright, and the id is permanent from the first upload to any track — so this had to be settled before ticket 016 could begin, and it could only be settled by whoever owns the domain.
+
+**Decision:** `nl.evict.quadrim`, chosen by the project owner on 2026-08-11 and applied before anything was uploaded anywhere.
+
+**Rationale:** It follows the reverse-domain convention against a domain the owner controls, which is what makes the namespace defensible rather than merely unused. `evict` also matches the owner's existing identity, so a second app can sit beside this one under the same prefix without a second decision.
+
+**What changed, and what deliberately did not.** The `applicationId`, the Gradle `namespace`, the Kotlin package and the directory that has to mirror it — four places that must agree, because Android resolves `MainActivity` through the merged manifest and a mismatch is a runtime crash on launch rather than a build error. Not changed: the Dart package name (`quadrim`), which is internal to pub and never leaves the repo, and the display name, which is a separate decision with separate constraints and is still open in ticket 015.
+
+**Cost:** the old id becomes a different app. Anything already installed under `com.example.quadrim` — every debug build on the emulator and on any developer's phone — is now a stranger to the new build, with its own saved games in its own sandbox. That is exactly the effect the permanence warning is about, seen harmlessly: it is free today because nothing has shipped, and it would be irreversible after the first closed test.
+
+**The window is open, and closes at the first upload.** Nothing has gone to Play yet, so this is still changeable today. Ticket 016 is what closes it.
+
 ---
 
 ## Appendix — session tooling

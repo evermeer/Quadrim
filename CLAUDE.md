@@ -62,7 +62,7 @@ third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
 doc/tickets/                The 7 tickets still open; the unit of work and of commits.
 doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-decisions.md       D01–D212. Every non-obvious choice, with its cost.
+doc/idea-decisions.md       D01–D213. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -92,7 +92,7 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 - **`l10n.strategyCredit` must be rendered somewhere in `app/lib`.** Patashnik's dictionary may be used only if credited in the shipped app; `check.sh` greps for it (D174). Ticket 028 (settings screen) inherits this.
 - **The dictionary is vendored byte-for-byte and its SHA-256 is verified** on every check run. Never edit `third_party/patashnik/qubic.dictionary`. Only the dictionary was taken — the GPL-2.0 C++ from the same repository is deliberately untouched (D172).
 - **No user-facing string outside l10n.** `check.sh` rejects `Text('...')` with letters in `app/lib`.
-- **The application id is permanent** once published to any track, including closed testing.
+- **The application id is `nl.evict.quadrim` and is permanent** once published to any track, including closed testing (D213). Nothing has been uploaded yet, so today it is still changeable; the moment a closed test goes out it is not.
 - Keystore credentials stay out of version control (ticket 015).
 
 ## Working conventions
@@ -102,7 +102,7 @@ The standing instruction for this repo:
 > Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D212.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D213.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.

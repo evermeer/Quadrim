@@ -12,7 +12,7 @@
 
 - [ ] A Google Play Console developer account exists and is verified
 - [ ] Apple Developer Program enrolment is started, with its status tracked
-- [ ] The final application id is chosen, recorded, and applied, replacing the placeholder
+- [x] The final application id is chosen, recorded, and applied, replacing the placeholder — `nl.evict.quadrim`, set 2026-08-11 before any upload (D213)
 - [ ] An upload keystore is generated and backed up somewhere durable and off the development machine
 - [ ] The backup has been verified by restoring it, not merely by creating it
 - [ ] Release signing is configured so a signed release build can be produced by one command
