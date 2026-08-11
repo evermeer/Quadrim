@@ -59,8 +59,8 @@ packages/quadrim_engine/    Rules, search, opponents, strategy book. Pure Dart.
 packages/quadrim_rating/    ELO maths. Pure Dart.
 tools/linegen/              Build-time generator for the 76 winning lines.
 third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
-doc/tickets/                The 11 tickets still open; the unit of work and of commits.
-doc/tickets/done/           The 18 finished ones. A ticket moves here once it is
+doc/tickets/                The 8 tickets still open; the unit of work and of commits.
+doc/tickets/done/           The 21 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
 doc/idea-decisions.md       D01–D210. Every non-obvious choice, with its cost.
 ```
@@ -109,7 +109,7 @@ The standing instruction for this repo:
 
 ## Known open items
 
-- **Two Casual-tier inversions await a decision that changes something published** (D210, ticket 014). Finch measures ~33 points above Kestrel and Kestrel ~50 above Willow. The cause is measured, not guessed: `aggression` is worth about 78 points, and the roster pins its direction — Kestrel "would rather build than block" (the stronger setting) is rated below Willow "shuts your threats down first" (the weaker one). No configuration change closes it. The options are to swap the anchors, rewrite a blurb, or accept the inversions for 0.1.
+- **Two Casual-tier inversions are accepted for 0.1 and owned by the 1.0 roster revision** (D210, D211). Finch plays ~33 points above Kestrel and Kestrel ~50 above Willow. The cause is measured: `aggression` is worth about 78 points and the roster pins its direction — Kestrel "would rather build than block" (the stronger setting) is rated below Willow "shuts your threats down first" (the weaker one). No configuration change closes it, so the fix is a roster change, not a tuning pass. Do not "fix" this by editing a bot config; check it with `calibrate.dart --only kestrel`.
 - Calibration puts Oracle at 2323 against a published 2300 — the earlier ~2100 estimate does not survive a measured run. Quadrim Prime measures 2176 from a single readable pair, and it is the opponent the reduced budget hits hardest, so that number is a floor rather than a verdict; re-run `--only quadrim_prime --budget 1` before believing it.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
 - Ticket 027 (computer rating) is **not** in `done/`, and looks like it should be. Most of what it asks for shipped incidentally with 013 — `quadrim_rating`, `rating_fold.dart`, the rating on the main screen, the delta on the result screen — but it was never worked or reviewed as a ticket, and its blocker 014 is open, so its anchors are the ones known to be mis-calibrated. Verify its criteria before moving it rather than assuming.

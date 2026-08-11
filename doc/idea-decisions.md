@@ -2045,7 +2045,22 @@ That is a problem for the roster rather than for the configuration, because the 
 
 A configuration that *did* order Finch below Kestrel was found and rejected: it needed Finch at 0.25, above Bramble, which the catalogue test caught. Kestrel's extra eight preferred cells and its two hundredths of blunder rate buy it about 45 points, against the roughly 78 its aggression costs. The arithmetic does not close.
 
-The three ways out are to swap the affected anchors, to rewrite one of the blurbs, or to accept two ~40-point inversions between adjacent rungs as within the approximate strengths 0.1 states it ships with. All three change something published, so all three are the user's call. Recorded here; the ladder ships ordered at every other rung.
+The three ways out are to swap the affected anchors, to rewrite one of the blurbs, or to accept two ~40-point inversions between adjacent rungs as within the approximate strengths 0.1 states it ships with. All three change something published, so all three are the user's call. Recorded here; the ladder ships ordered at every other rung. Settled in [D211](#d211--the-two-casual-tier-inversions-are-accepted-for-01-and-owned-by-10).
+
+### D211 — The two Casual-tier inversions are accepted for 0.1, and owned by 1.0
+**Question:** [D210](#d210--what-orders-the-casual-tier-is-good-squares-not-blunder-rate) left three ways out of a conflict between the roster's personalities and its rating order. Which one ships?
+
+**Decision:** Accept the two inversions for release 0.1. Finch (1100) plays about 33 points above Kestrel (1200), and Kestrel about 50 above Willow (1250). Nothing is renamed, no blurb is rewritten, and no anchor moves.
+
+**Rationale:** The ticket itself already says what 0.1 promises — "for 0.1 the strengths are an approximate estimate and are stated as such", with the tuning pass deferred "once there is enough real play to measure against". Two adjacent rungs 40 points out of order is inside that promise, and it is smaller than the gaps the ladder is wrong by elsewhere and not complaining about: Pebble measures 485 points off its anchor and Twig 205.
+
+The alternatives both cost more than they buy. Swapping Kestrel's and Willow's anchors would reorder the opponent list a player already sees and break the tier's published rating rungs for a 50-point correction. Rewriting a blurb would make a personality serve the number rather than the other way round, which is backwards: the personalities are the thing players actually experience, and "Cautious. Shuts your threats down before it starts its own" is a real and recognisable way to play whether or not it wins.
+
+**Cost, stated plainly:** a player who beats Willow and then loses to Kestrel has met the ladder out of order, and their computer rating will move by the wrong amount for those two games — Willow's win pays 50 points more than it earned. It is a real inaccuracy in a real number, not a cosmetic one, and it is being accepted because 0.1's ratings are stated as approximate.
+
+**What owns it next.** Not a later tuning pass in general, but specifically the 1.0 roster revision, which is already the point at which Quadrim Prime is upgraded. The fix there is a roster change rather than a configuration one: either the Casual tier's rungs are spaced by something other than aggression, or aggression stops being a personality axis and becomes a strength axis. `calibrate.dart --only kestrel` is the check that it worked.
+
+**No test pins this.** A test asserting "Finch beats Kestrel" would codify a known defect as an expectation and would have to be deleted the moment it is fixed; a test asserting the *size* stays small would be a slow, noisy self-play run in the gate. The calibration tool is the instrument, and D210 plus this entry are the record.
 
 ---
 

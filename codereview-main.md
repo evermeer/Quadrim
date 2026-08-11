@@ -2862,5 +2862,8 @@ expect the larger number.
 
 ### Outcome
 
-Shipped with one acceptance criterion deliberately left unticked. Gate:
-`ALL CHECKS PASSED`. Engine 120 tests, rating 29, app 212, linegen 8.
+Shipped. The ordering criterion carries two named exceptions, accepted by
+explicit decision (D211) rather than by shrugging: the Casual-tier inversions
+are a roster conflict that no configuration change closes, so they are owned by
+the 1.0 roster revision. Gate: `ALL CHECKS PASSED`. Engine 120 tests, rating 29,
+app 212, linegen 8.
