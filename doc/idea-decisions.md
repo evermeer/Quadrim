@@ -1883,6 +1883,31 @@ The strength curve starts at full and is dragged to zero by a `1 - t` envelope. 
 
 **What it costs.** The winning line keeps its borders as well, because the flash is over after four seconds and the record of how the game ended should not be. The last move has no such persistent marker — look away for five seconds and it is gone, which is the honest limit of a transient cue. Every widget test that plays a move now advances four seconds of simulated time; measurable in the suite's runtime, not in anything a player sees.
 
+### D204 — The scrubber takes the turn banner's place, because there is no room for a row
+**Question:** Ticket 012 wants a control that steps through a game's moves. The obvious shape is a row of buttons under the board. How much vertical room is there?
+
+**Decision:** Six dp. Review is a *mode*: entering it replaces the turn banner and the opening-move caption with the scrubber, so the board's height budget is unchanged.
+
+**Rationale:** Measured before designing, which is the only reason this did not have to be undone later. Cell size at the smallest supported screen, against the audited 32dp floor:
+
+| Screen | Cell | Slack | Chrome available |
+|---|---|---|---|
+| 360×780 | 32.38dp | 0.38dp | **6dp** |
+| 360×800 | 33.63dp | 1.63dp | 26dp |
+| 360×844 | 36.38dp | 4.38dp | 70dp |
+
+A 48dp row of buttons was never on the table at 780dp — it would have taken every cell three dp under the floor. Swapping one block of chrome for another costs nothing, and the two are naturally exclusive anyway: "Your turn" and "Opening move: Ember — chosen at random" have nothing to say to somebody looking at move four of twelve.
+
+**The buttons keep their full 48dp targets and the board gives way instead.** That looks backwards until you notice which floor is which. [D135](#d135)'s 32dp is a *touch-target* floor, and nothing on a reviewed board is tappable — the ticket requires exactly that. Legibility is the constraint that survives, which is the same trade [D194](#d194--the-tutorial-draws-on-the-real-board-and-pays-for-it-in-layout) made for the tutorial. The test asserts the *playing* board still meets 32dp and the reviewed one merely stays legible.
+
+**Review is a view, never a fact.** The position is `GameState.fromMoves(moves.take(n))` — the same replay the live board does, stopped earlier. There is no second copy of anything to get out of step, which is why the ticket calls this cheap. Two things are hidden while reviewing: **Resign**, the one control that would change the game being looked at, and the result panel, whose Rematch button starts a different game entirely.
+
+A game against the computer carries on underneath. If the opponent replies while the player is three moves back, the total grows under them and the view stays put — correct, and the alternative (yanking them to the present) would be the scrubber altering what it is supposed to be a window onto.
+
+**The announcement carries the move; the visible text carries the counter.** On screen, "Move 3 of 3" — the board is right there. To a screen reader, "Move 3 of 3. Layer 2, row 3, column 3, light piece", because the position is the one thing that cannot be seen. Same split as [D198](#d198--the-step-announcement-carries-the-title-and-the-visible-text-does-not), reusing `cellSemantics` so the coordinates are worded exactly as the board words them.
+
+**A testing trap worth recording.** Flutter puts an `IconButton`'s tooltip in the semantics `tooltip` field, *not* `label`. `find.bySemanticsLabel('Previous move')` therefore matches nothing, and the obvious reading of that failure is "the button is not accessible" — it is, and TalkBack reads it. Dumping the semantics tree settled it in one run where guessing would have produced a fix for a bug that did not exist. The assertion is on `tooltip` and on the node being a button, so it still fails if the label is ever dropped.
+
 ---
 
 ## Appendix — session tooling

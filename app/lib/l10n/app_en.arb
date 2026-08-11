@@ -345,5 +345,26 @@
   "practiceHintBuild": "Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.",
   "@practiceHintBuild": {
     "placeholders": {"where": {"type": "String"}}
-  }
+  },
+  "review": "Review the moves",
+  "@review": {
+    "description": "Opens the move-history scrubber. Available on a game in progress as well as a finished one; reviewing never changes the game (ticket 012)."
+  },
+  "reviewLeave": "Back to the game",
+  "@reviewLeave": {
+    "description": "Leaves the scrubber. On a game in progress this returns the player to their turn, unchanged."
+  },
+  "moveOf": "Move {move} of {total}",
+  "@moveOf": {
+    "description": "Where the scrubber is. Move 0 is the empty board before anybody has played.",
+    "placeholders": {
+      "move": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "reviewStart": "Before the first move",
+  "reviewToStart": "Jump to the start",
+  "reviewBack": "Previous move",
+  "reviewForward": "Next move",
+  "reviewToEnd": "Jump to the latest move"
 }

@@ -1033,6 +1033,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.'**
   String practiceHintBuild(String where);
+
+  /// Opens the move-history scrubber. Available on a game in progress as well as a finished one; reviewing never changes the game (ticket 012).
+  ///
+  /// In en, this message translates to:
+  /// **'Review the moves'**
+  String get review;
+
+  /// Leaves the scrubber. On a game in progress this returns the player to their turn, unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the game'**
+  String get reviewLeave;
+
+  /// Where the scrubber is. Move 0 is the empty board before anybody has played.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {move} of {total}'**
+  String moveOf(int move, int total);
+
+  /// No description provided for @reviewStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Before the first move'**
+  String get reviewStart;
+
+  /// No description provided for @reviewToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to the start'**
+  String get reviewToStart;
+
+  /// No description provided for @reviewBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous move'**
+  String get reviewBack;
+
+  /// No description provided for @reviewForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Next move'**
+  String get reviewForward;
+
+  /// No description provided for @reviewToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to the latest move'**
+  String get reviewToEnd;
 }
 
 class _AppLocalizationsDelegate

@@ -2395,3 +2395,92 @@ becomes `for (var x = 0; x < 4; x++) _cell(x, y)`.
 
 The nit applied. 189 app tests green, `flutter analyze` clean,
 `ALL CHECKS PASSED` exit 0.
+
+---
+
+# Ticket 012 — Move-history scrubber
+
+> Reviewed: working tree against `2202c93` on `main`.
+> Changed: `app/lib/game/game_screen.dart`, both `.arb` files (+ generated),
+> `app/test/review_test.dart` (new), `doc/idea-decisions.md` (D204).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None survived verification. Two candidates were investigated and cleared;
+both are recorded below because the investigation is the evidence.
+
+## Investigated and cleared
+
+- **"The scrubber buttons have no accessible name."** The semantics dump showed
+  four button nodes with empty `label`. That reads as a criterion failure —
+  "operable by screen reader" — and it is not one: Flutter puts an
+  `IconButton`'s tooltip in the semantics `tooltip` field, which TalkBack
+  reads, and `find.bySemanticsLabel` cannot see. Dumping the tree distinguished
+  "the app is broken" from "the finder is wrong" in a single run. The test now
+  asserts `node.tooltip` and `isButton`, so it still fails if the name is ever
+  dropped.
+- **"A timer leaks when the opponent moves during review."** A probe left a
+  pending timer and the same probe without review mode did not. The difference
+  is the test harness, not the app: a reviewed board is static, so no frames
+  are scheduled, and `pumpAndSettle` returns without advancing past
+  `kBotMoveDelay`. Worth knowing — this suite has been implicitly relying on
+  the flash animation to advance simulated time — but nothing to fix in
+  `lib/`. It did earn a real test: the opponent's reply is now pumped for
+  explicitly, and the assertion is that it lands *and* the view does not move.
+
+## Not findings, checked and cleared
+
+- **Reviewing cannot alter the game.** The position is
+  `GameState.fromMoves(moves.take(n))` — the same replay, stopped earlier —
+  and there is no write path on the screen while reviewing. The test taps a
+  cell that is empty in every position shown and asserts the stored move list
+  is byte-for-byte unchanged, which is stronger than asserting the board
+  did not update.
+- **The height budget was measured, not estimated.** 6dp of slack at 360×780
+  before cells fall under the audited floor, so the scrubber replaces the turn
+  banner rather than joining it. The test pins both halves: the *playing* board
+  still meets `kMinCellSize`, the reviewed one merely stays legible — the floor
+  is a touch-target floor and nothing on a reviewed board is tappable (D135,
+  D194).
+- **Resign and Rematch are both out of reach while reviewing.** They are the
+  only two controls on this screen that would change the game being looked at
+  or start a different one.
+- **Leaving review restores play, not just the view.** The test plays a move
+  afterwards and asserts it lands in the stored game — a check that the board
+  merely looks live would have passed with a dead board.
+- **The announcement is not the visible text.** "Move 3 of 3" on screen;
+  "Move 3 of 3. Layer 2, row 3, column 3, light piece" announced, reusing
+  `cellSemantics` so coordinates are worded as the board words them (D198).
+- **Move 1 is light regardless of seat.** The announcement derives the colour
+  from move parity, matching `GameState`, not from `playerSeat`.
+
+## Functional Validation
+
+⚠️ No Jira issue key — validated against `doc/tickets/012-move-history-scrubber.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Steps backward and forward one move at a time | ✅ | "steps back and forward one move at a time" |
+| 2 | Board shows the position after the selected move | ✅ | same test asserts `BoardView.state.moves` at each step |
+| 3 | Current move number and total visible | ✅ | `moveOf`; asserted as rendered text |
+| 4 | Jumping to start and end without stepping | ✅ | "jumps to the start and to the latest move" |
+| 5 | Scrubbing a live game alters nothing; no move from the past | ✅ | "no move can be made from a past position" |
+| 6 | Returning to the present resumes play unchanged | ✅ | "leaving review resumes play exactly where it was" |
+| 7 | Any completed game can be replayed | ✅ | "a finished game can be replayed the same way" |
+| 8 | Operable by screen reader, position announced as it changes | ✅ | "the scrubber is reachable and the position is announced" |
+| 9 | All new strings in English and Dutch | ✅ | "every scrubber string exists in Dutch"; `check.sh` gate |
+
+### Gaps
+
+None — all nine criteria are addressed.
+
+Gate: `ALL CHECKS PASSED`, exit 0. App 199 tests, engine 120, rating 24, linegen 8.

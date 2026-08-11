@@ -569,4 +569,30 @@ class AppLocalizationsNl extends AppLocalizations {
   String practiceHintBuild(String where) {
     return 'Er wordt nog niets bedreigd. $where ligt op meer lijnen dan elk ander vrij vakje en geeft je dus de meeste manieren om te winnen.';
   }
+
+  @override
+  String get review => 'Zetten teruglezen';
+
+  @override
+  String get reviewLeave => 'Terug naar de partij';
+
+  @override
+  String moveOf(int move, int total) {
+    return 'Zet $move van $total';
+  }
+
+  @override
+  String get reviewStart => 'Voor de eerste zet';
+
+  @override
+  String get reviewToStart => 'Naar het begin';
+
+  @override
+  String get reviewBack => 'Vorige zet';
+
+  @override
+  String get reviewForward => 'Volgende zet';
+
+  @override
+  String get reviewToEnd => 'Naar de laatste zet';
 }

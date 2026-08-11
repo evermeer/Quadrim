@@ -94,6 +94,14 @@ class _GameScreenState extends State<GameScreen> {
   ///   stores both moves and the player takes the opponent's turn too.
   bool _busy = false;
 
+  /// Which position is on screen while reviewing: 0 for the empty board,
+  /// `moves.length` for the present. Null when not reviewing at all.
+  ///
+  /// A view, never a fact about the game — the stored move list is what the
+  /// board is replayed from either way, so scrubbing cannot alter anything and
+  /// leaving review restores play exactly where it was (D204).
+  int? _review;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +122,7 @@ class _GameScreenState extends State<GameScreen> {
       _game = null;
       _rating = null;
       _busy = false;
+      _review = null;
       _subscription =
           widget.repository.watchGame(widget.gameId).listen(_onGame);
     }
@@ -251,7 +260,18 @@ class _GameScreenState extends State<GameScreen> {
             ? botName(l10n, game.opponent)
             : l10n.passAndPlay),
         actions: [
-          if (game != null && game.status == GameStatus.active)
+          if (game != null && game.moves.isNotEmpty)
+            IconButton(
+              icon: Icon(_review == null ? Icons.history : Icons.close),
+              tooltip: _review == null ? l10n.review : l10n.reviewLeave,
+              onPressed: () => setState(
+                  () => _review = _review == null ? game.moves.length : null),
+            ),
+          // Hidden while reviewing: resigning is the one thing on this screen
+          // that would change the game the player came here to look at.
+          if (game != null &&
+              game.status == GameStatus.active &&
+              _review == null)
             TextButton(
               onPressed: () => _resign(game),
               child: Text(l10n.resign),
@@ -269,6 +289,8 @@ class _GameScreenState extends State<GameScreen> {
                 enabled: !_isOpponentsTurn(game),
                 onCellTap: _play,
                 onRematch: () => _rematch(game),
+                review: _review,
+                onReview: (index) => setState(() => _review = index),
               ),
       ),
     );
@@ -282,6 +304,8 @@ class _GameBody extends StatelessWidget {
     required this.enabled,
     required this.onCellTap,
     required this.onRematch,
+    required this.review,
+    required this.onReview,
   });
 
   final GameDocument game;
@@ -290,11 +314,19 @@ class _GameBody extends StatelessWidget {
   final void Function(Cell cell) onCellTap;
   final VoidCallback onRematch;
 
+  /// How many moves of the game to show, or null for the live position.
+  final int? review;
+  final void Function(int? index) onReview;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // The board is replayed from the stored moves, never held alongside them.
-    final state = GameState.fromMoves(game.moves);
+    final reviewing = review != null;
+    // The board is replayed from the stored moves, never held alongside them —
+    // which is exactly what makes a past position free: it is the same replay,
+    // stopped earlier.
+    final state = GameState.fromMoves(
+        reviewing ? game.moves.take(review!) : game.moves);
     final o = outcome(state);
     // The record decides whether the game is over, not the board: a
     // resignation leaves a perfectly playable position behind.
@@ -312,22 +344,32 @@ class _GameBody extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Column(
-            children: [
-              _TurnBanner(
-                text: _statusText(l10n, game, o, lightToMove),
-                lightToMove: !over && lightToMove,
-                over: over,
-                thinking: thinking,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _firstMoveCaption(l10n, game),
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+          // The scrubber *replaces* the banner rather than joining it. At the
+          // shortest supported screen the board has about 6dp of vertical
+          // slack before its cells fall under the audited floor, so a row that
+          // added height was never available (D204).
+          child: reviewing
+              ? _ReviewBar(
+                  game: game,
+                  index: review!,
+                  onReview: onReview,
+                )
+              : Column(
+                  children: [
+                    _TurnBanner(
+                      text: _statusText(l10n, game, o, lightToMove),
+                      lightToMove: !over && lightToMove,
+                      over: over,
+                      thinking: thinking,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _firstMoveCaption(l10n, game),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
         ),
         Expanded(
           // Right-aligned column of four layers (D137). No scroll view:
@@ -339,7 +381,10 @@ class _GameBody extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: BoardView(
                 state: state,
-                enabled: enabled && !over,
+                // Never while reviewing: the criterion is that no move can be
+                // made from a past position, and a tap that landed would be
+                // played into the present anyway.
+                enabled: enabled && !over && !reviewing,
                 onCellTap: onCellTap,
                 highlight: highlight,
                 // The move just played, or the whole line once one is
@@ -353,11 +398,105 @@ class _GameBody extends StatelessWidget {
         ),
         // The result sits below the board rather than over it, so the four
         // highlighted cells of the winning line stay visible while the player
-        // reads how it ended.
-        if (over) _ResultPanel(game: game, rating: rating, onRematch: onRematch),
+        // reads how it ended. Hidden while reviewing: its Rematch button
+        // starts a new game, which is not what "step back through this one"
+        // should have within reach.
+        if (over && !reviewing)
+          _ResultPanel(game: game, rating: rating, onRematch: onRematch),
       ],
     );
   }
+}
+
+/// Step back and forth through a game's moves.
+///
+/// Occupies the turn banner's slot, and is deliberately no taller: see D204.
+/// The four buttons keep their full 48dp targets — what gives is the board's
+/// cell size, which is allowed to dip under [kMinCellSize] here because
+/// nothing on a reviewed board is tappable. That floor is a touch-target
+/// floor (D135), and the same argument the tutorial makes (D194) applies.
+class _ReviewBar extends StatelessWidget {
+  const _ReviewBar({
+    required this.game,
+    required this.index,
+    required this.onReview,
+  });
+
+  final GameDocument game;
+  final int index;
+  final void Function(int? index) onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final total = game.moves.length;
+    final atStart = index == 0;
+    final atEnd = index >= total;
+
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.first_page),
+          tooltip: l10n.reviewToStart,
+          onPressed: atStart ? null : () => onReview(0),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          tooltip: l10n.reviewBack,
+          onPressed: atStart ? null : () => onReview(index - 1),
+        ),
+        Expanded(
+          child: Semantics(
+            liveRegion: true,
+            // The announcement says which piece landed where; the label on
+            // screen says only how far through the game we are. Same split as
+            // D198 — the position is already visible, and reading the board
+            // aloud is the only way to convey it to somebody who cannot see it.
+            label: _reviewAnnouncement(l10n, game, index),
+            child: ExcludeSemantics(
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    l10n.moveOf(index, total),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          tooltip: l10n.reviewForward,
+          onPressed: atEnd ? null : () => onReview(index + 1),
+        ),
+        IconButton(
+          icon: const Icon(Icons.last_page),
+          tooltip: l10n.reviewToEnd,
+          onPressed: atEnd ? null : () => onReview(total),
+        ),
+      ],
+    );
+  }
+}
+
+/// What a screen reader hears when the scrubber moves: how far through the
+/// game we are, and the move that got us here.
+String _reviewAnnouncement(
+    AppLocalizations l10n, GameDocument game, int index) {
+  final where = l10n.moveOf(index, game.moves.length);
+  if (index == 0) return '$where. ${l10n.reviewStart}';
+  final cell = Cell(game.moves[index - 1]);
+  // Move 1 is light by definition — the first player holds the light pieces,
+  // whichever seat that is.
+  final light = (index - 1).isEven;
+  return '$where. ${l10n.cellSemantics(
+    cell.z + 1,
+    cell.y + 1,
+    cell.x + 1,
+    light ? l10n.cellLight : l10n.cellDark,
+  )}';
 }
 
 class _ResultPanel extends StatelessWidget {

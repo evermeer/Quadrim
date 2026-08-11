@@ -568,4 +568,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String practiceHintBuild(String where) {
     return 'Nothing is threatened yet. $where sits on more lines than any other free square, so it gives you the most ways to win.';
   }
+
+  @override
+  String get review => 'Review the moves';
+
+  @override
+  String get reviewLeave => 'Back to the game';
+
+  @override
+  String moveOf(int move, int total) {
+    return 'Move $move of $total';
+  }
+
+  @override
+  String get reviewStart => 'Before the first move';
+
+  @override
+  String get reviewToStart => 'Jump to the start';
+
+  @override
+  String get reviewBack => 'Previous move';
+
+  @override
+  String get reviewForward => 'Next move';
+
+  @override
+  String get reviewToEnd => 'Jump to the latest move';
 }

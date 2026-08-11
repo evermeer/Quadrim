@@ -154,5 +154,13 @@
   "practiceHintWin": "Je kunt nu winnen — {where} maakt een lijn af.",
   "practiceHintBlock": "Blokkeer op {where}, anders maakt je tegenstander daar bij de volgende zet een lijn af.",
   "practiceHintFork": "Speel {where}. Dat levert twee lijnen op die elk nog één steen nodig hebben, en er kan er maar één geblokkeerd worden.",
-  "practiceHintBuild": "Er wordt nog niets bedreigd. {where} ligt op meer lijnen dan elk ander vrij vakje en geeft je dus de meeste manieren om te winnen."
+  "practiceHintBuild": "Er wordt nog niets bedreigd. {where} ligt op meer lijnen dan elk ander vrij vakje en geeft je dus de meeste manieren om te winnen.",
+  "review": "Zetten teruglezen",
+  "reviewLeave": "Terug naar de partij",
+  "moveOf": "Zet {move} van {total}",
+  "reviewStart": "Voor de eerste zet",
+  "reviewToStart": "Naar het begin",
+  "reviewBack": "Vorige zet",
+  "reviewForward": "Volgende zet",
+  "reviewToEnd": "Naar de laatste zet"
 }
