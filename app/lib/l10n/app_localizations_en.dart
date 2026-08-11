@@ -135,9 +135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
-  String get comingSoon => 'Arrives in a later build.';
-
-  @override
   String get computerRatingHeading => 'Against the computer';
 
   @override
@@ -594,4 +591,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reviewToEnd => 'Jump to the latest move';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsFollowDevice => 'Follow the device';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageDutch => 'Nederlands';
+
+  @override
+  String get settingsShowTutorial => 'Show the tutorial again';
+
+  @override
+  String get settingsAbout => 'About';
 }

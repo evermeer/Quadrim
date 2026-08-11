@@ -36,7 +36,6 @@
   "newGame": "Nieuwe partij",
   "tutorial": "Uitleg",
   "settings": "Instellingen",
-  "comingSoon": "Komt in een latere versie.",
   "computerRatingHeading": "Tegen de computer",
   "recordLine": "{wins} gewonnen · {losses} verloren · {draws} remise",
   "recordEmpty": "Nog geen voltooide partijen tegen de computer.",
@@ -162,5 +161,14 @@
   "reviewToStart": "Naar het begin",
   "reviewBack": "Vorige zet",
   "reviewForward": "Volgende zet",
-  "reviewToEnd": "Naar de laatste zet"
+  "reviewToEnd": "Naar de laatste zet",
+  "settingsLanguage": "Taal",
+  "settingsTheme": "Thema",
+  "settingsFollowDevice": "Volg het toestel",
+  "themeLight": "Licht",
+  "themeDark": "Donker",
+  "languageEnglish": "English",
+  "languageDutch": "Nederlands",
+  "settingsShowTutorial": "Uitleg opnieuw bekijken",
+  "settingsAbout": "Over"
 }

@@ -314,12 +314,6 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
-  /// Placeholder body for a screen whose ticket has not shipped yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Arrives in a later build.'**
-  String get comingSoon;
-
   /// Label above the computer rating. Must not read as a universal rating: a separate rating against people arrives at 0.3b.
   ///
   /// In en, this message translates to:
@@ -1081,6 +1075,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Jump to the latest move'**
   String get reviewToEnd;
+
+  /// Overrides the device language. Half the closed testers are Dutch, and a Dutch tester whose phone is set to English cannot otherwise see the Dutch build at all (ticket 028).
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsFollowDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow the device'**
+  String get settingsFollowDevice;
+
+  /// The light colour scheme. Deliberately a separate key from sideLight, which names the light pieces — they are the same word in English and need not stay so.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// A language names itself in its own language, so this is identical in every locale file and is not a translation error.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageDutch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nederlands'**
+  String get languageDutch;
+
+  /// No description provided for @settingsShowTutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the tutorial again'**
+  String get settingsShowTutorial;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
 }
 
 class _AppLocalizationsDelegate

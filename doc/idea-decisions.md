@@ -1908,6 +1908,33 @@ A game against the computer carries on underneath. If the opponent replies while
 
 **A testing trap worth recording.** Flutter puts an `IconButton`'s tooltip in the semantics `tooltip` field, *not* `label`. `find.bySemanticsLabel('Previous move')` therefore matches nothing, and the obvious reading of that failure is "the button is not accessible" — it is, and TalkBack reads it. Dumping the semantics tree settled it in one run where guessing would have produced a fix for a bug that did not exist. The assertion is on `tooltip` and on the node being a button, so it still fails if the label is ever dropped.
 
+### D205 — Language and theme are watched at the root, and "system" is an absence
+**Question:** Ticket 028 requires language and theme changes to apply "immediately, without a restart". The settings document has existed since ticket 005 and had no writer; `QuadrimApp` was a `StatelessWidget` with `themeMode: ThemeMode.system` written in.
+
+**Decision:** `QuadrimApp` is stateful and subscribes to `watchSettings()`. A change to the document rebuilds the `MaterialApp`, and every screen below it comes with it.
+
+**Rationale:** Watching at the root is the only place that gets the whole tree for free. The player changes the language while standing *on* the settings screen, and that screen has to be in the new language before their finger leaves it — anything scoped lower would have left the screen that made the change as the one screen that had not noticed.
+
+**"Follow the device" is the absence of an override, not a third option.** `MaterialApp.locale` is null and `themeMode` is `ThemeMode.system`; a stored `'system'` maps to those rather than to a locale of its own. Getting this backwards — inventing a `Locale('system')` — is the kind of thing that works in every test on an English machine.
+
+The injected `locale` parameter still wins over the document. A test that forces Dutch is asserting that the Dutch strings render, not exercising the settings screen, and those are different claims.
+
+**The override matters in both directions.** The ticket motivates it with Dutch testers on English phones, and it would be easy to build only that direction and pass. A test pins the reverse — English forced on a Dutch device — and a third pins that "follow the device" clears the override rather than pinning whatever was last chosen.
+
+**The placeholder is gone, and so is its string.** `_PlaceholderScreen` existed so that the tutorial and settings buttons were never dead ([D159](#d159)); ticket 018 replaced one route and this one replaces the other, which is all it was for. `comingSoon` went with it, following [D192](#d192--the-record-belongs-in-the-rating-card-not-under-a-heading-of-its-own): an unused key still gets read, translated and maintained, and the next person cannot tell dead from not-yet-rendered.
+
+The strategy-dictionary attribution **moved rather than vanished**. It had been riding on the placeholder precisely so that no build would ever ship with the credit merely planned ([D174](#d174)); it is now on this screen under an "About" heading, `check.sh` still greps `app/lib` for the key, and a test asserts it actually renders.
+
+**Language names are written in their own language.** `languageEnglish` is "English" and `languageDutch` is "Nederlands" in *both* locale files. Identical values across locales look like a missing translation and are not one — a language picker that renamed Nederlands to "Dutch" for English speakers would be worse for exactly the person who needs it.
+
+**`RadioListTile`, not a row with a tick.** The tick is not the point; the announcement is. The radio is what tells a screen reader this is one choice among several and which one is taken — confirmed against a dump: `isInMutuallyExclusiveGroup` true, `isChecked` set, headings carrying the header flag.
+
+Three test-harness facts learned the hard way and worth keeping:
+
+- **`pumpWidget` with the same widget type updates the existing element tree**, so the `Navigator` keeps whatever route it had pushed. A "survives a restart" test that just pumps a second app is still standing on the settings screen; it needs a distinct key to force a real relaunch.
+- **`tester.getSemantics` walks *up*** from the widget it is given, so on a merged subtree like a `RadioListTile` it does not reliably land on the node carrying the flags. Walking down and matching on the label does.
+- **`isChecked` is a `CheckedState` enum, not a bool**, and `expect(..., isTrue)` against it fails in a way that reads like the widget being wrong.
+
 ---
 
 ## Appendix — session tooling

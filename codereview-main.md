@@ -2484,3 +2484,89 @@ both are recorded below because the investigation is the evidence.
 None — all nine criteria are addressed.
 
 Gate: `ALL CHECKS PASSED`, exit 0. App 199 tests, engine 120, rating 24, linegen 8.
+
+---
+
+# Ticket 028 — Settings screen
+
+> Reviewed: working tree against `5e56bcd` on `main`.
+> New: `app/lib/settings/settings_screen.dart`, `app/test/settings_test.dart`.
+> Modified: `app/lib/main.dart` (root now watches the settings document),
+> `app/lib/home/home_screen.dart` (placeholder deleted), both `.arb` files
+> (+ generated), `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D205).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None survived verification. One candidate was investigated and cleared.
+
+## Investigated and cleared
+
+- **"The radio choices are not announced as a group."** The first assertion
+  said `isInMutuallyExclusiveGroup` was false, which would have meant a screen
+  reader could not tell these were mutually exclusive. A semantics dump showed
+  the opposite: `excl=true`, `checked=CheckedState.isTrue` on the selected one,
+  and the headings carrying the header flag. Two harness facts caused the false
+  alarm — `getSemantics` walks *up* and does not land on a merged
+  `RadioListTile`'s own node, and `isChecked` is a `CheckedState` enum rather
+  than a bool, so `expect(..., isTrue)` fails in a way that reads like a widget
+  defect. The test now walks the tree by label.
+
+## Not findings, checked and cleared
+
+- **The attribution moved rather than vanished.** It rode on the placeholder
+  screen this ticket deletes, precisely so that no build would ship with the
+  credit merely planned (D174). It is now under "About" on this screen, a test
+  asserts it renders, and `check.sh` still greps `app/lib` for the key — that
+  grep is what would have caught a silent loss, and it passes.
+- **"Follow the device" is the absence of an override.** `MaterialApp.locale`
+  null and `ThemeMode.system`, not an invented `Locale('system')`. A test pins
+  that choosing it clears a previously stored override rather than pinning
+  whatever was last selected.
+- **The override works in both directions.** The ticket motivates it with Dutch
+  testers on English phones, and building only that direction would have passed
+  a naive test. A separate test forces English on a Dutch-configured app.
+- **The injected test locale still wins over the document**, so the existing
+  locale tests are asserting that Dutch strings render, not exercising settings.
+- **Persistence is checked against the bytes.** A second repository over the
+  same store, and a distinct widget key so the relaunch is a relaunch — without
+  it, `pumpWidget` updates the element tree in place and the Navigator keeps
+  the settings route, so the test would have been standing on the same screen
+  it started on.
+- **`comingSoon` was deleted from both locale files**, not left behind, per
+  D192: an unused key still gets read, translated and maintained.
+- **Identical `languageEnglish`/`languageDutch` across locales is deliberate**,
+  not a missing translation — a language names itself in its own language.
+- **Largest font scale reaches the last row.** The screen is a `ListView` and
+  the test scrolls to the attribution, which is the bottom-most element.
+
+## Functional Validation
+
+⚠️ No Jira issue key — validated against `doc/tickets/028-settings-screen.md`.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Reachable from the main screen | ✅ | gear icon routes to `SettingsScreen`; "is reachable from the main screen" |
+| 2 | Language: system/English/Dutch, applied immediately | ✅ | "changing the language applies immediately, without a restart" — asserts the current screen *and* the one underneath |
+| 3 | Theme: system/light/dark, applied immediately | ✅ | "changing the theme applies immediately" asserts `MaterialApp.themeMode` |
+| 4 | Restart the tutorial from here | ✅ | "the tutorial can be restarted from here" |
+| 5 | Choices persist and survive a restart | ✅ | "choices survive a restart", read back through a second repository |
+| 6 | Screen reader, largest font scale, both themes | ⚠️ | first two asserted; "correct in both themes" is a visual claim no widget test settles — `themeMode` is asserted to change, and the appearance itself belongs to ticket 021 |
+| 7 | All new strings in English and Dutch | ✅ | "every settings string exists in Dutch"; `check.sh` gate |
+
+### Gaps
+
+- **Criterion 6, "correct in both themes", is partial.** The test asserts the
+  app *switches* to each theme; whether the result looks right in dark is a
+  visual judgement, and this screen is now the easiest place in the app to
+  make that switch. Ticket 021 gets a better tool than it had.
+
+Gate: `ALL CHECKS PASSED`, exit 0. App 210 tests, engine 120, rating 24, linegen 8.

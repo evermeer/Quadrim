@@ -112,10 +112,6 @@
   },
   "tutorial": "Tutorial",
   "settings": "Settings",
-  "comingSoon": "Arrives in a later build.",
-  "@comingSoon": {
-    "description": "Placeholder body for a screen whose ticket has not shipped yet."
-  },
   "computerRatingHeading": "Against the computer",
   "@computerRatingHeading": {
     "description": "Label above the computer rating. Must not read as a universal rating: a separate rating against people arrives at 0.3b."
@@ -366,5 +362,23 @@
   "reviewToStart": "Jump to the start",
   "reviewBack": "Previous move",
   "reviewForward": "Next move",
-  "reviewToEnd": "Jump to the latest move"
+  "reviewToEnd": "Jump to the latest move",
+  "settingsLanguage": "Language",
+  "@settingsLanguage": {
+    "description": "Overrides the device language. Half the closed testers are Dutch, and a Dutch tester whose phone is set to English cannot otherwise see the Dutch build at all (ticket 028)."
+  },
+  "settingsTheme": "Theme",
+  "settingsFollowDevice": "Follow the device",
+  "themeLight": "Light",
+  "@themeLight": {
+    "description": "The light colour scheme. Deliberately a separate key from sideLight, which names the light pieces — they are the same word in English and need not stay so."
+  },
+  "themeDark": "Dark",
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "A language names itself in its own language, so this is identical in every locale file and is not a translation error."
+  },
+  "languageDutch": "Nederlands",
+  "settingsShowTutorial": "Show the tutorial again",
+  "settingsAbout": "About"
 }

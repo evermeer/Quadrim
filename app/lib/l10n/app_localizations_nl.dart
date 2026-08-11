@@ -136,9 +136,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings => 'Instellingen';
 
   @override
-  String get comingSoon => 'Komt in een latere versie.';
-
-  @override
   String get computerRatingHeading => 'Tegen de computer';
 
   @override
@@ -595,4 +592,31 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get reviewToEnd => 'Naar de laatste zet';
+
+  @override
+  String get settingsLanguage => 'Taal';
+
+  @override
+  String get settingsTheme => 'Thema';
+
+  @override
+  String get settingsFollowDevice => 'Volg het toestel';
+
+  @override
+  String get themeLight => 'Licht';
+
+  @override
+  String get themeDark => 'Donker';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageDutch => 'Nederlands';
+
+  @override
+  String get settingsShowTutorial => 'Uitleg opnieuw bekijken';
+
+  @override
+  String get settingsAbout => 'Over';
 }

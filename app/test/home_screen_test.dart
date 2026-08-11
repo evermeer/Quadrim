@@ -190,8 +190,8 @@ void main() {
     _phone(tester);
     await _pumpHome(tester, await _repository());
 
-    // The tutorial is real since ticket 018; settings is still the
-    // placeholder, and stays one until ticket 028.
+    // Both are real screens now — ticket 018 replaced one placeholder route
+    // and ticket 028 the other, which is all the placeholder was ever for.
     await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
     await tester.pumpAndSettle();
     expect(find.text('Step 1 of 12'), findsOneWidget);
@@ -200,7 +200,8 @@ void main() {
 
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text('Arrives in a later build.'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Theme'), findsOneWidget);
   });
 
   testWidgets('pass-and-play games are listed but not counted', (tester) async {
