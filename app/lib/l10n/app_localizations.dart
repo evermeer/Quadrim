@@ -290,7 +290,7 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// One row of the main screen's by-opponent breakdown, read as one fact. Carries the rating because the row shows it as a bar, which a screen reader cannot see.
+  /// One row of the main screen that names a computer opponent — the by-opponent breakdown, and each game in progress or finished. Read as one fact. Carries the rating because the row shows it as a pill, and the breakdown also as a bar, neither of which a screen reader can see. The third placeholder is whatever that row's right-hand fact is: a win-loss record, moves played, or how the game ended.
   ///
   /// In en, this message translates to:
   /// **'{name}. Rating {rating}. {record}'**

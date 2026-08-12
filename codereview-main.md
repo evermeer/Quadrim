@@ -3073,3 +3073,81 @@ None surviving. Two were caught before the first build, both in the new code.
 
 Shipped. Gate: `ALL CHECKS PASSED`. App 228 tests, engine 120, rating 29,
 linegen 8.
+
+---
+
+# The rating pill in every section, and a flake it uncovered
+
+> Reviewed: working tree against `925395a` on `main`.
+> Changed: `app/lib/home/home_screen.dart` (`_GameRow`),
+> `app/lib/l10n/app_en.arb` (description only),
+> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D215, D216).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+### [MAJOR] A test guarding the rating's ordering failed one run in three — `flaky-test`
+
+**File:** `app/test/home_screen_test.dart:16` (`_repository`, as it stood)
+
+**Evidence** — the default the fixture was taking:
+
+```dart
+now ?? () => DateTime.now().toUtc(),
+newId ?? _randomId,
+```
+
+and the rule those two feed, `local_game_repository.dart:111`:
+
+```dart
+final byTime = (b.completedAt ?? b.updatedAt).compareTo(a.completedAt ?? a.updatedAt);
+return byTime != 0 ? byTime : b.id.compareTo(a.id);
+```
+
+**Problem:** two fixture games created back to back routinely complete inside
+the same millisecond, so `byTime` is 0 and the **random** id decides. Measured
+before the fix: 2 failures in 6 runs of the file, always
+`lists finished games most recent first`, with no source change between a pass
+and a fail.
+
+This is the ordering the computer rating is folded in (spec §8.3) — the
+contract `repository_test.dart:158` pins and `rating_fold_test.dart` builds
+on. A guard that fails a third of the time trains everyone to re-run instead
+of read.
+
+**Fix, applied:** the fixture injects a clock advancing one second per call.
+The repository is untouched: its rule is deterministic given distinct
+timestamps, and real games do not finish in the same millisecond. Verified
+with 8 consecutive clean runs against the previous 2-in-6.
+
+## Not findings, checked and cleared
+
+- **One change, three sections.** The in-progress and finished lists share
+  `_GameRow`, so the pill went in once. A test creates an *active* game
+  specifically to prove the shared row is what changed rather than one caller.
+- **A game row shows the anchor it was played against**, `game.opponentRating`,
+  not the catalogue's current value — the same rule as the rating fold, so a
+  recalibration cannot rewrite what a finished game says it was worth.
+- **Pass-and-play draws no pill**, on the same null check as the bar, so the
+  two presentations cannot disagree about whether a rating is known. Pinned by
+  asserting no stadium-shaped container exists on such a screen.
+- **The layout test got stronger, not weaker.** It now asserts the
+  name-then-pill relationship for *every* occurrence rather than one, which
+  covers each section without a fixture per section.
+- **Four existing tests changed because the labels genuinely changed**
+  (`Ember. Won` → `Ember. Rating 1300. Won`, and two rows now announce a
+  rating where one did). Each was updated to the new truth rather than
+  loosened.
+
+### Outcome
+
+Shipped. Gate: `ALL CHECKS PASSED`. App 230 tests, engine 120, rating 29,
+linegen 8.

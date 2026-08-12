@@ -2120,6 +2120,21 @@ The name is `Flexible` with `TextOverflow.ellipsis` so a long name gives way to 
 
 **Cost:** the by-opponent row now shows the rating twice for a sighted player, once as length and once as digits. That is redundancy on purpose, but it is redundancy: if the row ever gets crowded — a wider record string, a longer name, a third column — the pill is the first thing to drop, because the bar is the part that cannot be replaced by reading.
 
+**Extended to every section that names an opponent** — the games in progress and the finished games, not only the breakdown. One change rather than three, because all three share `_GameRow`/`_OpponentSection`'s name slot; a game row's pill reads `game.opponentRating`, the anchor that game was *played* against, so a recalibration never rewrites what a finished game says it was worth. Pass-and-play has nobody to rate and therefore no pill, on the same null check that governs the bar.
+
+### D216 — The home-screen fixtures needed a clock, because the tie-break is random
+**Question:** `home_screen_test.dart`'s "lists finished games most recent first" failed about one run in three — two failures in six runs — with no source change between a pass and a fail. Found while extending the rating pill, not caused by it.
+
+**Decision:** `_repository()` injects a clock that advances one second per call, instead of the default `DateTime.now()`.
+
+**Rationale:** completed games are ordered by `completedAt` with the id as tie-break, and `LocalGameRepository`'s default id generator is **random**. Two fixture games created back to back routinely finish inside the same millisecond, so the tie-break decides — and on random ids that is a coin flip. The test was asserting creation order against a fixture that did not establish one.
+
+The repository is not at fault and was not changed: its rule is deterministic given distinct timestamps, and the id tie-break is a defined, documented rule for the case where they are not. Real games do not finish in the same millisecond. The fixture was the only thing pretending they might.
+
+**Why it mattered more than a flaky test usually does.** This is the ordering the computer rating is folded in (spec §8.3) — the same contract `repository_test.dart` pins and `rating_fold_test.dart` builds on. A test guarding it that fails a third of the time trains everyone to re-run rather than to read, and would have hidden a real regression in it.
+
+**Cost:** every test in that file now runs against a fixed 2026-01-01 clock rather than the wall clock, so none of them can ever assert anything about real elapsed time. Nothing there wants to.
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

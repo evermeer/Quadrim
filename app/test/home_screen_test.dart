@@ -14,7 +14,18 @@ import 'package:quadrim_rating/quadrim_rating.dart';
 /// A repository whose first-launch tutorial offer has already been made, so
 /// the dialog does not open over the screen under test.
 Future<LocalGameRepository> _repository() async {
-  final repository = await LocalGameRepository.open(MemoryDocumentStore());
+  // An advancing clock, because the default is `DateTime.now()` and two
+  // fixture games routinely finish inside the same millisecond. Completed
+  // games are ordered by `completedAt` with the id as tie-break, and the
+  // default id is *random* — so on a tie the order of two games is a coin
+  // flip, and a test asserting "most recent first" failed about one run in
+  // three. Real games do not finish in the same millisecond; the fixture was
+  // the only thing pretending they might.
+  var tick = DateTime.utc(2026, 1, 1);
+  final repository = await LocalGameRepository.open(
+    MemoryDocumentStore(),
+    now: () => tick = tick.add(const Duration(seconds: 1)),
+  );
   addTearDown(repository.dispose);
   await repository
       .saveSettings(const SettingsDocument(tutorialOffered: true));
@@ -116,36 +127,74 @@ void main() {
     expect(bars.first.value, lessThan(0.5), reason: '600 against 2400');
   });
 
-  testWidgets('each opponent name is followed by a pill with its rating',
-      (tester) async {
+  testWidgets('every row naming an opponent carries a rating pill after the '
+      'name', (tester) async {
     _phone(tester);
     final repo = await _repository();
     await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
     await _pumpHome(tester, repo);
 
-    // Scoped through the pill rather than through the name: an opponent's
-    // name appears twice on this screen — the breakdown and the finished game
-    // — while the rating appears only in the pill. Asking which row holds the
-    // pill is therefore unambiguous, and it is also the claim being made.
-    Finder pillRow(String rating) =>
-        find.ancestor(of: find.text(rating), matching: find.byType(Row)).first;
+    // Two rows name Pebble — the breakdown and the finished game — and both
+    // must carry the pill. Asserting over every occurrence rather than
+    // picking one means the test does not need to know which is which, and
+    // covers each section without a fixture per section.
+    final pills = find.text('600');
+    expect(pills, findsNWidgets(2),
+        reason: 'the by-opponent breakdown and the finished game');
 
-    expect(find.descendant(of: pillRow('600'), matching: find.text('Pebble')),
-        findsOneWidget);
-    expect(find.descendant(of: pillRow('1300'), matching: find.text('Ember')),
-        findsOneWidget);
+    for (var i = 0; i < 2; i++) {
+      final row =
+          find.ancestor(of: pills.at(i), matching: find.byType(Row)).first;
+      final name = tester.getRect(
+          find.descendant(of: row, matching: find.text('Pebble')));
+      final pill = tester.getRect(pills.at(i));
+      // Beside the name rather than at the far end of the row: the rating is
+      // a fact about the opponent, and the right-hand column is about the
+      // player's game.
+      expect(pill.left, greaterThan(name.right), reason: 'row $i');
+      expect(pill.left - name.right, lessThan(24),
+          reason: 'row $i: close to the name, not drifting right');
+      expect(pill.center.dy, closeTo(name.center.dy, 2),
+          reason: 'row $i: on the same line as the name');
+    }
+  });
 
-    // Beside the name rather than at the far end of the row: the pill belongs
-    // to the opponent, not to the record.
-    final name = tester.getRect(
-        find.descendant(of: pillRow('600'), matching: find.text('Pebble')));
-    final pill = tester.getRect(find.text('600'));
-    expect(pill.left, greaterThan(name.right), reason: 'the pill follows the name');
-    expect(pill.left - name.right, lessThan(24),
-        reason: 'and follows it closely, rather than drifting right');
-    expect(pill.center.dy, closeTo(name.center.dy, 2),
-        reason: 'on the same line as the name');
+  testWidgets('a game in progress carries the pill too', (tester) async {
+    // The in-progress section shares _GameRow with the finished one, so this
+    // is a check that the shared row is what got the pill rather than one
+    // caller of it.
+    _phone(tester);
+    final repo = await _repository();
+    await repo.createGame(
+      mode: GameMode.vsComputer,
+      opponent: botOpponent(sable.id),
+      opponentRating: sable.rating,
+    );
+    await _pumpHome(tester, repo);
+
+    expect(find.text('In progress'), findsOneWidget);
+    expect(find.text('1700'), findsOneWidget);
+  });
+
+  testWidgets('pass and play has no opponent, so it has no pill',
+      (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    await repo.createGame(
+        mode: GameMode.passAndPlay, opponent: kGuestOpponent);
+    await _pumpHome(tester, repo);
+
+    expect(find.text('Pass and play'), findsOneWidget);
+    // Nothing stadium-shaped on a row with nobody to rate. Checked by the
+    // absence of any pill at all rather than of a particular number, since
+    // there is no number it could be showing.
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) =>
+          w is Container && w.decoration is ShapeDecoration &&
+          (w.decoration! as ShapeDecoration).shape is StadiumBorder),
+      findsNothing,
+    );
   });
 
   testWidgets('the pill says the rating once, not twice, to a screen reader',
@@ -159,8 +208,9 @@ void main() {
     await _pumpHome(tester, repo);
 
     expect(find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
-        findsOneWidget);
-    expect(find.bySemanticsLabel('1300'), findsNothing);
+        findsNWidgets(2));
+    expect(find.bySemanticsLabel('1300'), findsNothing,
+        reason: 'no pill announces itself on top of its row');
     handle.dispose();
   });
 
@@ -189,10 +239,10 @@ void main() {
     await _completedGame(repo, botId: ember.id, rating: ember.rating);
     await _pumpHome(tester, repo);
 
-    expect(
-      find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
-      findsOneWidget,
-    );
+    // Both rows that name Ember say it: the breakdown, whose bar and pill are
+    // invisible to a screen reader, and the finished game, whose pill is.
+    expect(find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
+        findsNWidgets(2));
     handle.dispose();
   });
 
@@ -573,7 +623,9 @@ void main() {
       await _completedGame(repo, botId: ember.id, rating: ember.rating);
       await _pumpHome(tester, repo);
 
-      expect(find.bySemanticsLabel('Ember. Won'), findsOneWidget);
+      // The rating sits between the two facts now that the row shows it as a
+      // pill: name, rating, outcome, still as one node rather than three.
+      expect(find.bySemanticsLabel('Ember. Rating 1300. Won'), findsOneWidget);
       handle.dispose();
     });
 

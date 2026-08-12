@@ -501,12 +501,19 @@ class _GameRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final label = _opponentLabel(l10n, game);
+    // The anchor this game was actually played against, not the catalogue's
+    // current value — the same rule the rating fold follows (spec §8.3), so a
+    // recalibration never rewrites what a finished game says it was worth.
+    // Null for pass-and-play, which has no opponent to rate.
+    final rating = game.opponentRating;
 
     return InkWell(
       onTap: onTap,
       child: Semantics(
         button: true,
-        label: '$label. $trailing',
+        label: rating == null
+            ? '$label. $trailing'
+            : l10n.opponentRowSemantics(label, rating, trailing),
         child: ExcludeSemantics(
           // Constrained, not just padded. `ListTile` — which this replaced —
           // enforces a 48dp minimum; hand-rolling the row dropped it to 44,
@@ -521,7 +528,20 @@ class _GameRow extends StatelessWidget {
                 children: [
                   _OpponentAvatarSlot(opponent: game.opponent),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(label)),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child:
+                              Text(label, overflow: TextOverflow.ellipsis),
+                        ),
+                        if (rating != null) ...[
+                          const SizedBox(width: 6),
+                          _RatingPill(rating: rating),
+                        ],
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
