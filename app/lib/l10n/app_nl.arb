@@ -74,6 +74,7 @@
   "matchEven": "Gelijkwaardig",
   "matchStronger": "Boven jouw niveau",
   "matchWeaker": "Onder jouw niveau",
+  "opponentRowSemantics": "{name}. Rating {rating}. {record}",
   "opponentSemantics": "{name}. {tier}. Rating {rating}. {match}. {blurb}",
   "tierNovice": "Beginner",
   "tierCasual": "Recreatief",

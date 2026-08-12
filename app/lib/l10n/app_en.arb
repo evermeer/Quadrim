@@ -99,6 +99,15 @@
   "resignConfirmTitle": "Resign this game?",
   "resignConfirmBody": "The game ends as a loss for the side to move. There is no draw offer.",
   "cancel": "Cancel",
+  "opponentRowSemantics": "{name}. Rating {rating}. {record}",
+  "@opponentRowSemantics": {
+    "description": "One row of the main screen's by-opponent breakdown, read as one fact. Carries the rating because the row shows it as a bar, which a screen reader cannot see.",
+    "placeholders": {
+      "name": { "type": "String" },
+      "rating": { "type": "int" },
+      "record": { "type": "String" }
+    }
+  },
   "ratingValue": "{rating}",
   "@ratingValue": {
     "description": "A rating on its own. Deliberately unformatted: a rating is written 1200, not 1,200 or 1.200, in every locale this ships in.",

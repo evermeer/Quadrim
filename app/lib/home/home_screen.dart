@@ -338,27 +338,57 @@ class _OpponentSection extends StatelessWidget {
       children: [
         _SectionHeading(l10n.byOpponent),
         for (final record in records)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                // The same slot the game rows use, so the two sections share a
-                // left edge for their names rather than stepping in and out.
-                _OpponentAvatarSlot(opponent: record.opponent),
-                const SizedBox(width: 12),
-                Expanded(child: Text(botName(l10n, record.opponent))),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    l10n.opponentRecord(record.wins, record.losses,
-                        record.draws, record.played),
-                    textAlign: TextAlign.end,
-                    style: Theme.of(context).textTheme.bodySmall,
+          Builder(builder: (context) {
+            final name = botName(l10n, record.opponent);
+            final tally = l10n.opponentRecord(
+                record.wins, record.losses, record.draws, record.played);
+            final rating = record.rating;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Semantics(
+                container: true,
+                // The bar below carries the rating as a length, which a screen
+                // reader cannot read. Saying it here is what keeps the two
+                // presentations equivalent rather than one of them decorative.
+                label: rating == null
+                    ? '$name. $tally'
+                    : l10n.opponentRowSemantics(name, rating, tally),
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          // The same slot the game rows use, so the two
+                          // sections share a left edge for their names rather
+                          // than stepping in and out.
+                          _OpponentAvatarSlot(opponent: record.opponent),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(name)),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              tally,
+                              textAlign: TextAlign.end,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Absent rather than empty when the rating is unknown: a
+                      // zero-length bar would read as "very weak", and an
+                      // unknown number is not a low one — the same reasoning
+                      // that sorts these rows last.
+                      if (rating != null) ...[
+                        const SizedBox(height: 6),
+                        _RatingBar(rating: rating),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }),
       ],
     );
   }
@@ -514,6 +544,46 @@ String _resultLabel(AppLocalizations l10n, GameDocument game) {
         : l10n.darkWins;
   }
   return result.winnerSeat == game.playerSeat ? l10n.resultWon : l10n.resultLost;
+}
+
+/// An opponent's rating drawn as a length, under its row.
+///
+/// Full width is the top of the catalogue rather than the strongest opponent
+/// the player happens to have met, so a bar means the same thing on a fresh
+/// install as on a finished one, and beating someone new never shortens the
+/// bars already on the screen.
+///
+/// The scale starts at zero rather than at Pebble, so Pebble reads as a
+/// quarter of Quadrim Prime — which is what the ratings say. Stretching the
+/// bottom of the ladder to fill the bar would make the roster look evenly
+/// spread when it is not.
+class _RatingBar extends StatelessWidget {
+  const _RatingBar({required this.rating});
+
+  final int rating;
+
+  /// The catalogue is ordered weakest first and a test pins that, so the last
+  /// entry is the ceiling without a constant to keep in step with it.
+  static final int _strongest = opponentCatalogue.last.rating;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(2),
+      child: LinearProgressIndicator(
+        // Clamped because a stored anchor comes from the game it was played
+        // in, and a recalibration could leave one above today's ceiling.
+        value: (rating / _strongest).clamp(0.0, 1.0),
+        minHeight: 4,
+        // The unfilled track is drawn rather than left blank: without it a bar
+        // is only comparable to the other bars on screen, and the claim being
+        // made is against the top of the ladder, which may not be on screen.
+        backgroundColor: scheme.surfaceContainerHighest,
+        color: scheme.primary,
+      ),
+    );
+  }
 }
 
 class _SectionHeading extends StatelessWidget {

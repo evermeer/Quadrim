@@ -2956,3 +2956,65 @@ had the two-game fixture happened to differ by a point, the test would have
 
 Shipped. All 14 acceptance criteria met. Gate: `ALL CHECKS PASSED`.
 App 223 tests, engine 120, rating 29, linegen 8.
+
+---
+
+# Rating bars under the opponent breakdown
+
+> Reviewed: working tree against `051ec3c` on `main`. Not a ticket — a
+> requested change to the main screen.
+> Changed: `app/lib/home/home_screen.dart` (`_OpponentSection`, new
+> `_RatingBar`), `app/lib/l10n/app_{en,nl}.arb`,
+> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D214).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None surviving. Two were found and fixed while writing it, both in the new
+code and both caught before the first build.
+
+## Fixed in place
+
+- **A dead parameter with a comment that described something else.**
+  `LinearProgressIndicator(semanticsLabel: null)` is the default, and the
+  comment above it explained why the unfilled track is meaningful — a true
+  statement attached to a line that did not implement it. The parameter is
+  gone and the comment now sits on `backgroundColor`, which is what actually
+  draws the track.
+- **The bar would have been decorative to a screen reader.** A length is
+  invisible, so the row now carries `opponentRowSemantics` (name, rating,
+  record) with the visual children excluded. Without it the row would be
+  strictly less informative to a non-sighted player than to a sighted one.
+
+## Not findings, checked and cleared
+
+- **The scale cannot drift from the roster.** `opponentCatalogue.last.rating`
+  rather than a literal 2400, and `strategic_bot_test.dart:39` already pins
+  that the catalogue is ordered weakest first — so the ceiling follows a new
+  opponent instead of needing to be updated alongside one.
+- **A stored anchor above today's ceiling cannot overflow the bar.** `value`
+  is clamped to `0.0..1.0`. Reachable in principle, because the anchor comes
+  from the game it was played in and a recalibration could lower the
+  catalogue's top.
+- **A null rating draws no bar rather than an empty one**, matching the
+  existing `_weakestFirst` reasoning that an unknown number is not a low one.
+- **The row's other assertions still hold.** `ExcludeSemantics` covers the
+  avatar, and the four existing by-opponent tests (avatars, shared left edge,
+  smaller avatar than the selection screen, unknown opponent) pass unchanged.
+- **Proportions verified on the device, not just in the widget tree.**
+  Measured off an emulator screenshot: Bramble's fill ends at 41.6% of the
+  track against a predicted 1000/2400 = 41.7%, Basalt's at 58.2% against
+  1400/2400 = 58.3%.
+
+### Outcome
+
+Shipped. Gate: `ALL CHECKS PASSED`. App 226 tests, engine 120, rating 29,
+linegen 8.

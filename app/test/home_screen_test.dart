@@ -87,6 +87,67 @@ void main() {
         findsOneWidget);
   });
 
+  testWidgets('each opponent is underlined by a bar as long as its rating',
+      (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
+    await _completedGame(repo, botId: quadrimPrime.id,
+        rating: quadrimPrime.rating);
+    await _pumpHome(tester, repo);
+
+    // Read off the widgets rather than the pixels: the bar's meaning is its
+    // fraction, and a rendered width also encodes the column it sits in.
+    final bars = tester
+        .widgetList<LinearProgressIndicator>(
+            find.byType(LinearProgressIndicator))
+        .toList();
+    expect(bars, hasLength(2), reason: 'one per opponent played');
+
+    // Weakest first, so Pebble's bar is the first one.
+    expect(bars.last.value, 1.0,
+        reason: 'the top of the catalogue fills the bar');
+    expect(bars.first.value,
+        closeTo(pebble.rating / quadrimPrime.rating, 0.001));
+
+    // The scale is the catalogue's ceiling, not the strongest opponent on
+    // screen — otherwise every list would have a full bar in it and the bars
+    // would mean something different on each device.
+    expect(bars.first.value, lessThan(0.5), reason: '600 against 2400');
+  });
+
+  testWidgets('the bar is scaled against the catalogue, not against the list',
+      (tester) async {
+    // The same weak opponent, alone. If the scale were relative to the list,
+    // Pebble would now fill the bar.
+    _phone(tester);
+    final repo = await _repository();
+    await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
+    await _pumpHome(tester, repo);
+
+    final bar = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator));
+    expect(bar.value, closeTo(pebble.rating / quadrimPrime.rating, 0.001));
+  });
+
+  testWidgets('the rating a bar shows is also said, for a screen reader',
+      (tester) async {
+    // The bar carries the rating as a length, which a screen reader cannot
+    // see. Without this the row would be strictly less informative to a
+    // non-sighted player than to a sighted one (spec §7.10).
+    _phone(tester);
+    final handle = tester.ensureSemantics();
+    final repo = await _repository();
+    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _pumpHome(tester, repo);
+
+    expect(
+      find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
+
   testWidgets('statistics and lists update when a game finishes, without a '
       'restart', (tester) async {
     _phone(tester);

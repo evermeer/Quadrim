@@ -290,6 +290,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// One row of the main screen's by-opponent breakdown, read as one fact. Carries the rating because the row shows it as a bar, which a screen reader cannot see.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}. Rating {rating}. {record}'**
+  String opponentRowSemantics(String name, int rating, String record);
+
   /// A rating on its own. Deliberately unformatted: a rating is written 1200, not 1,200 or 1.200, in every locale this ships in.
   ///
   /// In en, this message translates to:

@@ -122,6 +122,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get cancel => 'Annuleren';
 
   @override
+  String opponentRowSemantics(String name, int rating, String record) {
+    return '$name. Rating $rating. $record';
+  }
+
+  @override
   String ratingValue(int rating) {
     return '$rating';
   }

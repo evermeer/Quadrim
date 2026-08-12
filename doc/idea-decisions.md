@@ -2090,6 +2090,23 @@ The app helps by having nothing to enforce against — its only runtime dependen
 
 ---
 
+### D214 — The opponent bars are scaled against the catalogue, from zero
+**Question:** Each opponent in the main screen's breakdown is now underlined by a bar as long as its rating. Two choices decide what that bar means: what counts as full, and what counts as empty.
+
+**Decision:** Full is the top of the catalogue — `opponentCatalogue.last.rating`, 2400 today — and empty is zero. So Quadrim Prime fills the bar and Pebble fills a quarter of it.
+
+**Rationale, for the ceiling:** the alternative is to scale against the strongest opponent the player has actually met, which is worse in a way that is easy to miss. It would put a full bar in every list, including a list containing nothing but Pebble; it would mean a different thing on each device; and beating someone new would silently shorten every bar already on the screen. A fixed ceiling makes a bar a claim about the ladder rather than about the player's history, which is what the section is for. Taken from the catalogue rather than written as 2400, because the catalogue is ordered weakest first and a test pins that — so the ceiling follows the roster instead of needing to be kept in step with it.
+
+**Rationale, for the zero:** a min-max scale from Pebble to Quadrim Prime would stretch the roster to fill the bar and make the twenty look evenly spread. They are not: the bottom of the ladder is closer together than the top, and 600 really is a quarter of 2400. The bar should say what the ratings say.
+
+**The unfilled track is drawn**, not left blank. Without it a bar is only comparable to the other bars on screen, and the comparison being offered is against the top of the ladder, which is usually not on screen.
+
+**Accessibility.** A length is invisible to a screen reader, so the row now carries `opponentRowSemantics` — name, rating, record — as one label, with the visual children excluded. Without that the row would be strictly less informative to a non-sighted player than to a sighted one, which is the failure mode spec §7.10 exists to prevent. The bar itself is `LinearProgressIndicator`, so it is Flutter's widget rather than a hand-drawn box, and its own semantics are suppressed rather than left to announce a progress bar that is not measuring progress.
+
+**Cost:** the row is taller by ten logical pixels, in a list that grows by one row per opponent ever played. At twenty opponents that is 200 pixels of a scrolling sliver, which is affordable; if the breakdown ever moves somewhere with a height budget, this is the first thing to reconsider.
+
+**A rating with no anchor draws no bar at all**, rather than an empty one. A zero-length bar reads as "very weak", and an unknown number is not a low one — the same reasoning that already sorts those rows last.
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.
