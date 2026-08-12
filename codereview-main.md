@@ -3151,3 +3151,60 @@ with 8 consecutive clean runs against the previous 2-in-6.
 
 Shipped. Gate: `ALL CHECKS PASSED`. App 230 tests, engine 120, rating 29,
 linegen 8.
+
+---
+
+# The rating change on each finished game
+
+> Reviewed: working tree against `1a477e5` on `main`.
+> New maths: `quadrim_rating` `ratingSteps`, `rating_fold.dart` `ratingDeltas`.
+> Changed: `app/lib/home/home_screen.dart` (`_GameRow`, new `_RatingDelta`),
+> tests in all three, `doc/idea-decisions.md` (D217).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None surviving. One assumption of mine was wrong and the code was right.
+
+## What the tests corrected
+
+- **"A win always gains points" is false.** A first draft asserted
+  `greaterThan(0)` for every win and failed on `beating 100`: from the seed
+  that is `32 x 0.0018`, which rounds to **zero**. The assertion was wrong,
+  not the fold. It now pins the true property — a win never *costs* and a loss
+  never *pays* — plus a test that a rounded-away step is reachable, because
+  the UI branches on it and an unexercised branch rots.
+
+## Not findings, checked and cleared
+
+- **Not quadratic.** `computerRatingAround` re-folds the prefix per game;
+  drawing a hundred rows that way is five thousand fold steps. `ratingSteps`
+  walks once and the screen calls it alongside the summary, not per row.
+- **The two folds cannot drift.** A test pins
+  `sum(ratingSteps) == ratingFrom(games) - kSeedRating` across the K boundary,
+  and another checks step-for-step against `ratingAround`. Confirmed on the
+  device too: the four rows read -24, +9, +25, +11, summing to +21 against a
+  card showing 1221 from a 1200 seed.
+- **Colour is not the only signal.** Arrow direction and the sign each carry
+  the meaning independently, so red/green is confirmation. That matters more
+  here than elsewhere in the app: red-versus-green is the worst pair for the
+  most common colour vision deficiency, where D124's light-versus-dark is the
+  best.
+- **A zero step draws no arrow**, and 0 is reachable rather than theoretical.
+- **Pass-and-play draws nothing** — absent from the delta map rather than
+  mapped to zero, so "no change" and "no rating" stay distinguishable.
+- **The floor truncates a step rather than being ignored by it**: at 100 a
+  loss reports 0, pinned in the rating package.
+
+### Outcome
+
+Shipped. Gate: `ALL CHECKS PASSED`. App 233 tests, engine 120, rating 35,
+linegen 8.

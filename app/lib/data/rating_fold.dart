@@ -42,6 +42,24 @@ double _scoreFor(GameDocument game, int seat) {
 int computerRating(List<GameDocument> completed) =>
     ratingFrom(ratedGamesFrom(completed));
 
+/// The change each ladder game caused, by game id.
+///
+/// One pass for the whole list. [computerRatingAround] re-folds the prefix for
+/// a single game, which is right for the one game a result screen shows and
+/// quadratic for a list showing every game.
+///
+/// Games not on this ladder — pass and play, and anything stored without an
+/// anchor — are absent rather than zero. A caller drawing an arrow needs to
+/// tell "no change" from "no rating".
+Map<String, int> ratingDeltas(List<GameDocument> completed) {
+  final ladder = _ladder(completed);
+  final steps = ratingSteps(ratedGamesFrom(completed));
+  return {
+    // Both walk `_ladder`, in its order, so the two line up by construction.
+    for (var i = 0; i < ladder.length; i++) ladder[i].id: steps[i],
+  };
+}
+
 /// The rating either side of [gameId], for a result screen showing the change
 /// that game caused.
 ///

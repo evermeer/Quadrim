@@ -207,6 +207,65 @@ void main() {
     });
   });
 
+  group('the change every game caused', () {
+    test('sums to the rating the whole fold arrives at', () {
+      // The invariant the finished-games list leans on: what the rows add up
+      // to has to be what the card at the top of the screen says.
+      final games = _newestFirst([
+        for (var i = 0; i < 25; i++)
+          _game(
+            id: 'g$i',
+            opponentRating: 700 + (i % 6) * 250,
+            playerWon: i % 3 != 1,
+            drawn: i % 7 == 0,
+            minute: i,
+          ),
+      ]);
+      final total =
+          ratingDeltas(games).values.fold(0, (a, b) => a + b);
+      expect(kSeedRating + total, computerRating(games));
+    });
+
+    test('agrees with the single-game fold, game for game', () {
+      // computerRatingAround re-folds the prefix for one game and is what the
+      // result screen uses; these two are the same fact on two screens.
+      final games = _newestFirst([
+        for (var i = 0; i < 8; i++)
+          _game(id: 'g$i', opponentRating: 1000 + i * 100,
+              playerWon: i.isEven, minute: i),
+      ]);
+      final deltas = ratingDeltas(games);
+      for (final game in games) {
+        final around = computerRatingAround(games, game.id);
+        expect(deltas[game.id], around.after - around.before,
+            reason: game.id);
+      }
+    });
+
+    test('leaves out games that are not on this ladder', () {
+      // Absent, not zero: a caller drawing an arrow has to tell "no change"
+      // from "no rating", and pass-and-play is the second.
+      final games = _newestFirst([
+        _game(id: 'ladder', opponentRating: 1500),
+        _game(id: 'guest', opponentRating: 0, mode: GameMode.passAndPlay,
+            minute: 1),
+      ]);
+      final deltas = ratingDeltas(games);
+      expect(deltas.keys, ['ladder']);
+      expect(deltas.containsKey('guest'), isFalse);
+    });
+
+    test('a win pays and a loss costs, in the order they were played', () {
+      final games = _newestFirst([
+        _game(id: 'won', opponentRating: 1500, minute: 1),
+        _game(id: 'lost', opponentRating: 1500, playerWon: false, minute: 2),
+      ]);
+      final deltas = ratingDeltas(games);
+      expect(deltas['won']!, greaterThan(0));
+      expect(deltas['lost']!, lessThan(0));
+    });
+  });
+
   group('the change one game caused', () {
     test('is the step that game made, not the step the newest game made', () {
       final games = _newestFirst([

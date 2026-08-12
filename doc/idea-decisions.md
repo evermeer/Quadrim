@@ -2135,6 +2135,23 @@ The repository is not at fault and was not changed: its rule is deterministic gi
 
 **Cost:** every test in that file now runs against a fixed 2026-01-01 clock rather than the wall clock, so none of them can ever assert anything about real elapsed time. Nothing there wants to.
 
+### D217 — A finished game shows what it was worth, in one pass
+**Question:** Each finished game should show the points it moved the rating by — green up-arrow and `+n` for a win, red down-arrow and `-n` for a loss. The number is a property of the *whole history up to that game*, not of the game, so where does it come from?
+
+**Decision:** `ratingSteps` in the rating package returns the change each game caused, in one walk, and `ratingDeltas` in the app zips those to game ids. The screen computes it once per change alongside the summary.
+
+**Rationale:** the obvious implementation is to call the existing `computerRatingAround(games, id)` per row. That re-folds the whole prefix for one game — correct for the single game a result screen shows, and quadratic for a list showing every game. A hundred games would be five thousand fold steps to draw a screen.
+
+The maths went into `quadrim_rating` rather than the app, next to the fold it has to agree with, and a test pins the agreement: the steps must sum to `ratingFrom(games) - kSeedRating`. Two functions walking the same fold is exactly where a drift would hide. A second test checks step-for-step against `ratingAround`, since the two are the same fact on two different screens.
+
+**Colour is the third telling, not the only one.** The arrow's direction and the number's sign each carry the whole meaning, so red and green are confirmation rather than information — the same reasoning D124 applies to the pieces, for a pair of colours that is far worse for colour vision deficiency than light-versus-dark. Green has no Material 3 token, so it is a literal pair chosen per brightness; red is `colorScheme.error`, which already has one.
+
+**A zero step draws no arrow.** Beating an opponent far below you earns a fraction of a point, which rounds to nothing — `ratingSteps` returns 0, and there is no direction to point in. Showing an arrow anyway would claim a movement that did not happen. This is pinned in the rating package's tests rather than left as a remark, because it is a UI branch that would otherwise never be exercised: beating a 100-rated opponent from the seed is worth `32 x 0.0018` of a point.
+
+**Games off the ladder are absent from the map, not zero.** A caller drawing an arrow has to tell "no change" from "no rating", and pass-and-play is the second.
+
+**What it cost elsewhere.** The right-hand column now nests a Row for the result and its change, which broke a test helper that took the *innermost* Row ancestor of a result — that row no longer contains the opponent's name. The helper now takes the outermost. Worth recording because the same shape will catch the next person: `find.ancestor(...).first` means "closest", and adding a wrapper silently changes what it selects.
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

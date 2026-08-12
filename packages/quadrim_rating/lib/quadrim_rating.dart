@@ -93,6 +93,32 @@ int ratingFrom(Iterable<RatedGame> games) {
   return rating;
 }
 
+/// The change each game in [games] caused, in the same order.
+///
+/// One pass for a whole history, where [ratingAround] re-folds the prefix for
+/// one game. That is the right shape for a result screen showing a single
+/// game and quadratic for a list showing every game.
+///
+/// Sums to `ratingFrom(games) - kSeedRating`, which is what a test pins: two
+/// functions walking the same fold is a place for them to drift apart.
+List<int> ratingSteps(Iterable<RatedGame> games) {
+  final steps = <int>[];
+  var rating = kSeedRating;
+  var played = 0;
+  for (final game in games) {
+    final next = updatedRating(
+      rating,
+      kFactor(played),
+      game.score,
+      expectedScore(rating, game.opponentRating),
+    );
+    steps.add(next - rating);
+    rating = next;
+    played++;
+  }
+  return steps;
+}
+
 /// The rating before and after [games]' final entry — what a result screen
 /// needs to show a change without folding twice.
 ///

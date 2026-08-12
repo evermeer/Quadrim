@@ -223,6 +223,85 @@ void main() {
     });
   });
 
+  group('ratingSteps', () {
+    List<RatedGame> history(int n) => [
+          for (var i = 0; i < n; i++)
+            RatedGame(
+              opponentRating: 800 + (i % 7) * 200,
+              score: switch (i % 3) { 0 => 1.0, 1 => 0.0, _ => 0.5 },
+            ),
+        ];
+
+    test('sums to the same rating the fold arrives at', () {
+      // The invariant that keeps the two walks from drifting: whatever the
+      // steps say happened, applying all of them has to land where ratingFrom
+      // lands. Checked across the K boundary at twenty games.
+      for (final n in [0, 1, 2, 19, 20, 21, 50]) {
+        final games = history(n);
+        final total = ratingSteps(games).fold(0, (a, b) => a + b);
+        expect(kSeedRating + total, ratingFrom(games), reason: '$n games');
+      }
+    });
+
+    test('gives one step per game, in order', () {
+      expect(ratingSteps(history(0)), isEmpty);
+      expect(ratingSteps(history(5)), hasLength(5));
+    });
+
+    test('a win never costs points and a loss never pays them', () {
+      // Not "a win always gains": beating a 100 from the seed earns
+      // 32 x 0.0018 of a point, which rounds to nothing. The sign is what
+      // holds, not the strict inequality — and a caller drawing an arrow per
+      // step has to expect a zero.
+      for (final opponent in [100, 600, 1200, 2400]) {
+        expect(
+          ratingSteps([RatedGame(opponentRating: opponent, score: 1)]).single,
+          greaterThanOrEqualTo(0),
+          reason: 'beating $opponent',
+        );
+        expect(
+          ratingSteps([RatedGame(opponentRating: opponent, score: 0)]).single,
+          lessThanOrEqualTo(0),
+          reason: 'losing to $opponent',
+        );
+      }
+    });
+
+    test('a rounded-away step really is reachable', () {
+      // Pinned rather than left as a remark, because the UI branches on it:
+      // a zero step gets no arrow, and a test that never produced one would
+      // let that branch rot.
+      expect(ratingSteps(const [RatedGame(opponentRating: 100, score: 1)]),
+          [0]);
+      // Against a comparable opponent the movement is unmistakable.
+      expect(ratingSteps(const [RatedGame(opponentRating: 1200, score: 1)]),
+          [16]);
+    });
+
+    test('agrees with ratingAround on the last game of any history', () {
+      // The two are used by different screens for the same fact, so they had
+      // better say the same thing.
+      for (final n in [1, 7, 20, 25]) {
+        final games = history(n);
+        final around = ratingAround(games);
+        expect(ratingSteps(games).last, around.after - around.before,
+            reason: '$n games');
+      }
+    });
+
+    test('the floor truncates a step rather than being ignored by it', () {
+      // At the floor a loss cannot cost the full amount, so the step must be
+      // what actually happened, not what the formula asked for.
+      final atFloor = [
+        for (var i = 0; i < 400; i++)
+          const RatedGame(opponentRating: 600, score: 0),
+      ];
+      final steps = ratingSteps(atFloor);
+      expect(kSeedRating + steps.fold(0, (a, b) => a + b), kRatingFloor);
+      expect(steps.last, 0, reason: 'nothing left to lose');
+    });
+  });
+
   group('impliedRatingDifference', () {
     test('inverts expectedScore exactly, across the catalogue range', () {
       // Round-tripping rather than checking against copied constants: the two

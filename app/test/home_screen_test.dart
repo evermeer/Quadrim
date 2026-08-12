@@ -44,8 +44,13 @@ void _phone(WidgetTester tester, {double textScale = 1}) {
 ///
 /// Opponent names appear twice on this screen — in the by-opponent breakdown
 /// and again on each game — so assertions about a row have to say which.
+///
+/// Outermost rather than innermost: a row's right-hand column now nests a Row
+/// of its own for the result and the rating change beside it, so the closest
+/// Row ancestor of "Won" is that pair and does not contain the opponent's
+/// name at all.
 Finder _rowContaining(String text) =>
-    find.ancestor(of: find.text(text), matching: find.byType(Row)).first;
+    find.ancestor(of: find.text(text), matching: find.byType(Row)).last;
 
 Future<void> _pumpHome(WidgetTester tester, LocalGameRepository repo) async {
   await tester.pumpWidget(
@@ -212,6 +217,71 @@ void main() {
     expect(find.bySemanticsLabel('1300'), findsNothing,
         reason: 'no pill announces itself on top of its row');
     handle.dispose();
+  });
+
+  testWidgets('a finished game shows what it did to the rating', (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo,
+        botId: pebble.id, rating: pebble.rating, playerWins: false);
+    await _pumpHome(tester, repo);
+
+    // A win points up, a loss points down, and the sign says the same thing
+    // again so the arrow is not the only telling.
+    expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+
+    final up = find.ancestor(
+        of: find.byIcon(Icons.arrow_drop_up), matching: find.byType(Row)).first;
+    final down = find.ancestor(
+        of: find.byIcon(Icons.arrow_drop_down),
+        matching: find.byType(Row)).first;
+    expect(find.descendant(of: up, matching: find.textContaining('+')),
+        findsOneWidget);
+    expect(find.descendant(of: down, matching: find.textContaining('-')),
+        findsOneWidget);
+
+    // Behind the result text, not in front of it.
+    final won = tester.getRect(find.text('Won'));
+    expect(tester.getRect(find.byIcon(Icons.arrow_drop_up)).left,
+        greaterThan(won.right));
+  });
+
+  testWidgets('the numbers on the rows add up to the rating on the card',
+      (tester) async {
+    // The screen would be lying if they did not: the card is a fold over the
+    // same games the rows each report one step of.
+    _phone(tester);
+    final repo = await _repository();
+    for (var i = 0; i < 5; i++) {
+      await _completedGame(repo,
+          botId: ember.id, rating: ember.rating, playerWins: i.isEven);
+    }
+    await _pumpHome(tester, repo);
+
+    var total = 0;
+    for (final text in tester.widgetList<Text>(find.byType(Text))) {
+      final data = text.data;
+      if (data == null) continue;
+      final signed = RegExp(r'^[+-]\d+$').firstMatch(data);
+      if (signed != null) total += int.parse(data);
+    }
+    expect(find.text('${kSeedRating + total}'), findsOneWidget,
+        reason: 'the rating card should read ${kSeedRating + total}');
+  });
+
+  testWidgets('a pass-and-play result shows no rating change', (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    final game = await repo.createGame(
+        mode: GameMode.passAndPlay, opponent: kGuestOpponent);
+    await _finish(repo, game, _lightWinsMoves);
+    await _pumpHome(tester, repo);
+
+    expect(find.text('Finished games'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_drop_up), findsNothing);
+    expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
   });
 
   testWidgets('the bar is scaled against the catalogue, not against the list',
@@ -625,7 +695,12 @@ void main() {
 
       // The rating sits between the two facts now that the row shows it as a
       // pill: name, rating, outcome, still as one node rather than three.
-      expect(find.bySemanticsLabel('Ember. Rating 1300. Won'), findsOneWidget);
+      // Name, rating, outcome and what the outcome was worth — four facts,
+      // still one node. The change is matched as a pattern rather than a
+      // literal because its value depends on the whole fold, and hard-coding
+      // it here would pin the rating maths in the wrong file.
+      expect(find.bySemanticsLabel(RegExp(r'^Ember\. Rating 1300\. Won\. \+\d+$')),
+          findsOneWidget);
       handle.dispose();
     });
 

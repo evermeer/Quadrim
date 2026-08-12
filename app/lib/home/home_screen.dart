@@ -7,6 +7,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../data/home_summary.dart';
+import '../data/rating_fold.dart' as fold;
 import '../game/game_screen.dart';
 import '../game/opponent_avatar.dart';
 import '../game/opponent_name.dart';
@@ -51,6 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
   List<GameDocument> _activeGames = const [];
   List<GameDocument> _completedGames = const [];
   HomeSummary _summary = HomeSummary.empty;
+  /// What each finished ladder game did to the rating, by game id. Computed
+  /// with the summary rather than per row, which would re-fold the history
+  /// once for every row on the screen.
+  Map<String, int> _deltas = const {};
 
   @override
   void initState() {
@@ -65,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _completedGames = games;
         _summary = HomeSummary.from(games);
+        _deltas = fold.ratingDeltas(games);
       });
     });
     // After the first frame, not during it: showing a dialog needs a Navigator
@@ -242,7 +248,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       heading: l10n.finishedGames,
                       games: _completedGames,
                       tile: (game) => _FinishedGameTile(
-                          game: game, onTap: () => _openGame(game.id)),
+                          game: game,
+                          delta: _deltas[game.id],
+                          onTap: () => _openGame(game.id)),
                     ),
                   const SliverToBoxAdapter(child: SizedBox(height: 8)),
                 ],
@@ -427,9 +435,18 @@ class _ActiveGameTile extends StatelessWidget {
 }
 
 class _FinishedGameTile extends StatelessWidget {
-  const _FinishedGameTile({required this.game, required this.onTap});
+  const _FinishedGameTile({
+    required this.game,
+    required this.onTap,
+    this.delta,
+  });
 
   final GameDocument game;
+
+  /// What this game did to the computer rating, or null if it was not on that
+  /// ladder at all.
+  final int? delta;
+
   final VoidCallback onTap;
 
   @override
@@ -438,6 +455,7 @@ class _FinishedGameTile extends StatelessWidget {
     return _GameRow(
       game: game,
       trailing: _resultLabel(l10n, game),
+      delta: delta,
       onTap: onTap,
     );
   }
@@ -487,12 +505,17 @@ class _GameRow extends StatelessWidget {
     required this.game,
     required this.trailing,
     required this.onTap,
+    this.delta,
   });
 
   final GameDocument game;
 
   /// The right-hand fact: moves played, or how the game ended.
   final String trailing;
+
+  /// What this game did to the computer rating, shown after [trailing]. Null
+  /// where there is nothing to show — a game in progress, or pass and play.
+  final int? delta;
 
   final VoidCallback onTap;
 
@@ -511,9 +534,14 @@ class _GameRow extends StatelessWidget {
       onTap: onTap,
       child: Semantics(
         button: true,
+        // The arrow and its number are one more fact about the row, so they
+        // join the row's single label rather than announcing separately. A
+        // signed integer needs no translating, which is why it is appended
+        // rather than routed through a placeholder of its own.
         label: rating == null
             ? '$label. $trailing'
-            : l10n.opponentRowSemantics(label, rating, trailing),
+            : l10n.opponentRowSemantics(label, rating,
+                delta == null ? trailing : '$trailing. ${_signedDelta(delta!)}'),
         child: ExcludeSemantics(
           // Constrained, not just padded. `ListTile` — which this replaced —
           // enforces a 48dp minimum; hand-rolling the row dropped it to 44,
@@ -544,10 +572,21 @@ class _GameRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: Text(
-                      trailing,
-                      textAlign: TextAlign.end,
-                      style: theme.textTheme.bodySmall,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            trailing,
+                            textAlign: TextAlign.end,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                        if (delta != null) ...[
+                          const SizedBox(width: 6),
+                          _RatingDelta(delta: delta!),
+                        ],
+                      ],
                     ),
                   ),
                 ],
@@ -556,6 +595,57 @@ class _GameRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+String _signedDelta(int delta) => delta > 0 ? '+$delta' : '$delta';
+
+/// What one finished game did to the computer rating: an arrow and a number.
+///
+/// The arrow's *direction* and the number's sign both carry the meaning, so
+/// the colour is the third telling rather than the only one — which is what
+/// keeps it readable to a player who cannot separate red from green (D124's
+/// reasoning, applied to a different pair of colours).
+///
+/// It announces nothing of its own; the row it sits in says the number once,
+/// in its single label.
+class _RatingDelta extends StatelessWidget {
+  const _RatingDelta({required this.delta});
+
+  final int delta;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // Reachable, not hypothetical: beating an opponent far below you earns a
+    // fraction of a point, which rounds to nothing. There is no direction to
+    // point in, so it shows the number alone rather than an arrow that would
+    // claim a movement that did not happen.
+    final colour = delta == 0
+        ? theme.colorScheme.onSurfaceVariant
+        : delta > 0
+            ? (theme.brightness == Brightness.dark
+                ? const Color(0xFF7CD98C)
+                : const Color(0xFF2E7D32))
+            : theme.colorScheme.error;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (delta != 0)
+          Icon(
+            delta > 0 ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+            size: 18,
+            color: colour,
+          ),
+        Text(
+          _signedDelta(delta),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colour,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
