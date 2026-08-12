@@ -364,7 +364,22 @@ class _OpponentSection extends StatelessWidget {
                           // than stepping in and out.
                           _OpponentAvatarSlot(opponent: record.opponent),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(name)),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                // Flexible, so a long name gives way to the
+                                // pill rather than pushing it off the row.
+                                Flexible(
+                                  child: Text(name,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                                if (rating != null) ...[
+                                  const SizedBox(width: 6),
+                                  _RatingPill(rating: rating),
+                                ],
+                              ],
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -544,6 +559,42 @@ String _resultLabel(AppLocalizations l10n, GameDocument game) {
         : l10n.darkWins;
   }
   return result.winnerSeat == game.playerSeat ? l10n.resultWon : l10n.resultLost;
+}
+
+/// An opponent's rating as a number, beside its name.
+///
+/// The bar under the row says how strong this opponent is *relative to the
+/// ladder*, which is the comparison worth making at a glance; this says which
+/// number it is. Both, because a length cannot be read off precisely and a
+/// number cannot be compared at a glance.
+///
+/// Carries no semantics of its own — the row already announces the rating
+/// once, and a screen reader that met it twice would be worse off than one
+/// that met it never.
+class _RatingPill extends StatelessWidget {
+  const _RatingPill({required this.rating});
+
+  final int rating;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: ShapeDecoration(
+        color: theme.colorScheme.secondaryContainer,
+        shape: const StadiumBorder(),
+      ),
+      child: Text(
+        // Through l10n even though it is only digits: a rating is written 1200
+        // rather than 1,200 or 1.200 in every locale this ships in, and that
+        // is a decision recorded next to the string rather than in the layout.
+        AppLocalizations.of(context)!.ratingValue(rating),
+        style: theme.textTheme.labelSmall
+            ?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+      ),
+    );
+  }
 }
 
 /// An opponent's rating drawn as a length, under its row.

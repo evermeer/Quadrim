@@ -3018,3 +3018,58 @@ code and both caught before the first build.
 
 Shipped. Gate: `ALL CHECKS PASSED`. App 226 tests, engine 120, rating 29,
 linegen 8.
+
+---
+
+# A rating pill beside each opponent name
+
+> Reviewed: working tree against `38a30c0` on `main`. A follow-on to the
+> rating bars, same section of the same screen.
+> Changed: `app/lib/home/home_screen.dart` (new `_RatingPill`, the name slot),
+> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D215).
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+## Findings
+
+None surviving. Two were caught before the first build, both in the new code.
+
+## Fixed in place
+
+- **`l10n_of(context)` does not exist.** Written from muscle memory for a
+  helper this project does not have; the pattern here is
+  `AppLocalizations.of(context)!`. Caught by `flutter analyze`.
+- **`FontFeature.tabularFigures()` needed an import it did not earn.**
+  Tabular figures only align digits within the same digit count, and these
+  ratings are three and four digits, so it bought nothing. Removed rather
+  than imported for.
+
+## Not findings, checked and cleared
+
+- **The number is not announced twice.** The row's `Semantics` already carries
+  it and `ExcludeSemantics` covers the pill. Pinned by asserting the bare
+  number is absent as a standalone label — without that assertion, "announced
+  once" and "announced twice" look identical from a passing test.
+- **A long name cannot push the pill off the row.** The name is `Flexible`
+  with `TextOverflow.ellipsis` inside the `Expanded` slot. This is not
+  hypothetical: names are localised and the Dutch build is not obliged to
+  match English widths.
+- **A missing anchor draws no pill**, on the same `if (rating != null)` as the
+  bar, so the two presentations can never disagree about whether a rating is
+  known.
+- **The test scopes through the pill, not the name.** An opponent's name
+  appears twice on this screen — the breakdown and the finished game — and the
+  first version of the test failed on exactly that ambiguity. Asking which row
+  holds the *rating* is unambiguous and is also the claim being made.
+
+### Outcome
+
+Shipped. Gate: `ALL CHECKS PASSED`. App 228 tests, engine 120, rating 29,
+linegen 8.

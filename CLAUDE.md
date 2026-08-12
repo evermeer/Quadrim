@@ -62,7 +62,7 @@ third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
 doc/tickets/                The 7 tickets still open; the unit of work and of commits.
 doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-decisions.md       D01–D214. Every non-obvious choice, with its cost.
+doc/idea-decisions.md       D01–D215. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -102,7 +102,7 @@ The standing instruction for this repo:
 > Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D214.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D215.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.

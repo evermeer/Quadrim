@@ -2107,6 +2107,19 @@ The app helps by having nothing to enforce against — its only runtime dependen
 
 **A rating with no anchor draws no bar at all**, rather than an empty one. A zero-length bar reads as "very weak", and an unknown number is not a low one — the same reasoning that already sorts those rows last.
 
+### D215 — The rating is also a pill beside the name, and says itself only once
+**Question:** [D214](#d214--the-opponent-bars-are-scaled-against-the-catalogue-from-zero) gave each opponent a bar. A bar cannot be read off precisely — you can see that Basalt is stronger than Bramble but not that it is 1400. Where does the number go?
+
+**Decision:** A small stadium-shaped pill immediately after the opponent's name, carrying the number.
+
+**Rationale:** The two presentations answer different questions and neither replaces the other. The bar is comparative and pre-attentive — the ladder's shape at a glance, without reading anything. The pill is exact. Putting the number at the far end of the row instead would have grouped it with the win-loss record, which is about the *player*, when it is a fact about the opponent; beside the name is where it belongs.
+
+The name is `Flexible` with `TextOverflow.ellipsis` so a long name gives way to the pill rather than pushing it off the row. That matters more than it looks: opponent names are localised, and the Dutch build is not free to be the same width.
+
+**It carries no semantics of its own.** The row already announces "Bramble. Rating 1000. 1−1−0 in 2 games" as one label, with the visual children excluded, so a pill that announced itself would make a screen reader read the number twice — worse than never reading it. A test asserts the number is *absent* as a standalone semantics label, because "it works" and "it is announced twice" look identical without one.
+
+**Cost:** the by-opponent row now shows the rating twice for a sighted player, once as length and once as digits. That is redundancy on purpose, but it is redundancy: if the row ever gets crowded — a wider record string, a longer name, a third column — the pill is the first thing to drop, because the bar is the part that cannot be replaced by reading.
+
 ## Appendix — session tooling
 
 Not product decisions, recorded so the session is complete.

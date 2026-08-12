@@ -116,6 +116,54 @@ void main() {
     expect(bars.first.value, lessThan(0.5), reason: '600 against 2400');
   });
 
+  testWidgets('each opponent name is followed by a pill with its rating',
+      (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
+    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _pumpHome(tester, repo);
+
+    // Scoped through the pill rather than through the name: an opponent's
+    // name appears twice on this screen — the breakdown and the finished game
+    // — while the rating appears only in the pill. Asking which row holds the
+    // pill is therefore unambiguous, and it is also the claim being made.
+    Finder pillRow(String rating) =>
+        find.ancestor(of: find.text(rating), matching: find.byType(Row)).first;
+
+    expect(find.descendant(of: pillRow('600'), matching: find.text('Pebble')),
+        findsOneWidget);
+    expect(find.descendant(of: pillRow('1300'), matching: find.text('Ember')),
+        findsOneWidget);
+
+    // Beside the name rather than at the far end of the row: the pill belongs
+    // to the opponent, not to the record.
+    final name = tester.getRect(
+        find.descendant(of: pillRow('600'), matching: find.text('Pebble')));
+    final pill = tester.getRect(find.text('600'));
+    expect(pill.left, greaterThan(name.right), reason: 'the pill follows the name');
+    expect(pill.left - name.right, lessThan(24),
+        reason: 'and follows it closely, rather than drifting right');
+    expect(pill.center.dy, closeTo(name.center.dy, 2),
+        reason: 'on the same line as the name');
+  });
+
+  testWidgets('the pill says the rating once, not twice, to a screen reader',
+      (tester) async {
+    // The row already announces "Ember. Rating 1300." — a pill that announced
+    // itself as well would make the row read the number twice.
+    _phone(tester);
+    final handle = tester.ensureSemantics();
+    final repo = await _repository();
+    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _pumpHome(tester, repo);
+
+    expect(find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
+        findsOneWidget);
+    expect(find.bySemanticsLabel('1300'), findsNothing);
+    handle.dispose();
+  });
+
   testWidgets('the bar is scaled against the catalogue, not against the list',
       (tester) async {
     // The same weak opponent, alone. If the scale were relative to the list,
