@@ -2,7 +2,7 @@
 
 What Quadrim is and what it must do, written so that someone rebuilding it from nothing has no functional question left to ask.
 
-This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D256).
+This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D270). D258 onward were taken by reading this document back against the twenty-two tickets already built, and the reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
 
 Status: 0.1 built and playable up to the progression system, which is specified here and not yet built. 0.2 onward specified, not built.
 Date: 2026-08-14
@@ -518,7 +518,18 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 | Games played in one day | 5 | 5, 10, 20, 50, 100 |
 | Consecutive days played | 8 | 5, 10, 30, 90, 180, 360, 720, 1440 |
 
-**Quest rewards are expressed as multiples of a win at the player's current rung** — where the current rung is the highest-indexed opponent they have unlocked. A flat reward would be ladder-skipping at the bottom and pocket change at the top; a scaled one is worth the same *effort* everywhere, which is the same property §7.3 has.
+**Every quest is priced by the opponents it was earned against, never by how high the player has climbed.** That is one rule for all four families, and it is the rule §7.2 already applies to a plain win: points measure the strength of what you played, not who you are.
+
+- **A per-opponent quest pays one win against that opponent** — 2ⁱ for opponent *i*, fixed by the roster and worth the same whenever it is claimed.
+- **A volume or streak quest pays its multiple of a win against the average of the games that earned it**, where the average is taken over the **roster index** and rounded to the nearest opponent. Twenty games averaging index 8 pay as one win against Kestrel; twenty games against Pebble pay as one win against Pebble.
+
+**Average the index, not the payout.** Because payouts double, an arithmetic mean of them is dominated by the single strongest game in the set: nineteen Pebble games and one Titan game average 6,555 points, which prices twenty games at roughly a Corvus win on the strength of one of them. Averaging the index and then exponentiating — the geometric mean — gives 2 points for the same set, which is what nineteen trivial games and one real one are actually worth. Round the mean index to the nearest opponent so the result is nameable: the interface can say *your twenty games averaged Kestrel*, which is a sentence, where a fractional exponent is not.
+
+**Two ways of pricing quests by the player instead of the opposition were tried and both fail, in opposite directions.**
+
+*Pricing at the player's current rung lets the cheap quests be banked.* The ladder never requires playing the weakest opponents — the cheapest route to Willow's 64 points is four Bramble wins, not sixty-four Pebble wins, which is exactly the self-pricing property §7.3 relies on. So a player has no reason to touch Pebble, Twig, Mote or Clover at all, and their eight per-opponent quests would sit unclaimed and appreciating. Cashed in at rung 15 those eight games pay 262,144 points — the entire Titan unlock. At rung 19 they pay 4,194,304 against a roster costing 2,097,088 in total: twice the whole ladder, for eight games against opponents that move at random. The optimal play would be to avoid a fifth of the roster on purpose.
+
+*And it makes the volume family a pure grind.* A hundred games in a day pays four wins-worth; priced at the player's rung, a hundred instant Pebble games at rung 17 pay 524,288 points — four Titan wins for an afternoon of tapping. Priced by the opposition it pays four. This is the failure the rest of §7 was carefully built to avoid: §7.3's whole argument is that every rung down halves the payout, so grinding downward prices itself out. A quest that pays by the player's height reintroduced the exploit that §7.3 spent its entire shape defending against, in the one place nobody was looking.
 
 | Games in one day | 5 | 10 | 20 | 50 | 100 |
 |---|---|---|---|---|---|
@@ -528,11 +539,13 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 |---|---|---|---|---|---|---|---|---|
 | Pays, in wins-worth | 1 | 2 | 4 | 8 | 12 | 16 | 24 | 32 |
 
-Four wins is one unlock, so a 30-day streak or a 100-game day is worth roughly one free opponent. Per-opponent quests pay one win-worth each.
+Four wins is one unlock, so a 30-day streak of real games, or a 100-game day against opponents near the player's own level, is worth roughly one free opponent. The same streak kept alive with one Pebble game a day is worth four points, and that is the intended answer rather than a shortcoming: showing up is what the streak measures, but *what you showed up to* is what the points measure. A per-opponent quest pays 2ⁱ — one win against the opponent it names — so the forty of them are worth about two extra wins against each opponent the player actually works through.
 
-**The volume ladder is subscriber-only by arithmetic, not by a rule.** Five games in a day exceeds the free cap of three, so no free player can complete even the first rung. This is deliberate and must be *stated* rather than left to be discovered: the quest tiles show the requirement, and a free player sees why it is out of reach and what would change it. A permanently unreachable goal presented without explanation reads as a bug.
+**From 0.4, the volume ladder is subscriber-only by arithmetic, not by a rule.** Five games in a day exceeds the free cap of three, so no free player can complete even the first rung. This is deliberate and must be *stated* rather than left to be discovered: the quest tiles show the requirement, and a free player sees why it is out of reach and what would change it. A permanently unreachable goal presented without explanation reads as a bug.
 
-**The daily-volume family is also the only remaining farm vector**, since it rewards game *count* rather than opponent strength. It is behind the paywall, which bounds the damage to people who have paid, and the reward is capped at four wins-worth a day. If it ever needs tightening, tighten the reward, not the eligibility.
+**That copy ships with the meter, not before it.** The cap arrives at 0.4 (§4.2) and progression arrives at 0.1, so for the whole of the closed test every tester can complete the entire volume family and an explanation of why they cannot would be false. In 0.1 these are ordinary quests with no restriction copy; the explanation arrives in the release that makes it true.
+
+**There is no remaining farm vector, and no rule is doing the work.** The daily-volume family was the last one, because it counts games rather than weighing them — but pricing it by the average opponent means a hundred games against Pebble pay a hundred games' worth of Pebble, which is four points. The paywall is no longer what contains it, which matters because the paywall does not exist until 0.4 and progression ships at 0.1; a containment rule that arrives three releases after the thing it contains is not a containment rule. This is the same property §7.3 has and for the same reason: the exponent does the work, so no anti-farming rule has to.
 
 ### 7.5 Streaks
 
@@ -558,6 +571,12 @@ unlock: { opponentId, unlockedAt, pricePaid, source }
 - **`pricePaid` is stored for the same reason a game stores the opponent's anchor rating** (§5): re-tuning a cost later must never retroactively bankrupt someone who already spent at the old price. The balance is *earned minus the sum of prices actually paid*, which is stable under any future change to the table.
 - **`source`** distinguishes points from the one-time purchase, so a refund of the purchase can revoke exactly what it bought and nothing a player earned.
 - Everything else stays derived. There is no stored balance, no stored streak length, no stored quest progress — all three are folds, and all three would drift.
+
+**Points earned is a fold over the games and nothing else** — no unlock record is consulted to compute it. That is a consequence of §7.4 pricing every quest by the opponents it was earned against rather than by the player's current rung, and it is worth stating because the alternative was not obviously worse until it was written down. Under a current-rung rule, an award would depend on which opponents were unlocked *at the moment it fired*, so the fold would have had to interleave completed games with unlock records in time order — two streams, an ordering hazard on both, and a balance that could not be checked against the game list alone. Pricing by the opposition removes the dependency entirely.
+
+The ordering key stays exactly as §5 defines it, and it is still load-bearing for the per-game rating steps: `completedAt`, with the game id as tie-break.
+
+**Storing the price but deriving the award is asymmetric, and the asymmetry is resolved by a rule rather than a second table.** Re-tuning §7.4's multiples downward would reduce every player's earned total, and since the balance is *earned minus prices actually paid*, it could drive a balance below zero against unlocks already bought — the same bankruptcy `pricePaid` exists to prevent. **The balance clamps at zero, and no unlock is ever revoked.** A downward re-tune costs future purchasing power and takes nothing away. The alternative — storing each award as it fires — would buy insurance against a re-tune expected once, before real players exist, at the permanent cost of the property that nothing but the unlock records is stored.
 
 This record is **the first thing in the app that is not reconstructible from game history**, which means it must be in the **explicit Android backup allowlist from 0.1**, not from whenever the cloud arrives. A player who replaces their phone and loses fifteen unlocks they earned over two months has lost the only thing in this app that was expensive to acquire.
 
@@ -616,7 +635,7 @@ Top to bottom:
 
 Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and answered a question nobody was asking. This one answers "where am I, and who is next".
 
-**Three equal tiles across the width.** The middle tile is the **first opponent rated above the player's current rating**, highlighted. One behind it, one ahead. Each tile stacks vertically:
+**Three equal tiles across the width.** The middle tile is the **next unlock** — the lowest-indexed opponent still locked — highlighted, with its price and the player's progress toward it. One owned opponent behind it, one locked one ahead. Each tile stacks vertically:
 
 - a full-tile-width avatar
 - the name
@@ -625,7 +644,9 @@ Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and a
 - three stars
 - a rematch button — icon only, with a spoken label, because no button text fits the width
 
-**The window clamps at both ends.** A player below Pebble or above Quadrim Prime still sees three tiles; the window slides rather than shrinking. A two-tile row with a hole in it looks like a bug.
+**It follows the unlock ladder, not the rating ladder, and that is the whole point of the section.** Centring on rating instead was the earlier design and it fails at exactly the moment that matters most. A player seeded at 800 (§5) would get a window of Mote (800), Clover (900) and Bramble (1000) — three opponents they already own — while their next unlock is Willow at 1100, outside the window entirely. The price ladder, which is the entire motivation for §7, would be invisible on the main screen until the rating climbed into it. The section asks "where am I, and who is next"; centred on rating it answers the first question twice and the second not at all. Where the player stands on the *rating* ladder is still available, in the place a player goes looking for it: §8.7's accordion opens at the tier containing their rating.
+
+**The window clamps at both ends.** A player who has unlocked nothing beyond the free five, or everything, still sees three tiles; the window slides rather than shrinking. A two-tile row with a hole in it looks like a bug.
 
 **Locked opponents appear in full**, greyed, with their price and the player's progress toward it. Hiding them would hide the goal, which is the entire motivation for the ladder. The full roster, with the same records and stars, remains browsable in opponent selection (§8.7).
 
@@ -786,7 +807,9 @@ Flutter for the client. **Android first; iOS from 0.3b** (§12). Firebase for th
 
 **Structure the code as a Flutter app over pure-Dart packages**: the rules, search and opponents in one, the rating maths in another, both with **no dependency on Flutter, on any I/O library, on an ambient clock or on an ambient random source, and no runtime dependencies at all**.
 
-The progression maths — point values, unlock costs, quest multiples, star thresholds — belongs in a pure package under the same rules. It is arithmetic over stored records, it needs to be exhaustively testable, and it must not acquire a clock. Streak evaluation *does* need a calendar, so **the day boundary is passed in, never read**.
+The progression maths — point values, unlock costs, quest multiples, star thresholds — belongs in a pure package of its own, `quadrim_progression`, under the same rules. It is arithmetic over stored records, it needs to be exhaustively testable, and it must not acquire a clock. Streak evaluation *does* need a calendar, so **the day boundary is passed in, never read**.
+
+**Not in the engine package, by the engine's own rule.** §6.1 says locking is not an engine concern and the catalogue carries no `locked` field, because the strength harness plays all twenty against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost sits on the other side of that line. It does need the roster index, so it depends on the engine package — the one inter-package dependency in the project, running in the allowed direction.
 
 **Enforce that mechanically.** Ours is a grep in the build gate over each package's manifest and imports. Purity that is merely intended lasts until the first convenient import.
 
@@ -891,8 +914,8 @@ Four places must agree: the application id, the build namespace, the source pack
 4. All twenty opponents exist, are distinguishable in play, and are calibrated by a self-play harness that reports measured against published strength.
 5. The top opponent's advertised strength matches what it delivers, and the interface never claims perfection it cannot deliver from both seats.
 6. Both ratings update correctly and independently — provisional K, draws, forfeits, the floor. The computer rating is derived from stored games, never stored, and never leaves the device; the human rating is never written by a client.
-7. **Points, unlocks, quests and streaks are correct**: a win pays 2ⁱ, an unlock costs 2ⁱ⁺¹ and is available only in roster order, the balance is earned minus prices actually paid, and every quest fires exactly once.
-8. **An unlock survives a re-tune of the cost table**, because the price paid is stored with it.
+7. **Points, unlocks, quests and streaks are correct**: a win pays 2ⁱ, an unlock costs 2ⁱ⁺¹ and is available only in roster order, the balance is earned minus prices actually paid, and every quest fires exactly once. **No quest reward anywhere depends on the player's own rung** — a per-opponent quest pays that opponent's index, and a volume or streak quest pays the rounded mean index of the games that earned it. A hundred games against Pebble in one day pay four points, and deferring a first win against a weak opponent earns nothing extra.
+8. **An unlock survives a re-tune of either table.** The cost table, because the price paid is stored with it; the quest table, because the balance clamps at zero and no unlock is ever revoked.
 9. **A missed day resets a streak and a played day does not**, across a month boundary, a year boundary and a time-zone change.
 10. **Nothing but the unlock records is stored.** Balances, streaks, quest progress and statistics are all derived, and a test proves each one reconstructs from game history alone.
 11. Async games expire correctly, with a warning first.
@@ -925,7 +948,7 @@ Every item here is a business, account or measurement decision. **None is functi
 | **App name availability** | Checked against both stores and trademark registers. Not yet done. |
 | **The reference device** | The twenty-second ceiling (§6.8) is a device number, and the node-to-seconds conversion must be confirmed on real hardware. |
 | **The progression numbers** | The shape is settled and the values are derived from a stated target rather than measured (§7.7). They are the first thing to instrument once real players exist. Watch the median time to each unlock and the rung at which players stop. |
-| **Two Casual-tier rating inversions** | Vireo measures above Finch, and Willow above Vireo, by about 40 points each. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Kestrel's 0.08. The fix is a roster change, owned by 1.0. A rebuilder starting from this document should instead design the Casual tier so that its personalities and its rungs agree. |
+| **Two Casual-tier rating inversions** | Vireo measures above Finch, and Willow above Vireo, by about 40 points each. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Kestrel's 0.08. The fix is a roster change, owned by 1.0. **Progression gives it a visible symptom**: the roster index sets both the unlock price and the win payout, so across three consecutive rungs the player is shown increasing prices for decreasing strength — Willow at 64 is the strongest of the three, Finch at 256 the weakest by about 83 points. The economy survives (four Kestrel wins remain a faster 1,024 points than eight Finch wins, so §7.3's self-pricing property holds), but three prices are displayed as a public claim about difficulty and for these three the claim is false. Re-pricing by measured strength is not available — §6.4 pins pricing to the index and the ratings are anchors — so this is an argument for scheduling the 1.0 roster revision early, not for a tuning pass. A rebuilder starting from this document should instead design the Casual tier so that its personalities and its rungs agree. |
 
 **Things earlier editions listed as open that are now closed:** push on desktop and web (§10 — a stated platform limitation, not a problem to solve); the size and obtainability of the strategy book (§6.6 — 54,745 bytes, published, permissively granted); anchor calibration (§6.7 — a built harness); auto-match cold start (§8.9 — a computer opponent after a short wait); the per-game Firebase cost, negligible in steady state now that the migration burst that dominated it no longer exists; the business model (§4.1); and the large-screen layout, which is cancelled rather than deferred (§8.1).
 

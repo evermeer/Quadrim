@@ -3,7 +3,7 @@
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D257**.
+Numbering continues from [idea-v1-decisions.md](idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D270**.
 
 Date: 2026-08-14
 Status: agreed, pre-implementation. No code written for any of it.
@@ -16,6 +16,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 | 4 | The main screen | D240–D252 |
 | 5 | Scope, platforms and staging | D253–D256 |
 | 6 | The roster rename | D257 |
+| 7 | v3 read back against the build | D258–D270 |
 
 ---
 
@@ -265,6 +266,169 @@ Pebble, Twig, Mote, Clover, Bramble, Onyx, Sable, Titan, Oracle and Quadrim Prim
 
 ---
 
+# Group 7 — v3 read back against the build
+
+D218–D257 were taken against v2 and a set of notes, with the build deliberately out of view. These were taken with it in view: [idea-v3.md](idea-v3.md) read against the twenty-two finished tickets, which is what surfaced two structural problems in §7 that reading the specification on its own did not. The reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
+
+## D258 — What the brainstorming pass is allowed to change
+
+**Question:** Is reading v3 against the build an implementation-planning exercise, or may it reopen v3's product decisions?
+
+**Decision:** Both, and v3 may be amended. Four of the decisions below change what the product does rather than how it is built (D260, D261, D262, D266), and each is folded back into idea-v3.md rather than left as an erratum in a second document.
+
+**Cost:** A specification that has already been reviewed changes again before any of it is built. Accepted because the alternative is a brief that is known to be wrong in two places and a build that follows it anyway — and because both problems (D261, D262) were found by looking at the roster and the seed value, which is exactly the kind of thing only a read against the real numbers catches.
+
+## D259 — The closed-test clock waits for progression
+
+**Question:** Google Play requires twelve testers for fourteen continuous days before granting production access, and ticket 016 starts that clock. §12 puts progression in 0.1, before the closed test. Does the clock wait?
+
+**Decision:** Yes. 0.1 goes to closed test complete, with points, unlocks, quests and streaks.
+
+**Cost:** Weeks of the critical path. This is the same argument §12 already makes — a fourteen-day test *is* a measurement of whether people come back, and shipping the ladder afterwards means the one test that could have validated it ran against a build without it — but it is worth recording as a cost rather than only as a rationale. The mitigation is that ticket 015 is waiting time rather than effort and has no code dependency, so the store and signing work should start immediately and run alongside, not after.
+
+## D260 — Generated avatars in 0.1; the real ones at 0.2
+
+**Question:** `doc/Avatars.md` now holds twenty avatar specifications and D257 renamed ten opponents specifically so the images read as a progression. But §6.4 says to generate avatars from the opponent id, and §12 puts real art in 0.2. Which is true?
+
+**Decision:** §6.4 stands for 0.1. The generated avatars ship to the closed test; the real ones arrive with 0.2's art pass, where §12 already puts them.
+
+**Cost:** The closed test sees placeholder faces on the Your Path tiles, which is the one place §8.4 gives an avatar full tile width and therefore the place the difference is most visible. Accepted because the rename bought what it needed to buy: the names had to be settled before images could be commissioned against them, and they now are. Nothing about D257 is wasted by shipping the art one release later.
+
+## D261 — Per-opponent quests pay at that opponent's rung, not the player's
+
+**Question:** §7.4 pays every quest as a multiple of a win at the player's current rung. Forty of the fifty-three quests are per-opponent. Does that hold?
+
+**Extended by D270**, which found the same defect in the half this decision left alone and applied the same fix there.
+
+**Decision:** No. **Per-opponent quests pay 2ⁱ for opponent *i*** — fixed by the roster index and therefore worth the same whenever they are claimed. The volume and streak families keep the current-rung scaling.
+
+The hole is that the unlock ladder never requires playing the weakest opponents: the cheapest route to Willow's 64 points is four Bramble wins, not sixty-four Pebble wins, which is precisely the self-pricing property §7.3 relies on. So a player has no reason to touch Pebble, Twig, Mote or Clover at all, and their eight quests appreciate untouched. Claimed at rung 15 they pay 262,144 — the whole Titan unlock. At rung 19 they pay 4,194,304 against a roster costing 2,097,088 in total: twice the entire ladder, for eight games against opponents that move at random.
+
+The other thirty-two are far less exposed, because §3.1 assigns the first seat at random and alternates on rematch, so "first win as second player to move" fires on its own about half the time. The reliably bankable set is the eight against opponents the ladder never asks you to play.
+
+**Decision detail:** the two families keep different bases because they measure different things. A first encounter is a property of the opponent, so it is priced by the opponent. A hundred games in a day or a ninety-day streak is a property of recent effort, and §7.4's argument that a flat reward would be ladder-skipping at the bottom and pocket change at the top applies to those and only those.
+
+**Cost:** Two reward rules where §7.4 had one, and the sentence explaining quest rewards is now two sentences. Cheap next to the alternative, which is an economy whose optimal play is to avoid four of the twenty opponents on purpose. A side benefit: forty of the fifty-three awards become constants keyed by roster index, which takes them out of the ordering problem in D265.
+
+## D262 — Your Path centres on the next unlock, not the next rating rung
+
+**Question:** §8.4 centres the middle tile on "the first opponent rated above the player's current rating". §7.3 unlocks strictly in roster order. Which ladder does the section follow?
+
+**Decision:** The unlock ladder. The middle tile is the **next locked opponent**, with its price and the player's progress toward it; one owned opponent behind it and one locked one ahead.
+
+The two diverge exactly where it matters most. A player seeded at 800 (§5) gets a rating-centred window of Mote (800) / Clover (900) / Bramble (1000) — three opponents they already own — while their next unlock is Willow at 1100, outside the window entirely. §8.4 provides for locked tiles showing their price and progress, but on first launch there is no locked tile on screen, so the price ladder is invisible until the rating climbs into it. The section is titled "where am I, and who is next"; centred on rating it answers the first question twice and the second not at all.
+
+**Cost:** The section no longer shows where the player sits on the *rating* ladder, which was its original job in v2. That reading is not lost — §8.7's tier accordion still opens at the tier containing the player's rating, which is the same information in the place a player goes looking for it. The clamping rule in §8.4 still applies at both ends: a player who has unlocked everything sees the top three, not a hole.
+
+## D263 — Progression maths goes in a new pure package
+
+**Question:** §11.1 says the progression maths belongs in a pure package. `quadrim_engine` or a new one?
+
+**Decision:** A new package, **`quadrim_progression`** — point values, unlock costs, the quest tables, streak evaluation and the star thresholds.
+
+Not the engine, by the engine's own rule: §6.1 says locking is not an engine concern and the catalogue has no `locked` field, because the strength harness plays all twenty against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost belongs on the other side of that line. `quadrim_rating` is the precedent — a small pure package for one body of maths that must be exhaustively testable and must not acquire a clock.
+
+**Cost:** A third package to wire into the build gate's purity scan and a third `pubspec`. Small and mechanical. The package does need the roster index, which lives in the engine, so it takes a dependency on `quadrim_engine` — the first inter-package dependency in the project, and one that runs in the allowed direction.
+
+## D264 — A derived balance clamps at zero; unlocks are never revoked
+
+**Question:** §7.6 stores `pricePaid` so that re-tuning a cost cannot retroactively bankrupt someone. Quest awards are derived from the live table, so re-tuning §7.4's multiples changes every player's earned total — and since balance is `earned − Σ pricePaid`, a downward re-tune can drive a balance negative against unlocks already bought. Same failure mode, untreated.
+
+**Decision:** The balance clamps at zero, and unlocks are never revoked — §7.3 already promises the second half. A downward re-tune costs future purchasing power and takes nothing away.
+
+**Cost:** A player who re-tunes into a clamped balance sees no points until they earn past the shortfall, with no explanation available that would not be worse than silence. Accepted because the alternative is a stored award record, which would cost the property in DoD #10 that nothing but the unlock records is stored — a permanent structural cost to insure against a re-tune expected once, before real players exist, if at all.
+
+## D265 — The balance is a merge of two time-ordered streams
+
+**Question:** §7.6 describes points earned as a fold over stored games. Is it?
+
+**Superseded by D270**, which removes the dependency entirely. Kept because the reasoning is what made D270's benefit visible.
+
+**Decision:** No — it is a fold over games **and** unlock records, interleaved in completion order. The signature is `balance(games, unlocks)`, and the specification says so rather than leaving it to be discovered.
+
+Volume and streak awards depend on the rung at the time the quest fired, and the rung comes from the unlock records with their own `unlockedAt`. Games alone cannot say what rung the player was on. D261 shrinks this from fifty-three quests to thirteen but does not remove it.
+
+**Cost:** The fold is more expensive and more intricate than "sum 2ⁱ over wins", and it runs on every main-screen render. Bounded by the same argument §7.2 of the v1 spec makes about statistics — it is a fold over a list already in memory. The ordering key is settled and already exists: `completedAt` with the game id as tie-break (§5), and `unlockedAt` under the same rule.
+
+## D266 — Three vertical slices, and no meter copy in 0.1
+
+**Question:** In what order is §7 built, and what do the volume quests say in a release that has no meter?
+
+**Decision:** Three slices, each crossing every layer: **points and unlocks**, then **quests**, then **streaks**. The package's shape is fixed up front — the point and cost functions, roster-index keying, the `balance(games, unlocks)` signature — so the three passes extend a settled interface rather than renegotiating it.
+
+Bottom-up was the alternative: package, then repository, then screens. Rejected because it finishes with the riskiest part. The arithmetic is small and exhaustively testable whenever it is written; §8.3's six sections on the smallest supported phone at the largest font scale are neither, and slices meet that first.
+
+**And in 0.1 the volume quests carry no restriction copy.** §7.4 says they are subscriber-only by arithmetic because five games in a day exceeds the free cap of three — but the cap arrives at 0.4, so through the entire closed test every tester can complete the whole family and the explanation would be false. The copy ships with the meter, in the release that makes it true.
+
+**Cost:** `quadrim_progression` is written in three passes rather than once, so its tests are extended twice. The 0.4 meter work gains a small UI task it would not otherwise have had.
+
+## D267 — The main screen is split before it grows
+
+**Question:** `home_screen.dart` is 769 lines holding twelve private widget classes, and §8.3 adds a trend graph, a balance, a Your Path row and a quests section while rewriting the finished-game row. Extend it or restructure it?
+
+**Decision:** Split first, as its own step with no behaviour change. `app/lib/home/` gains `rating_card.dart`, `your_path.dart`, `quests_section.dart`, `finished_games.dart` and `active_games.dart`; `home_screen.dart` becomes the composition and the state feeding it. The new sections then arrive as new files instead of as growth in the file every remaining ticket touches.
+
+The split is close to mechanical — the private widget classes already in the file are the extraction boundaries. `_OpponentSection` is deleted rather than moved, since Your Path replaces it (§8.4), but `HomeSummary.byOpponent` is kept: Your Path's tiles need exactly the per-opponent records it already produces, plus the locked ones the catalogue supplies.
+
+**Cost:** One commit that moves code and changes nothing, which is the kind of commit that looks like wasted effort in a log. It is the opposite: it is what makes the four diffs after it legible. Rewriting the main screen outright was the other option and was rejected — the rating card and the games lists have the same specification in v3 as in v2, and discarding working, reviewed, accessibility-tested code for them buys nothing.
+
+## D268 — The Casual inversion is now a user-visible defect, and still a 1.0 fix
+
+**Question:** §14 records that Willow measures about 33 points above Vireo and Vireo about 50 above Finch, and assigns the fix to the 1.0 roster revision. Does progression change that disposition?
+
+**Decision:** The disposition does not change. The reason does, and §14 is rewritten to say so.
+
+Under v2 this was a discrepancy between two numbers, one of which nobody could see. Under §7 the roster index sets both the unlock price and the win payout, so across three consecutive rungs a player now pays **increasing prices for decreasing strength**: Willow costs 64 and is the strongest of the three, Vireo costs 128, Finch costs 256 and is the weakest by about 83 points. Three prices are about to be displayed as a public claim about relative difficulty, and for these three the claim is false.
+
+The farming vector it opens is real but bounded, and the arithmetic is worth doing rather than assuming. Beating Finch pays 128 against Kestrel's 256, so 1,024 points is eight Finch wins or four Kestrel wins; at roughly 1170 effective against a published 1300, a player near 1300 needs about twelve games for the first and about eight for the second. Kestrel remains the faster route and §7.3's self-pricing property survives. What does not survive is legibility.
+
+Re-pricing by measured strength is not available: §6.4 pins pricing to roster index and D144 pins ratings as anchors, so a price that followed measurement would be a rating change wearing a different name.
+
+**Cost:** 0.1 ships with three prices that misdescribe three opponents, and the closed test will see them. Accepted, because the fix is a roster change and a roster change invalidates every calibration run and every stored game's anchor — which is exactly why §14 put it at 1.0. What this decision buys is that the 1.0 revision now has a symptom attached rather than only a measurement, which is the strongest argument yet for scheduling it early rather than late.
+
+## D269 — Disposition of the seven open tickets
+
+**Question:** v3 contradicts three of the tickets still open. What happens to each?
+
+**Decision:**
+
+| Ticket | Disposition |
+|---|---|
+| **015** Store accounts and release signing | Unchanged, and started immediately — D259 puts the fourteen-day clock behind progression, which makes the waiting-time work more urgent, not less |
+| **016** Closed test | Unchanged in content; sequenced behind the progression tickets |
+| **017** Large-screen landscape layout | **Cancelled** by §8.1 (D253). Moved to `done/` with a cancellation note rather than deleted — the reasoning is worth keeping |
+| **021** Accessibility audit | Content unchanged; blockers re-pointed, since it currently lists 017 and 023 and neither will exist. Gains a largest-font-scale test over §8.3's six sections |
+| **022** Release 0.1 readiness | Unchanged; its "every other ticket" dependency now includes the new ones |
+| **023** Per-opponent milestones | **Absorbed** into the quest system by §7.4 (D240). The work survives as forty of the fifty-three quests, and its "no new stored shape" property survives with it |
+| **024** Closed-test survey | Content unchanged and considerably more valuable — §7.7 names median time to each unlock and the rung at which players stop as the two signals to watch, and this survey is the only instrument that can see them. Both are added to it |
+
+Five new tickets, in build order: **030** main-screen decomposition (D267); **031** `quadrim_progression` and the first slice — points, unlock records, balance, Your Path, lock state and the unlock confirmation; **032** quests; **033** streaks; **034** the trend graph, the finished-game row changes, the end-of-game panel and the portrait lock.
+
+**Cost:** Two tickets that were written, reviewed and ready to build are cancelled or absorbed without a line of their code existing. That is the cheapest possible moment for it to happen, and it is what a specification pass before implementation is for. Ticket 031 is the largest of the five and could split along the unlock/display seam if it proves unwieldy; it is left whole because the first slice is only a slice when a player can actually buy something.
+
+## D270 — No quest reward anywhere depends on the player's own rung
+
+**Question:** D261 repriced the forty per-opponent quests by the opponent and left the thirteen volume and streak quests scaling with the player's current rung, on the argument that those measure recent effort rather than a first meeting. Does that hold?
+
+**Decision:** No. **Every quest is priced by the opponents it was earned against.** One rule, all four families, and it is the rule §7.2 already applies to a plain win. This extends D261 and supersedes D265.
+
+- A per-opponent quest pays 2ⁱ for opponent *i*.
+- A volume or streak quest pays its multiple of a win against the **average roster index of the qualifying games, rounded to the nearest opponent**.
+
+D261 fixed one half of the problem and left the other half in place. A hundred games in a day pays four wins-worth; priced at the player's rung, a hundred instant Pebble games at rung 17 pay 524,288 points — four Titan wins for an afternoon of tapping. §7.4 had already noticed this and called the volume family "the only remaining farm vector", then leaned on the paywall to contain it. That containment does not exist: the meter arrives at 0.4 and progression ships at 0.1, so for three releases nothing bounds it, and even afterwards it only bounds it to people who have paid. §7.3's entire shape exists so that grinding downward prices itself out without a rule; a quest priced by the player's height reintroduced the exploit in the one place nobody was checking.
+
+**Average the index, not the payout.** Because payouts double, an arithmetic mean of them is dominated by the strongest single game: nineteen Pebble games and one Titan game average 6,555 points, pricing twenty games at roughly a Corvus win on the strength of one. The mean of the *index*, exponentiated — a geometric mean — pays 2 for the same set. Rounding the mean index to the nearest opponent keeps the result nameable, so the interface can say *your twenty games averaged Kestrel*; a fractional exponent is a correct number that cannot be put in a sentence.
+
+**Cost:** Two real ones, and a large refund.
+
+*The streak rungs are worth much less to a casual player.* A ninety-day streak kept alive with one easy game a day now pays a handful of points instead of eight wins-worth. That is the intended answer — showing up is what the streak measures, but what you showed up *to* is what the points measure — and it is a genuine reduction in what the longest rungs are worth to the player most likely to reach them. Worth watching under §7.7 alongside the rest of the table.
+
+*Volume and streak awards now need the games that earned them, not just a count.* A quest can no longer fire off a tally; it has to know which games qualified so it can average them. In practice both folds already walk the game list.
+
+*And the refund:* **points earned becomes a fold over the games alone.** Under a current-rung rule the award depended on what was unlocked when it fired, so the fold had to interleave games with unlock records in time order — the two-stream merge D265 described, with an ordering hazard on both sides and a balance that could not be checked against the game list by itself. That is now gone. §3's "everything derives from the move list" holds for the whole of points earned, and §7.6's single stored record is consulted only for what was *spent*.
+
+---
+
 ## Open items
 
-Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239), and the two Casual-tier rating inversions owned by the 1.0 roster revision.
+Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

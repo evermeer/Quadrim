@@ -20,9 +20,10 @@ The idea was written three times, and the versions are kept apart on purpose.
 | [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
 | [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
 | **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
-| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D257. The decisions that turned v2 and the additions into v3 |
+| [idea-v3-brainstorming.md](doc/idea-v3-brainstorming.md) | v3 read back against the twenty-two tickets already built — where the spec and the code disagree, and in what order the rest gets built |
+| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D270. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 257 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 270 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
 
 ## Starting the Vibe coding workflow
 
@@ -227,5 +228,15 @@ unambiguous before you summarize. The goal is to have a clear and unambiguous un
 Put all decisions in the file doc/idea-v3-decisions.md and put the result in the file doc/idea-v3.md
 ```
 
+Improving on the idea-v3.md
 
+**Prompt**
+```
+Use the Superpowers brainstorming skill on the created file doc/idea-v3.md. 
+Take into consideration what is already implemented.
+Propose several approaches. Ask clarifying questions about the setup, functionality, design and
+constraints before proposing options if anything is unclear.
+Put the results in the file doc/idea-v3-brainstorming.md
+Add all decisions to the file doc/idea-v3-decisions.md
+```
 
