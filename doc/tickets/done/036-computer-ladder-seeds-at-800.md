@@ -16,9 +16,37 @@ The owner's call, recorded here because it is a judgement rather than a derivati
 
 **Status:** ready-for-agent
 
-- [ ] A new player with no history has a computer rating of **800** — spec criterion F9
-- [ ] The human ladder's seed of 1000 is **not** introduced here; it arrives at 0.4 with the rating it belongs to, and the doc comment says so
-- [ ] No migration, no stored rating, and no second copy of anything: the fold is still the only source
-- [ ] K is still 32 for the first 20 games and 16 after, the floor is still 100, and a draw still scores one half — this ticket moves one number and nothing else
-- [ ] Every test that pinned a value derived from the old seed is corrected rather than deleted, and any test whose *meaning* changed at the new seed says so
-- [ ] `tool/check.sh` passes
+- [x] A new player with no history has a computer rating of **800** — spec criterion F9
+- [x] The human ladder's seed of 1000 is **not** introduced here; it arrives at 0.4 with the rating it belongs to, and the doc comment says so
+- [x] No migration, no stored rating, and no second copy of anything: the fold is still the only source
+- [x] K is still 32 for the first 20 games and 16 after, the floor is still 100, and a draw still scores one half — this ticket moves one number and nothing else
+- [x] Every test that pinned a value derived from the old seed is corrected rather than deleted, and any test whose *meaning* changed at the new seed says so
+- [x] `tool/check.sh` passes
+
+## How this was closed
+
+One constant, and **fourteen tests** — none of them broken, every one of them
+newly wrong about a premise that had moved. That ratio is the whole story of
+this ticket and the reason D227 says what it says.
+
+Moving the seed moves where a new player is *standing*. The tier accordion
+opens at the tier nearest the player, so a seeded player now lands on Novice —
+Mote is rated 800 exactly — where they used to land on Casual. Four tests
+tapped a tier heading to open a section that is now already open, and so shut
+the very list they were about to look inside. A seeded player's fair-match band
+moved with them: 1250 read "even" and now reads "above your level", while 900
+reads even.
+
+The case worth keeping in mind is the rounded-away rating step. The UI branches
+on it — a zero step gets no arrow rather than one claiming a movement that did
+not happen — so a test that stopped producing zeroes would have quietly rotted
+that branch. From 1200 a single win over a 100-rated opponent rounded away;
+from 800 the same win pays 1. It is still reachable and the test now reaches it
+the way a player actually does: climb past the twentieth game where K halves,
+then beat the weakest opponent on the roster from far above it.
+
+No migration, and none needed: nothing stores a rating, so the fold simply
+re-derives from 800. The owner's call that the re-derived numbers stand is
+D278.
+
+Review in `codereview-main.md`: no findings.
