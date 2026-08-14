@@ -3,7 +3,7 @@
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D270**.
+Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D274**.
 
 Date: 2026-08-14
 Status: agreed, pre-implementation. No code written for any of it.
@@ -17,6 +17,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 | 5 | Scope, platforms and staging | D253–D256 |
 | 6 | The roster rename | D257 |
 | 7 | v3 read back against the build | D258–D270 |
+| 8 | The specification | D271–D274 |
 
 ---
 
@@ -426,6 +427,52 @@ D261 fixed one half of the problem and left the other half in place. A hundred g
 *Volume and streak awards now need the games that earned them, not just a count.* A quest can no longer fire off a tally; it has to know which games qualified so it can average them. In practice both folds already walk the game list.
 
 *And the refund:* **points earned becomes a fold over the games alone.** Under a current-rung rule the award depended on what was unlocked when it fired, so the fold had to interleave games with unlock records in time order — the two-stream merge D265 described, with an ordering hazard on both sides and a balance that could not be checked against the game list by itself. That is now gone. §3's "everything derives from the move list" holds for the whole of points earned, and §7.6's single stored record is consulted only for what was *spent*.
+
+---
+
+# Group 8 — The specification
+
+Taken while turning [idea-v3.md](idea-v3.md) and [idea-v3-brainstorming.md](idea-v3-brainstorming.md) into [idea-v3-spec.md](idea-v3-spec.md).
+
+## D271 — The v3 spec is a successor, and preserves the v1 spec's numbering
+
+**Question:** idea-v1-spec.md has twelve numbered sections and eight criterion prefixes (E, F, U, T, D, R, S, G). Does the v3 spec start clean?
+
+**Decision:** No. **Identical section numbers and identical criterion ids.** §7 is still Exposed Endpoints, §8 is still Data, §8.3 is still the game document, §11 is still Acceptance Criteria. New material is appended inside the existing structure.
+
+The reason is that both are cited from things that already exist and would otherwise silently start pointing at the wrong requirement. Source comments carry `spec §8.3`, `spec §8.6`, `spec §9.5`, `spec §9.12`, `spec E7`, `criterion S4`, `spec D2/S2` and `spec S1/F13`; twenty-two completed tickets cite the same ids. A renumbering would be a silent, repository-wide invalidation with no compiler to catch it.
+
+**Cost:** The v3 spec inherits a structure designed for a smaller product. Progression has no natural home in a layout that predates it, so it is spread across §7.3 (the package), §8.8 (the one stored record) and §11.6 (a new criteria section) rather than sitting in one place the way §7 of idea-v3.md does. Accepted: a reader who wants progression whole reads the brief, and a reader who wants it testable reads the spec.
+
+## D272 — A changed criterion keeps its id and changes its text
+
+**Question:** F9 says a new player's rating is 1200; D226 made it 800. U10 requires a large-screen layout that D253 cancelled. New id, or same id with new text?
+
+**Decision:** **Same id, new text**, marked ▲ in the spec. F9 is still "a new player with no history has the seed rating" and the seed changed. U10 is still "the layout policy holds" and the policy changed. A comment citing F9 wants whatever the seed rule currently is.
+
+New criteria are appended and marked ＋. Retired criteria would keep their id and be struck rather than reused — none are, so far.
+
+**Cost:** The criteria tables no longer read as a clean list; they carry two kinds of annotation and a note under §11.1 explaining that E8–E10 name different opponents than they used to. That is the honest record, and it is cheaper than a citation that resolves to the wrong requirement.
+
+## D273 — Progression criteria take a new `P` prefix
+
+**Question:** Where do the twenty-two progression criteria go — inside F for game flow, D for data, or their own section?
+
+**Decision:** **A new §11.6 with a `P` prefix**, and the release gates and security sections shift from §11.6/§11.7 to §11.7/§11.8. Progression is neither game flow nor data: it spans a pure package, a repository award point, a stored record and four screens, and every one of its interesting properties is arithmetic that no other section tests.
+
+**Cost:** Two section numbers move, so `§11.6` in an old document now means release gates where it used to mean the same thing — the *criterion ids* R1–R13 are unambiguous but the section number is not. Nothing in the source cites `§11.6` or `§11.7`, only `§8.x` and `§9.x`, which is why this was affordable and why the section numbers in §7–§9 were not.
+
+## D274 — Three clauses of the v1 spec prompt do not carry to v3
+
+**Question:** The prompt that produced this spec was the v1 prompt with the filenames changed. Three of its clauses no longer refer to anything that exists. Follow them literally, or resolve them?
+
+**Decision:** Resolved, with the user's confirmation on each, and recorded here because two of them would have destroyed finished work.
+
+- **"Follow recommended strategy A from the brainstorming document."** There is no strategy A in idea-v3-brainstorming.md. It has approaches A/B/C for building §7 and M1/M2/M3 for the main screen, and **approach A — bottom-up — is the one that document explicitly rejects**. The chosen approaches are B (three vertical slices) and M2 (split the main screen before growing it), per D266 and D267. "Strategy A" is from the *v1* brainstorming document, which had lettered strategies of its own.
+- **"Use the suggested bots Pebble, Mote, Bramble, Kestrel, Marlin and Onyx."** That is v1's six-bot roster, from before the twenty were built. All twenty exist, are calibrated, and are what §7 of idea-v3.md prices over — a win pays 2ⁱ for roster index *i*, an unlock costs 2ⁱ⁺¹, the whole roster is exactly sixty wins, and the free tier is "everything rated 1000 and below". Cutting to six would have deleted fourteen implemented opponents and required rewriting the economy from scratch.
+- **"Use the Matt Skills to-spec skill."** Not available in this environment; the v1 spec's §12.5 recorded its own deviations from it. The requested section list — goal, scope, non-goals, exposed endpoints, data, acceptance criteria — is followed directly instead.
+
+**Cost:** None to the work, but a general lesson worth keeping: **a prompt reused across document versions carries its old assumptions silently.** Two of these three would have passed a casual reading and destroyed work, and neither would have failed a build. The v1 spec has the same hazard in the other direction — its §12.1 opens "Strategy A was chosen", meaning v1's strategy A, which is not this document's approach A.
 
 ---
 

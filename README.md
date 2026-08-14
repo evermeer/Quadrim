@@ -10,20 +10,21 @@ The idea was written three times, and the versions are kept apart on purpose.
 | Document | What it is |
 |---|---|
 | [idea-v0.md](doc/history/idea-v0.md) | The original rough idea, as first written |
-| [idea-v1.md](doc/idea-v1.md) | That idea made unambiguous — but still carrying five open questions and a fallback ladder for the top opponent |
+| [idea-v1.md](doc/tickets/done/idea-v1.md) | That idea made unambiguous — but still carrying five open questions and a fallback ladder for the top opponent |
 | [idea-v1-brainstorming.md](doc/history/idea-v1-brainstorming.md) | v1 brainstormed with the Superpowers skill, which produced several options for each open question |
-| [idea-v1-spec.md](doc/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
+| [idea-v1-spec.md](doc/tickets/done/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
 | [idea-v1-spec-review.md](doc/history/idea-v1-spec-review.md) | v1 spec reviewed by the Agency Agents backend-architect, security-engineer, and product-manager |
 | [design.md](doc/design.md) | The design for the first run experience of the game, created with Claude Design |
-| [design-handoff.md](doc/design-handoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
-| [idea-v1-decisions.md](doc/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
+| [design-handoff.md](doc/DesignHandoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
+| [idea-v1-decisions.md](doc/tickets/done/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
 | [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
 | [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
 | **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
 | [idea-v3-brainstorming.md](doc/idea-v3-brainstorming.md) | v3 read back against the twenty-two tickets already built — where the spec and the code disagree, and in what order the rest gets built |
-| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D270. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
+| **[idea-v3-spec.md](doc/idea-v3-spec.md)** | **v3 turned into a spec with acceptance criteria — the successor to idea-v1-spec.md, preserving its section numbers and criterion ids** |
+| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D274. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 270 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 274 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
 
 ## Starting the Vibe coding workflow
 
@@ -38,7 +39,7 @@ unambiguous before you summarize. The goal is to have a clear and unambiguous un
 Put all decisions in the file doc/idea-v1-decisions.md and put the result in the file doc/idea-v1.md
 ```
 
-The result of that prompt was a [decisions](doc/idea-v1-decisions.md) document and a [final idea](doc/idea-v1.md) document.
+The result of that prompt was a [decisions](doc/tickets/done/idea-v1-decisions.md) document and a [final idea](doc/tickets/done/idea-v1.md) document.
 
 **Prompt**
 ```	
@@ -65,7 +66,7 @@ Put the result in the file doc/idea-v1-spec.md
 Add all decisions to the file doc/idea-v1-decisions.md
 ```
 
-The result of that prompt was a [spec](doc/idea-v1-spec.md) document.
+The result of that prompt was a [spec](doc/tickets/done/idea-v1-spec.md) document.
 
 Again overriding the instructions of the to-tickets skill, this next prompt asks to 
 break the spec into tickets as markdown files in the .doc/tickets folder.
@@ -228,7 +229,7 @@ unambiguous before you summarize. The goal is to have a clear and unambiguous un
 Put all decisions in the file doc/idea-v3-decisions.md and put the result in the file doc/idea-v3.md
 ```
 
-Improving on the idea-v3.md
+Improving on the idea-v3.md with a brainstorm session
 
 **Prompt**
 ```
@@ -240,3 +241,15 @@ Put the results in the file doc/idea-v3-brainstorming.md
 Add all decisions to the file doc/idea-v3-decisions.md
 ```
 
+Create a fresh specification document.
+
+**Prompt**
+```
+Use the Matt Skills to-spec skill to turn the doc/idea-v3.md plus the doc/idea-v3-brainstorming.md
+into a spec for the game: goal, scope, non-goals, exposed endpoints, data and
+acceptance criteria. Ask clarifying questions and don't finalize the spec until
+any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
+Use the sugested bots Pebble, Mote, Bramble, Kestrel, Marlin and Onyx.
+Put the result in the file doc/idea-v3-spec.md
+Add all decisions to the file doc/idea-v3-decisions.md
+```
