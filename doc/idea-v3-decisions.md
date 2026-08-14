@@ -579,6 +579,36 @@ The first implementation used the id alone, which is alphabetical: it opened the
 
 ---
 
+## D282 — A streak rung's progress is the current streak; its achievement is the best run ever
+
+**Question:** The volume family shows the **best day the player ever had**, so a rung already cleared cannot un-clear itself. Should the streak family work the same way and show the longest run ever?
+
+**Decision:** **No — the two halves are read from different places.** A rung is **achieved** from the earliest run that ever reached it, so it fires once and stays fired when a streak later breaks. **Progress** on a rung not yet achieved is the streak the player is on **right now**.
+
+The asymmetry is the point. "The best day you ever had" is the only reading of a volume rung that means anything, because a day is over and cannot be resumed. A streak is the opposite: it is a thing you are currently holding, and after it lapses you are genuinely back at zero. Showing "29 of 30" to somebody whose run broke last month would be a lie about the quantity being measured, and the one number a streak display exists to be honest about.
+
+**Cost:** One family's progress falls, which no other progress in this app does. A player who lapses sees a number go down. That is what happened.
+
+---
+
+## D283 — An ambiguous day is bridged when less than 48 hours passed
+
+**Question:** Ticket 034 asks that the reset be correct across a time-zone change in both directions and that an ambiguous boundary be evaluated **generously** — never break a streak any reasonable reading would have kept. It also says, two paragraphs earlier, that a missed day resets to zero with **no forgiveness**. Those pull in opposite directions. Where is the line?
+
+**Decision:** **A gap of exactly one calendar day is bridged when the games either side of it are less than 48 hours apart in real time.** Anything longer, or a gap of two days or more, breaks the streak.
+
+The mechanism this exists for is precise. `toLocal()` renders the **whole** history in the device's *current* zone, so moving zones shifts every stored game by the same offset — up to about twenty-six hours. Games near midnight cross into the neighbouring day while the rest do not, and the result is a one-day hole in a history the player lived without a gap. Two games less than 48 hours apart cannot span a day somebody was absent for, so the bridge can never forgive a real miss — which is what keeps it consistent with "no forgiveness" rather than an exception to it.
+
+It also catches the honest near-miss the same way: a game at 23:30 on Monday and the next at 00:15 on Wednesday is 24 hours and 45 minutes of real time, and "you missed Tuesday" is technically true and the wrong thing to tell that player.
+
+The **head** is generous separately and for a different reason: a streak is alive while the last day played is today *or yesterday*, because a player who has not opened the app yet today has not missed anything, and telling them their streak is zero before they have had a chance is the surest way to make it true.
+
+**Cost:** A rule with a constant in it — `kAmbiguousDayWindow` — where the rest of the streak arithmetic is pure calendar. It is named, documented with the mechanism it defends against, and pinned by three tests: it bridges the artefact, it refuses a sixty-hour gap, and it never bridges two days.
+
+**A consequence worth stating.** A bridged day *counts* toward the streak's length, so the run is measured from its first calendar day to its last. That is the generous reading applied consistently; counting the days played and not the days spanned would break a streak's length instead of the streak itself, which is the same unkindness one level down.
+
+---
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

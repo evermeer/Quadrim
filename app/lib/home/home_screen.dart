@@ -61,10 +61,10 @@ class HomeScreen extends StatefulWidget {
 
   /// Local time, injected so a test can put the player on a chosen day.
   ///
-  /// Only the quest fold reads it, and in 0.1 only its streak family will —
-  /// which ticket 034 evaluates. It is a parameter here for the same reason it
-  /// is one in the package: the calendar is the one thing a fixture cannot
-  /// arrange by writing games (spec §9.2).
+  /// The quest fold and the streak both read it. It is a parameter here for
+  /// the same reason it is one in the package: the calendar is the one thing a
+  /// fixture cannot arrange by writing games (spec §9.2), and a streak that
+  /// could only be tested by waiting a day could not be tested.
   final DateTime Function()? now;
 
   @override
@@ -85,6 +85,9 @@ class _HomeScreenState extends State<HomeScreen> {
   /// finished games as the rating and the balance. Nothing about them is
   /// stored (spec §8.8).
   List<QuestStatus> _quests = const [];
+
+  /// Consecutive days played, folded with the quests from the same list.
+  int _streak = 0;
 
   /// True while a purchase is in flight, which is what stops a second tap
   /// buying a second time before the first write lands.
@@ -108,8 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _completedGames = games;
         _summary = HomeSummary.from(games);
         _deltas = fold.ratingDeltas(games);
-        _quests = closestQuests(
-            points_fold.questsFrom(games, (widget.now ?? DateTime.now)()));
+        final today = (widget.now ?? DateTime.now)();
+        _quests = closestQuests(points_fold.questsFrom(games, today));
+        _streak = points_fold.streakFrom(games, today);
       });
     });
     // After the first frame, not during it: showing a dialog needs a Navigator
@@ -279,7 +283,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     sliver: SliverList.list(
                       children: [
-                        RatingCard(summary: _summary, balance: _balance),
+                        RatingCard(
+                            summary: _summary,
+                            balance: _balance,
+                            streak: _streak),
                         const SizedBox(height: 16),
                         YourPath(
                           summary: _summary,

@@ -33,3 +33,44 @@ Two consequences are handled honestly rather than hidden. A player crossing time
 - [ ] Pass-and-play games and the tutorial's practice game do not keep a streak alive
 - [ ] The current streak is announced to a screen reader as a labelled value
 - [ ] All new strings are present in English and Dutch
+
+---
+
+## Closed
+
+The eight rungs are evaluated and the current streak is on the rating card.
+
+**No clock is read in the package.** `currentStreak(games, today:)` takes the
+day boundary as a parameter and `check.sh`'s purity scan still passes. The app
+is the only thing that converts to local time, because deciding which day a UTC
+instant falls in is a question about the player's device and not about
+arithmetic.
+
+Two readings the ticket asked for, made precise rather than approximate:
+
+**The head is generous.** A streak is alive while the last day played is today
+*or yesterday* — a player who has not opened the app yet today has not missed
+anything, and telling them their streak is zero before they have had a chance
+is the surest way to make it true.
+
+**An ambiguous day is bridged when less than 48 hours passed** (D283). `toLocal()`
+renders the whole history in the device's current zone, so a zone change shifts
+every stored game by the same offset and games near midnight cross into the
+neighbouring day while the rest do not — leaving a hole in a history the player
+lived without a gap. Two games less than 48 hours apart cannot span a day
+somebody was absent for, so the bridge cannot forgive a real miss. Three tests
+pin it: it bridges the artefact, it refuses a sixty-hour gap, and it never
+bridges two days.
+
+Calendar arithmetic goes through a day ordinal computed with `DateTime.utc`, so
+month ends, year ends and leap days need no special case. Tests cross all four,
+including 29 February 2028 and its absence in 2027.
+
+**D282:** a rung is achieved from the earliest run that ever reached it, so it
+fires once and stays fired; progress on an unachieved rung is the streak the
+player is on *now*. That asymmetry with the volume family is deliberate — a day
+is over and cannot be resumed, where a lapsed streak really is back at zero.
+
+Ninety days kept alive with one Pebble game a day pays **8 points**, and the
+test says so in words so nobody later reads it as a bug. The same ninety days
+against Kestrel pays 2,048.

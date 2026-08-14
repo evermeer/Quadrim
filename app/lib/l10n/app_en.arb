@@ -712,5 +712,18 @@
         "type": "int"
       }
     }
+  },
+  "streakHeading": "Streak",
+  "@streakHeading": {
+    "description": "Label of the consecutive-days streak on the rating card."
+  },
+  "streakValue": "{days, plural, =0{No days yet} =1{1 day in a row} other{{days} days in a row}}",
+  "@streakValue": {
+    "description": "The current streak. Zero is written out rather than shown as a bare 0, which reads as a score rather than as a start.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   }
 }

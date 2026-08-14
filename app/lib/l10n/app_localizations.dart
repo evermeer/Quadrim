@@ -1291,6 +1291,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}. Achieved, {points} points.'**
   String questAwardSemantics(String name, int points);
+
+  /// Label of the consecutive-days streak on the rating card.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakHeading;
+
+  /// The current streak. Zero is written out rather than shown as a bare 0, which reads as a score rather than as a start.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{No days yet} =1{1 day in a row} other{{days} days in a row}}'**
+  String streakValue(int days);
 }
 
 class _AppLocalizationsDelegate

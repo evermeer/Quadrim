@@ -1,6 +1,7 @@
 import 'package:quadrim_engine/quadrim_engine.dart';
 
 import 'points.dart';
+import 'streaks.dart';
 
 /// One achievement system, not three (spec §7.4).
 ///
@@ -74,9 +75,9 @@ const _volumeQuarters = [1, 2, 4, 8, 16];
 
 /// Consecutive days, paying 1, 2, 4, 8, 12, 16, 24 and 32 wins-worth.
 ///
-/// Specified here and evaluated in ticket 034: the calendar arithmetic needs
-/// an injected day boundary and a deliberate answer for time-zone changes,
-/// which is a ticket of its own.
+/// The calendar arithmetic is in `streaks.dart` (ticket 034). 1440 days is
+/// just under four years; it exists as a horizon rather than as a target, and
+/// nothing depends on anyone reaching it.
 const _streakTargets = [5, 10, 30, 90, 180, 360, 720, 1440];
 const _streakQuarters = [4, 8, 16, 32, 48, 64, 96, 128];
 
@@ -171,6 +172,8 @@ List<QuestStatus> questStatuses(
   }
 
   final days = _byDay(ordered);
+  final runs = streakRuns(ordered);
+  final live = currentStreak(ordered, today: today);
 
   return [
     for (final quest in questCatalogue)
@@ -178,14 +181,7 @@ List<QuestStatus> questStatuses(
         QuestFamily.firstWin => _milestone(quest, beaten),
         QuestFamily.firstWinSecond => _milestone(quest, beatenSecond),
         QuestFamily.gamesInDay => _volume(quest, days),
-        // Ticket 034. Reported as untouched rather than as absent, so the
-        // rungs are visible from 0.1 and only the evaluator is missing.
-        QuestFamily.consecutiveDays => QuestStatus(
-          quest: quest,
-          current: 0,
-          achieved: false,
-          award: 0,
-        ),
+        QuestFamily.consecutiveDays => _streak(quest, runs, live),
       },
   ];
 }
@@ -226,6 +222,35 @@ QuestStatus _volume(Quest quest, List<List<ScoredGame>> days) {
     }
   }
   return QuestStatus(quest: quest, current: best, achieved: false, award: 0);
+}
+
+/// The streak family, priced exactly as the volume family is.
+///
+/// **Achieved** from the earliest run that ever reached the rung, so a rung
+/// cannot un-fire when a streak later breaks. **Progress** is the streak the
+/// player is on right now, which is the number they are actually building —
+/// unlike the volume family, where "the best day you ever had" is the only
+/// reading that means anything, a streak that has lapsed is genuinely back at
+/// zero and saying otherwise would be a lie about the thing being measured
+/// (D282).
+QuestStatus _streak(Quest quest, List<StreakRun> runs, int live) {
+  for (final run in runs) {
+    if (run.length >= quest.target) {
+      return QuestStatus(
+        quest: quest,
+        current: quest.target,
+        achieved: true,
+        award: _award(quest.multipleQuarters,
+            _meanIndex(qualifyingGames(run, quest.target))),
+      );
+    }
+  }
+  return QuestStatus(
+    quest: quest,
+    current: live < quest.target ? live : quest.target,
+    achieved: false,
+    award: 0,
+  );
 }
 
 /// Completed games grouped by local calendar day, days in chronological order

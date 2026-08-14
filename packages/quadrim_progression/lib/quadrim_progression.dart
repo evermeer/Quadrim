@@ -23,4 +23,5 @@ library;
 
 export 'src/points.dart';
 export 'src/quests.dart';
+export 'src/streaks.dart';
 export 'src/unlocks.dart';

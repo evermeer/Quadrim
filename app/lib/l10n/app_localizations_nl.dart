@@ -780,4 +780,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String questAwardSemantics(String name, int points) {
     return '$name. Behaald, $points punten.';
   }
+
+  @override
+  String get streakHeading => 'Reeks';
+
+  @override
+  String streakValue(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days dagen op rij',
+      one: '1 dag op rij',
+      zero: 'Nog geen dagen',
+    );
+    return '$_temp0';
+  }
 }

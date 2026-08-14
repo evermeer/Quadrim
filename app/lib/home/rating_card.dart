@@ -17,6 +17,7 @@ class RatingCard extends StatelessWidget {
     super.key,
     required this.summary,
     required this.balance,
+    required this.streak,
   });
 
   final HomeSummary summary;
@@ -24,6 +25,13 @@ class RatingCard extends StatelessWidget {
   /// Earned minus spent, clamped at zero — not [HomeSummary.points], which is
   /// the earned total and keeps rising as unlocks are bought (spec §8.8).
   final int balance;
+
+  /// Consecutive local days with a finished computer game, as of now.
+  ///
+  /// Passed in rather than read from [summary] because it is the one fold that
+  /// needs a calendar, and the calendar is injected all the way down (ticket
+  /// 034).
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +41,7 @@ class RatingCard extends StatelessWidget {
         ? l10n.recordEmpty
         : l10n.recordLine(summary.wins, summary.losses, summary.draws);
     final points = l10n.pointsValue(balance);
+    final days = l10n.streakValue(streak);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -44,6 +53,7 @@ class RatingCard extends StatelessWidget {
           // never spoken is worse than one that is never drawn (spec §8.13).
           label: '${l10n.computerRatingHeading}: ${summary.computerRating}. '
               '$record. ${l10n.pointsHeading}: $points. '
+              '${l10n.streakHeading}: $days. '
               '${l10n.computerRatingNote}',
           child: ExcludeSemantics(
             child: Column(
@@ -75,6 +85,19 @@ class RatingCard extends StatelessWidget {
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         )),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Beside the points rather than under a heading of its own:
+                // it is a third fact about the same fold, and a card with
+                // three headings would be a list.
+                Row(
+                  children: [
+                    Icon(Icons.local_fire_department_outlined,
+                        size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: Text(days, style: theme.textTheme.bodyMedium)),
                   ],
                 ),
                 const SizedBox(height: 4),

@@ -60,6 +60,10 @@ List<ScoredGame> scoredGamesFrom(List<GameDocument> completed) {
 List<QuestStatus> questsFrom(List<GameDocument> completed, DateTime today) =>
     questStatuses(scoredGamesFrom(completed), today: today);
 
+/// The streak the player is on, folded from the same list (ticket 034).
+int streakFrom(List<GameDocument> completed, DateTime today) =>
+    currentStreak(scoredGamesFrom(completed), today: today);
+
 /// The player's points, folded from the same list everything else on the main
 /// screen is folded from.
 int pointsFrom(List<GameDocument> completed) =>

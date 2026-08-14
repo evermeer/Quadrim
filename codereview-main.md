@@ -3752,3 +3752,82 @@ parameter exists now so that ticket adds a body rather than a signature. If
   rating or a rung. `ScoredGame`'s two new fields are **required** rather than
   defaulted, so a forgotten mapping in the app is a compile error and not two
   quest families that silently never fire.
+
+---
+
+# Ticket 034 — Streaks
+
+> Reviewed: 2026-08-14 · Base: `4bc155b` on `main` · Working-tree changes
+> Scope: the streak work only.
+
+New: `packages/quadrim_progression/lib/src/streaks.dart`,
+`packages/quadrim_progression/test/streaks_test.dart`.
+Modified: `quests.dart` (the family is evaluated instead of stubbed),
+`quadrim_progression.dart`, `app/lib/data/points_fold.dart`,
+`app/lib/home/{home_screen,rating_card}.dart`, both `.arb` files,
+`app/test/quests_test.dart`.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 0 |
+
+---
+
+### [MINOR] An exported function nothing called — `dead-code`
+
+**File:** `packages/quadrim_progression/lib/src/streaks.dart` (as written, before the fix)
+
+**Evidence, as it stood:**
+
+```dart
+StreakRun? firstRunReaching(Iterable<ScoredGame> games, int days) {
+  for (final run in streakRuns(games)) {
+    if (run.length >= days) return run;
+  }
+  return null;
+}
+```
+
+**Problem:** `_streak` in `quests.dart` walks the runs it was already handed
+rather than calling this, because calling it would recompute every run once per
+rung — eight times over the whole history. So the function was exported,
+untested, and would have recomputed the thing its only plausible caller already
+had.
+
+**Fix applied:** deleted. `_streak` keeps the inline walk, which is the version
+with the right complexity, and the package's surface no longer offers a second
+way to ask the same question.
+
+---
+
+## Checked and clear
+
+- **No clock is read in the package.** `currentStreak` and `streakRuns` take
+  their boundary as a parameter; `check.sh`'s purity scan passes unchanged.
+- **Calendar boundaries.** Day arithmetic goes through an ordinal computed with
+  `DateTime.utc(year, month, day)`, which does month ends, year ends and leap
+  days without a special case. UTC and not local, deliberately: a local midnight
+  that daylight saving deleted would make one day of the year 23 hours long and
+  the subtraction wrong. Tests cross a month, a year, 29 February 2028 and its
+  absence in 2027.
+- **A rung cannot be re-priced.** `_streak` returns at the *earliest* run
+  reaching the target, and `qualifyingGames` takes only the first `target`
+  calendar days of it. Pinned by *fire exactly once, and stay fired when the
+  streak later breaks*: a later twelve-day run of Quadrim Prime games leaves the
+  ten-day rung at the 2 points its Pebble days earned.
+- **The 48-hour bridge cannot forgive a real miss.** Two games less than 48
+  hours apart cannot span a day the player was absent for. A sixty-hour gap
+  breaks the streak, and a gap of two calendar days is never bridged whatever
+  the clocks say.
+- **A backwards clock does not punish the player.** `currentStreak` returns 0
+  only when *more* than one day has passed; a "today" earlier than the last game
+  leaves the streak standing, because that is a broken device rather than a
+  missed day.
+- **Pass-and-play and the practice game keep nothing alive.** They never become
+  a `ScoredGame` at all, which `points_fold.dart` established in 033 and a
+  widget test re-checks through the rating card.

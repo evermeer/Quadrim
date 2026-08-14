@@ -206,5 +206,7 @@
   "questSemantics": "{name}. {current} van {target}.",
   "questAchievedTitle": "Behaald",
   "questAward": "+{points}",
-  "questAwardSemantics": "{name}. Behaald, {points} punten."
+  "questAwardSemantics": "{name}. Behaald, {points} punten.",
+  "streakHeading": "Reeks",
+  "streakValue": "{days, plural, =0{Nog geen dagen} =1{1 dag op rij} other{{days} dagen op rij}}"
 }

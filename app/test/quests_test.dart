@@ -24,11 +24,24 @@ const _darkWinsMoves = [21, 0, 22, 1, 26, 2, 27, 3];
 
 final _today = DateTime(2026, 8, 14, 12);
 
-Future<LocalGameRepository> _repository({DateTime? from}) async {
-  var tick = from ?? DateTime.utc(2026, 1, 1);
+/// A repository over a clock the test can move.
+///
+/// It advances a second per read, so two games never share a completion
+/// instant — the fold orders by `completedAt` with a *random* id as tie-break,
+/// so equal stamps make the order a coin flip. [_Clock.skip] jumps whole days,
+/// which is the only way to write a streak into a fixture.
+class _Clock {
+  _Clock(this.at);
+  DateTime at;
+  DateTime tick() => at = at.add(const Duration(seconds: 1));
+  void skip(int days) => at = at.add(Duration(days: days));
+}
+
+Future<LocalGameRepository> _repository({_Clock? clock}) async {
+  final ticking = clock ?? _Clock(DateTime(2026, 1, 1, 12));
   final repo = await LocalGameRepository.open(
     MemoryDocumentStore(),
-    now: () => tick = tick.add(const Duration(seconds: 1)),
+    now: ticking.tick,
   );
   addTearDown(repo.dispose);
   await repo.saveSettings(const SettingsDocument(tutorialOffered: true));
@@ -204,6 +217,87 @@ void main() {
       expect(find.text('Opdrachten'), findsOneWidget);
       expect(find.text('5 partijen op één dag'), findsOneWidget);
       expect(find.text('1 van 5'), findsOneWidget);
+    });
+  });
+
+  group('the streak on the rating card', () {
+    testWidgets('reads zero before anything has been played', (tester) async {
+      _phone(tester);
+      final repo = await _repository();
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+
+      // Written out rather than shown as a bare 0, which reads as a score.
+      expect(find.text('No days yet'), findsOneWidget);
+    });
+
+    testWidgets('counts consecutive days, and yesterday still counts',
+        (tester) async {
+      _phone(tester);
+      // The 11th, 12th and 13th. Today is the 14th and the player has not
+      // opened the app yet, which has broken nothing.
+      final clock = _Clock(DateTime(2026, 8, 11, 12));
+      final repo = await _repository(clock: clock);
+      for (var day = 0; day < 3; day++) {
+        await _play(repo, botId: pebble.id);
+        clock.skip(1);
+      }
+
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+      expect(find.text('3 days in a row'), findsOneWidget);
+    });
+
+    testWidgets('a missed day puts it back to zero', (tester) async {
+      _phone(tester);
+      final clock = _Clock(DateTime(2026, 8, 1, 12));
+      final repo = await _repository(clock: clock);
+      for (var day = 0; day < 4; day++) {
+        await _play(repo, botId: pebble.id);
+        clock.skip(1);
+      }
+
+      // Today is the 14th; the last game was the 4th.
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+      expect(find.text('No days yet'), findsOneWidget);
+    });
+
+    testWidgets('is announced as part of the card, in words', (tester) async {
+      _phone(tester);
+      final handle = tester.ensureSemantics();
+      final repo = await _repository(clock: _Clock(DateTime(2026, 8, 13, 12)));
+      await _play(repo, botId: pebble.id);
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel(RegExp(r'Streak: 1 day in a row\.')),
+          findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('exists in Dutch', (tester) async {
+      _phone(tester);
+      final repo = await _repository(clock: _Clock(DateTime(2026, 8, 13, 12)));
+      await _play(repo, botId: pebble.id);
+      await tester.pumpWidget(_home(repo, locale: const Locale('nl')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 dag op rij'), findsOneWidget);
+    });
+
+    testWidgets('a pass-and-play game keeps no streak alive', (tester) async {
+      _phone(tester);
+      final repo = await _repository(clock: _Clock(DateTime(2026, 8, 13, 12)));
+      final social = await repo.createGame(
+          mode: GameMode.passAndPlay, opponent: kGuestOpponent);
+      for (final move in _lightWinsMoves) {
+        await repo.appendMove(social.id, move);
+      }
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No days yet'), findsOneWidget);
     });
   });
 
