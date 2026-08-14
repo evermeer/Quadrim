@@ -67,10 +67,12 @@ void main() {
   group('the accordion', () {
     testWidgets('opens the tier nearest the player and no other',
         (tester) async {
-      // A seeded player at 1200 sits on Vireo exactly, so Casual opens.
+      // A seeded player at 800 sits on Mote exactly, so Novice opens. It was
+      // Casual while the seed was 1200 — moving the seed moved where a new
+      // player is standing, which is the whole point of the change (D226).
       await _pumpTall(tester, playerRating: kSeedRating);
-      expect(find.text('Vireo'), findsOneWidget);
-      expect(find.text('Pebble'), findsNothing, reason: 'Novice must be shut');
+      expect(find.text('Mote'), findsOneWidget);
+      expect(find.text('Vireo'), findsNothing, reason: 'Casual must be shut');
       expect(find.text('Titan'), findsNothing, reason: 'Expert must be shut');
     });
 
@@ -96,23 +98,23 @@ void main() {
 
     testWidgets('opening one closes the one that was open', (tester) async {
       await _pumpTall(tester);
-      expect(find.text('Vireo'), findsOneWidget);
+      expect(find.text('Mote'), findsOneWidget, reason: 'Novice opens at 800');
 
       await _openTier(tester, BotTier.master);
       expect(find.text('Oracle'), findsOneWidget);
-      expect(find.text('Vireo'), findsNothing,
-          reason: 'Casual should have closed when Master opened');
+      expect(find.text('Mote'), findsNothing,
+          reason: 'Novice should have closed when Master opened');
 
-      await _openTier(tester, BotTier.novice);
-      expect(find.text('Pebble'), findsOneWidget);
+      await _openTier(tester, BotTier.casual);
+      expect(find.text('Vireo'), findsOneWidget);
       expect(find.text('Oracle'), findsNothing);
     });
 
     testWidgets('tapping the open tier closes it', (tester) async {
       await _pumpTall(tester);
-      expect(find.text('Vireo'), findsOneWidget);
-      await _openTier(tester, BotTier.casual);
-      expect(find.text('Vireo'), findsNothing);
+      expect(find.text('Mote'), findsOneWidget);
+      await _openTier(tester, BotTier.novice);
+      expect(find.text('Mote'), findsNothing);
       // All five headings survive with nothing open.
       for (final label in _tierLabels.values) {
         expect(find.text(label), findsOneWidget);
@@ -141,6 +143,10 @@ void main() {
 
   testWidgets('every one of the twenty is reachable', (tester) async {
     await _pumpTall(tester);
+    // Novice is already open for a seeded player, and _openTier toggles — so
+    // close it first, or the first pass of the loop would shut the tier it is
+    // about to look inside.
+    await _openTier(tester, BotTier.novice);
     for (final tier in BotTier.values) {
       await _openTier(tester, tier);
       for (final bot in opponentCatalogue.where((b) => b.tier == tier)) {
@@ -173,14 +179,12 @@ void main() {
 
   testWidgets('a mismatch is distinguishable from a fair match',
       (tester) async {
-    // One tier is open at a time, so the three bands are checked where each
-    // actually occurs for a seeded player: Novice is far below, Casual is
-    // even, Master is far above.
+    // One tier is open at a time. Novice is what opens for a seeded player
+    // now, and it happens to span the seed — Pebble at 600 is below, Mote at
+    // 800 is level — so two of the three bands are visible at once.
     await _pumpTall(tester, playerRating: kSeedRating);
     expect(find.text('Even match'), findsWidgets);
     expect(find.byIcon(Icons.balance), findsWidgets);
-
-    await _openTier(tester, BotTier.novice);
     expect(find.text('Below your level'), findsWidgets);
     expect(find.byIcon(Icons.trending_down), findsWidgets);
 
@@ -227,11 +231,12 @@ void main() {
     );
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    // Vireo is in the tier that opens for a seeded player.
-    await tester.tap(find.text('Vireo'));
+    // Mote is in the tier that opens for a seeded player, now that the seed
+    // is 800 and Novice is what a new player lands on.
+    await tester.tap(find.text('Mote'));
     await tester.pumpAndSettle();
-    expect(chosen?.id, 'vireo');
-    expect(chosen?.rating, 1200);
+    expect(chosen?.id, 'mote');
+    expect(chosen?.rating, 800);
   });
 
   testWidgets('backing out chooses nobody', (tester) async {
@@ -283,9 +288,10 @@ void main() {
       findsOneWidget,
     );
 
-    // The same opponent, announced to a seeded player, is far below them.
+    // The same opponent, announced to a seeded player, is below them. Novice
+    // is already open at 800, so there is nothing to open — toggling it here
+    // would shut the section this assertion is looking inside.
     await _pumpTall(tester, playerRating: kSeedRating);
-    await _openTier(tester, BotTier.novice);
     expect(
       find.bySemanticsLabel(RegExp(r'Pebble\..*Below your level')),
       findsOneWidget,
@@ -303,8 +309,9 @@ void main() {
     // would then meet five words with no hint that lists are behind them.
     final expert = tester.getSemantics(find.text('Expert')).flagsCollection;
     expect(expert.isExpanded, Tristate.isFalse);
-    final casual = tester.getSemantics(find.text('Casual')).flagsCollection;
-    expect(casual.isExpanded, Tristate.isTrue);
+    // Novice, not Casual: a seeded player sits on Mote at 800 (D226).
+    final novice = tester.getSemantics(find.text('Novice')).flagsCollection;
+    expect(novice.isExpanded, Tristate.isTrue);
     handle.dispose();
   });
 
@@ -340,7 +347,9 @@ void main() {
     await _pumpTall(tester, locale: const Locale('nl'));
     expect(find.text('Kies een tegenstander'), findsOneWidget);
     expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Vireo'), findsOneWidget);
+    // A name from the tier that opens at the seed. Bot names are proper nouns
+    // and are the same in both languages, which is the point of checking one.
+    expect(find.text('Mote'), findsOneWidget);
   });
 
   group('tierNearest', () {

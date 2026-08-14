@@ -68,20 +68,22 @@ void main() {
     });
 
     test('a worked provisional sequence', () {
-      // Three wins against an even opponent while provisional: K stays 32.
-      const games = [
-        RatedGame(opponentRating: 1200, score: 1),
-        RatedGame(opponentRating: 1200, score: 1),
-        RatedGame(opponentRating: 1200, score: 1),
+      // Three wins against an opponent on the seed, so the first is a genuine
+      // even match: K stays 32 and the first step is the full half of it.
+      // Written against kSeedRating rather than a literal, because the point
+      // is "an even opponent" and the seed has moved once already (D226).
+      final games = [
+        for (var i = 0; i < 3; i++)
+          RatedGame(opponentRating: kSeedRating, score: 1),
       ];
-      // 1200 -> 1216 -> ~1231 -> ~1245, each step recomputing expectation.
+      // 800 -> 816 -> ~831 -> ~845, each step recomputing the expectation.
       var rating = kSeedRating;
       for (final g in games) {
         rating = updatedRating(
             rating, 32, g.score, expectedScore(rating, g.opponentRating));
       }
       expect(ratingFrom(games), rating);
-      expect(ratingFrom(games), greaterThan(1240));
+      expect(ratingFrom(games), greaterThan(kSeedRating + 40));
     });
 
     test('K drops to 16 after the twentieth game, slowing later movement', () {
@@ -219,7 +221,13 @@ void main() {
           MatchBalance.opponentWeaker);
       expect(matchBalance(own: kSeedRating, opponent: 2400),
           MatchBalance.opponentStronger);
-      expect(matchBalance(own: kSeedRating, opponent: 1250), MatchBalance.even);
+      // Clover at 900, which is where a seeded player's fair-match band now
+      // sits. It used to be Finch at 1250 — moving the seed to 800 moved the
+      // band with it, and that is the point of the change rather than a
+      // side effect of it (D226).
+      expect(matchBalance(own: kSeedRating, opponent: 900), MatchBalance.even);
+      expect(matchBalance(own: kSeedRating, opponent: 1250),
+          MatchBalance.opponentStronger);
     });
   });
 
@@ -271,10 +279,24 @@ void main() {
       // Pinned rather than left as a remark, because the UI branches on it:
       // a zero step gets no arrow, and a test that never produced one would
       // let that branch rot.
-      expect(ratingSteps(const [RatedGame(opponentRating: 100, score: 1)]),
-          [0]);
-      // Against a comparable opponent the movement is unmistakable.
-      expect(ratingSteps(const [RatedGame(opponentRating: 1200, score: 1)]),
+      //
+      // It takes a real history now. From the old seed of 1200 a single win
+      // over a 100-rated opponent rounded to nothing; from 800 the same win
+      // pays 1, because the gap is 700 rather than 1100. So the case is
+      // reached the way a player actually reaches it: climb well clear of the
+      // bottom of the roster, past the twentieth game where K halves, then
+      // beat the weakest opponent there is.
+      final climbThenPebble = [
+        for (var i = 0; i < 25; i++)
+          const RatedGame(opponentRating: 2400, score: 1),
+        const RatedGame(opponentRating: 600, score: 1),
+      ];
+      expect(ratingSteps(climbThenPebble).last, 0,
+          reason: 'beating Pebble from far above it is worth nothing');
+      // Against a genuinely comparable opponent the movement is unmistakable:
+      // an even match is half of K, exactly. Written against kSeedRating, so
+      // "comparable" keeps meaning comparable if the seed ever moves again.
+      expect(ratingSteps([RatedGame(opponentRating: kSeedRating, score: 1)]),
           [16]);
     });
 

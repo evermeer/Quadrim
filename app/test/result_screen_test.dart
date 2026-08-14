@@ -63,9 +63,13 @@ void main() {
       expect(rated.length, 1, reason: 'pass-and-play is not on this ladder');
       expect(rated.single.opponentRating, 600);
       expect(rated.single.score, 1);
-      // Beating a 600 from the 1200 seed is worth very little.
+      // Beating a 600 from the 800 seed is worth little, but not nothing:
+      // the gap is 200 rather than the 600 it used to be (D226).
       expect(computerRating(completed), greaterThan(kSeedRating));
-      expect(computerRating(completed) - kSeedRating, lessThan(5));
+      // Less than half of K, which is what an even match would pay: the
+      // opponent is below the player, so the win is worth less than a fair
+      // one. It is 8 at this gap rather than the 1 it was from 1200.
+      expect(computerRating(completed) - kSeedRating, lessThan(16));
       await repo.dispose();
     });
 

@@ -14,8 +14,24 @@ library;
 
 import 'dart:math' as math;
 
-/// Where every player starts on either ladder.
-const int kSeedRating = 1200;
+/// Where a player starts on the **computer** ladder.
+///
+/// 800 rather than 1200 (D226). Against a roster that starts at 600, a player
+/// seeded at 1200 spends their first week watching a number fall, which is the
+/// opposite of the story the ladder is telling. At 800 they sit just below
+/// Clover, above the two weakest opponents, with somewhere obvious to climb.
+///
+/// **Moving this re-derives every existing rating**, because the rating is a
+/// fold with nothing stored — which is the property that keeps it from ever
+/// drifting from the games that produced it, and the reason any future change
+/// to this number is a silent rewrite of everyone's history (D227). It was
+/// affordable exactly once, before anyone had a rating worth keeping.
+///
+/// The human ladder seeds at 1000 and brings its own constant at 0.4. It does
+/// not share this one: human Elo is not separable per player, so recomputing it
+/// is a global chronological replay across every account rather than the
+/// per-player fold below (spec §7.2).
+const int kSeedRating = 800;
 
 /// No rating falls below this, however long a losing run goes on.
 const int kRatingFloor = 100;

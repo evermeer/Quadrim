@@ -54,7 +54,7 @@ void main() {
   group('the computer rating', () {
     test('a player with no history sits on the seed', () {
       expect(computerRating(const []), kSeedRating);
-      expect(computerRating(const []), 1200);
+      expect(computerRating(const []), kSeedRating);
     });
 
     test('is the same answer every time it is computed', () {

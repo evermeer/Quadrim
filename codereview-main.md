@@ -3537,3 +3537,62 @@ went with it.
 Validated against `doc/tickets/032-unlocks-and-your-path.md`: all twenty-two
 acceptance criteria pass. `tool/check.sh` green end to end with a captured exit
 code of 0; 259 app tests and 43 progression tests.
+
+---
+
+# Ticket 036 — The computer ladder seeds at 800
+
+Reviewed against `2ec9992`. One constant, its doc comment, and fourteen tests.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 0 |
+
+No findings. Recorded anyway, because what this ticket did to the test suite is
+the interesting part and is worth being able to find again.
+
+## What the tests said when the seed moved
+
+Fourteen tests failed, **none of them broken**. Each had encoded a fact that was
+true at 1200 and is false at 800, which is what a good test does when a premise
+moves. Grouped by what they were really asserting:
+
+| What changed | Tests | Why |
+|---|---|---|
+| Where a new player stands | 6 | The accordion opens at the tier nearest the player. At 800 that is **Novice** — Mote is rated 800 exactly — where it used to be Casual. Four of these tapped a tier heading to open a section that is now already open, and so shut the list they were about to inspect |
+| What counts as a fair match | 2 | 1250 used to read "even" to a seeded player; it now reads "above your level", and 900 reads even |
+| What a win is worth | 4 | Beating a 600 from 800 pays 8 rather than 1; an even match still pays half of K, but "an even opponent" is now 800 rather than 1200 |
+| Whether a zero step is reachable | 1 | From 1200, one win over a 100-rated opponent rounded away. From 800 the same win pays 1 |
+| Hard-coded seed literals | 1 | `expect(computerRating(const []), 1200)` |
+
+The zero-step case is the one worth keeping in mind. The UI branches on it — a
+step of zero gets no arrow rather than one claiming a movement that did not
+happen — so a test that stopped producing zeroes would have quietly rotted that
+branch. It is still reachable, and the rewritten test reaches it the way a
+player actually does: climb past the twentieth game where K halves, then beat
+the weakest opponent on the roster from far above it.
+
+Where a test's *meaning* changed rather than its arithmetic, the new meaning is
+stated in the test rather than left to be re-derived — that a seeded player's
+fair-match band moved with them is the change working, not a regression.
+
+## Not findings, checked and cleared
+
+- **No migration, and none needed.** `git grep` finds no stored rating anywhere;
+  the fold in `rating_fold.dart` is still the only source, and `HomeSummary`
+  still derives it per change.
+- **Nothing else moved.** K is 32/16 at twenty games, the floor is 100, a draw
+  scores one half — all unchanged and all still covered.
+- **The human seed was not introduced.** Adding an unused 1000 now would be
+  speculative, and spec §7.2 says the human rating is not this fold at all.
+
+## Functional Validation
+
+Six acceptance criteria in `doc/tickets/036-computer-ladder-seeds-at-800.md`,
+all passing. Spec criterion F9 ▲ now matches the code. `tool/check.sh` green
+with a captured exit code of 0; 259 app tests, 35 rating tests.

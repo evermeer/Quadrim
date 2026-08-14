@@ -3,10 +3,10 @@
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D277**.
+Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D278**.
 
 Date: 2026-08-14
-Status: agreed, pre-implementation. No code written for any of it.
+Status: D218–D277 agreed pre-implementation; D278 onward were taken while building.
 
 | Group | What it settles | Decisions |
 |---|---|---|
@@ -19,6 +19,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 | 7 | v3 read back against the build | D258–D270 |
 | 8 | The specification | D271–D274 |
 | 9 | The ticket breakdown | D275–D277 |
+| 10 | Implementation | D278 |
 
 ---
 
@@ -513,6 +514,28 @@ Both ship without regression. That is the part worth checking rather than assumi
 Deleting it during the decomposition would leave the main screen with a hole for two tickets — a visible regression in exchange for nothing, in the one ticket whose entire discipline is that it changes no behaviour. It would also have made 030 unreviewable as a move: a reviewer checking that every hunk is a move cannot also be checking that one deletion is intentional.
 
 **Cost:** One file is created in 030 and removed in 032, which shows in the log as churn. Half a commit's worth, against a main screen that stays whole throughout.
+
+---
+
+# Group 10 — Implementation
+
+## D278 — The seed moves to 800 with no migration, and the re-derived ratings stand
+
+**Question:** D226 moved the computer seed from 1200 to 800, ticket 027 had already shipped 1200, and D269's breakdown cut no ticket for the change. The rating is a fold with nothing stored, so changing the constant silently re-derives every existing rating (D227). Is that acceptable, or does it need a migration?
+
+**Decision:** Acceptable. The constant changes, the fold does what it does, and **no migration is written**. Ticket 036.
+
+The owner's reasoning, recorded because it is a judgement rather than a derivation: a player who had actually started at 800 would have gained slightly *more* per win than the stored games recorded, since the Elo step is larger the further you sit below your opponent. So the re-fold understates such a player a little. Against twelve closed testers who do not yet exist, that is noise, and preserving numbers nobody has seen would cost more than the numbers are worth.
+
+**The constant keeps its name.** `kSeedRating` is now documented as the *computer* ladder's seed. The human ladder's 1000 arrives at 0.4 with its own constant rather than sharing this one, because the human rating is not this fold at all — Elo is not separable per player, so recomputing it is a global chronological replay across every account (spec §7.2).
+
+**Cost:** Real, and larger than the one-line change suggests. **Fourteen tests changed**, none of them broken and all of them newly wrong about what they were asserting, because moving the seed moves where a new player is *standing* on the ladder:
+
+- The tier accordion opens at the tier nearest the player, so a seeded player now lands on **Novice** (Mote is rated 800 exactly) where they used to land on Casual. Four tests toggled a section that is now already open, and so closed the very list they were about to look inside.
+- A seeded player's fair-match band moved with them: 1250 used to read "even" and now reads "above your level", while 900 reads even. That is the change working, not a regression.
+- A win over a 100-rated opponent used to round away to a zero rating step; from 800 the same win pays 1. The zero case is still reachable — it now takes a player who has climbed well clear of the bottom of the roster and then beats Pebble — and the test reaches it the way a player actually would.
+
+The general lesson is the one D227 already states and this is the first instance of: the derived rating's great virtue, that nothing can drift, is the same property that makes any change to its constants a silent rewrite of everyone's history. It was affordable exactly once.
 
 ---
 
