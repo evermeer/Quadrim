@@ -1,6 +1,6 @@
 # Quadrim — Specification
 
-Derived from [Idea-final.md](Idea-final.md) (what to build) and [idea-decisions.md](idea-decisions.md) (why). The build approach was chosen in [history/Idea-final-brainstorming.md](history/Idea-final-brainstorming.md).
+Derived from [idea-v1.md](idea-v1.md) (what to build) and [idea-v1-decisions.md](idea-v1-decisions.md) (why). The build approach was chosen in [history/idea-v1-brainstorming.md](history/idea-v1-brainstorming.md).
 
 Follows **Strategy A — Store-First Offline Slice**.
 Release 0.1 is specified at implementation depth. Releases 0.2 through 1.0 are scoped but not detailed; each gets its own spec when its turn comes.
@@ -36,7 +36,7 @@ Because the early releases are private and their audience is small, **0.3 starts
 
 **For 0.1:** an offline Quadrim good enough that twelve real people install it, understand it without help, and enjoy it against an opponent matched to their skill — while proving the release pipeline end to end and unlocking production access before it is needed.
 
-**For 1.0:** everything in Idea-final.md.
+**For 1.0:** everything in idea-v1.md.
 
 ### 3.1 Success criteria
 
@@ -99,7 +99,7 @@ What 0.3b does ship is the thing that has to work first: **can two people actual
 - Append-only move history; no undo, no takeback, in any mode
 
 **Modes**
-- Versus computer: **all twenty opponents**, from Pebble to Quadrim Prime (Idea-final.md §6.4)
+- Versus computer: **all twenty opponents**, from Pebble to Quadrim Prime (idea-v1.md §6.4)
 - Local pass-and-play, two humans on one device
 
 **Rating**
@@ -160,7 +160,7 @@ What 0.3b does ship is the thing that has to work first: **can two people actual
 
 ### 5.2 Out of scope permanently
 
-Per Idea-final.md §11: **no ads ever**, and no payment path other than the subscription — no consumables, no cosmetics, nothing pay-to-win; **everything release 0.1 shipped stays free forever**, and accepting an invite is free forever; no undo or takeback in any mode; **no draw offers in any mode**; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; computer opponent ratings never float; the computer rating and offline games never sync.
+Per idea-v1.md §11: **no ads ever**, and no payment path other than the subscription — no consumables, no cosmetics, nothing pay-to-win; **everything release 0.1 shipped stays free forever**, and accepting an invite is free forever; no undo or takeback in any mode; **no draw offers in any mode**; no spectating; no tournaments, leagues, seasons, or leaderboards; no chat outside a shared game; no uploaded avatars; no rotatable 3D board; no board size other than 4×4×4; computer opponent ratings never float; the computer rating and offline games never sync.
 
 Note the deliberate narrowing: the promise is that **0.1's feature set** is free forever, not that nothing offline is ever paid. The broader form was written under a free-with-no-purchases model and would permanently foreclose a future offline feature nobody has designed yet.
 
@@ -410,7 +410,7 @@ Settings (§8.6) is therefore the only local document besides games.
 
 ### 8.5 Opponent catalogue — all twenty
 
-Code-side constants, not persisted. The roster, ratings and personalities are defined once in Idea-final.md §6.4 and are not duplicated here.
+Code-side constants, not persisted. The roster, ratings and personalities are defined once in idea-v1.md §6.4 and are not duplicated here.
 
 What matters to implementation is which engine capability each tier requires, because that — not the count — is what the work actually is:
 
@@ -424,7 +424,7 @@ What matters to implementation is which engine capability each tier requires, be
 
 Fourteen of the twenty are catalogue entries over capabilities the lower tiers already establish. The genuinely new engine work sits in the Club, Expert and Master rows.
 
-**Quadrim Prime ships with the strategy book.** The dataset was obtained, verified and licence-checked during ticket 026 rather than deferred to 1.0 — 2,929 positions, solved independently twice since 1976 (Idea-final.md §6.5.1). Both Master opponents hold it.
+**Quadrim Prime ships with the strategy book.** The dataset was obtained, verified and licence-checked during ticket 026 rather than deferred to 1.0 — 2,929 positions, solved independently twice since 1976 (idea-v1.md §6.5.1). Both Master opponents hold it.
 
 It proves a **first-player win** and nothing else, so Oracle and Prime are unbeatable only when they open and defend by search from the second seat. No catalogue entry or player-facing string may call either of them perfect without that qualification (D181).
 
@@ -728,7 +728,7 @@ This section exists from 0.1 even though most of it is not yet reachable. Every 
 
 ### 12.1 What going private changed, and what it did not
 
-Strategy A was chosen in [history/Idea-final-brainstorming.md](history/Idea-final-brainstorming.md) largely because it reached the stores soonest. Making 0.1 and 0.2 private removes that argument, so it needs replacing rather than quietly dropping.
+Strategy A was chosen in [history/idea-v1-brainstorming.md](history/idea-v1-brainstorming.md) largely because it reached the stores soonest. Making 0.1 and 0.2 private removes that argument, so it needs replacing rather than quietly dropping.
 
 **The sequencing still holds, on different grounds.** Offline-first still means the entire backend learning curve is deferred until Flutter is familiar, still means something is playable within weeks, and still means the first release carries no public listing and no public privacy exposure. Those were always the stronger reasons; the store-clock argument was the one most sensitive to scope growth, and it is now simply not needed — §9.11 satisfies the fourteen-day requirement using the same twelve people who are the audience anyway.
 
@@ -750,7 +750,7 @@ What remains is smaller and still worth stating plainly in the app rather than d
 
 ### 12.3 Calibrating twenty opponents at once
 
-**The published ratings in Idea-final.md §6.4 are fixed (D144).** They are the anchor every player's computer rating is earned against, so a rating that moves silently rewrites the meaning of every result already recorded against it. The self-play harness therefore *measures and reports*; it never rewrites the roster. Where measured strength disagrees with the published number, the opponent's configuration is what changes — blunder rate, search depth, rule set, positional bias.
+**The published ratings in idea-v1.md §6.4 are fixed (D144).** They are the anchor every player's computer rating is earned against, so a rating that moves silently rewrites the meaning of every result already recorded against it. The self-play harness therefore *measures and reports*; it never rewrites the roster. Where measured strength disagrees with the published number, the opponent's configuration is what changes — blunder rate, search depth, rule set, positional bias.
 
 For 0.1 the strengths are an approximate estimate and are described that way. The tuning pass waits for enough real play to measure against, which makes it a post-0.1 activity rather than a release gate.
 
@@ -771,7 +771,7 @@ None of these block starting.
 **Inherited:**
 
 - **OI-01** — push unsupported on Flutter desktop; first matters at 0.5
-- **OI-02** — **substantially reduced.** The strategy is published literature, not original research: independently solved twice, with the first-player-win strategy amounting to roughly 2,929 stored positions and everything else reachable by forcing moves (Idea-final.md §6.5.1). Asset size is kilobytes, not an unknown. What remains is a bounded task, and the **preferred route is to re-derive the strategy in-house by proof-number search** rather than to source it. What cost 1,500 hours in 1980 is a modest modern run, the symmetry reduction shrinks it further, and derived data carries **no licence question** — which sourced data does. The 1980 paper is method and proof, not a dataset, and is copyrighted under JSTOR terms; it is a reference to verify against, not a supply. Prime stays on fallback rung 2 until a derivation is complete and cross-checked against the published result, because unverified data is not a proof
+- **OI-02** — **substantially reduced.** The strategy is published literature, not original research: independently solved twice, with the first-player-win strategy amounting to roughly 2,929 stored positions and everything else reachable by forcing moves (idea-v1.md §6.5.1). Asset size is kilobytes, not an unknown. What remains is a bounded task, and the **preferred route is to re-derive the strategy in-house by proof-number search** rather than to source it. What cost 1,500 hours in 1980 is a modest modern run, the symmetry reduction shrinks it further, and derived data carries **no licence question** — which sourced data does. The 1980 paper is method and proof, not a dataset, and is copyrighted under JSTOR terms; it is a reference to verify against, not a supply. Prime stays on fallback rung 2 until a derivation is complete and cross-checked against the published result, because unverified data is not a proof
 - **OI-03** — **narrowed by D144.** The question is no longer "what should the ratings be" — they are fixed — but "do the current parameters produce the strength each fixed rating claims". All twenty are measured together with the method in §12.3; a mismatch is a configuration defect to correct on the bot. The measurement pass needs real play to anchor against, so it lands after 0.1
 - **OI-04** — auto-match cold start; first matters at 0.4
 - **OI-05** — **largely answered.** The expert review sized it: steady state is negligible, roughly 250 games a day inside the free tier. The real exposure was the migration burst — one user with 500 local games costing about 1,000 writes at once — and the clean start removed it entirely. What remains is ordinary steady-state sizing before 0.3b

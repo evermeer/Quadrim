@@ -105,7 +105,7 @@ final class GameState {
 }
 
 /// Every empty cell — placement is never restricted beyond emptiness
-/// (Idea-final 2.4).
+/// (idea-v1 2.4).
 List<Cell> legalMoves(GameState state) {
   if (state._win != null) return const [];
   return [

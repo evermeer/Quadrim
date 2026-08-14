@@ -1,6 +1,6 @@
 # Quadrim — Decision Log
 
-Every decision taken while turning [IDEA.md](history/IDEA.md) into a specification, a build approach, and a set of tickets.
+Every decision taken while turning [idea-v0.md](history/idea-v0.md) into a specification, a build approach, and a set of tickets.
 Each entry records the question, the decision, and what it costs or buys.
 
 Date: 2026-07-27
@@ -12,16 +12,16 @@ The project was planned in five steps, each producing one document. Decisions ar
 
 | Step | What it did | Produced | Decisions |
 |---|---|---|---|
-| 1 | Turned the rough idea into an unambiguous specification | [Idea-final.md](Idea-final.md) | D01–D35 |
-| 2 | Chose a build approach and release staging | [Idea-final-brainstorming.md](history/Idea-final-brainstorming.md) | D36–D46 |
-| 3 | Wrote the implementable specification | [Idea-final-spec.md](Idea-final-spec.md) | D47–D58 |
+| 1 | Turned the rough idea into an unambiguous specification | [idea-v1.md](idea-v1.md) | D01–D35 |
+| 2 | Chose a build approach and release staging | [idea-v1-brainstorming.md](history/idea-v1-brainstorming.md) | D36–D46 |
+| 3 | Wrote the implementable specification | [idea-v1-spec.md](idea-v1-spec.md) | D47–D58 |
 | 4 | Broke release 0.1 into tickets | [tickets/](tickets/) | D59–D64 |
-| 5 | Reconciled the spec with a decision reversed in step 4 | [Idea-final-spec.md](Idea-final-spec.md) | D65 |
-| 6 | Expert review by backend, security and product reviewers | [Idea-final-spec-review.md](history/Idea-final-spec-review.md) | D66–D83 |
-| 7 | Private early releases and a clean start at 0.3 | [Idea-final-spec.md](Idea-final-spec.md) | D84–D91 |
+| 5 | Reconciled the spec with a decision reversed in step 4 | [idea-v1-spec.md](idea-v1-spec.md) | D65 |
+| 6 | Expert review by backend, security and product reviewers | [idea-v1-spec-review.md](history/idea-v1-spec-review.md) | D66–D83 |
+| 7 | Private early releases and a clean start at 0.3 | [idea-v1-spec.md](idea-v1-spec.md) | D84–D91 |
 | 8 | Split ratings, the full roster, and a subscription | all documents | D92–D100 |
 | 9 | Second expert review: 0.3b becomes free online play | all documents | D101–D118 |
-| 10 | The published Qubic literature | [Idea-final.md](Idea-final.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
+| 10 | The published Qubic literature | [idea-v1.md](idea-v1.md) §2.2, §2.3, §6.5.1, §14 | D119–D121 |
 | 11 | First-run experience design review | [FirstRunHandoff.md](FirstRunHandoff.md) | D122–D129 |
 | 12 | Implementation | the code | D130+ |
 
@@ -201,7 +201,7 @@ Decisions D01–D35. Established what Quadrim *is*, without regard to how or in 
 **Question:** The top bot must play perfectly. How?
 **Decision:** A build-time solver precomputes the proven first-player winning strategy and ships it as a compressed asset. At runtime the bot follows the book, and switches to exact search once the position is small enough to solve outright.
 **Rationale:** Qubic is solved, but "solved" means a proof exists — not that alpha-beta at any practical depth reproduces it. Deep search alone is *strong*, not perfect. Runtime proof-number search would need seconds to minutes per opening move on a phone, which is unacceptable.
-**Consequence:** The solver is a **separate build-time deliverable**, not part of the app. Asset size is unknown until it exists ([OI-02](#oi-02--strategy-book-size-and-solver-effort)). A fallback ladder is defined in Idea-final.md so the app can ship even if the book proves impractical.
+**Consequence:** The solver is a **separate build-time deliverable**, not part of the app. Asset size is unknown until it exists ([OI-02](#oi-02--strategy-book-size-and-solver-effort)). A fallback ladder is defined in idea-v1.md so the app can ship even if the book proves impractical.
 **Honest caveat, agreed with the user:** the perfect bot is unbeatable when it moves first. That is the mathematical truth of the game, not a design flaw. Moving second it plays optimal defence and can be drawn but not beaten by perfect play.
 
 ---
@@ -287,7 +287,7 @@ Decisions D01–D35. Established what Quadrim *is*, without regard to how or in 
 
 # Step 2 — Build approach and staging
 
-Decisions D36–D46. Produced [Idea-final-brainstorming.md](history/Idea-final-brainstorming.md). Where step 1 asked *what*, this step asked *by whom, in what order, and with what constraints* — and the answers reshaped the plan considerably.
+Decisions D36–D46. Produced [idea-v1-brainstorming.md](history/idea-v1-brainstorming.md). Where step 1 asked *what*, this step asked *by whom, in what order, and with what constraints* — and the answers reshaped the plan considerably.
 
 ## 11. Who is building it
 
@@ -339,7 +339,7 @@ Decisions D36–D46. Produced [Idea-final-brainstorming.md](history/Idea-final-b
 
 ### D43 — Scope is stageable
 **Question:** Must everything in the specification land in one release?
-**Decision:** No. [Idea-final.md](Idea-final.md) becomes the **1.0 target**, delivered across releases 0.1 through 1.0. Nothing is cut; things are ordered.
+**Decision:** No. [idea-v1.md](idea-v1.md) becomes the **1.0 target**, delivered across releases 0.1 through 1.0. Nothing is cut; things are ordered.
 **Rationale:** The specification as written is five projects — engine, solver, client, backend, content — and planning them as one unit is how projects stall at 70%.
 **Consequence:** Every subsequent document addresses a release rather than the whole product. Created the release ladder.
 
@@ -365,7 +365,7 @@ Decisions D36–D46. Produced [Idea-final-brainstorming.md](history/Idea-final-b
 
 # Step 3 — Specification
 
-Decisions D47–D58. Produced [Idea-final-spec.md](Idea-final-spec.md), covering the whole 1.0 roadmap with release 0.1 at implementation depth.
+Decisions D47–D58. Produced [idea-v1-spec.md](idea-v1-spec.md), covering the whole 1.0 roadmap with release 0.1 at implementation depth.
 
 ## 14. Spec scope and shape
 
@@ -491,7 +491,7 @@ Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
 
 ### D65 — Spec reconciled with the upload-timing decision
 **Question:** [D60](#d60--when-the-first-store-upload-happens) contradicted §9.11 of the specification, which stated the opposite. Which wins?
-**Decision:** The step 4 decision wins. §9.11 and §12.1 of [Idea-final-spec.md](Idea-final-spec.md) were rewritten to separate store account creation (day one) from the first upload (after the game is complete), and to record the schedule cost explicitly.
+**Decision:** The step 4 decision wins. §9.11 and §12.1 of [idea-v1-spec.md](idea-v1-spec.md) were rewritten to separate store account creation (day one) from the first upload (after the game is complete), and to record the schedule cost explicitly.
 **Rationale:** Two planning documents disagreeing on a critical-path item reads as an oversight weeks later, when nobody remembers which was deliberate.
 **Consequence:** Spec and tickets now agree. §12.1 also records the rule for next time: **if 0.1 grows again, protect the upload date rather than the feature list** — anything added after the main screen is complete can ship as 0.2 into the same testing track.
 
@@ -499,7 +499,7 @@ Decisions D59–D64. Produced the 22 files in [tickets/](tickets/).
 
 # Step 6 — Expert review
 
-Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [Idea-final-spec-review.md](history/Idea-final-spec-review.md).
+Decisions D66–D83. The specification and all 22 tickets were reviewed by three specialist reviewers — backend architecture, application security, and product management. Each was asked to raise clarifying questions before giving concerns; all eighteen questions were answered by the user and are recorded below. The reviewers' resulting concerns and recommendations are in [idea-v1-spec-review.md](history/idea-v1-spec-review.md).
 
 **These eighteen were settled at the time. Several were then superseded by [Step 7](#step-7--private-early-releases-and-a-clean-start)** — read this section together with [§19](#19-review-findings-against-these-decisions), which records what survived.
 
@@ -623,7 +623,7 @@ Every decision in this section changes a shape that release 0.1 writes to disk b
 
 ## 19. Review findings against these decisions
 
-The reviewers examined D66–D83 and found several of them defective or incomplete. **These are recorded as open, not resolved.** The full findings are in [Idea-final-spec-review.md](history/Idea-final-spec-review.md); nothing there has been accepted.
+The reviewers examined D66–D83 and found several of them defective or incomplete. **These are recorded as open, not resolved.** The full findings are in [idea-v1-spec-review.md](history/idea-v1-spec-review.md); nothing there has been accepted.
 
 | Decision | Status after review |
 |---|---|
@@ -794,7 +794,7 @@ Neither influences the other. The same ELO maths and seed apply to both.
 
 # Step 9 — Second expert review
 
-Decisions D101–D118. A coverage check of [Idea-final.md](Idea-final.md) against the spec and tickets found four gaps, and a second review by the same three specialists produced five Critical findings. The result is the largest change to the release ladder since staging was adopted: **0.3b becomes free online play, and 0.4 becomes the competitive paid product.**
+Decisions D101–D118. A coverage check of [idea-v1.md](idea-v1.md) against the spec and tickets found four gaps, and a second review by the same three specialists produced five Critical findings. The result is the largest change to the release ladder since staging was adopted: **0.3b becomes free online play, and 0.4 becomes the competitive paid product.**
 
 ## 26. Gaps found by the coverage check
 
@@ -810,7 +810,7 @@ Decisions D101–D118. A coverage check of [Idea-final.md](Idea-final.md) agains
 **Consequence:** New ticket, and a blocker of the first upload.
 
 ### D103 — Draw offers are removed from the product entirely
-**Question:** Idea-final.md gave both players a right to offer a draw; the spec deferred it as meaningless offline.
+**Question:** idea-v1.md gave both players a right to offer a draw; the spec deferred it as meaningless offline.
 **Decision:** Removed everywhere. Games end by four-in-a-row, a full board, resignation, or timeout.
 **Rationale:** A negotiated draw is a two-party state machine touching move history, clocks and rating, for a case players can resolve by resigning.
 **Consequence:** Supersedes [D12](#d12--draw-condition) in part and [D13](#d13--available-in-game-actions). Removes work from every online mode, not just 0.1. `result.outcome` still needs a **timeout** value, which it did not have.
@@ -834,7 +834,7 @@ The three reviewers independently converged on one shape. Security found the hum
 ### D106 — The subscription moves to 0.4
 **Question:** Should the subscription gate the first public release?
 **Decision:** No. It moves to 0.4.
-**Rationale:** At 0.3b the paid tier sells access to a population of zero. It is not a cold-start problem but a two-sided market where **both sides must pay to enter**, which forecloses every standard remedy. The plan already conceded it and mislabelled it: [Idea-final.md §7.6](Idea-final.md) has auto-match fall back to a computer opponent, which is the paid feature degrading into the free one. Both stores also expect a subscription's content to be available at purchase.
+**Rationale:** At 0.3b the paid tier sells access to a population of zero. It is not a cold-start problem but a two-sided market where **both sides must pay to enter**, which forecloses every standard remedy. The plan already conceded it and mislabelled it: [idea-v1.md §7.6](idea-v1.md) has auto-match fall back to a computer opponent, which is the paid feature degrading into the free one. Both stores also expect a subscription's content to be available at purchase.
 **Consequence:** Supersedes the timing in [D96](#d96--an-annual-subscription-unlocks-play-against-real-opponents). 0.4 is where friends, open challenges, auto-match and chat exist — the first moment there is something to sell.
 
 ### D107 — Free to accept, paid to initiate
@@ -935,7 +935,7 @@ Decisions D122–D128. A first-run experience was designed in Claude Design and 
 ### D122 — The specification's roster wins
 **Question:** The prototype invents twenty opponents — Pip, Dott, Cubby, Fenn, Loop, Nook, Vex, Marlo, Suri, Halden, Quill, Ravel, Denz, Astra, Korr, Vantage, Ilex, Zephyrine, Oberon, Meridian — rated 620 to 2400. The specification's roster is Pebble through Quadrim Prime, rated 600 to 2600. Which is authoritative?
 **Decision:** The specification's roster. The design adopts it.
-**Rationale:** The roster is load-bearing well beyond the picker screen: [Idea-final.md](Idea-final.md) §6.4 defines it, ticket 011 renders it, tickets 006 through 026 build to it, and ticket 014's calibration chain is about to measure those exact ratings. Renaming twenty opponents to match a prototype would ripple through eight tickets and re-anchor a scale that is nearly ready to be measured.
+**Rationale:** The roster is load-bearing well beyond the picker screen: [idea-v1.md](idea-v1.md) §6.4 defines it, ticket 011 renders it, tickets 006 through 026 build to it, and ticket 014's calibration chain is about to measure those exact ratings. Renaming twenty opponents to match a prototype would ripple through eight tickets and re-anchor a scale that is nearly ready to be measured.
 **Consequence:** The prototype's names are a mock, not a proposal. Any string extracted from it must be checked against §6.4 rather than copied.
 
 ### D123 — Five tiers, not three categories
@@ -948,7 +948,7 @@ Decisions D122–D128. A first-run experience was designed in Claude Design and 
 **Question:** The design distinguishes pieces by lightness — a white pebble against a black one. The specification said pieces must be distinguished by **shape** as well as colour.
 **Decision:** Lightness satisfies it. The specification's wording is relaxed: pieces must be distinguishable without relying on hue; shape is an acceptable alternative, not a requirement.
 **Rationale:** The original rule existed to prevent hue-only encoding, which is the failure mode that excludes red-green colour vision deficiency. A light piece against a dark one does not merely avoid that failure — it is the strongest available signal, and it survives full achromatopsia, which two similarly-toned shapes would not. The rule was guarding against a problem this design already solves better.
-**Consequence:** [Idea-final.md](Idea-final.md) §7.10 and [Idea-final-spec.md](Idea-final-spec.md) §4.2 reworded. The pebble treatment is kept, which also preserves the most characterful thing in the design. Ticket 021's audit criterion still applies — it must be verified under simulation, not assumed.
+**Consequence:** [idea-v1.md](idea-v1.md) §7.10 and [idea-v1-spec.md](idea-v1-spec.md) §4.2 reworded. The pebble treatment is kept, which also preserves the most characterful thing in the design. Ticket 021's audit criterion still applies — it must be verified under simulation, not assumed.
 
 ### D125 — First-run scope is the four screens plus the missing end state
 **Question:** The design covers tutorial, main screen, opponent picker and match. Several things release 0.1 requires are absent. How much does the handoff cover?
@@ -1133,7 +1133,7 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 
 **Decision:** Replace the enum with two weights, `centreBias` and `cornerBias`, each 0–1.
 
-**Rationale:** A three-valued enum cannot express "both" or "a little of each", and the roster needs exactly that range — Finch has a strong centre preference, Kestrel is corner-hungry, Bramble and Ember have no positional sense at all. It also matches what [Idea-final §6.3](Idea-final.md) already records: the central 2×2×2 and the corners are **the same class** under the board's symmetries, both sitting on seven lines each, so ranking one strictly above the other is a flavour choice rather than a strength one. Two weights say that; an ordered enum implies the opposite.
+**Rationale:** A three-valued enum cannot express "both" or "a little of each", and the roster needs exactly that range — Finch has a strong centre preference, Kestrel is corner-hungry, Bramble and Ember have no positional sense at all. It also matches what [idea-v1 §6.3](idea-v1.md) already records: the central 2×2×2 and the corners are **the same class** under the board's symmetries, both sitting on seven lines each, so ranking one strictly above the other is a flavour choice rather than a strength one. Two weights say that; an ordered enum implies the opposite.
 
 **Consequence:** A breaking change to an API one ticket old, which is cheap now and would not be later. Nothing outside the engine referenced it. Ticket 009's third positional rule — most lines already part-owned — becomes another term in the same scoring step rather than another enum case.
 
@@ -1192,7 +1192,7 @@ The turn banner is a Semantics live region: every text change (turn, win, draw) 
 **Consequence:** The engine stays pure — `dart:isolate` never enters it, and the concurrency concern lives in the app layer where it belongs.
 
 ### D154 — The Club tier was retuned to what self-play actually measures
-**Question:** Idea-final §6.4 gives Vireo 2-ply search with defensive weighting at 1550 and Marlin 2-ply with aggressive weighting at 1500, and Onyx a plain 4-ply search at 1650. Does that produce the ladder it claims?
+**Question:** idea-v1 §6.4 gives Vireo 2-ply search with defensive weighting at 1550 and Marlin 2-ply with aggressive weighting at 1500, and Onyx a plain 4-ply search at 1650. Does that produce the ladder it claims?
 
 **Decision:** No, and the parameters changed rather than the ratings ([D144](#d144--published-opponent-ratings-are-fixed-calibration-moves-the-parameters-not-the-numbers)). What ships is:
 
@@ -1267,7 +1267,7 @@ The shipped ladder, at the sample sizes the tests use, holds across three indepe
 
 **Rationale:** A hand-written table would be 12,288 numbers nobody could check by reading, and a generated one would need the same construction anyway. What matters is the proof, and that is what the tests are: exactly 192 members, every one a permutation of all 64 cells, every one mapping the 76 lines onto the 76 lines, closed under composition, closed under inverses, and preserving each cell's degree.
 
-**Consequence:** Two independent facts fall out and are asserted rather than assumed — the group has exactly two orbits, of sizes 16 and 48, matching the known cell degrees; and an empty board has exactly **two** distinct opening moves, which is Idea-final §2.3's claim reproduced from first principles rather than quoted.
+**Consequence:** Two independent facts fall out and are asserted rather than assumed — the group has exactly two orbits, of sizes 16 and 48, matching the known cell degrees; and an empty board has exactly **two** distinct opening moves, which is idea-v1 §2.3's claim reproduced from first principles rather than quoted.
 
 ### D161 — Canonicalisation pays in the opening and nowhere else
 **Question:** Ticket 025 calls canonicalising positions before caching them "the difference between a table that fits on a phone and one that does not". Is it?
@@ -1298,7 +1298,7 @@ The shipped ladder, at the sample sizes the tests use, holds across three indepe
 **Consequence:** **The named-reference-device criterion is not met**, and cannot be from here: the development machine is a stand-in. Against [D152](#d152--the-computers-move-budget-and-where-the-time-is-spent)'s 250 ms mean and 1 s worst, Quartz through Lyra have room and Titan does not — at two to four times slower, a phone puts Titan around 600 ms mean and 2.5 s worst. Ticket 016's first device run must measure all four and either confirm these budgets or cut them; this decision is the record of what to check.
 
 ### D163 — Eight plies is not affordable, and depth is not the reason these opponents are strong
-**Question:** Idea-final §6.4 gives the Expert tier 6-ply and 8-ply searches. Does the engine reach them?
+**Question:** idea-v1 §6.4 gives the Expert tier 6-ply and 8-ply searches. Does the engine reach them?
 
 **Decision:** No, and the roster's depths are not what ships. The four are separated by node budget and forcing-search depth; the depth each reaches is whatever its budget buys, typically **five to six plies** in the middlegame.
 
@@ -1316,7 +1316,7 @@ The shipped ladder, at the sample sizes the tests use, holds across three indepe
 **Consequence:** The ceiling belongs to the strongest opponents alone. A twenty-second think from a 1500-rated opponent would be a defect, not a feature, so the budget is spent as a ladder: the Novice, Casual and Club tiers stay in single-digit milliseconds, the Expert tier moves into the low seconds, and only the Master tier goes near the ceiling. [D162](#d162--the-experts-tier-budgets-and-the-reference-device-that-is-still-missing)'s node budgets were sized against the wrong number and are raised accordingly. The ceiling is still a *device* number that no device has yet produced — ticket 016 must confirm the conversion from nodes.
 
 ### D165 — The whole app ships in fifty megabytes
-**Question:** Idea-final leaves the size of a stored strategy book open (OI-02), and the Master tier's Quadrim Prime is described as following a proven winning strategy.
+**Question:** idea-v1 leaves the size of a stored strategy book open (OI-02), and the Master tier's Quadrim Prime is described as following a proven winning strategy.
 
 **Decision (product owner):** **No more than 50 MB of data ships with the app.**
 
@@ -1429,7 +1429,7 @@ The duel result was **47–12 both times, with the same single draw** — the re
 ---
 
 ### D172 — Perfect play comes from Patashnik's dictionary, and nothing else comes from that repository
-**Question:** Idea-final §14 left the top of the ladder resting on an open research question: is a perfect-play strategy obtainable, and on what terms? A copy was found at `github.com/kogorman/qubic`. That repository is **GPL-2.0**, which if it applied to what Quadrim takes would force Quadrim to be GPL-2.0 as well.
+**Question:** idea-v1 §14 left the top of the ladder resting on an open research question: is a perfect-play strategy obtainable, and on what terms? A copy was found at `github.com/kogorman/qubic`. That repository is **GPL-2.0**, which if it applied to what Quadrim takes would force Quadrim to be GPL-2.0 as well.
 
 **Decision:** Take **`qubic.dictionary` and nothing else.** The file carries its own terms in its own header, quoted verbatim:
 
@@ -1439,7 +1439,7 @@ That is a permissive grant from the data's own copyright notice, and it predates
 
 **Rationale:** Two obligations, both mechanised rather than promised. *Moves unchanged*: the file is vendored byte for byte, `.gitattributes` marks it `-text` so no line-ending conversion can touch it, and `tool/bookgen.dart` verifies its SHA-256 on every run of `tool/check.sh`. *Source credited*: see [D174](#d174--the-attribution-is-a-property-of-the-built-app-not-of-the-repository).
 
-**Consequence:** This closes Idea-final §14 and OI-02's first half. The strategy book exists, it is 54,745 bytes, and it costs nothing against the fifty-megabyte ceiling of [D165](#d165--fifty-megabytes-is-the-download-ceiling). The solver sub-project OI-02 contemplated is not needed: Patashnik did it in 1976-77.
+**Consequence:** This closes idea-v1 §14 and OI-02's first half. The strategy book exists, it is 54,745 bytes, and it costs nothing against the fifty-megabyte ceiling of [D165](#d165--fifty-megabytes-is-the-download-ceiling). The solver sub-project OI-02 contemplated is not needed: Patashnik did it in 1976-77.
 
 **This is not legal advice, and the licensing judgement above is the owner's to confirm.** What is recorded here is what the file says and what the code does about it.
 
@@ -2169,7 +2169,7 @@ These are unresolved facts that need discovery work, not further product decisio
 Firebase Cloud Messaging does not support Flutter Windows or macOS. Web push works only in browsers that support it and requires an explicit permission grant; on iOS Safari it requires the site to be installed to the home screen. **Position:** push is a mobile feature. Web and desktop degrade to in-app notifications and a badge on the active-games list while the app is open. This must be stated in the UI so a desktop-only player is not silently timed out by D16.
 
 ### OI-02 — Strategy book size and solver effort
-The perfect-play book (D24) has no known size until the solver is built. The solver is a build-time tool, likely not written in Dart, and is a genuine sub-project. **Mitigation:** the fallback ladder in Idea-final.md — book if practical, otherwise exact endgame plus deepest achievable search, with the top bot's rating and description adjusted honestly rather than overclaiming perfection.
+The perfect-play book (D24) has no known size until the solver is built. The solver is a build-time tool, likely not written in Dart, and is a genuine sub-project. **Mitigation:** the fallback ladder in idea-v1.md — book if practical, otherwise exact endgame plus deepest achievable search, with the top bot's rating and description adjusted honestly rather than overclaiming perfection.
 
 ### OI-03 — Bot rating calibration
 The 20 fixed anchor ratings (D18) are currently estimates. They must be calibrated by round-robin self-play to establish relative ordering, then pinned to absolute values with human test games. Publishing a mis-calibrated anchor and correcting it later invalidates every rating derived from it.

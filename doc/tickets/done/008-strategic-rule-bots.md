@@ -15,7 +15,7 @@ They all run the same four-rule ladder from the specification, differing only in
 - [ ] Blunder rate is configurable and causes the chosen move to be replaced by a weaker legal one
 - [ ] Aggression is configurable, weighting building one's own threats against blocking the opponent's
 - [ ] Corner and centre preference are configurable independently
-- [ ] All eight opponents exist as catalogue entries with the configurations given in Idea-final.md §6.4
+- [ ] All eight opponents exist as catalogue entries with the configurations given in idea-v1.md §6.4
 - [ ] Given a position with an immediate win available, a rule-enabled opponent takes it
 - [ ] Given a position where the opponent wins next move, a rule-enabled opponent blocks it
 - [ ] Given a position where a double threat is available, an opponent with that rule enabled plays it

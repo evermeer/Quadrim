@@ -46,7 +46,7 @@ void main() {
         'onyx', 'sable']));
     });
 
-    test('the configurations match the roster in Idea-final 6.4', () {
+    test('the configurations match the roster in idea-v1 6.4', () {
       expect(twig.rules, {StrategicRule.winNow});
       expect(mote.rules, {StrategicRule.winNow, StrategicRule.blockNow});
       expect(mote.blunderRate, 0.40);

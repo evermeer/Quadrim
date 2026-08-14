@@ -186,7 +186,7 @@ for (final line in _linesThroughCell[cell.index]) {
 }
 ```
 
-**Problem:** A double-completing move exists in Qubic; the recorded/highlighted line is the lexicographically first. Deterministic and spec-compatible (Idea-final rule 4 speaks of "the completed line", singular), but undocumented.
+**Problem:** A double-completing move exists in Qubic; the recorded/highlighted line is the lexicographically first. Deterministic and spec-compatible (idea-v1 rule 4 speaks of "the completed line", singular), but undocumented.
 
 **Fix:** One doc line on `Win.line` noting the tie-break. Defer to next touch of the file.
 
@@ -673,7 +673,7 @@ Full suite: 37 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` pas
 
 > Generated: 2026-08-08
 > Base: HEAD (5adae40), work uncommitted
-> Changed files: 4 — `packages/quadrim_engine/lib/src/bot.dart`, `packages/quadrim_engine/test/positional_bot_test.dart` (new), `packages/quadrim_engine/test/strategic_bot_test.dart`, `doc/idea-decisions.md`
+> Changed files: 4 — `packages/quadrim_engine/lib/src/bot.dart`, `packages/quadrim_engine/test/positional_bot_test.dart` (new), `packages/quadrim_engine/test/strategic_bot_test.dart`, `doc/idea-v1-decisions.md`
 
 ---
 
@@ -761,7 +761,7 @@ duplicating `strategic_bot_test.dart:8`.
 | Positional rules implemented and evaluated in order: centre, corner, most part-owned lines, random | ✅ | `bot.dart:405` scores class then building term; four tests, one per rung (`positional_bot_test.dart:18–60`) |
 | Used both when no strategic rule fires and as the tie-break within a rule | ✅ | `chooseMove` passes `_ruleCandidates(...) ?? moves` to the one `_positionalPick` (`bot.dart:261`); the tie-break case is tested at `positional_bot_test.dart:117` |
 | Positional bias configurable — centre, corner and edge weighted differently | ✅ | `centreBias`/`cornerBias`/`edgeBias`/`lineBias` (`bot.dart:81–95`); edge-preferring configuration tested at `positional_bot_test.dart:78` |
-| Basalt exists with the specified configuration | ✅ | `bot.dart:200` — 1400, all four rules, 6% blunder, matching Idea-final §6.4; asserted at `positional_bot_test.dart:90` |
+| Basalt exists with the specified configuration | ✅ | `bot.dart:200` — 1400, all four rules, 6% blunder, matching idea-v1 §6.4; asserted at `positional_bot_test.dart:90` |
 | Given an empty board, Basalt opens in the central cube | ✅ | 200 seeds, opened centrally in more than 170 — the shortfall is its configured 6% blunder rate, verified statistically as ticket 008 established |
 | Given several cells satisfying the same strategic rule, Basalt picks by the tie-break rather than at random | ✅ | a position offering wins at cell 21 (centre) and cell 3 (corner): Basalt takes 21 in >85/100 seeds, Ember — same rule, no positional sense — in <70/100 |
 | Basalt beats Ember over a significant number of self-play games | ✅ | 120 games with alternating starts: 103–17–0. Re-run at two further seeds off-test: 96–24–0 and 102–17–1 |
@@ -788,7 +788,7 @@ Full suite: 49 engine tests, 61 app, 19 rating, 8 generator. `tool/check.sh` pas
 
 > Generated: 2026-08-08
 > Base: HEAD (b4fd4f3), work uncommitted
-> Changed files: 10 — `packages/quadrim_engine/lib/src/search.dart` (new), `.../lib/src/bot.dart`, `.../lib/quadrim_engine.dart`, `.../test/search_test.dart` (new), `.../test/bot_test.dart`, `.../test/strategic_bot_test.dart`, `app/lib/game/game_screen.dart`, `app/test/bot_game_test.dart`, `app/test/result_screen_test.dart`, `doc/idea-decisions.md`
+> Changed files: 10 — `packages/quadrim_engine/lib/src/search.dart` (new), `.../lib/src/bot.dart`, `.../lib/quadrim_engine.dart`, `.../test/search_test.dart` (new), `.../test/bot_test.dart`, `.../test/strategic_bot_test.dart`, `app/lib/game/game_screen.dart`, `app/test/bot_game_test.dart`, `app/test/result_screen_test.dart`, `doc/idea-v1-decisions.md`
 
 ---
 
@@ -899,7 +899,7 @@ followed, for the same position, by the same two calls inside `_ruleCandidates`.
 
 ### Gaps
 
-None blocking. Two deviations from Idea-final §6.4's *prose*, both deliberate, measured and recorded as D154:
+None blocking. Two deviations from idea-v1 §6.4's *prose*, both deliberate, measured and recorded as D154:
 
 - **Vireo searches three plies, not two.** At equal depth it and Marlin are level however the temperaments are set, over 400-game matches. Defensive weighting is worth nothing in this game.
 - **Onyx searches three plies with a six-move forcing search, not four plies plain.** The four-ply version was both slower (59 ms mean against 1.8) and weaker — it lost to a three-ply Vireo, 73–87.
@@ -924,7 +924,7 @@ Full suite: 71 engine tests, 63 app, 19 rating, 8 generator. `tool/check.sh` pas
 
 > Generated: 2026-08-08
 > Base: HEAD (8e3f06f), work uncommitted
-> Changed files: 13 — `app/lib/home/home_screen.dart` (new), `app/lib/data/home_summary.dart` (new), `app/lib/game/opponent_name.dart` (new), `app/lib/main.dart`, `app/lib/game/game_screen.dart`, both `.arb` files and their generated output, `app/test/home_screen_test.dart` (new), `app/test/home_summary_test.dart` (new), `app/test/{smoke,game_screen,bot_game}_test.dart`, `doc/idea-decisions.md`
+> Changed files: 13 — `app/lib/home/home_screen.dart` (new), `app/lib/data/home_summary.dart` (new), `app/lib/game/opponent_name.dart` (new), `app/lib/main.dart`, `app/lib/game/game_screen.dart`, both `.arb` files and their generated output, `app/test/home_screen_test.dart` (new), `app/test/home_summary_test.dart` (new), `app/test/{smoke,game_screen,bot_game}_test.dart`, `doc/idea-v1-decisions.md`
 
 ---
 
@@ -969,7 +969,7 @@ child: ListView(
 
 ### [NIT] D141 read as current after this ticket retired it — `documentation`
 
-**File:** `doc/idea-decisions.md:1071`
+**File:** `doc/idea-v1-decisions.md:1071`
 
 **Evidence:**
 ```
@@ -1216,7 +1216,7 @@ const Set<StrategicRule> _clubRules = _allRules;
 
 ### Gaps
 
-- **Ticket 026 is half done.** The evaluation rewrite landed; the two Master opponents did not. D167 records why: the fork term changed the chosen move in **0 of 84** positions from real games, so the evaluation is not the lever. Reaching 2300+ needs the strategy-book route, which starts with the Idea-final §14 licensing question — a decision that is the owner's, not the reviewer's.
+- **Ticket 026 is half done.** The evaluation rewrite landed; the two Master opponents did not. D167 records why: the fork term changed the chosen move in **0 of 84** positions from real games, so the evaluation is not the lever. Reaching 2300+ needs the strategy-book route, which starts with the idea-v1 §14 licensing question — a decision that is the owner's, not the reviewer's.
 - **The Expert ladder is flat.** Four opponents are shipped with ratings that measurement does not yet support. Ticket 014's calibration harness is the place that gets settled.
 
 ### Notes
@@ -1368,7 +1368,7 @@ expect(sha256Hex(utf8.encode('abc')),
 
 ## Functional Validation
 
-⚠️ No Jira issue key detected — this project tracks work in `doc/tickets/`. Validated against `doc/tickets/026-master-tier.md` and Idea-final §14.
+⚠️ No Jira issue key detected — this project tracks work in `doc/tickets/`. Validated against `doc/tickets/026-master-tier.md` and idea-v1 §14.
 
 ### Ticket 026 — Master tier
 
@@ -2079,7 +2079,7 @@ Both applied.
 > Reviewed: working tree against `730be24` on `main`.
 > Changed: `app/lib/tutorial/tutorial_steps.dart`, `app/lib/tutorial/tutorial_screen.dart`,
 > both `.arb` files (+ generated), `app/test/tutorial_test.dart`,
-> `app/test/home_screen_test.dart` (step count), `doc/idea-decisions.md` (D196–D198).
+> `app/test/home_screen_test.dart` (step count), `doc/idea-v1-decisions.md` (D196–D198).
 
 ## Summary
 
@@ -2190,7 +2190,7 @@ scale test added. 157 app tests green, `flutter analyze` clean.
 > Reviewed: working tree against `185e27c` on `main`.
 > New: `app/lib/tutorial/practice_hint.dart`, `app/lib/tutorial/practice_screen.dart`,
 > `app/test/practice_test.dart`. Modified: `tutorial_screen.dart`, both `.arb`
-> files (+ generated), `doc/idea-decisions.md` (D199–D201).
+> files (+ generated), `doc/idea-v1-decisions.md` (D199–D201).
 
 ## Summary
 
@@ -2314,7 +2314,7 @@ green, `flutter analyze` clean.
 > asked for after playing the game.
 > Changed: `app/lib/game/board_view.dart`, `app/lib/game/game_screen.dart`,
 > `app/lib/tutorial/practice_screen.dart`, `app/test/board_flash_test.dart` (new),
-> `app/test/game_screen_test.dart`, `doc/idea-decisions.md` (D203).
+> `app/test/game_screen_test.dart`, `doc/idea-v1-decisions.md` (D203).
 
 ## Summary
 
@@ -2402,7 +2402,7 @@ The nit applied. 189 app tests green, `flutter analyze` clean,
 
 > Reviewed: working tree against `2202c93` on `main`.
 > Changed: `app/lib/game/game_screen.dart`, both `.arb` files (+ generated),
-> `app/test/review_test.dart` (new), `doc/idea-decisions.md` (D204).
+> `app/test/review_test.dart` (new), `doc/idea-v1-decisions.md` (D204).
 
 ## Summary
 
@@ -2493,7 +2493,7 @@ Gate: `ALL CHECKS PASSED`, exit 0. App 199 tests, engine 120, rating 24, linegen
 > New: `app/lib/settings/settings_screen.dart`, `app/test/settings_test.dart`.
 > Modified: `app/lib/main.dart` (root now watches the settings document),
 > `app/lib/home/home_screen.dart` (placeholder deleted), both `.arb` files
-> (+ generated), `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D205).
+> (+ generated), `app/test/home_screen_test.dart`, `doc/idea-v1-decisions.md` (D205).
 
 ## Summary
 
@@ -2579,7 +2579,7 @@ Gate: `ALL CHECKS PASSED`, exit 0. App 210 tests, engine 120, rating 24, linegen
 > correction after playing the game.
 > Changed: `app/lib/game/board_view.dart` (`flashCells`),
 > `app/test/board_flash_test.dart`, `app/test/game_screen_test.dart`,
-> `doc/idea-decisions.md` (D206).
+> `doc/idea-v1-decisions.md` (D206).
 
 ## Summary
 
@@ -2650,7 +2650,7 @@ Shipped. 211 app tests green, `ALL CHECKS PASSED` exit 0.
 > correction after playing the game.
 > Changed: `app/lib/game/board_view.dart` (`_Pebble._lightFlash`,
 > `_Pebble._darkFlash`), `app/test/board_flash_test.dart`,
-> `doc/idea-decisions.md` (D207).
+> `doc/idea-v1-decisions.md` (D207).
 
 ## Summary
 
@@ -2718,7 +2718,7 @@ Shipped. 212 app tests green, `ALL CHECKS PASSED` exit 0.
 > `packages/quadrim_engine/pubspec.yaml`,
 > `packages/quadrim_engine/lib/src/bot.dart` (the Casual tier),
 > `packages/quadrim_engine/test/positional_bot_test.dart`,
-> `CLAUDE.md`, `doc/idea-decisions.md` (D208–D210), the ticket.
+> `CLAUDE.md`, `doc/idea-v1-decisions.md` (D208–D210), the ticket.
 
 ## Summary
 
@@ -2875,7 +2875,7 @@ app 212, linegen 8.
 > Reviewed: working tree against `eded7c2` on `main`.
 > New: `app/test/rating_fold_test.dart`.
 > Changed: `tool/check.sh` (release-manifest network guard),
-> `doc/idea-decisions.md` (D212), the ticket.
+> `doc/idea-v1-decisions.md` (D212), the ticket.
 >
 > A **verification** ticket: the implementation shipped incidentally with 013,
 > so what was reviewed is whether each criterion is actually met and actually
@@ -2965,7 +2965,7 @@ App 223 tests, engine 120, rating 29, linegen 8.
 > requested change to the main screen.
 > Changed: `app/lib/home/home_screen.dart` (`_OpponentSection`, new
 > `_RatingBar`), `app/lib/l10n/app_{en,nl}.arb`,
-> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D214).
+> `app/test/home_screen_test.dart`, `doc/idea-v1-decisions.md` (D214).
 
 ## Summary
 
@@ -3026,7 +3026,7 @@ linegen 8.
 > Reviewed: working tree against `38a30c0` on `main`. A follow-on to the
 > rating bars, same section of the same screen.
 > Changed: `app/lib/home/home_screen.dart` (new `_RatingPill`, the name slot),
-> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D215).
+> `app/test/home_screen_test.dart`, `doc/idea-v1-decisions.md` (D215).
 
 ## Summary
 
@@ -3081,7 +3081,7 @@ linegen 8.
 > Reviewed: working tree against `925395a` on `main`.
 > Changed: `app/lib/home/home_screen.dart` (`_GameRow`),
 > `app/lib/l10n/app_en.arb` (description only),
-> `app/test/home_screen_test.dart`, `doc/idea-decisions.md` (D215, D216).
+> `app/test/home_screen_test.dart`, `doc/idea-v1-decisions.md` (D215, D216).
 
 ## Summary
 
@@ -3159,7 +3159,7 @@ linegen 8.
 > Reviewed: working tree against `1a477e5` on `main`.
 > New maths: `quadrim_rating` `ratingSteps`, `rating_fold.dart` `ratingDeltas`.
 > Changed: `app/lib/home/home_screen.dart` (`_GameRow`, new `_RatingDelta`),
-> tests in all three, `doc/idea-decisions.md` (D217).
+> tests in all three, `doc/idea-v1-decisions.md` (D217).
 
 ## Summary
 

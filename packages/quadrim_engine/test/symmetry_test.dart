@@ -72,7 +72,7 @@ void main() {
     test('it acts transitively on the two kinds of cell, and no further', () {
       // The 16 seven-line cells form one orbit and the 48 four-line cells the
       // other. This is the fact that makes "an empty board has two distinct
-      // opening moves, not 64" true (Idea-final §2.3).
+      // opening moves, not 64" true (idea-v1 §2.3).
       final orbits = <Set<int>>[];
       final assigned = <int>{};
       for (var start = 0; start < 64; start++) {

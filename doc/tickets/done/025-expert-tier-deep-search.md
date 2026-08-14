@@ -14,7 +14,7 @@ This is the first ticket with genuinely new engine machinery rather than new con
 - [ ] Iterative deepening searches progressively deeper within a time budget rather than fixing a depth up front
 - [ ] Exact endgame solving proves a win, loss or draw once the number of empty cells falls below a configurable threshold
 - [ ] A proven result is never overridden by a heuristic estimate
-- [ ] Quartz, Corvus, Lyra and Titan exist as catalogue entries with the configurations given in Idea-final.md §6.4
+- [ ] Quartz, Corvus, Lyra and Titan exist as catalogue entries with the configurations given in idea-v1.md §6.4
 - [ ] **Every search budget is expressed in nodes, never in milliseconds.** A wall-clock budget makes each opponent non-deterministic across devices, between debug and release, and between CI and a phone — which would make acceptance criterion E7 a test that passes locally and flakes everywhere else, and would make calibration unrepeatable
 - [ ] The wall-clock equivalent of each node budget is measured and recorded against a **named reference device**, which is also the device the responsiveness criteria are judged on
 - [ ] Each chooses a move fast enough to feel responsive on that named device

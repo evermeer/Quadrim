@@ -2,7 +2,7 @@
 ///
 /// Quadrim's 4x4x4 board has **192 automorphisms** — permutations of the 64
 /// cells that map the set of 76 winning lines onto itself (Silver, 1967;
-/// Idea-final §2.3). Two positions related by one of them are the same
+/// idea-v1 §2.3). Two positions related by one of them are the same
 /// position in every way that matters, so collapsing them to a single
 /// representative is what makes a transposition table affordable: up to 192
 /// entries become one.

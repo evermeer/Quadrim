@@ -1,7 +1,7 @@
 # Quadrim — Final Specification
 
 The unambiguous description of what Quadrim is and what v1 must do.
-Derived from [IDEA.md](history/IDEA.md); every choice is justified in [idea-decisions.md](idea-decisions.md).
+Derived from [idea-v0.md](history/idea-v0.md); every choice is justified in [idea-v1-decisions.md](idea-v1-decisions.md).
 
 Status: agreed. No code written yet.
 Date: 2026-07-27

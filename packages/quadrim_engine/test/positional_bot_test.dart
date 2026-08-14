@@ -85,7 +85,7 @@ void main() {
   });
 
   group('Basalt', () {
-    test('has the configuration given in Idea-final 6.4', () {
+    test('has the configuration given in idea-v1 6.4', () {
       expect(basalt.id, 'basalt');
       expect(basalt.rating, 1400);
       expect(basalt.rules.length, 4);

@@ -1,8 +1,8 @@
 # Quadrim — Build Approach Brainstorming
 
-> **Archived record.** This document captured the choice of build approach. It is superseded in places — the roster, the rating model and the store-clock rationale have all changed since. Nothing here is load-bearing; the current position is in [Idea-final-spec.md](../Idea-final-spec.md), and the reasoning in [idea-decisions.md](../idea-decisions.md).
+> **Archived record.** This document captured the choice of build approach. It is superseded in places — the roster, the rating model and the store-clock rationale have all changed since. Nothing here is load-bearing; the current position is in [idea-v1-spec.md](../idea-v1-spec.md), and the reasoning in [idea-v1-decisions.md](../idea-v1-decisions.md).
 
-How to build what [Idea-final.md](../Idea-final.md) specifies.
+How to build what [idea-v1.md](../idea-v1.md) specifies.
 The spec says *what*. This says *in what order, in what shape, and why*.
 
 Date: 2026-07-27
@@ -20,7 +20,7 @@ Established before proposing anything:
 | Cadence | Evenings and weekends |
 | Experience | New to both Flutter and Firebase |
 | First success | An app live in the App Store and Play Store |
-| Scope flexibility | Stageable — Idea-final.md is the 1.0 target, not the first release |
+| Scope flexibility | Stageable — idea-v1.md is the 1.0 target, not the first release |
 | First platform | Android first, iOS shortly after |
 | Store accounts | None yet. Mac available for iOS builds |
 | Client architecture | Riverpod, layered, testable |
@@ -30,7 +30,7 @@ Established before proposing anything:
 
 ### 1.1 The honest reading
 
-Idea-final.md is five projects wearing one hat: a game engine, a build-time perfect-play solver, a Flutter client for five platforms, a Firebase backend with matchmaking and moderation, and content work across twenty bots and two languages. Built literally as written, by one person on evenings, that is a multi-year effort in which nothing is playable for months.
+idea-v1.md is five projects wearing one hat: a game engine, a build-time perfect-play solver, a Flutter client for five platforms, a Firebase backend with matchmaking and moderation, and content work across twenty bots and two languages. Built literally as written, by one person on evenings, that is a multi-year effort in which nothing is playable for months.
 
 Nothing needs to be cut. It needs to be **ordered**, and the order should be driven by two things the spec does not mention: what produces feedback soonest, and what has lead times outside your control.
 

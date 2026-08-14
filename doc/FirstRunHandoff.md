@@ -2,7 +2,7 @@
 
 Reconciled handoff for the first-run flow. Supersedes [DesignHandoff.md](DesignHandoff.md) where the two disagree.
 
-Sources: the design in [design.md](design.md) and `design_reference/`, the Nocturne system in `design_system/`, and the product truth in [Idea-final.md](Idea-final.md), [Idea-final-spec.md](Idea-final-spec.md) and [tickets/](tickets/). Decisions in [idea-decisions.md](idea-decisions.md) Step 11 (D122–D128).
+Sources: the design in [design.md](design.md) and `design_reference/`, the Nocturne system in `design_system/`, and the product truth in [idea-v1.md](idea-v1.md), [idea-v1-spec.md](idea-v1-spec.md) and [tickets/](tickets/). Decisions in [idea-v1-decisions.md](idea-v1-decisions.md) Step 11 (D122–D128).
 
 Date: 2026-08-07
 Status: reviewed against spec. Ready to implement, with three blockers named in §9.
@@ -23,7 +23,7 @@ Four things in the delivered design contradict the specification. Implement the 
 
 | Delivered design | Implement instead | Why |
 |---|---|---|
-| Opponents named Pip, Dott, Cubby … Meridian, rated 620–2400 | The roster in [Idea-final.md](Idea-final.md) §6.4 — Pebble … Quadrim Prime, 600–2400 | The roster drives eight tickets and the calibration about to measure it (D122) |
+| Opponents named Pip, Dott, Cubby … Meridian, rated 620–2400 | The roster in [idea-v1.md](idea-v1.md) §6.4 — Pebble … Quadrim Prime, 600–2400 | The roster drives eight tickets and the calibration about to measure it (D122) |
 | Three categories: Easy / Medium / Hard | Five tiers: Novice, Casual, Club, Expert, Master | Twenty in three groups is ~7 per accordion; five averages four and reads as a ladder (D123) |
 | Rating tag reads "Unrated" | A live computer rating, seeded 1200 | "Unrated practice" is the pre-D92 model, superseded when ratings split (D128) |
 | "Step N / 5" with six progress segments | Step count and segment count must match | The design contradicts itself; the tutorial has four parts (tickets 018–020) plus a welcome |

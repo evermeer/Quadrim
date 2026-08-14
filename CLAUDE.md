@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quadrim — four in a row in a 4×4×4 cube (the game is publicly known as Qubic). Flutter 3.44.9 / Dart 3.12.2, Android-only for release 0.1. Built ticket by ticket from `doc/tickets/`, driven by a spec (`doc/Idea-final-spec.md`) and a numbered decision log (`doc/idea-decisions.md`).
+Quadrim — four in a row in a 4×4×4 cube (the game is publicly known as Qubic). Flutter 3.44.9 / Dart 3.12.2, Android-only for release 0.1. Built ticket by ticket from `doc/tickets/`, driven by a spec (`doc/idea-v1-spec.md`) and a numbered decision log (`doc/idea-v1-decisions.md`). `doc/idea-v2.md` is the brief rewritten to include everything those two settled — the document to hand someone rebuilding this from scratch.
 
 ## Commands
 
@@ -62,7 +62,7 @@ third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
 doc/tickets/                The 7 tickets still open; the unit of work and of commits.
 doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-decisions.md       D01–D217. Every non-obvious choice, with its cost.
+doc/idea-v1-decisions.md    D01–D217. Every non-obvious choice, with its cost.
 ```
 
 ## Architecture
@@ -99,10 +99,10 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 
 The standing instruction for this repo:
 
-> Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
+> Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-v1-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-decisions.md` recording the question, the decision, and what it costs. Currently at D217.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-v1-decisions.md` recording the question, the decision, and what it costs. Currently at D217.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.

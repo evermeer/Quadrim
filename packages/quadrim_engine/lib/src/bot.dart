@@ -17,7 +17,7 @@ import 'strategy_book.dart';
 import 'winning_lines.g.dart';
 
 /// The four rules that make an opponent look like it is paying attention
-/// (Idea-final §6.2). Evaluated in order; the first that matches decides.
+/// (idea-v1 §6.2). Evaluated in order; the first that matches decides.
 enum StrategicRule {
   /// Complete a line when one is available.
   winNow,
@@ -173,7 +173,7 @@ final class BotConfig {
   /// Independent knobs rather than one enum (D147): the roster's personalities
   /// distinguish "drawn to corners" from "strong centre preference", and the
   /// two cell classes are in fact equivalent under the board's symmetries
-  /// (Idea-final §6.3) — so weighting them separately is a flavour choice the
+  /// (idea-v1 §6.3) — so weighting them separately is a flavour choice the
   /// configuration should be able to express. The three classes partition the
   /// board, so exactly one of these applies to any cell.
   final double centreBias;
@@ -227,7 +227,7 @@ const Set<StrategicRule> _allRules = {
 };
 
 // ---------------------------------------------------------------------------
-// The catalogue. Configurations realise the personalities in Idea-final §6.4;
+// The catalogue. Configurations realise the personalities in idea-v1 §6.4;
 // the ratings there are fixed and these parameters are what gets tuned when
 // measured strength disagrees with them (D144).
 // ---------------------------------------------------------------------------
@@ -345,7 +345,7 @@ const BotConfig ember = BotConfig(
 
 /// The first opponent with a plan: all four rules plus the full positional
 /// ladder — centre, then corner, then the cell on the most lines it is
-/// already building — and only a 6% blunder rate (Idea-final §6.4).
+/// already building — and only a 6% blunder rate (idea-v1 §6.4).
 ///
 /// The weights realise the ladder as an order: any centre cell (1.00 … 1.25)
 /// outscores any corner (0.50 … 0.75), which outscores any other cell

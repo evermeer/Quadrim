@@ -1,4 +1,4 @@
-> **Archived record.** The original idea, kept as written. Everything here is superseded by [Idea-final.md](../Idea-final.md), which is the current product definition.
+> **Archived record.** The original idea, kept as written. Everything here is superseded by [idea-v1.md](../idea-v1.md), which is the current product definition.
 
 # Quadrim
 

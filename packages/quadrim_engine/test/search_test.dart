@@ -337,7 +337,7 @@ void main() {
           [1500, 1550, 1650, 1700]);
       expect([marlin.blunderRate, vireo.blunderRate, onyx.blunderRate,
         sable.blunderRate], [0.05, 0.04, 0.03, 0.02]);
-      // Depths are what calibration settled on, not what Idea-final 6.4's
+      // Depths are what calibration settled on, not what idea-v1 6.4's
       // prose says (D154): forcing depth is the lever that works, and past
       // three plies ordinary depth separates nothing (D156).
       expect(marlin.searchDepth, 2);

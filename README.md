@@ -3,52 +3,52 @@
 
 This document will show how this game was constructed using vibe coding folowing [the workflow described here](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
 
-Here is what i wrote as the initial [Idea](doc/history/IDEA.md) for the game.
+Here is what i wrote as the initial [Idea](doc/history/idea-v0.md) for the game.
 
 **Prompt**
 ```
-Here's a rough idea for a game in the file doc/idea.md. Restate the
+Here's a rough idea for a game in the file doc/idea-v0.md. Restate the
 goal, list the assumptions and unknowns, and don't write any code yet. Ask me
 any clarifying questions you need until the goal and constraints are
 unambiguous before you summarize. The goal is to have a clear and unambiguous understanding of the game and its requirements before starting to write code.
-Put all decisions in the file doc/idea-decisions.md and put the result in the file doc/Idea-final.md
+Put all decisions in the file doc/idea-v1-decisions.md and put the result in the file doc/idea-v1.md
 ```
 
-The result of that prompt was a [decisions](doc/idea-decisions.md) document and a [final idea](doc/Idea-final.md) document.
+The result of that prompt was a [decisions](doc/idea-v1-decisions.md) document and a [final idea](doc/idea-v1.md) document.
 
 **Prompt**
 ```	
-Use the Superpowers brainstorming skill on the created file doc/Idea-final.md. 
+Use the Superpowers brainstorming skill on the created file doc/idea-v1.md. 
 Propose several approaches. Ask clarifying questions about the setup, functionality, design and
 constraints before proposing options if anything is unclear.
-Put the results in the file doc/Idea-final-brainstorming.md
-Add all decisions to the file doc/idea-decisions.md
+Put the results in the file doc/idea-v1-brainstorming.md
+Add all decisions to the file doc/idea-v1-decisions.md
 ```	
 
-The result of that prompt was a [brainstorming](doc/history/Idea-final-brainstorming.md) document.
+The result of that prompt was a [brainstorming](doc/history/idea-v1-brainstorming.md) document.
 
 This next prompt overrides the write to tickets instructiions of the to-spec skill and instead 
 asks to write a spec document. It also answers 2 questions from the brainstorming document.
 
 **Prompt**
 ```
-Use the Matt Skills to-spec skill to turn the doc/Idea-final.md plus the doc/Idea-final-brainstorming.md
+Use the Matt Skills to-spec skill to turn the doc/idea-v1.md plus the doc/idea-v1-brainstorming.md
 into a spec for the game: goal, scope, non-goals, exposed endpoints, data and
 acceptance criteria. Ask clarifying questions and don't finalize the spec until
 any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
 Use the sugested bots Pebble, Mote, Bramble, Ember, Basalt and Onyx.
-Put the result in the file doc/Idea-final-spec.md
-Add all decisions to the file doc/idea-decisions.md
+Put the result in the file doc/idea-v1-spec.md
+Add all decisions to the file doc/idea-v1-decisions.md
 ```
 
-The result of that prompt was a [spec](doc/Idea-final-spec.md) document.
+The result of that prompt was a [spec](doc/idea-v1-spec.md) document.
 
 Again overriding the instructions of the to-tickets skill, this next prompt asks to 
 break the spec into tickets as markdown files in the .doc/tickets folder.
 
 **Prompt**
 ```
-Use the Matt Skills to-tickets skill to break the doc/Idea-final-spec.md into
+Use the Matt Skills to-tickets skill to break the doc/idea-v1-spec.md into
 small, independently shippable tickets with dependencies and acceptance
 criteria, ordered so each can be built, tested, and merged on its own. Ask
 clarifying questions about scope or dependencies before finalizing the
@@ -56,19 +56,19 @@ breakdown. Store all tickets as a markdown file in the ./doc/tickets folder,
 with a name that starts with the ticket number and a dash, followed by a short 
 description of the ticket. For example, 001-setup-project.md. Put the result in 
 the ./doc/tickets folder.
-Add all decisions to the file doc/idea-decisions.md
+Add all decisions to the file doc/idea-v1-decisions.md
 ```
 
 The result is 22 markdown tickets files in the [tickets folder](doc/tickets) folder.
 
 **Prompt**
 ```
-Review the doc/Idea-final-spec.md and the tickets in the ./doc/tickets folder with the Agency Agents
+Review the doc/idea-v1-spec.md and the tickets in the ./doc/tickets folder with the Agency Agents
 backend-architect, security-engineer, and product-manager. Have each agent ask
 clarifying questions where context is missing before giving their concerns.
 Return each agent's concerns and recommendations so I can fold them back into
-the spec and tickets. write the concerns and recommendations in the file doc/Idea-final-spec-review.md
-Add all decisions to the file doc/idea-decisions.md
+the spec and tickets. write the concerns and recommendations in the file doc/idea-v1-spec-review.md
+Add all decisions to the file doc/idea-v1-decisions.md
 ```
 
 Solving the main concerns from the review resulted in the following changes to the spec and tickets:
@@ -76,14 +76,14 @@ Solving the main concerns from the review resulted in the following changes to t
 **Prompt**
 ```
 I will not go public with the 0.1 and 0.2 release and only test that with friends and family. This will make it okay to just start with a clean history at 0.3. 
-Please work it throug and update the Idea-final-spec-review.md to remove the findings that are now solved with this change or make updates if things have changed.
+Please work it throug and update the idea-v1-spec-review.md to remove the findings that are now solved with this change or make updates if things have changed.
 ```
 
 Solving some of the other review issues:
 
 **Prompt**
 ```
-As a reaction on the review, i would likce to process the following changes to the idea-final.md, idea-final-spec.md, idea-decisions.md and tickets
+As a reaction on the review, i would likce to process the following changes to the idea-v1.md, idea-v1-spec.md, idea-v1-decisions.md and tickets
 - A user will get 2 elo ratings. 1 for games against the computer and 1 against real opponents.
 - All 20 computer opponents will be implemented from the start so that they can all be callibrated.
 - For games against a computer opponent all processing including validation will be on the users device only. Also the rating for that is only visible on the device itself.
@@ -95,20 +95,20 @@ Cleanup of historical document so we can start another round of reviews.
 
 **Prompt**
 ```
-i would like to move the documents that are only a record and which do not contribure to the implemantation into a doc/history folder.  I think that's the case for idea-final-brainstorming.md, idea-final-spec-review.md and the original idea.md please evaluate before moving.
+i would like to move the documents that are only a record and which do not contribure to the implemantation into a doc/history folder.  I think that's the case for idea-v1-brainstorming.md, idea-v1-spec-review.md and the original idea-v0.md please evaluate before moving.
 ```
 
 Ask for another review that would also update the spec and tickets with the new information.
 
 **Prompt**
 ```
-Start a new review of the doc/Idea-final-spec.md and the tickets in the ./doc/tickets folder and 
-also evaluate if averything in idea-final.md is covered. Ask clarifying questions before proposing
+Start a new review of the doc/idea-v1-spec.md and the tickets in the ./doc/tickets folder and 
+also evaluate if averything in idea-v1.md is covered. Ask clarifying questions before proposing
 changes if anything is unclear. 
 Then use the Agency Agents backend-architect, security-engineer, and product-manager and evaluate 
 each agent's concerns and recommendations and ask clarifying questions before you fold 
 them back into the spec and tickets. 
-Add all decisions to the file doc/idea-decisions.md
+Add all decisions to the file doc/idea-v1-decisions.md
 ```
 
 Found an existing game called Qubic that is similar to Quadrim and has a known first move wins strategy.
@@ -126,7 +126,7 @@ Now I went to https://claude.ai/design and asked for a design for the game. The 
 
 **Prompt**
 ```
-Based on the doc/Idea-final.md , the doc/Idea-final-spec.md and the tickets in the doc/tickets folder,
+Based on the doc/idea-v1.md , the doc/idea-v1-spec.md and the tickets in the doc/tickets folder,
 I create a first run experience for the game using Claude Design. 
 I put the results in de doc folder. See the DesignHandof.md file for the handoff.
 
@@ -137,7 +137,7 @@ https://claude.ai/design/p/b1cfa4c8-147f-43ac-aa79-fc7318d8bfd4?file=First-Run+E
 use the skills design-consultation and design-review to reevaluate the design and flow of the first run experience. 
 Make sure that the choices made in the design are consistent with the spec and tickets.
 Ask clarifying questions about the design and flow if anything is unclear before finalizing the first run experience.
-Add the decissions to the file doc/idea-decisions.md
+Add the decissions to the file doc/idea-v1-decisions.md
 
 Then use the skill design:design-handoff to create a design handoff document for the first run experience.
 ```
@@ -148,18 +148,18 @@ Start implementation.
 ```
 Now that the spec and tickets are finalized, start implementing the game according to the tickets in the ./doc/tickets folder.
 The goal is to have a working v0.1 version of the game that can be tested by friends and family.
-Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-v1-decisions.md
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
 ```
 
-After it stoped half way (4 times): Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
+After it stoped half way (5 times): Continue with other tickets until all tickets are completed and the v0.1 version is ready for testing.
 
 **Prompt**
 ```
 Continue implementing the game according to the tickets in the ./doc/tickets folder.
-The goal is to have all tickets implemented so that there is a complete testable 0.1 version..
-Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+The goal is to have all tickets implemented so that there is a complete testable version..
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-v1-decisions.md
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
 Then open the new app in the simulator.
@@ -183,10 +183,12 @@ Found the perfect play data.
 I found the Patashnic data plus an okay to use it. See the data plus sample code 
 at https://github.com/kogorman/qubic start the implementation of the perfect play and then us it 
 to fix the other tiers.
-Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-decisions.md
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-v1-decisions.md
 After each ticket run the skill code-review-expert 
 Commit the code to the main branch after each ticket is completed and reviewed.
 ```
 
 Requested some small UI tweaks.
+
+
 

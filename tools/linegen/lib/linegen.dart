@@ -14,10 +14,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-/// Canonical cell index: x + 4*y + 16*z, each coordinate 0..3 (Idea-final 2).
+/// Canonical cell index: x + 4*y + 16*z, each coordinate 0..3 (idea-v1 2).
 int cell(int x, int y, int z) => x + 4 * y + 16 * z;
 
-/// The 76 winning lines, built exactly as Idea-final 2.1 constructs them:
+/// The 76 winning lines, built exactly as idea-v1 2.1 constructs them:
 /// 48 axis-aligned, 24 planar diagonals, 4 space diagonals.
 List<List<int>> buildLines() {
   final lines = <List<int>>[];
@@ -62,7 +62,7 @@ List<List<int>> buildLines() {
 }
 
 /// Lines through each cell. The literature says 7 for the 8 corners and the
-/// 8 inner cells, 4 for the other 48 (Idea-final 2.2) — verified by the tests.
+/// 8 inner cells, 4 for the other 48 (idea-v1 2.2) — verified by the tests.
 List<int> buildDegrees(List<List<int>> lines) {
   final degrees = List<int>.filled(64, 0);
   for (final line in lines) {

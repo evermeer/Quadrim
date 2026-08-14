@@ -9,7 +9,7 @@
 - [ ] An alpha-beta search over the heuristic position evaluation is implemented, with configurable depth
 - [ ] The heuristic evaluation is derived from threats and line ownership, reusing existing engine primitives rather than duplicating them
 - [ ] Threat-space search finds forcing sequences that plain depth-limited search at the same depth misses
-- [ ] Marlin, Vireo, Onyx and Sable exist as catalogue entries with the configurations given in Idea-final.md §6.4
+- [ ] Marlin, Vireo, Onyx and Sable exist as catalogue entries with the configurations given in idea-v1.md §6.4
 - [ ] Each chooses a move within a time budget that feels responsive on a mid-range phone, with the budget recorded
 - [ ] Search never blocks the interface; the board stays responsive while an opponent thinks
 - [ ] Given a forced win within the search horizon, the opponent finds it

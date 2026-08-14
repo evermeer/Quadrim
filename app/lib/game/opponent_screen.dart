@@ -33,7 +33,7 @@ class OpponentScreen extends StatefulWidget {
 ///
 /// Deliberately *not* a rating-band lookup. Tier is stored rather than derived
 /// precisely so that a recalibration cannot reclassify an opponent
-/// ([D179](doc/idea-decisions.md)), and a band table here would reintroduce
+/// ([D179](doc/idea-v1-decisions.md)), and a band table here would reintroduce
 /// exactly the coupling that decision removed — it would have to be kept in
 /// step with twenty ratings by hand. Asking which opponent is nearest needs no
 /// table and stays right by construction (D190).
