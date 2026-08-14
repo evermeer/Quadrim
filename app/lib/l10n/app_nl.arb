@@ -196,5 +196,15 @@
   "starsLabel": "{count} van 3 sterren",
   "neverPlayed": "Nog niet gespeeld",
   "pathTileSemantics": "{name}, waardering {rating}. {state}",
-  "lockedWithPrice": "Op slot. {cost} punten, je hebt er {have}."
+  "lockedWithPrice": "Op slot. {cost} punten, je hebt er {have}.",
+  "quests": "Opdrachten",
+  "questFirstWin": "Eerste winst tegen {name}",
+  "questFirstWinSecond": "Eerste winst als tweede speler tegen {name}",
+  "questGamesInDay": "{count} partijen op één dag",
+  "questDaysInRow": "{count} dagen op rij",
+  "questProgressValue": "{current} van {target}",
+  "questSemantics": "{name}. {current} van {target}.",
+  "questAchievedTitle": "Behaald",
+  "questAward": "+{points}",
+  "questAwardSemantics": "{name}. Behaald, {points} punten."
 }

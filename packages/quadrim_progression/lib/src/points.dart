@@ -55,9 +55,9 @@ int? rosterIndexOf(String botId) {
 ///
 /// Sixty is the number to reason about; the point totals are display.
 int get fullRosterCost => [
-      for (var i = 0; i < opponentCatalogue.length; i++)
-        if (!isFree(opponentCatalogue[i])) unlockCost(i),
-    ].fold(0, (a, b) => a + b);
+  for (var i = 0; i < opponentCatalogue.length; i++)
+    if (!isFree(opponentCatalogue[i])) unlockCost(i),
+].fold(0, (a, b) => a + b);
 
 /// One completed game, reduced to what progression cares about.
 ///
@@ -65,13 +65,32 @@ int get fullRosterCost => [
 /// document is. The app maps its stored games onto this, the same way it maps
 /// them onto `RatedGame` for the rating fold.
 class ScoredGame {
-  const ScoredGame({required this.rosterIndex, required this.won});
+  const ScoredGame({
+    required this.rosterIndex,
+    required this.won,
+    required this.movedSecond,
+    required this.completedAt,
+  });
 
   /// The opponent's ordinal position in the catalogue.
   final int rosterIndex;
 
   /// Whether the player won. Draws and losses are false and pay nothing.
   final bool won;
+
+  /// Whether the player was the **second** to move, which one quest family
+  /// asks for. Already on every stored game as the two seat fields, so it
+  /// costs nothing to carry (spec §7.4).
+  final bool movedSecond;
+
+  /// When it finished, **in local time**, or null if the record has no
+  /// completion time. Converting to local is the app's job: this package may
+  /// not read a clock and may not guess a zone either (spec §9.2).
+  ///
+  /// Required rather than defaulted, though only the quest fold reads it. A
+  /// default would let the app forget to map it and the day-counting family
+  /// would silently never fire — the compiler is cheaper than that test.
+  final DateTime? completedAt;
 }
 
 /// Points earned: a fold over the games and **nothing else**.

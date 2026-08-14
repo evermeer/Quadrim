@@ -34,8 +34,20 @@ Future<LocalGameRepository> _repository() async {
   return repository;
 }
 
-void _phone(WidgetTester tester, {double textScale = 1}) {
-  tester.view.physicalSize = const Size(1080, 2400);
+/// Taller than any real phone, on purpose.
+///
+/// These tests ask what the screen *says*, and a sliver list builds only what
+/// fits: once ticket 033 put a quests section above the game lists, a finder
+/// for a row below the fold matched nothing, because the row was not merely
+/// off screen but unbuilt. Scrolling in every one of eighteen tests would have
+/// tested the scroll rather than the content.
+///
+/// What this viewport is *not* is a claim that everything fits on a phone. It
+/// does not, and it is not meant to — the screen scrolls. Layout at real sizes
+/// and at the largest font scale is ticket 035's six-section test and ticket
+/// 021's audit, both of which use a real phone and would catch what this hides.
+void _phone(WidgetTester tester, {double textScale = 1, double height = 3600}) {
+  tester.view.physicalSize = Size(1080, height);
   tester.view.devicePixelRatio = 2.5;
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.view.reset);
@@ -392,7 +404,12 @@ void main() {
   testWidgets('is readable at the largest system font scale', (tester) async {
     // The screen must survive a 2x scale without overflowing, which is what
     // criterion 23 asks for and what a Column of fixed rows would fail.
-    _phone(tester, textScale: 2);
+    //
+    // On a **real** phone, not the tall viewport the rest of this file uses to
+    // keep rows built: a taller screen is exactly what relieves the pressure
+    // this test exists to apply, so borrowing it would leave the criterion
+    // asserted and unproven.
+    _phone(tester, textScale: 2, height: 2400);
     final repo = await _repository();
     await _completedGame(repo, botId: sable.id, rating: sable.rating);
     await _pumpHome(tester, repo);

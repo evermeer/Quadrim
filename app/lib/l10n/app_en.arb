@@ -620,5 +620,97 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "quests": "Quests",
+  "@quests": {
+    "description": "Heading of the section listing the quests closest to completion."
+  },
+  "questFirstWin": "First win against {name}",
+  "@questFirstWin": {
+    "description": "Quest name: beat one opponent for the first time.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "questFirstWinSecond": "First win as second player against {name}",
+  "@questFirstWinSecond": {
+    "description": "Quest name: beat one opponent for the first time while moving second, which is the harder side in Qubic.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "questGamesInDay": "{count} games in one day",
+  "@questGamesInDay": {
+    "description": "Quest name: finish this many games on one local day.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "questDaysInRow": "{count} days in a row",
+  "@questDaysInRow": {
+    "description": "Quest name: play on this many consecutive local days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "questProgressValue": "{current} of {target}",
+  "@questProgressValue": {
+    "description": "The progress bar's meaning as a number, so the bar is never the only way to read it.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "questSemantics": "{name}. {current} of {target}.",
+  "@questSemantics": {
+    "description": "What a screen reader hears for an unfinished quest: state with progress, not decoration.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "current": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "questAchievedTitle": "Achieved",
+  "@questAchievedTitle": {
+    "description": "Heading above the quests one finished game just achieved."
+  },
+  "questAward": "+{points}",
+  "@questAward": {
+    "description": "What a quest paid, shown beside its name at the end of a game.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "questAwardSemantics": "{name}. Achieved, {points} points.",
+  "@questAwardSemantics": {
+    "description": "What a screen reader hears for a quest just achieved.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "points": {
+        "type": "int"
+      }
+    }
   }
 }

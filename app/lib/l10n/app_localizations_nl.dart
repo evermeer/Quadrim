@@ -734,4 +734,50 @@ class AppLocalizationsNl extends AppLocalizations {
 
     return 'Op slot. $costString punten, je hebt er $haveString.';
   }
+
+  @override
+  String get quests => 'Opdrachten';
+
+  @override
+  String questFirstWin(String name) {
+    return 'Eerste winst tegen $name';
+  }
+
+  @override
+  String questFirstWinSecond(String name) {
+    return 'Eerste winst als tweede speler tegen $name';
+  }
+
+  @override
+  String questGamesInDay(int count) {
+    return '$count partijen op één dag';
+  }
+
+  @override
+  String questDaysInRow(int count) {
+    return '$count dagen op rij';
+  }
+
+  @override
+  String questProgressValue(int current, int target) {
+    return '$current van $target';
+  }
+
+  @override
+  String questSemantics(String name, int current, int target) {
+    return '$name. $current van $target.';
+  }
+
+  @override
+  String get questAchievedTitle => 'Behaald';
+
+  @override
+  String questAward(int points) {
+    return '+$points';
+  }
+
+  @override
+  String questAwardSemantics(String name, int points) {
+    return '$name. Behaald, $points punten.';
+  }
 }

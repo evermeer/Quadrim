@@ -26,7 +26,11 @@ import 'documents.dart';
 /// folded is worse than one whose oldest games are worth zero.
 List<ScoredGame> scoredGamesFrom(List<GameDocument> completed) {
   final scored = <ScoredGame>[];
-  for (final game in completed) {
+  // Oldest first. Points do not care, but the quest fold does: the volume
+  // family awards on the day it first fired and needs to know which games got
+  // there. `loadCompletedGames` returns most recent first, the same inversion
+  // `rating_fold.dart` makes for the same reason.
+  for (final game in completed.reversed) {
     if (game.mode != GameMode.vsComputer) continue;
     final result = game.result;
     if (result == null) continue;
@@ -38,10 +42,23 @@ List<ScoredGame> scoredGamesFrom(List<GameDocument> completed) {
       rosterIndex: index,
       won: result.outcome != GameOutcome.draw &&
           result.winnerSeat == game.playerSeat,
+      movedSecond: game.playerSeat != game.startingSeat,
+      // Local, because the quest that counts games in a day means the
+      // player's day. The package is not allowed to decide which day a UTC
+      // instant falls in, and it is right not to be.
+      completedAt: game.completedAt?.toLocal(),
     ));
   }
   return scored;
 }
+
+/// Every quest's standing, folded from the same list as everything else.
+///
+/// [today] is passed through rather than read here for the same reason it is a
+/// parameter of the package: a fixture must be able to put the player on any
+/// day it likes.
+List<QuestStatus> questsFrom(List<GameDocument> completed, DateTime today) =>
+    questStatuses(scoredGamesFrom(completed), today: today);
 
 /// The player's points, folded from the same list everything else on the main
 /// screen is folded from.

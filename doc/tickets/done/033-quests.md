@@ -46,3 +46,39 @@ Ordered after 032 and not dependent on it: the per-opponent quests are more mean
 - [ ] Pass-and-play games and the tutorial's practice game count toward no quest
 - [ ] Quests are announced to a screen reader as state with progress, not as decoration
 - [ ] All new strings are present in English and Dutch
+
+---
+
+## Closed
+
+All fifty-three quests exist and forty-five of them are evaluated. The eight
+consecutive-day rungs are defined here and left unevaluated on purpose — that
+is ticket 034, which owns the injected day boundary and the time-zone answer.
+They report as 0 of their target rather than being absent, so the rungs are
+visible from 0.1 and only the evaluator is missing.
+
+**The pricing rule is carried by the types.** No function in
+`quadrim_progression` accepts a rating or a rung, so no reward *can* be priced
+by how high the player has climbed. A per-opponent quest pays 2ⁱ whenever it is
+claimed; a volume quest pays its multiple × 2^round(mean roster index). Both
+rejected rules are pinned as tests rather than described in a comment: banking
+the four cheapest per-opponent quests is worth 15 points and not 4,194,304, and
+a hundred Pebble games in a day pays 4 whether or not the player has beaten
+Titan.
+
+Nothing is stored. `ScoredGame` gained `movedSecond` and `completedAt`, both
+**required** rather than defaulted, so the compiler — not a test — is what
+stops the app forgetting to map them and silently killing two quest families.
+
+The end-of-game acknowledgement is the difference between folding the quests
+with this game and without it. That is two folds of a small in-memory list and
+no new record.
+
+Three decisions came out of building it: D279 (a quest that fires pays at least
+one point), D280 (multiples are integers in quarters of a win), D281 (ties rank
+by roster order, not alphabetically — the first implementation opened the
+section with four opponents chosen by spelling).
+
+**Deferred, deliberately:** the volume family carries no restriction copy, per
+the ticket — it becomes subscriber-only by arithmetic when the meter arrives at
+0.4, and saying so now would be false for the whole closed test.

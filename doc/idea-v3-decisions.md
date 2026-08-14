@@ -539,6 +539,46 @@ The general lesson is the one D227 already states and this is the first instance
 
 ---
 
+## D279 — A quest that fires must pay at least one point
+
+**Question:** The volume family's cheapest rung pays a **quarter** of a win (§7.4's table: 5 games in a day is worth ¼). Priced by the opposition, five Pebble games are a quarter of a point, and integer arithmetic rounds that to nothing. What does the interface do with a quest that announces itself and pays zero?
+
+**Decision:** **Every quest that fires pays at least one point.** The award is `multipleQuarters × 2^index ÷ 4`, floored, and clamped up to 1.
+
+Zero is arithmetically honest and reads as a defect. An achievement that arrives with "+0" beside it is indistinguishable from a bug in the awarding code, and a player who saw it would be right to report one.
+
+The clamp cannot be farmed, because **a quest fires exactly once**. It is worth one point to the player who does five trivial games on their first day, and never again.
+
+**Cost:** The ¼ and ½ rungs are worth slightly more than the table says at the bottom of the roster — one point instead of a quarter or a half. Only the two lowest multiples against the two weakest opponents are affected; above index 2 the arithmetic is exact.
+
+---
+
+## D280 — Quest multiples are stored in quarters of a win
+
+**Question:** Two of the five volume rungs pay a fraction of a win. Store the multiple as a `double`, or as a rational?
+
+**Decision:** **An integer numerator over a fixed denominator of four** — `multipleQuarters`. Volume: 1, 2, 4, 8, 16. Streak: 4, 8, 16, 32, 48, 64, 96, 128. Both per-opponent families: 4, which is exactly one win against the opponent they name, so all four families run through one award function rather than two.
+
+A `double` multiple would put a floating-point rounding argument between a re-tune and a payout, in the one part of this project where the arithmetic is the product. §7.7 says these numbers are the most likely in the document to be wrong and the first to instrument; whoever changes them should be changing an integer.
+
+**Cost:** A denominator that has to stay 4. If a future rung needs a third of a win, the constant moves and every multiple is rescaled — mechanical, and the test file pins the payouts rather than the numerators, so it would catch a rescale done wrongly.
+
+---
+
+## D281 — Tied quests are ranked by roster order, not by id
+
+**Question:** The main screen shows the four quests closest to completion, ranked by percentage complete with ties going to the smaller absolute remainder (ticket 033). On a fresh install **forty** per-opponent quests are tied on both rules — all at 0 of 1. What breaks the tie?
+
+**Decision:** **Roster order**, weakest opponent first, with the id as a final tie-break only so the list cannot reshuffle between two identical rebuilds.
+
+The first implementation used the id alone, which is alphabetical: it opened the section with Basalt, Bramble, Clover and Corvus — four opponents picked by spelling, three of them locked. Roster order shows the player the cheapest things they could actually go and do next, which is the question the section exists to answer.
+
+**Cost:** None measured. It is a comparator clause, and the ordering is pinned by a test that names the four it expects.
+
+**A related observation that is not a defect.** One finished game puts the volume family at 1 of 5 — twenty per cent — which outranks every per-opponent quest still at zero, so a player who has played exactly one game sees four *games in one day* rungs and nothing else. That is the ticket's ranking rule working exactly as written, and the section diversifies as soon as anything else has progress on it. If it still reads badly with the whole main screen assembled, it belongs to ticket 035's restructure rather than to a rule change here.
+
+---
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

@@ -1231,6 +1231,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Locked. {cost} points, you have {have}.'**
   String lockedWithPrice(int cost, int have);
+
+  /// Heading of the section listing the quests closest to completion.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get quests;
+
+  /// Quest name: beat one opponent for the first time.
+  ///
+  /// In en, this message translates to:
+  /// **'First win against {name}'**
+  String questFirstWin(String name);
+
+  /// Quest name: beat one opponent for the first time while moving second, which is the harder side in Qubic.
+  ///
+  /// In en, this message translates to:
+  /// **'First win as second player against {name}'**
+  String questFirstWinSecond(String name);
+
+  /// Quest name: finish this many games on one local day.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} games in one day'**
+  String questGamesInDay(int count);
+
+  /// Quest name: play on this many consecutive local days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days in a row'**
+  String questDaysInRow(int count);
+
+  /// The progress bar's meaning as a number, so the bar is never the only way to read it.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {target}'**
+  String questProgressValue(int current, int target);
+
+  /// What a screen reader hears for an unfinished quest: state with progress, not decoration.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}. {current} of {target}.'**
+  String questSemantics(String name, int current, int target);
+
+  /// Heading above the quests one finished game just achieved.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieved'**
+  String get questAchievedTitle;
+
+  /// What a quest paid, shown beside its name at the end of a game.
+  ///
+  /// In en, this message translates to:
+  /// **'+{points}'**
+  String questAward(int points);
+
+  /// What a screen reader hears for a quest just achieved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}. Achieved, {points} points.'**
+  String questAwardSemantics(String name, int points);
 }
 
 class _AppLocalizationsDelegate

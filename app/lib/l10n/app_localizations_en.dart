@@ -733,4 +733,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return 'Locked. $costString points, you have $haveString.';
   }
+
+  @override
+  String get quests => 'Quests';
+
+  @override
+  String questFirstWin(String name) {
+    return 'First win against $name';
+  }
+
+  @override
+  String questFirstWinSecond(String name) {
+    return 'First win as second player against $name';
+  }
+
+  @override
+  String questGamesInDay(int count) {
+    return '$count games in one day';
+  }
+
+  @override
+  String questDaysInRow(int count) {
+    return '$count days in a row';
+  }
+
+  @override
+  String questProgressValue(int current, int target) {
+    return '$current of $target';
+  }
+
+  @override
+  String questSemantics(String name, int current, int target) {
+    return '$name. $current of $target.';
+  }
+
+  @override
+  String get questAchievedTitle => 'Achieved';
+
+  @override
+  String questAward(int points) {
+    return '+$points';
+  }
+
+  @override
+  String questAwardSemantics(String name, int points) {
+    return '$name. Achieved, $points points.';
+  }
 }

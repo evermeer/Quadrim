@@ -4,10 +4,13 @@ import 'dart:math';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_progression/quadrim_progression.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
+import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart';
+import '../home/quests_section.dart';
 import '../l10n/app_localizations.dart';
 import 'board_view.dart';
 import 'opponent_name.dart';
@@ -59,6 +62,7 @@ class GameScreen extends StatefulWidget {
     required this.repository,
     required this.gameId,
     this.random,
+    this.now,
     this.opponentMove = chooseMoveInBackground,
   });
 
@@ -68,6 +72,10 @@ class GameScreen extends StatefulWidget {
   /// Injected so a test can pin what the opponent plays. Null means a fresh
   /// unseeded source, which is what the app uses.
   final Random? random;
+
+  /// Local time, injected so a test can put the player on a chosen day. Read
+  /// only when the game ends, to fold the quests it achieved.
+  final DateTime Function()? now;
 
   /// How the opponent's move is computed. Defaults to a background isolate.
   final OpponentMove opponentMove;
@@ -84,6 +92,13 @@ class _GameScreenState extends State<GameScreen> {
   /// The computer-ladder rating either side of this game, computed once the
   /// game completes. Null while the game is running, or in pass-and-play.
   ({int before, int after})? _rating;
+
+  /// What this game achieved that the history before it had not.
+  ///
+  /// Derived by folding the quests twice — with this game and without it —
+  /// rather than by storing anything, which is the same discipline the rating
+  /// and the balance follow (spec §8.8). Empty until the game completes.
+  List<QuestStatus> _achieved = const [];
 
   /// True from the moment a move is dispatched until it has been stored and
   /// observed. It guards both directions:
@@ -121,6 +136,7 @@ class _GameScreenState extends State<GameScreen> {
       _subscription?.cancel();
       _game = null;
       _rating = null;
+      _achieved = const [];
       _busy = false;
       _review = null;
       _subscription =
@@ -141,14 +157,37 @@ class _GameScreenState extends State<GameScreen> {
     if (game.status == GameStatus.complete &&
         game.mode == GameMode.vsComputer &&
         _rating == null) {
-      unawaited(_loadRating());
+      unawaited(_loadOutcome());
     }
   }
 
-  Future<void> _loadRating() async {
+  /// The two things a finished game has to say about itself: what it did to
+  /// the rating, and what it achieved. One read of the history serves both.
+  Future<void> _loadOutcome() async {
     final completed = await widget.repository.loadCompletedGames();
     if (!mounted) return;
-    setState(() => _rating = computerRatingAround(completed, widget.gameId));
+    final today = (widget.now ?? DateTime.now)();
+    // The **prefix ending at this game**, not "everything except this game" —
+    // the same distinction `computerRatingAround` makes and for the same
+    // reason. Removing one game from the middle of the history asks "would
+    // this quest still stand without you", which five games on the same day
+    // all answer yes to: each of the five would claim the five-game rung on
+    // its own. Asking "what did the history not yet have before this move"
+    // credits the game that actually completed it, and keeps the answer stable
+    // when an old game is opened again from the history list.
+    //
+    // `completed` is most recent first, so the chronological prefix ending at
+    // this game is the suffix starting at it.
+    final index = completed.indexWhere((game) => game.id == widget.gameId);
+    final upTo = index < 0 ? completed : completed.sublist(index);
+    final before = index < 0 ? completed : completed.sublist(index + 1);
+    setState(() {
+      _rating = computerRatingAround(completed, widget.gameId);
+      _achieved = newlyAchieved(
+        points_fold.questsFrom(before, today),
+        points_fold.questsFrom(upTo, today),
+      );
+    });
   }
 
   bool _isOpponentsTurn(GameDocument game) =>
@@ -284,6 +323,7 @@ class _GameScreenState extends State<GameScreen> {
             : _GameBody(
                 game: game,
                 rating: _rating,
+                achieved: _achieved,
                 // Taps are the human's alone: a game against the computer
                 // must not let the player move for it while it thinks.
                 enabled: !_isOpponentsTurn(game),
@@ -301,6 +341,7 @@ class _GameBody extends StatelessWidget {
   const _GameBody({
     required this.game,
     required this.rating,
+    required this.achieved,
     required this.enabled,
     required this.onCellTap,
     required this.onRematch,
@@ -310,6 +351,10 @@ class _GameBody extends StatelessWidget {
 
   final GameDocument game;
   final ({int before, int after})? rating;
+
+  /// The quests this game just achieved, passed through to the result panel.
+  final List<QuestStatus> achieved;
+
   final bool enabled;
   final void Function(Cell cell) onCellTap;
   final VoidCallback onRematch;
@@ -402,7 +447,11 @@ class _GameBody extends StatelessWidget {
         // starts a new game, which is not what "step back through this one"
         // should have within reach.
         if (over && !reviewing)
-          _ResultPanel(game: game, rating: rating, onRematch: onRematch),
+          _ResultPanel(
+              game: game,
+              rating: rating,
+              achieved: achieved,
+              onRematch: onRematch),
       ],
     );
   }
@@ -503,11 +552,18 @@ class _ResultPanel extends StatelessWidget {
   const _ResultPanel({
     required this.game,
     required this.rating,
+    required this.achieved,
     required this.onRematch,
   });
 
   final GameDocument game;
   final ({int before, int after})? rating;
+
+  /// What this game achieved, acknowledged here rather than recorded silently
+  /// and rather than interrupting play — the game is over by the time this
+  /// panel exists, which is what the ticket asks for.
+  final List<QuestStatus> achieved;
+
   final VoidCallback onRematch;
 
   @override
@@ -547,6 +603,16 @@ class _ResultPanel extends StatelessWidget {
                 style: theme.textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
+            if (achieved.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(l10n.questAchievedTitle,
+                    style: theme.textTheme.titleSmall),
+              ),
+              for (final status in achieved)
+                _AchievedRow(status: status),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -566,6 +632,47 @@ class _ResultPanel extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One quest this game achieved, with what it paid.
+///
+/// The points are shown beside it rather than only added to a total, because
+/// a reward the player never sees arrive is indistinguishable from no reward.
+class _AchievedRow extends StatelessWidget {
+  const _AchievedRow({required this.status});
+
+  final QuestStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final name = questName(l10n, status.quest);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Semantics(
+        // `container: true` because the child is wholly excluded: without it
+        // there is no node of its own to carry the label, and the row is
+        // announced as nothing at all.
+        container: true,
+        label: l10n.questAwardSemantics(name, status.award),
+        child: ExcludeSemantics(
+          child: Row(
+            children: [
+              Icon(questIcon(status.quest.family),
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(child: Text(name, style: theme.textTheme.bodyMedium)),
+              const SizedBox(width: 8),
+              Text(l10n.questAward(status.award),
+                  style: theme.textTheme.labelLarge
+                      ?.copyWith(color: theme.colorScheme.primary)),
+            ],
+          ),
         ),
       ),
     );

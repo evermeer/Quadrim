@@ -8,6 +8,7 @@ import 'package:quadrim_progression/quadrim_progression.dart';
 import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../data/home_summary.dart';
+import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart' as fold;
 import '../game/game_screen.dart';
 import '../game/opponent_screen.dart';
@@ -16,6 +17,7 @@ import '../settings/settings_screen.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
 import 'finished_games.dart';
+import 'quests_section.dart';
 import 'rating_card.dart';
 import 'section_widgets.dart';
 import 'unlock_confirmation.dart';
@@ -40,6 +42,7 @@ class HomeScreen extends StatefulWidget {
     required this.settings,
     required this.unlocks,
     this.random,
+    this.now,
   });
 
   final GameRepository repository;
@@ -56,6 +59,14 @@ class HomeScreen extends StatefulWidget {
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
 
+  /// Local time, injected so a test can put the player on a chosen day.
+  ///
+  /// Only the quest fold reads it, and in 0.1 only its streak family will —
+  /// which ticket 034 evaluates. It is a parameter here for the same reason it
+  /// is one in the package: the calendar is the one thing a fixture cannot
+  /// arrange by writing games (spec §9.2).
+  final DateTime Function()? now;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -69,6 +80,11 @@ class _HomeScreenState extends State<HomeScreen> {
   List<GameDocument> _completedGames = const [];
   HomeSummary _summary = HomeSummary.empty;
   List<UnlockDocument> _unlockList = const [];
+
+  /// The four quests closest to completion, folded from the same list of
+  /// finished games as the rating and the balance. Nothing about them is
+  /// stored (spec §8.8).
+  List<QuestStatus> _quests = const [];
 
   /// True while a purchase is in flight, which is what stops a second tap
   /// buying a second time before the first write lands.
@@ -92,6 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _completedGames = games;
         _summary = HomeSummary.from(games);
         _deltas = fold.ratingDeltas(games);
+        _quests = closestQuests(
+            points_fold.questsFrom(games, (widget.now ?? DateTime.now)()));
       });
     });
     // After the first frame, not during it: showing a dialog needs a Navigator
@@ -268,6 +286,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           unlocked: _unlockedIds,
                           onUnlock: _unlocking ? null : _unlock,
                         ),
+                        // Not before the first finished game. "Closest to
+                        // completion" ranks fifty-three quests that are all at
+                        // zero, so the four it picks are arbitrary — and they
+                        // would push the empty state off the first screen,
+                        // which is the one moment it exists for.
+                        if (_completedGames.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          QuestsSection(quests: _quests),
+                        ],
                         if (_activeGames.isEmpty && _completedGames.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),

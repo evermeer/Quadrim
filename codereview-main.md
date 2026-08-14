@@ -3596,3 +3596,159 @@ fair-match band moved with them is the change working, not a regression.
 Six acceptance criteria in `doc/tickets/036-computer-ladder-seeds-at-800.md`,
 all passing. Spec criterion F9 ▲ now matches the code. `tool/check.sh` green
 with a captured exit code of 0; 259 app tests, 35 rating tests.
+
+---
+
+# Ticket 033 — Quests
+
+> Reviewed: 2026-08-14 · Base: `5402944` on `main` · Working-tree changes
+> Scope: the quest work only. Earlier ticket sections above are untouched.
+
+New: `packages/quadrim_progression/lib/src/quests.dart`,
+`packages/quadrim_progression/test/quests_test.dart`,
+`app/lib/home/quests_section.dart`, `app/test/quests_test.dart`.
+Modified: `points.dart`, `quadrim_progression.dart`, `points_test.dart`,
+`app/lib/data/points_fold.dart`, `app/lib/home/home_screen.dart`,
+`app/lib/game/game_screen.dart`, both `.arb` files,
+`app/test/home_screen_test.dart`.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 2 |
+| minor | 0 |
+| nit | 1 |
+
+Both major findings were in code written for this ticket and both are fixed
+here; the nit is recorded and left.
+
+---
+
+### [MAJOR] Every game of a qualifying day claimed the same volume quest — `bug`
+
+**File:** `app/lib/game/game_screen.dart:169` (as written before the fix)
+
+**Evidence, as it stood:**
+
+```dart
+final without = [
+  for (final game in completed)
+    if (game.id != widget.gameId) game,
+];
+_achieved = newlyAchieved(
+  points_fold.questsFrom(without, today),
+  points_fold.questsFrom(completed, today),
+);
+```
+
+**Problem:** "Everything except this game" asks *would this quest still stand
+without you*, and for a day of exactly five games all five answer no —
+removing any one of them drops the day to four. So each of the five, opened
+from the history list, announced that it had achieved the five-game rung.
+
+The per-opponent families hid the bug: a first win is achieved by exactly one
+game, so removing any other game changes nothing and the wrong question
+happens to give the right answer. Only the volume family, where a set of games
+earns one quest between them, exposes it.
+
+**Fix applied:** the **prefix ending at this game**, which is the distinction
+`computerRatingAround` already makes three functions away and for the same
+stated reason. `loadCompletedGames` returns most recent first, so the
+chronological prefix is the suffix starting at the game:
+
+```dart
+final index = completed.indexWhere((game) => game.id == widget.gameId);
+final upTo = index < 0 ? completed : completed.sublist(index);
+final before = index < 0 ? completed : completed.sublist(index + 1);
+```
+
+Nothing about the points changes — they are folded from the games once, so the
+old behaviour over-announced rather than over-paid. What it fixes is a
+statement to the player that was not true.
+
+Pinned by `app/test/quests_test.dart`, *only the game that completed a rung
+claims it*: the third of five announces nothing, the fifth announces the rung
+and its one point.
+
+---
+
+### [MAJOR] The largest-font-scale test was moved onto a viewport taller than any phone — `test-integrity`
+
+**File:** `app/test/home_screen_test.dart:49`
+
+**Evidence:**
+
+```dart
+void _phone(WidgetTester tester, {double textScale = 1, double height = 3600}) {
+  tester.view.physicalSize = Size(1080, height);
+```
+
+**Problem:** the quests section pushed the game rows below the fold, and a
+sliver list builds only what fits — eighteen tests began matching nothing
+because their rows were unbuilt rather than merely off screen. Raising the
+fixture viewport to 1440 dp fixed all eighteen and silently took *is readable
+at the largest system font scale* with it. That test exists to apply vertical
+pressure at 2× scale (criterion 23); a taller screen is precisely what
+relieves it, so the criterion would have stayed asserted and unproven.
+
+**Fix applied:** the height is a parameter, and the font-scale test asks for a
+real one:
+
+```dart
+_phone(tester, textScale: 2, height: 2400);
+```
+
+It passes on the real phone height with the quests section present. The tall
+default keeps its justification in a comment naming what it does not prove and
+which tickets do (035's six-section test, 021's audit).
+
+---
+
+### [NIT] Quest progress is folded with the wall clock captured at fold time — `style`
+
+**File:** `app/lib/home/home_screen.dart:112`
+
+**Evidence:**
+
+```dart
+_quests = closestQuests(
+    points_fold.questsFrom(games, (widget.now ?? DateTime.now)()));
+```
+
+**Problem:** the fold re-runs when a game finishes, so an app left open across
+midnight shows yesterday's day boundary until the next game.
+
+**Not fixed, deliberately.** Nothing 033 implements reads `today` — the volume
+family asks for the best day ever and the streak family is ticket 034's. The
+parameter exists now so that ticket adds a body rather than a signature. If
+034 needs the boundary to move without a game finishing, it owns that.
+
+---
+
+## Checked and clear
+
+- **A quest cannot fire twice or pay differently by when it is claimed.** A
+  per-opponent quest's award is `_award(4, quest.rosterIndex)` — a constant of
+  the quest, with no game and no history in it. `packages/…/test/quests_test.dart`
+  pins the failure D261 records: the four cheapest banked to rung 19 are worth
+  15 points, not 4,194,304.
+- **The volume family's qualifying games are deterministic.** `_volume` returns
+  at the *earliest* day reaching the target and takes that day's first `target`
+  games in completion order. Later games — on that day or any other — append
+  after them and cannot change the set. Pinned by *a day of a hundred games
+  does not price the five-game rung by its best games*.
+- **Reversing `scoredGamesFrom` broke no caller.** The two callers are
+  `pointsFrom`, a sum, and `questsFrom`, which needs exactly the new order.
+  `app/test/points_fold_test.dart:128` already asserted the sum is
+  order-independent and still passes.
+- **Day bucketing cannot mis-assign across UTC.** `points_fold.dart` converts
+  with `completedAt?.toLocal()` before the package sees it, and `_byDay` keys on
+  the local `year/month/day`. The package reads no clock and guesses no zone,
+  which is the rule it is under; the app is the only thing that knows the
+  player's day.
+- **The type-level rule holds.** No signature in `quadrim_progression` accepts a
+  rating or a rung. `ScoredGame`'s two new fields are **required** rather than
+  defaulted, so a forgotten mapping in the app is a compile error and not two
+  quest families that silently never fire.
