@@ -3208,3 +3208,115 @@ None surviving. One assumption of mine was wrong and the code was right.
 
 Shipped. Gate: `ALL CHECKS PASSED`. App 233 tests, engine 120, rating 35,
 linegen 8.
+
+---
+
+# Ticket 030 — Main screen decomposition
+
+Reviewed against `4ba67ad`. Working tree, six new files under `app/lib/home/` plus
+`home_screen.dart`. The `doc/` and `README.md` changes in the same tree belong to
+the specification and ticket-breakdown work and were out of scope.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 0 |
+| nit | 2 |
+
+The ticket's central claim is that the diff is **a move**. That is the thing worth
+verifying mechanically rather than by reading, so it was: every extracted class
+body was pulled from `HEAD:app/lib/home/home_screen.dart` and from its new file,
+whitespace-normalised, and compared after substituting the privacy prefix and the
+`super.key` insertion.
+
+| Extracted | Result |
+|---|---|
+| `RatingCard`, `OpponentSection`, `ActiveGameTile`, `FinishedGameTile` | identical |
+| `OpponentAvatarSlot`, `GameRow`, `RatingDelta` | identical |
+| `RatingPill`, `RatingBar`, `SectionHeading` | identical |
+| `signedDelta`, `opponentLabel`, `resultLabel` | identical |
+| `_gameSection` → `gameSectionSlivers` | identical apart from `_SectionHeading` → `SectionHeading` |
+| `_HomeScreenState` | identical once the helper moves out |
+
+`home_screen.dart` 769 → 280 lines. All 237 app tests pass with **no test file
+touched** (`git status --short app/test/` is empty), which is the criterion that
+actually distinguishes a move from a rewrite.
+
+## Findings
+
+### [NIT] Nine widgets gained `super.key`, which is not strictly "a move" — `style`
+
+**File:** `app/lib/home/rating_card.dart:16`
+
+**Evidence:**
+```dart
+class RatingCard extends StatelessWidget {
+  const RatingCard({super.key, required this.summary});
+```
+against the original `const _RatingCard({required this.summary});`
+
+**Problem:** The ticket says each body is unchanged "apart from imports and its
+privacy modifier". `super.key` is a third change, on nine widgets.
+
+**Fix:** None — it is forced rather than chosen. `flutter_lints` enables
+`use_key_in_widget_constructors`, which applies to public widgets and not to
+private ones, so making these public without a key parameter fails
+`flutter analyze`. It is behaviour-neutral: no call site passes a key, so every
+`key` stays null exactly as before. Recorded so the deviation is on the record
+rather than discovered by someone re-running the same comparison.
+
+### [NIT] `game_row.dart` is 218 lines against a stated ceiling of roughly 200 — `style`
+
+**File:** `app/lib/home/game_row.dart:1`
+
+**Evidence:** `wc -l app/lib/home/game_row.dart` → 218.
+
+**Problem:** The ticket asks that no new file exceed roughly 200 lines, on the
+grounds that a section wanting more is a sign it needs splitting further.
+
+**Fix:** Leave it. The file holds `GameRow`, `OpponentAvatarSlot`, `RatingDelta`
+and three label helpers, and roughly half its length is the doc comments that came
+with them — the reasoning about the 48 dp constraint (D189) and about the arrow's
+direction carrying meaning independently of colour (D124) is exactly the kind of
+comment this repository keeps. Splitting it further would separate `GameRow` from
+the helper functions only it calls. "Roughly" covers 9%.
+
+## Not findings, checked and cleared
+
+- **Import cycles.** None. The graph is a DAG with two leaves: `section_widgets` and
+  `rating_card` import nothing local; `game_row` → `section_widgets`;
+  `active_games`, `finished_games`, `opponent_section` → `game_row`; `home_screen`
+  imports the five sections. Verified by parsing the `import '<local>.dart'` edges.
+- **Localisation drift.** The set of `l10n.<key>` references across the six new
+  files plus `home_screen.dart` is exactly the set the original file had — nothing
+  added, nothing removed. That is criterion 5 of the ticket, mechanically.
+- **Semantics labels.** Unchanged, and this matters more than it looks: the
+  `Semantics(container: true, label: …)` / `ExcludeSemantics` pairing in
+  `RatingCard`, `OpponentSection` and `GameRow` is what keeps each row a single
+  announced node. All three came through the body comparison identical.
+- **Element identity and state preservation.** The extracted widgets' `runtimeType`
+  changed (`_RatingCard` → `RatingCard`), which `Widget.canUpdate` does compare.
+  No risk here: all ten are `StatelessWidget` with no state to preserve, and the
+  types change together across the whole tree in one build rather than one old and
+  one new type meeting at the same position.
+- **`OpponentAvatarSlot.size` and the label helpers became public.** A widening of
+  the API surface — `signedDelta`, `opponentLabel` and `resultLabel` are now
+  importable top-level functions rather than file-private. Unavoidable once the
+  callers moved to other files, and `resultLabel` in particular is one that ticket
+  035 will need from `finished_games.dart` anyway.
+- **`_OpponentSection` was extracted, not deleted.** Deliberate, per D277 — Your
+  Path replaces it in ticket 032, and deleting it here would leave the main screen
+  with a hole for two tickets in the one ticket whose whole discipline is that it
+  changes nothing.
+
+## Functional Validation
+
+No Jira issue key is present in the branch name (`main`) or in the commits since
+the merge base, and this repository tracks work in `doc/tickets/` rather than Jira.
+Validated against `doc/tickets/030-main-screen-decomposition.md` instead: all ten
+acceptance criteria pass, the last of them — `tool/check.sh` — green end to end
+(`ALL CHECKS PASSED`, exit 0), against a baseline run on the same tree before the
+change that was also green.
