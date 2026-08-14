@@ -192,3 +192,17 @@ Requested some small UI tweaks.
 
 
 
+
+## The documents
+
+The idea was written three times, and the versions are kept apart on purpose.
+
+| Document | What it is |
+|---|---|
+| [idea-v0.md](doc/history/idea-v0.md) | The original rough idea, as first written |
+| [idea-v1.md](doc/idea-v1.md) | That idea made unambiguous — but still carrying five open questions and a fallback ladder for the top opponent |
+| [idea-v1-spec.md](doc/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
+| [idea-v1-decisions.md](doc/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
+| **[idea-v2.md](doc/idea-v2.md)** | **v1 rewritten against everything the build settled.** No open functional questions. This is the one to start from |
+
+`idea-v2.md` is the interesting one if you want to build this yourself. It folds all 217 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
