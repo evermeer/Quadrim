@@ -25,5 +25,7 @@ The app has no analytics and no network, by design, and that must not change. So
   - [ ] Most testers never beat anything above Bramble → the ladder is mis-anchored; adjust configurations and published ratings in ticket 014 before 0.2
   - [ ] Day-10 screenshots show most testers stopped after day 2 → do not spend time on 0.2 polish; go straight at 0.3a
   - [ ] Fewer than half can name a human they would play → the paywall does not ship at 0.4 either, and human play stays free until a population exists
+- [ ] It measures **the median time to each unlock** and **the rung at which players stop** — spec gate R13. The progression numbers are the only ones in the specification derived from a stated target rather than measured, so these two are the first things to instrument, and the day-3 and day-10 screenshots already carry them
+- [ ] A threshold and a consequence exist for the ladder itself: **if no tester unlocks a single opponent, the ladder has failed** — that is success criterion G8, and it is the one behavioural signal that release 0.1's central feature works
 - [ ] Results are recorded somewhere durable alongside the decision each one triggered
 - [ ] No analytics, no network call, and no change to any store declaration is introduced by any of this

@@ -3,7 +3,7 @@
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D274**.
+Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D277**.
 
 Date: 2026-08-14
 Status: agreed, pre-implementation. No code written for any of it.
@@ -18,6 +18,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 | 6 | The roster rename | D257 |
 | 7 | v3 read back against the build | D258–D270 |
 | 8 | The specification | D271–D274 |
+| 9 | The ticket breakdown | D275–D277 |
 
 ---
 
@@ -473,6 +474,45 @@ New criteria are appended and marked ＋. Retired criteria would keep their id a
 - **"Use the Matt Skills to-spec skill."** Not available in this environment; the v1 spec's §12.5 recorded its own deviations from it. The requested section list — goal, scope, non-goals, exposed endpoints, data, acceptance criteria — is followed directly instead.
 
 **Cost:** None to the work, but a general lesson worth keeping: **a prompt reused across document versions carries its old assumptions silently.** Two of these three would have passed a casual reading and destroyed work, and neither would have failed a build. The v1 spec has the same hazard in the other direction — its §12.1 opens "Strategy A was chosen", meaning v1's strategy A, which is not this document's approach A.
+
+---
+
+# Group 9 — The ticket breakdown
+
+Taken while cutting [idea-v3-spec.md](idea-v3-spec.md) into `doc/tickets/`.
+
+## D275 — The breakdown covers the 0.1 remainder only
+
+**Question:** "Not yet implemented" in the spec includes 0.3a, 0.3b and 0.4 — accounts, the cloud repository, invites, push, chat, the human rating, server validation, subscriptions and the meter. Does the breakdown reach them?
+
+**Decision:** No. **Six new tickets, all 0.1**, plus the five already-open process tickets. Later releases are cut when their release is next, exactly as 0.1 was.
+
+Tickets 001–029 were all 0.1 and that was not an accident: a ticket written against a stack whose details are not yet chosen is a ticket that will be rewritten before it is built, and the rewriting costs more than the deferral. 0.3a's Firestore schema in particular is specified as a *contract* in spec §7.6 — the same flow tests as the local repository — precisely so that it can be designed natively when it arrives rather than being pre-cut now against guesses.
+
+**Cost:** The backlog does not show the whole road. Someone looking at `doc/tickets/` sees eleven items and the release plan says there are four releases after this one. The spec's §4.1 and §7.6 are where that shape lives, and they are linked from the tickets that need them.
+
+## D276 — Ticket 031 splits along the unlock/display seam
+
+**Question:** Spec §12 proposed 031 as one ticket covering the package, points, the unlock record, the purchase flow, Your Path, lock state and the confirmation, noting it "could split if it proves unwieldy". Small and independently shippable was asked for. Does it split?
+
+**Decision:** Yes, into two, and the four following tickets renumber to 032–035.
+
+- **031** — the package, points earned, the balance on the rating card
+- **032** — the unlock record, the purchase, lock state, Your Path, the confirmation
+
+Both ship without regression. That is the part worth checking rather than assuming: nothing is locked today, so 031 changes no opponent's availability and is purely additive. The counter-argument was D266's — a slice is only a slice when a player can actually buy something, and 031 alone shows a number with nothing to spend it on. That argument was about **slices versus bottom-up**, not about how thick a slice must be, and 031 is still a vertical slice: a pure package, a repository read and a screen, in one ticket.
+
+**Cost:** One release-shaped moment is split across two commits, so there is a build in which points accumulate and buy nothing. Acceptable for a closed test that has not started. The three-way split — package alone, then purchase, then display — was rejected: the middle ticket would have had no screen and the last no logic, which is approach A wearing a different name.
+
+## D277 — The by-opponent section survives until Your Path replaces it
+
+**Question:** Spec §12 put the deletion of `_OpponentSection` in ticket 030, the decomposition. Your Path arrives in 032. What happens to the main screen in between?
+
+**Decision:** **Extract it in 030, delete it in 032.** Spec §12's row for ticket 030 is corrected accordingly.
+
+Deleting it during the decomposition would leave the main screen with a hole for two tickets — a visible regression in exchange for nothing, in the one ticket whose entire discipline is that it changes no behaviour. It would also have made 030 unreviewable as a move: a reviewer checking that every hunk is a move cannot also be checking that one deletion is intentional.
+
+**Cost:** One file is created in 030 and removed in 032, which shows in the log as churn. Half a commit's worth, against a main screen that stays whole throughout.
 
 ---
 

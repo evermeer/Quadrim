@@ -4,7 +4,7 @@
 
 0.1 is a **private** release. It is not promoted to production and gets no public listing — that arrives with 0.3b. What this ticket closes is the quality of the build twelve real people are using, and the readiness of everything that follows.
 
-**Blocked by:** every other ticket in release 0.1.
+**Blocked by:** every other ticket in release 0.1 — which now means 015, 016, 021, 024 and 030–035. Tickets 017 and 023 are closed unbuilt (cancelled and absorbed respectively, D269) and do not gate this one.
 
 **Status:** ready-for-agent
 

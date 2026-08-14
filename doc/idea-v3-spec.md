@@ -4,7 +4,7 @@ The buildable form of [idea-v3.md](idea-v3.md), with the findings from [idea-v3-
 
 **This is a successor to [idea-v1-spec.md](tickets/done/idea-v1-spec.md), not a replacement for it.** Section numbers and criterion ids are preserved exactly, because both are cited from source comments (`spec §8.3`, `spec E7`, `criterion S4`, `spec D2/S2`) and from twenty-two completed tickets. Criteria whose *content* changed keep their id and change their text; new criteria are appended; nothing is renumbered. Progression takes a new `P` prefix (D271, D272).
 
-Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D274, continuing [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) D01–D217.
+Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D277, continuing [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) D01–D217.
 
 Date: 2026-08-14
 Status: 0.1 built through ticket 029 and playable. Progression specified here and not yet built.
@@ -74,8 +74,8 @@ Twenty-two tickets are complete. Every remaining gap in 0.1 is §7 of idea-v3.md
 | Settings, attribution | §11.3 | **Built** — ticket 028 |
 | Placeholder avatars, opponent content | §11.3 | **Built** — ticket 029 |
 | Build gate | §10 | **Built** — ticket 001 |
-| **Points, unlocks, quests, streaks** | **§7.3, §8.8, §11.6** | **Not built** — tickets 031–033 |
-| **Your Path, trend graph, quests section, end-of-game panel** | **§11.3** | **Not built** — tickets 030, 034 |
+| **Points, unlocks, quests, streaks** | **§7.3, §8.8, §11.6** | **Not built** — tickets 031–034 |
+| **Your Path, trend graph, quests section, end-of-game panel** | **§11.3** | **Not built** — tickets 030, 032, 035 |
 | Store accounts, closed test, survey | §11.7 | **Not built** — tickets 015, 016, 024 |
 
 ## 5. Non-Goals
@@ -610,17 +610,20 @@ Approach **B** with main-screen approach **M2** (D266, D267). Bottom-up was reje
 
 | Ticket | Contains | Criteria it closes |
 |---|---|---|
-| **030** | Main-screen decomposition. `home_screen.dart` splits into per-section files; `_OpponentSection` is deleted since Your Path replaces it; `HomeSummary.byOpponent` is kept, because Your Path needs exactly those records. **No behaviour change, no new strings** | none — the diff is provably a move |
-| **031** | `quadrim_progression`; point values and unlock costs; the unlock record and its persistence; the balance on the rating card; Your Path centred on the next unlock; lock state, price and progress in opponent selection; the unlock confirmation | P1–P8, P22, U13, U14, D10, D11, P21 |
-| **032** | All fifty-three quests; the four-closest section; awards priced by the opposition; acknowledgement at end of game | P9–P15, P20, U17, U18 |
-| **033** | Streaks: the eight rungs, the injected day boundary, reset across month, year and time-zone boundaries | P16–P19 |
-| **034** | The ten-game trend graph; the finished-game row changes; the end-of-game panel; the portrait lock | U10, U15, U19, U20, U21 |
+| **030** | Main-screen decomposition. `home_screen.dart` splits into per-section files. `_OpponentSection` is **extracted, not deleted** — 032 removes it when Your Path replaces it (D277). `HomeSummary.byOpponent` is kept, because Your Path needs exactly those records. **No behaviour change, no new strings** | none — the diff is provably a move |
+| **031** | `quadrim_progression`; point values and unlock costs; points earned as a fold; the balance on the rating card | P1–P4, P15, P20, P22 |
+| **032** | The unlock record and its persistence; the purchase; Your Path centred on the next unlock; lock state, price and progress in opponent selection; the unlock confirmation | P5–P8, P21, U13, U14, U22, D10, D11 |
+| **033** | All fifty-three quests; the four-closest section; awards priced by the opposition; acknowledgement at end of game | P9–P14, U17, U18 |
+| **034** | Streaks: the eight rungs, the injected day boundary, reset across month, year and time-zone boundaries | P16–P19 |
+| **035** | The ten-game trend graph; the finished-game row changes; the end-of-game panel; the portrait lock | U10, U15, U19, U20, U21 |
 
-Each of 031–033 crosses every layer, so a real unlock is on screen after the first of them. The package's *shape* — the signatures in §7.3 — is fixed before 031 starts, so the three passes extend a settled interface rather than renegotiating it.
+Each of 031–034 crosses every layer, so a real unlock is on screen after 032. The package's *shape* — the signatures in §7.3 — is fixed before 031 starts, so the passes after it extend a settled interface rather than renegotiating one.
 
-**Ticket 030 is one commit that moves code and changes nothing.** That looks like wasted effort in a log and is the opposite: it is what makes the four diffs after it legible.
+**031 was one ticket in an earlier draft of this section and is now two** (D276). Both halves ship without regression, which is the part worth checking rather than assuming: nothing is locked today, so 031 changes no opponent's availability and is purely additive.
 
-Disposition of the tickets already open: **015** starts immediately and is the longest lead time on the critical path; **016** sequences behind 031–034; **017** is cancelled by §5.2; **021**'s blockers re-point from 017 and 023 to 030–034 and it gains U21; **022** depends on everything; **023** is absorbed into 032; **024** gains R13.
+**Ticket 030 is one commit that moves code and changes nothing.** That looks like wasted effort in a log and is the opposite: it is what makes the five diffs after it legible.
+
+Disposition of the tickets already open: **015** starts immediately and is the longest lead time on the critical path; **016** sequences behind 030–035 and gains R12; **017** is cancelled by §5.2 and closed unbuilt; **021**'s blockers re-point from 017 and 023 to 032, 033 and 035, and it gains U21 and U22; **022** depends on everything; **023** is absorbed into 033 and closed unbuilt; **024** gains R13 and a threshold for G8. Later releases are not cut into tickets here (D275).
 
 ## 13. Further Notes
 

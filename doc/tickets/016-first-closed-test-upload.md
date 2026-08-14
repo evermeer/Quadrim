@@ -8,7 +8,9 @@ Recruiting twelve people who will actually install and open the app is a real ta
 
 **Staying private does not remove Play's declaration obligations.** Data Safety, content rating and the target-audience declaration are required before publishing to *any* track. What being private removes is the public listing and public discoverability.
 
-**Blocked by:** 011 — Opponent selection; 013 — Main screen; 015 — Store accounts and release signing; 018 — Tutorial: rules and controls; 024 — Closed-test survey and thresholds; 028 — Settings screen; 029 — Placeholder art and opponent content
+**Blocked by:** 015 — Store accounts and release signing; 024 — Closed-test survey and thresholds; 030–035 — the progression tickets. (011, 013, 018, 028 and 029 are done.)
+
+**The fourteen-day clock waits for progression (D259).** That is a deliberate cost to the critical path and the reason ticket 015 should already be underway — it is waiting time rather than effort and has no code dependency. The argument for waiting is that a fourteen-day closed test *is* a measurement of whether people come back, so running it against a build without the unlock ladder would measure a product nobody intends to ship.
 
 **Status:** ready-for-agent
 
@@ -26,4 +28,5 @@ Recruiting twelve people who will actually install and open the app is a real ta
 - [ ] Tester feedback is collected somewhere durable rather than in scattered messages
 - [ ] Testers are given a written privacy notice at install: what is collected (their Play enrolment address, survey answers, two statistics screenshots), why, who holds it, how long, and how to withdraw. **This is the developer's processing, not the app's, and it is the only personal data release 0.1 involves**
 - [ ] Whether DSA trader-verification duties apply to closed-testing-only distribution is checked and recorded with a date — if they do, they apply here and not only at 0.4
+- [ ] The build published to the track contains points, unlocks, quests and streaks — spec gate R12
 - [ ] The build is **not** promoted to production

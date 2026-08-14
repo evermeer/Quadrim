@@ -4,7 +4,9 @@
 
 Every previous ticket carried its own accessibility criteria, so this is a verification pass rather than a build — but it is kept as a separate ticket because cross-screen flows are exactly what per-ticket checks miss.
 
-**Blocked by:** 017 — Large-screen landscape layout; 020 — Tutorial: interactive practice game; 023 — Per-opponent milestones; 027 — Rating against the computer; 028 — Settings screen
+**Blocked by:** 020 — Tutorial: interactive practice game (done); 027 — Rating against the computer (done); 028 — Settings screen (done); 032 — Unlocks, and Your Path; 033 — Quests; 035 — The main screen and the end of a game, finished
+
+**Blockers changed (D269).** This ticket previously blocked on 017 and 023. Ticket 017 is cancelled unbuilt and 023 is absorbed into 033, so neither will ever complete. The progression tickets replace them, and they bring the two hardest accessibility surfaces in the release with them: a three-tile row with an avatar, a name, a rating, a record, stars and a price in each tile, and a trend graph whose meaning must not rest on the red/green pair.
 
 **Status:** ready-for-agent
 
@@ -15,6 +17,9 @@ Every previous ticket carried its own accessibility criteria, so this is a verif
 - [ ] Pieces remain distinguishable on every screen under simulation of the common forms of colour blindness
 - [ ] No information anywhere is conveyed by colour alone
 - [ ] Every screen is usable at the largest system font scale, with no clipped or overlapping text
+- [ ] **The main screen reaches its last row at the largest font scale on the smallest supported phone with all six sections present** — rating card, Your Path, games in progress, quests, finished games and the primary button. The three-tile Your Path row is the tightest thing in the release and needs its own test rather than a general sweep
+- [ ] A Your Path tile and a locked opponent row are each **one** accessibility node, announced once — not six separate readings of avatar, name, rating, record, stars and price
+- [ ] The trend graph's change is available as a signed number, and no element anywhere carries meaning by colour alone
 - [ ] Touch targets meet platform minimum sizes on the smallest supported phone
 - [ ] Contrast meets accepted guidelines in both light and dark themes
 - [ ] Findings that cannot be fixed within this ticket are recorded as follow-up work rather than left undocumented

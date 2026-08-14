@@ -22,9 +22,9 @@ The idea was written three times, and the versions are kept apart on purpose.
 | **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
 | [idea-v3-brainstorming.md](doc/idea-v3-brainstorming.md) | v3 read back against the twenty-two tickets already built — where the spec and the code disagree, and in what order the rest gets built |
 | **[idea-v3-spec.md](doc/idea-v3-spec.md)** | **v3 turned into a spec with acceptance criteria — the successor to idea-v1-spec.md, preserving its section numbers and criterion ids** |
-| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D274. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
+| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D277. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 274 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 277 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
 
 ## Starting the Vibe coding workflow
 
@@ -251,5 +251,20 @@ acceptance criteria. Ask clarifying questions and don't finalize the spec until
 any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
 Use the sugested bots Pebble, Mote, Bramble, Kestrel, Marlin and Onyx.
 Put the result in the file doc/idea-v3-spec.md
+Add all decisions to the file doc/idea-v3-decisions.md
+```
+
+Now crete the new tickets
+
+**Prompt**
+```
+Use the Matt Skills to-tickets skill to break what not yet implemented indoc/idea-v3-spec.md 
+into small, independently shippable tickets with dependencies and acceptance
+criteria, ordered so each can be built, tested, and merged on its own. Ask
+clarifying questions about scope or dependencies before finalizing the
+breakdown. Store all tickets as a markdown file in the ./doc/tickets folder, 
+with a name that starts with the ticket number and a dash, followed by a short 
+description of the ticket. For example, 001-setup-project.md. Put the result in 
+the ./doc/tickets folder.
 Add all decisions to the file doc/idea-v3-decisions.md
 ```
