@@ -254,6 +254,18 @@ abstract class AppLocalizations {
   /// **'Your rating against the computer, on this device only.'**
   String get computerRatingNote;
 
+  /// Label above the points balance on the main screen. Points are earned by winning and spent on unlocking opponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get pointsHeading;
+
+  /// A points balance on its own, formatted with the locale's thousands separator. The top of the ladder is seven digits, so the separator is not decoration.
+  ///
+  /// In en, this message translates to:
+  /// **'{points}'**
+  String pointsValue(int points);
+
   /// No description provided for @passAndPlayNoRating.
   ///
   /// In en, this message translates to:

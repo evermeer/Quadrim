@@ -34,6 +34,15 @@ const String kGuestOpponent = 'guest';
 /// The opponent value for a computer opponent, e.g. `bot:onyx`.
 String botOpponent(String botId) => 'bot:$botId';
 
+/// The inverse of [botOpponent]: the catalogue id inside a stored `opponent`,
+/// or null when the game was not against a computer opponent at all.
+///
+/// Lives beside the function it undoes so the prefix is written once on each
+/// side. `bot:` is a stored format, and the two places that must agree about
+/// it are here.
+String? botIdOf(String opponent) =>
+    opponent.startsWith('bot:') ? opponent.substring(4) : null;
+
 T _enumByName<T extends Enum>(List<T> values, Object? name, T fallback) {
   for (final v in values) {
     if (v.name == name) return v;

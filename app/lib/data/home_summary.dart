@@ -1,6 +1,8 @@
 import 'documents.dart';
-// Prefixed because the summary has a field of the same name — the field is
-// the fold's result, and the two must not be confusable at the call site.
+// Both prefixed, and neither prefix may be the field's name: the summary has a
+// `points` field and a `computerRating` field, and an import prefix that
+// collides with either shadows it at exactly the line that sets it.
+import 'points_fold.dart' as points_fold;
 import 'rating_fold.dart' as fold;
 
 /// Everything the main screen says about finished games, derived from **one**
@@ -20,6 +22,7 @@ class HomeSummary {
     required this.losses,
     required this.draws,
     required this.computerRating,
+    required this.points,
     required this.byOpponent,
   });
 
@@ -35,6 +38,15 @@ class HomeSummary {
   /// The player's live rating on the computer ladder, folded from the same
   /// list rather than read from anywhere.
   final int computerRating;
+
+  /// What the player has earned and can spend, folded from the same list.
+  ///
+  /// Never stored, for the same reason the rating is not (spec §8.8). Unlike
+  /// the rating it needs no stored anchor: a win pays by the opponent's
+  /// position in the roster, and an ordinal is not something a recalibration
+  /// moves. From ticket 032 the *balance* is this minus what has been spent;
+  /// until unlocks exist the two are the same number.
+  final int points;
 
   /// One record per computer opponent ever played, weakest first.
   final List<OpponentRecord> byOpponent;
@@ -90,6 +102,7 @@ class HomeSummary {
       losses: losses,
       draws: draws,
       computerRating: fold.computerRating(completed),
+      points: points_fold.pointsFrom(completed),
       byOpponent: List.unmodifiable(byOpponent),
     );
   }

@@ -26,6 +26,17 @@
   "firstMoveAlternating": "Aftrap: {who} — bij een revanche wisselt de aftrap",
   "computerRatingChange": "Computerrating {rating} ({delta})",
   "computerRatingNote": "Je rating tegen de computer, alleen op dit toestel.",
+  "pointsHeading": "Punten",
+  "pointsValue": "{points}",
+  "@pointsValue": {
+    "description": "A points balance on its own, formatted with the locale's thousands separator. The top of the ladder is seven digits, so the separator is not decoration.",
+    "placeholders": {
+      "points": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "passAndPlayNoRating": "Samen op één toestel telt niet mee voor je rating.",
   "rematch": "Revanche",
   "resign": "Opgeven",

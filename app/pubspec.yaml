@@ -15,6 +15,8 @@ dependencies:
   path_provider: ^2.1.5
   quadrim_engine:
     path: ../packages/quadrim_engine
+  quadrim_progression:
+    path: ../packages/quadrim_progression
   quadrim_rating:
     path: ../packages/quadrim_rating
 

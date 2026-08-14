@@ -102,6 +102,18 @@ class AppLocalizationsNl extends AppLocalizations {
       'Je rating tegen de computer, alleen op dit toestel.';
 
   @override
+  String get pointsHeading => 'Punten';
+
+  @override
+  String pointsValue(int points) {
+    final intl.NumberFormat pointsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String pointsString = pointsNumberFormat.format(points);
+
+    return '$pointsString';
+  }
+
+  @override
   String get passAndPlayNoRating =>
       'Samen op één toestel telt niet mee voor je rating.';
 

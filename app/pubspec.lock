@@ -311,6 +311,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0"
+  quadrim_progression:
+    dependency: "direct main"
+    description:
+      path: "../packages/quadrim_progression"
+      relative: true
+    source: path
+    version: "1.0.0"
   quadrim_rating:
     dependency: "direct main"
     description:

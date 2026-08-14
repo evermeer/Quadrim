@@ -24,10 +24,18 @@
   "@cellSemantics": {
     "description": "Screen reader label for one board cell. state is one of cellEmpty/cellLight/cellDark.",
     "placeholders": {
-      "layer": {"type": "int"},
-      "row": {"type": "int"},
-      "column": {"type": "int"},
-      "state": {"type": "String"}
+      "layer": {
+        "type": "int"
+      },
+      "row": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
     }
   },
   "cellEmpty": "empty",
@@ -36,7 +44,9 @@
   "layerLabel": "Layer {layer}",
   "@layerLabel": {
     "placeholders": {
-      "layer": {"type": "int"}
+      "layer": {
+        "type": "int"
+      }
     }
   },
   "backToHome": "Back",
@@ -52,14 +62,18 @@
   "@botThinking": {
     "description": "Shown while a computer opponent decides its move. Bot names are never translated.",
     "placeholders": {
-      "bot": {"type": "String"}
+      "bot": {
+        "type": "String"
+      }
     }
   },
   "youWin": "You win!",
   "youLose": "{bot} wins!",
   "@youLose": {
     "placeholders": {
-      "bot": {"type": "String"}
+      "bot": {
+        "type": "String"
+      }
     }
   },
   "botPebble": "Pebble",
@@ -72,26 +86,48 @@
   "@firstMoveRandom": {
     "description": "Caption explaining who opens a first game and why. who is You, a bot name, Light or Dark.",
     "placeholders": {
-      "who": {"type": "String"}
+      "who": {
+        "type": "String"
+      }
     }
   },
   "firstMoveAlternating": "Opening move: {who} — the start alternates in a rematch",
   "@firstMoveAlternating": {
     "placeholders": {
-      "who": {"type": "String"}
+      "who": {
+        "type": "String"
+      }
     }
   },
   "computerRatingChange": "Computer rating {rating} ({delta})",
   "@computerRatingChange": {
     "description": "Result screen rating line. delta is a preformatted signed number such as +12 or -8.",
     "placeholders": {
-      "rating": {"type": "int"},
-      "delta": {"type": "String"}
+      "rating": {
+        "type": "int"
+      },
+      "delta": {
+        "type": "String"
+      }
     }
   },
   "computerRatingNote": "Your rating against the computer, on this device only.",
   "@computerRatingNote": {
     "description": "Must make clear this is not a universal rating (spec: two independent ladders)."
+  },
+  "pointsHeading": "Points",
+  "@pointsHeading": {
+    "description": "Label above the points balance on the main screen. Points are earned by winning and spent on unlocking opponents."
+  },
+  "pointsValue": "{points}",
+  "@pointsValue": {
+    "description": "A points balance on its own, formatted with the locale's thousands separator. The top of the ladder is seven digits, so the separator is not decoration.",
+    "placeholders": {
+      "points": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   },
   "passAndPlayNoRating": "No rating changes in pass and play.",
   "rematch": "Rematch",
@@ -103,16 +139,24 @@
   "@opponentRowSemantics": {
     "description": "One row of the main screen that names a computer opponent — the by-opponent breakdown, and each game in progress or finished. Read as one fact. Carries the rating because the row shows it as a pill, and the breakdown also as a bar, neither of which a screen reader can see. The third placeholder is whatever that row's right-hand fact is: a win-loss record, moves played, or how the game ended.",
     "placeholders": {
-      "name": { "type": "String" },
-      "rating": { "type": "int" },
-      "record": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "rating": {
+        "type": "int"
+      },
+      "record": {
+        "type": "String"
+      }
     }
   },
   "ratingValue": "{rating}",
   "@ratingValue": {
     "description": "A rating on its own. Deliberately unformatted: a rating is written 1200, not 1,200 or 1.200, in every locale this ships in.",
     "placeholders": {
-      "rating": {"type": "int"}
+      "rating": {
+        "type": "int"
+      }
     }
   },
   "newGame": "New game",
@@ -128,9 +172,15 @@
   "recordLine": "{wins} won · {losses} lost · {draws} drawn",
   "@recordLine": {
     "placeholders": {
-      "wins": {"type": "int"},
-      "losses": {"type": "int"},
-      "draws": {"type": "int"}
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "draws": {
+        "type": "int"
+      }
     }
   },
   "recordEmpty": "No finished games against the computer yet.",
@@ -139,10 +189,18 @@
   "@opponentRecord": {
     "description": "One opponent's record: wins-losses-draws.",
     "placeholders": {
-      "wins": {"type": "int"},
-      "losses": {"type": "int"},
-      "draws": {"type": "int"},
-      "played": {"type": "int"}
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "draws": {
+        "type": "int"
+      },
+      "played": {
+        "type": "int"
+      }
     }
   },
   "inProgress": "In progress",
@@ -150,7 +208,9 @@
   "movesPlayed": "{count, plural, =1{1 move played} other{{count} moves played}}",
   "@movesPlayed": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "resultWon": "Won",
@@ -187,12 +247,20 @@
   "yourRating": "Your rating: {rating}",
   "@yourRating": {
     "description": "Shown on the opponent list so the choice can be made against the player's own strength.",
-    "placeholders": { "rating": { "type": "int" } }
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
   },
   "opponentCount": "{count}",
   "@opponentCount": {
     "description": "How many opponents a collapsed tier holds. A bare number, routed through l10n like ratingValue so it is formatted for the locale rather than interpolated in code.",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "matchEven": "Even match",
   "@matchEven": {
@@ -204,11 +272,21 @@
   "@opponentSemantics": {
     "description": "The whole of one opponent row, announced as a single unit so a screen reader user hears name, tier and strength together rather than swiping through four fragments.",
     "placeholders": {
-      "name": { "type": "String" },
-      "tier": { "type": "String" },
-      "rating": { "type": "int" },
-      "match": { "type": "String" },
-      "blurb": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "tier": {
+        "type": "String"
+      },
+      "rating": {
+        "type": "int"
+      },
+      "match": {
+        "type": "String"
+      },
+      "blurb": {
+        "type": "String"
+      }
     }
   },
   "tierNovice": "Novice",
@@ -252,8 +330,12 @@
   "@tutorialStepOf": {
     "description": "Tutorial progress. Also the screen-reader label for the progress bar, which carries no meaning on its own.",
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "tutorialNext": "Next",
@@ -329,27 +411,49 @@
   "@practiceHintWhere": {
     "description": "Where a hint is pointing, in the same words the board's own cell labels use, so a screen reader user can find it.",
     "placeholders": {
-      "layer": {"type": "int"},
-      "row": {"type": "int"},
-      "column": {"type": "int"}
+      "layer": {
+        "type": "int"
+      },
+      "row": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      }
     }
   },
   "practiceHintWin": "You can win now — {where} completes a line.",
   "@practiceHintWin": {
     "description": "Hints name a concrete reason, never generic encouragement. where comes from practiceHintWhere.",
-    "placeholders": {"where": {"type": "String"}}
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "practiceHintBlock": "Block at {where}, or your opponent completes a line there on their next move.",
   "@practiceHintBlock": {
-    "placeholders": {"where": {"type": "String"}}
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "practiceHintFork": "Play {where}. It leaves two lines each needing one more piece, and only one of them can be blocked.",
   "@practiceHintFork": {
-    "placeholders": {"where": {"type": "String"}}
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "practiceHintBuild": "Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.",
   "@practiceHintBuild": {
-    "placeholders": {"where": {"type": "String"}}
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "review": "Review the moves",
   "@review": {
@@ -363,8 +467,12 @@
   "@moveOf": {
     "description": "Where the scrubber is. Move 0 is the empty board before anybody has played.",
     "placeholders": {
-      "move": {"type": "int"},
-      "total": {"type": "int"}
+      "move": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "reviewStart": "Before the first move",

@@ -8,9 +8,16 @@ cd "$(dirname "$0")/.."
 fail=0
 
 echo "== purity: pure packages must not depend on Flutter, Firebase, or IO =="
-for pkg in packages/quadrim_engine packages/quadrim_rating; do
+for pkg in packages/quadrim_engine packages/quadrim_rating packages/quadrim_progression; do
   # Runtime dependencies: the section between 'dependencies:' and the next top-level key.
   deps=$(awk '/^dependencies:/{f=1;next} /^[a-z_]+:/{f=0} f' "$pkg/pubspec.yaml" | sed 's/#.*//' | grep -v '^\s*$' || true)
+  # The one allowed edge in the repository: progression prices the roster, and
+  # the roster's *order* lives in the engine (D263). Allowed by name so that
+  # any other dependency still fails, and only in this direction — the reverse
+  # check below is what keeps it a direction rather than a coupling.
+  if [ "$pkg" = packages/quadrim_progression ]; then
+    deps=$(echo "$deps" | grep -vE '^[[:space:]]*(quadrim_engine:|path:[[:space:]]*\.\./quadrim_engine)[[:space:]]*$' || true)
+  fi
   if [ -n "$deps" ]; then
     echo "FAIL: $pkg declares runtime dependencies:"; echo "$deps"; fail=1
   fi
@@ -18,6 +25,16 @@ for pkg in packages/quadrim_engine packages/quadrim_rating; do
     echo "FAIL: $pkg imports a forbidden library (above)"; fail=1
   fi
 done
+
+# The edge runs one way only. spec §7.1 says the catalogue carries no `locked`
+# field, because the strength harness plays all twenty opponents against each
+# other and has no business holding an entitlement. An engine that imported
+# progression would be the first step back towards exactly that.
+if grep -rn "package:quadrim_progression" packages/quadrim_engine/lib packages/quadrim_rating/lib 2>/dev/null; then
+  echo "FAIL: a pure package imports quadrim_progression (above)."
+  echo "      Progression depends on the engine, never the reverse (D263)."
+  fail=1
+fi
 
 echo "== strings: no user-facing literals outside l10n =="
 # Text('...') / Text("...") with letters in app code. Generated l10n lives in
@@ -87,7 +104,7 @@ if [ -s app/untranslated.json ] && grep -q '"' app/untranslated.json; then
   cat app/untranslated.json
   exit 1
 fi
-for pkg in packages/quadrim_engine packages/quadrim_rating tools/linegen; do
+for pkg in packages/quadrim_engine packages/quadrim_rating packages/quadrim_progression tools/linegen; do
   echo "-- $pkg"
   (cd "$pkg" && dart pub get --offline >/dev/null 2>&1 || dart pub get >/dev/null
    dart analyze --fatal-infos

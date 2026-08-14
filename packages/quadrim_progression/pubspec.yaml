@@ -1,0 +1,25 @@
+name: quadrim_progression
+description: Points, unlock costs, quests and streaks — the arithmetic of the ladder.
+version: 1.0.0
+
+# Never published: it is one of three packages inside this repository, and a
+# path dependency is invalid for a publishable package.
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+# The one runtime dependency any pure package in this project has, and the one
+# inter-package edge in the repository. Progression prices the roster, and the
+# roster — the catalogue and, decisively, its *order* — lives in the engine
+# (D263). It runs in the allowed direction: the engine must never depend on
+# this package, because spec §7.1 says the catalogue carries no `locked` field
+# precisely so the strength harness holds no entitlement. tool/check.sh allows
+# this edge by name and nothing else.
+dependencies:
+  quadrim_engine:
+    path: ../quadrim_engine
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

@@ -3320,3 +3320,123 @@ Validated against `doc/tickets/030-main-screen-decomposition.md` instead: all te
 acceptance criteria pass, the last of them — `tool/check.sh` — green end to end
 (`ALL CHECKS PASSED`, exit 0), against a baseline run on the same tree before the
 change that was also green.
+
+---
+
+# Ticket 031 — The progression package, and points that accumulate
+
+Reviewed against `6306f5d`. New package `packages/quadrim_progression`, a new
+app-side fold, the balance on the rating card, and the build gate taught about
+both.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 1 |
+
+Two defects were found and fixed during the ticket rather than after it, and
+both are recorded below because each was caught by something rather than by
+reading.
+
+## Findings
+
+### [MINOR] Two of the ticket's own claims were wrong, and its tests said so — `bug`
+
+**File:** `packages/quadrim_progression/test/points_test.dart:139`
+
+**Evidence:** the test as first written asserted
+
+```dart
+final games = List.filled(1000, const ScoredGame(rosterIndex: 0, won: true));
+expect(pointsEarned(games), lessThan(unlockCost(5)));   // failed: 1000 vs 64
+expect(unlockCost(19) ~/ winValue(17), 4);              // failed: got 8
+```
+
+**Problem:** Both were overclaims about the economy, not implementation bugs.
+A thousand Pebble wins is 1,000 points and Willow costs **64**, so grinding the
+bottom for the *first* rung works fine. And `unlockCost(i)` is four wins against
+`i − 1`, so measured against index 17 rather than 18 the ratio is eight.
+
+**Fix:** applied. The test now states the true shape — sixty-four Pebble wins
+really does buy Willow, and what the doubling prices out is grinding the bottom
+for the *top*, at 1,048,576 games for Quadrim Prime against four from the rung
+below. Worth keeping as a finding because idea-v3.md §7.3's sentence "grinding
+downward is self-defeating" is true of the ladder as a whole and **not** of its
+first rung, and an exhaustive test is what made the difference visible.
+
+### [NIT] A localised value interpolated into a quoted literal trips the gate — `style`
+
+**File:** `app/lib/home/rating_card.dart:56`
+
+**Evidence:** the first version of the points row read
+
+```dart
+Text('${l10n.pointsHeading} ', style: theme.textTheme.labelLarge),
+```
+
+which `tool/check.sh`'s `Text\(\s*['"][^'"]*[A-Za-z]` matched, failing the
+build with `FAIL: hardcoded user-facing string(s)`.
+
+**Problem:** The grep cannot distinguish an interpolated localised value inside
+a quoted literal from a hardcoded one — correctly, since both are a quoted
+literal containing letters. The trailing space was also a translatable
+character sitting outside the `.arb`.
+
+**Fix:** applied. The label is `Text(l10n.pointsHeading)` and the gap is a
+`SizedBox(width: 8)`. The comment explaining this had to be reworded too — its
+first version quoted the offending pattern and tripped the same grep, which is
+a fair demonstration that the check is a text search rather than a parser.
+
+## Not findings, checked and cleared
+
+- **The purity allowance is tight.** `check.sh` now permits exactly one runtime
+  dependency, for one package, by name. Verified by injecting `http: ^1.0.0`
+  into `packages/quadrim_progression/pubspec.yaml` and confirming the filter
+  still reports it (`correctly FAILS on: http: ^1.0.0`), then removing it. An
+  allowance that let anything through would be worse than no check.
+- **The edge is a direction, not a coupling.** A second gate check greps
+  `packages/quadrim_engine/lib` and `packages/quadrim_rating/lib` for
+  `package:quadrim_progression` and fails if either imports it. This is what
+  keeps spec §7.1 true — the catalogue carries no `locked` field because the
+  strength harness has no business holding an entitlement, and an engine that
+  imported progression would be the first step back towards exactly that.
+- **`pointsEarned` reads no unlock record.** Verified by signature: the whole
+  public surface is `winValue(int)`, `unlockCost(int)`, `isFree(BotConfig)`,
+  `rosterIndexOf(String)`, `fullRosterCost` and
+  `pointsEarned(Iterable<ScoredGame>)`, and `ScoredGame` carries a roster index
+  and a bool. Nothing can reach an unlock or a rating from there. That is D270
+  carried by the type system rather than by a comment.
+- **Pricing keys on the ordinal, not the rating.** Asserted over the whole
+  catalogue: prices rise monotonically with the index, which they would not do
+  if derived from the rating — the Casual tier's measured strengths run the
+  opposite way to its published ratings (idea-v3.md §14).
+- **The player seat, not seat zero.** `points_fold_test.dart:74` pins a win from
+  seat 1. Reading seat zero would have scored every such game a loss and halved
+  the points of anyone playing second — and the seat alternates on rematch
+  (§3.1), so that is about half of all games. The rating fold had the same trap
+  and the same test.
+- **The import prefix collision.** `home_summary.dart` gained a `points` field
+  and an import prefixed `points`, which shadowed the field at the one line that
+  sets it — caught by `flutter analyze`, not at runtime. Renamed to
+  `points_fold`, and the file's existing comment about why `fold` is prefixed
+  was extended to say that a prefix may not be a field's name.
+- **The gate's exit code.** A run that printed `FAIL:` appeared to exit 0. That
+  was the invocation, not the gate: `bash tool/check.sh | tail` reports `tail`'s
+  status. Confirmed by re-running with the code captured directly — `EXITCODE=1`
+  on the failing tree, `EXITCODE=0` and `ALL CHECKS PASSED` on the fixed one.
+  No defect, but worth recording: **anything monitoring this gate should key on
+  the `ALL CHECKS PASSED` line**, which only the final statement prints.
+
+## Functional Validation
+
+Validated against `doc/tickets/031-progression-package-and-points.md`. All
+fourteen acceptance criteria pass. The package's tests are exhaustive over the
+catalogue rather than sampled, as the ticket asks: every roster index is checked
+for `winValue`, `unlockCost`, the four-wins equality and `isFree`, and the
+round-trip through `rosterIndexOf`. `fullRosterCost` is pinned at 2,097,088 and
+separately at sixty wins. `tool/check.sh` is green end to end with a captured
+exit code of 0.

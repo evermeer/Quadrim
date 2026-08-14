@@ -102,6 +102,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your rating against the computer, on this device only.';
 
   @override
+  String get pointsHeading => 'Points';
+
+  @override
+  String pointsValue(int points) {
+    final intl.NumberFormat pointsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String pointsString = pointsNumberFormat.format(points);
+
+    return '$pointsString';
+  }
+
+  @override
   String get passAndPlayNoRating => 'No rating changes in pass and play.';
 
   @override
