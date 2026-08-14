@@ -17,11 +17,12 @@ The idea was written three times, and the versions are kept apart on purpose.
 | [design.md](doc/design.md) | The design for the first run experience of the game, created with Claude Design |
 | [design-handoff.md](doc/design-handoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
 | [idea-v1-decisions.md](doc/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
-| [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions. This is the one to start from |
+| [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
 | [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
-| **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it.**  |
+| **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
+| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D256. The decisions that turned v2 and the additions into v3 |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 217 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 256 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
 
 ## Starting the Vibe coding workflow
 
