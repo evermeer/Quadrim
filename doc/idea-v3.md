@@ -602,7 +602,7 @@ Any pulsing stays well under **three flashes per second** (WCAG 2.3.1), and hold
 Top to bottom:
 
 1. **Rating card** — the computer rating, the win/loss/draw record, the points balance, a ten-game trend graph, and a line making clear it is a rating against the computer, on this device only
-2. **Your path** — five opponent tiles (§8.4)
+2. **Your path** — three opponent tiles (§8.4)
 3. **Games in progress**
 4. **Quests** — the four closest to completion (§8.6)
 5. **Finished games** — four rows and a way to see the rest (§8.5)
@@ -616,7 +616,7 @@ Top to bottom:
 
 Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and answered a question nobody was asking. This one answers "where am I, and who is next".
 
-**Five equal tiles across the width.** The middle tile is the **first opponent rated above the player's current rating**, highlighted. Two behind it, two ahead. Each tile stacks vertically:
+**Three equal tiles across the width.** The middle tile is the **first opponent rated above the player's current rating**, highlighted. One behind it, one ahead. Each tile stacks vertically:
 
 - a full-tile-width avatar
 - the name
@@ -625,7 +625,7 @@ Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and a
 - three stars
 - a rematch button — icon only, with a spoken label, because no button text fits the width
 
-**The window clamps at both ends.** A player below Pebble or above Quadrim Prime still sees five tiles; the window slides rather than shrinking. A four-tile row with a hole in it looks like a bug.
+**The window clamps at both ends.** A player below Pebble or above Quadrim Prime still sees three tiles; the window slides rather than shrinking. A two-tile row with a hole in it looks like a bug.
 
 **Locked opponents appear in full**, greyed, with their price and the player's progress toward it. Hiding them would hide the goal, which is the entire motivation for the ladder. The full roster, with the same records and stars, remains browsable in opponent selection (§8.7).
 
@@ -735,7 +735,7 @@ Six things learned building it:
 - **A row that shows several facts announces them as one node**, not three. An avatar is decorative; a name and a state only mean anything side by side. Equally: whatever the eye can read from a shape must be *said* somewhere, and said **once** — a rating shown as a bar and a pill and announced twice is worse than never announced. A Your Path tile is one node: name, rating, record, stars, locked-or-not, and price if locked.
 - **Nothing carries meaning by colour alone.** The trend graph states its change as a signed number, a locked tile says "locked", stars are counted rather than merely drawn.
 - **Announce changing state through a live region**, attached to the message rather than to the space reserved for it. A live region wrapped around an empty placeholder announces nothing, repeatedly.
-- **System font scaling is respected**, and every screen must reach its last row at the largest setting. The five-tile row is the tightest thing on the main screen at large font sizes and needs a specific test.
+- **System font scaling is respected**, and every screen must reach its last row at the largest setting. The three-tile row is the tightest thing on the main screen at large font sizes and needs a specific test.
 - **Light and dark themes**, both readable.
 
 ### 8.14 Settings
@@ -904,7 +904,7 @@ Four places must agree: the application id, the build namespace, the source pack
 17. The security rules pass an adversarial suite in which every attempt is denied.
 18. Account deletion and data export work in-app, and deletion states it does not cancel the subscription.
 19. An account is linked before its first rated game or purchase.
-20. The one portrait layout renders on the smallest and largest supported phone, in both themes, at the largest font scale — including the five-tile Your Path row.
+20. The one portrait layout renders on the smallest and largest supported phone, in both themes, at the largest font scale — including the three-tile Your Path row.
 21. The board is playable and legible for a colourblind player and navigable by screen reader, every fact shown visually is announced exactly once, and **no element carries meaning by colour alone** — the trend graph in particular states its change as a number.
 22. The tutorial runs end to end, including the practice game, which is never stored, never paid and never metered.
 23. Every string exists in English and Dutch, enforced by the build.
