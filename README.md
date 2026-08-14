@@ -3,7 +3,29 @@
 
 This document will show how this game was constructed using vibe coding folowing [the workflow described here](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
 
-Here is what i wrote as the initial [Idea](doc/history/idea-v0.md) for the game.
+## The documents
+
+The idea was written three times, and the versions are kept apart on purpose.
+
+| Document | What it is |
+|---|---|
+| [idea-v0.md](doc/history/idea-v0.md) | The original rough idea, as first written |
+| [idea-v1.md](doc/idea-v1.md) | That idea made unambiguous — but still carrying five open questions and a fallback ladder for the top opponent |
+| [idea-v1-brainstorming.md](doc/history/idea-v1-brainstorming.md) | v1 brainstormed with the Superpowers skill, which produced several options for each open question |
+| [idea-v1-spec.md](doc/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
+| [idea-v1-spec-review.md](doc/history/idea-v1-spec-review.md) | v1 spec reviewed by the Agency Agents backend-architect, security-engineer, and product-manager |
+| [design.md](doc/design.md) | The design for the first run experience of the game, created with Claude Design |
+| [design-handoff.md](doc/design-handoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
+| [idea-v1-decisions.md](doc/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
+| [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions. This is the one to start from |
+| [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
+| **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it.**  |
+
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 217 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+
+## Starting the Vibe coding workflow
+
+This is now written as a start from doc/idea-v0.md. When restarting the workflow, you can start from doc/idea-v3.md instead. The workflow is described in the [workflow document](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
 
 **Prompt**
 ```
@@ -190,19 +212,19 @@ Commit the code to the main branch after each ticket is completed and reviewed.
 
 Requested some small UI tweaks.
 
+After the UI tweaks were implemented, I reevaluated the design and flow of the first run experience.
+I got new idease and recorded them in the [idea-v2-additions.md](doc/idea-v2-additions.md) document.
+We will now brainstorm that idea first and then update the spec and tickets with the new information.
+
+**Prompt**
+```
+After reviewing the current result I had some new ideas and recorded them in doc/idea-v2-additions.md. 
+These should be treated as modifications and additions to the idea-v2.md
+Restate the goal, list the assumptions and unknowns, and don't write any code yet. Ask me
+any clarifying questions you need until the goal and constraints are
+unambiguous before you summarize. The goal is to have a clear and unambiguous understanding of the game and its requirements before starting to write code.
+Put all decisions in the file doc/idea-v3-decisions.md and put the result in the file doc/idea-v3.md
+```
 
 
 
-## The documents
-
-The idea was written three times, and the versions are kept apart on purpose.
-
-| Document | What it is |
-|---|---|
-| [idea-v0.md](doc/history/idea-v0.md) | The original rough idea, as first written |
-| [idea-v1.md](doc/idea-v1.md) | That idea made unambiguous — but still carrying five open questions and a fallback ladder for the top opponent |
-| [idea-v1-spec.md](doc/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
-| [idea-v1-decisions.md](doc/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
-| **[idea-v2.md](doc/idea-v2.md)** | **v1 rewritten against everything the build settled.** No open functional questions. This is the one to start from |
-
-`idea-v2.md` is the interesting one if you want to build this yourself. It folds all 217 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
