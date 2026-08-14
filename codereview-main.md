@@ -3440,3 +3440,100 @@ for `winValue`, `unlockCost`, the four-wins equality and `isFree`, and the
 round-trip through `rosterIndexOf`. `fullRosterCost` is pinned at 2,097,088 and
 separately at sixty wins. `tool/check.sh` is green end to end with a captured
 exit code of 0.
+
+---
+
+# Ticket 032 — Unlocks, and Your Path
+
+Reviewed against `6b12b7f`. The unlock record and its store, `UnlockRepository`,
+the purchase flow, Your Path, lock state in opponent selection, and the
+by-opponent breakdown's removal.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 1 |
+
+## Findings
+
+### [MINOR] The rating seed is 1200 in code and 800 in the specification, and no ticket owns the gap — `correctness`
+
+**File:** `packages/quadrim_rating/lib/quadrim_rating.dart:22`
+
+**Evidence:**
+```dart
+const int kSeedRating = 1200;
+```
+against spec §7.2 — "from the **800** seed" — and criterion F9 ▲, "A new player
+with no history … it is **800**".
+
+**Problem:** D226 moved the computer seed to 800 and the human seed to 1000.
+Ticket 027 shipped 1200 before that decision existed, and the ticket breakdown
+in D269 did not cut a ticket for the change — so the specification and the code
+disagree with nothing scheduled to reconcile them. Found here because Your Path
+put Vireo's 1200 rating on the main screen beside the card's seed of 1200 and
+made a test finder ambiguous.
+
+**Fix:** not applied — it is outside this ticket, and it is not a one-line
+change: D227 records that altering the seed **silently rewrites every existing
+rating**, because the rating is a fold with nothing stored. It needs its own
+ticket with the rewrite stated. Raised to the user rather than absorbed.
+
+### [NIT] `RatingBar` was deleted rather than left unused — `simplification`
+
+**File:** `app/lib/home/section_widgets.dart:50`
+
+**Evidence:** its only caller was `OpponentSection`, which this ticket removes.
+After that, `grep -rn "RatingBar" app/lib` returns nothing.
+
+**Problem:** none, but the deletion is worth recording because spec criterion
+U16 still says "Any rating shown as a bar is zero-based against the top of the
+catalogue", and after this ticket no rating is shown as a bar at all.
+
+**Fix:** deleted, with the reason in the file's header comment. U16 is
+vacuously satisfied rather than violated, and ticket 035 can restore it from
+git if the trend work wants a bar back. Three tests that covered only the bar
+went with it.
+
+## Not findings, checked and cleared
+
+- **Sequential purchase is enforced where it is written, not only in the UI.**
+  `LocalGameRepository.purchase` refuses anything but the lowest-indexed locked
+  opponent and refuses a free one, both proven. That matters because the
+  repository is the only writer, and "four wins buys the *next* opponent" stops
+  being a promise the moment another path can skip ahead (D229).
+- **`pricePaid` is what was charged, not what the table says.** The test buys
+  Willow at 40 rather than at `unlockCost(5)`, so a re-tune of the table cannot
+  make the assertion pass by accident.
+- **The record inherits the backup allowlist with no manifest change.** It is
+  written under `files/quadrim/unlocks/`, inside the `quadrim/` path the
+  allowlist committed in ticket 001 already covers. Reopening the same store
+  returns the unlock, which is the closest a unit test gets to a device restore.
+- **Double-buy is idempotent at two layers.** The opponent id is the document
+  id, so a second write would overwrite rather than duplicate; and `purchase`
+  refuses outright before reaching the store. The UI adds a third guard — an
+  `_unlocking` flag that nulls the callback while a write is in flight.
+- **The Master warning is keyed on configuration, not on two ids.**
+  `unlock_confirmation.dart` branches on `bot.usesBook`, so a third book
+  opponent could not ship without the sentence spec §6.6 requires.
+- **Nineteen existing tests changed, and every change is a consequence of the
+  breakdown going.** They asserted counts that assumed opponent names appear
+  twice on the main screen. Your Path shows the window around the *next unlock*
+  rather than around what has been played, so on a fresh fixture that is
+  Bramble, Willow and Vireo and every other opponent appears once. A
+  `_inGameRows` finder now scopes the assertions that mean "in the list of
+  games", which is stricter than the index-based finders it replaced.
+- **Locked rows cannot start a game.** `onTap` is null when locked, so tapping
+  one cannot return a `BotConfig` the player has not earned. Existing opponent
+  tests pass an all-unlocked set so that a test about tiers or match balance is
+  not silently also a test about the ladder.
+
+## Functional Validation
+
+Validated against `doc/tickets/032-unlocks-and-your-path.md`: all twenty-two
+acceptance criteria pass. `tool/check.sh` green end to end with a captured exit
+code of 0; 259 app tests and 43 progression tests.

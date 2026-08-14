@@ -23,7 +23,8 @@ Future<LocalGameRepository> _pumpGame(WidgetTester tester) async {
   await repository
       .saveSettings(const SettingsDocument(tutorialOffered: true));
   await tester.pumpWidget(
-      QuadrimApp(repository: repository, settings: repository));
+      QuadrimApp(
+          repository: repository, settings: repository, unlocks: repository));
   // The main screen's one primary button opens a chooser; ticket 011 replaces
   // the chooser with the opponent list, and this route stays the same.
   await tester.tap(find.text('New game'));

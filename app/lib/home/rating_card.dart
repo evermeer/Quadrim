@@ -13,9 +13,17 @@ import '../l10n/app_localizations.dart';
 /// is the same fold over the same games that produced the number above it, and
 /// a "Your record" heading over a single line was a heading for nothing (D192).
 class RatingCard extends StatelessWidget {
-  const RatingCard({super.key, required this.summary});
+  const RatingCard({
+    super.key,
+    required this.summary,
+    required this.balance,
+  });
 
   final HomeSummary summary;
+
+  /// Earned minus spent, clamped at zero — not [HomeSummary.points], which is
+  /// the earned total and keeps rising as unlocks are bought (spec §8.8).
+  final int balance;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,7 @@ class RatingCard extends StatelessWidget {
     final record = summary.played == 0
         ? l10n.recordEmpty
         : l10n.recordLine(summary.wins, summary.losses, summary.draws);
-    final points = l10n.pointsValue(summary.points);
+    final points = l10n.pointsValue(balance);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),

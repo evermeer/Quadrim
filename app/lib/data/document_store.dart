@@ -19,6 +19,15 @@ abstract interface class DocumentStore {
 
   Future<void> deleteGame(String id);
 
+  /// Every readable unlock document, keyed by opponent id.
+  ///
+  /// Under the same root as games, so the backup allowlist committed in ticket
+  /// 001 covers it with no manifest change (spec §8.7). This is the only record
+  /// a player cannot regenerate by playing.
+  Future<Map<String, Map<String, Object?>>> readUnlocks();
+
+  Future<void> writeUnlock(String opponentId, Map<String, Object?> json);
+
   /// Null when settings have never been written or cannot be read.
   Future<Map<String, Object?>?> readSettings();
 
@@ -37,12 +46,15 @@ class FileDocumentStore implements DocumentStore {
   final Directory _root;
 
   Directory get _gamesDir => Directory('${_root.path}/games');
+  Directory get _unlocksDir => Directory('${_root.path}/unlocks');
   File get _settingsFile => File('${_root.path}/settings.json');
   File _gameFile(String id) => File('${_gamesDir.path}/$id.json');
+  File _unlockFile(String id) => File('${_unlocksDir.path}/$id.json');
 
   static Future<FileDocumentStore> open(Directory root) async {
     final store = FileDocumentStore(root);
     await store._gamesDir.create(recursive: true);
+    await store._unlocksDir.create(recursive: true);
     return store;
   }
 
@@ -69,6 +81,23 @@ class FileDocumentStore implements DocumentStore {
     final file = _gameFile(id);
     if (file.existsSync()) await file.delete();
   }
+
+  @override
+  Future<Map<String, Map<String, Object?>>> readUnlocks() async {
+    final unlocks = <String, Map<String, Object?>>{};
+    if (!_unlocksDir.existsSync()) return unlocks;
+    await for (final entity in _unlocksDir.list()) {
+      if (entity is! File || !entity.path.endsWith('.json')) continue;
+      final json = await _read(entity);
+      final id = json?['opponentId'];
+      if (json != null && id is String && id.isNotEmpty) unlocks[id] = json;
+    }
+    return unlocks;
+  }
+
+  @override
+  Future<void> writeUnlock(String opponentId, Map<String, Object?> json) =>
+      _writeAtomically(_unlockFile(opponentId), json);
 
   @override
   Future<Map<String, Object?>?> readSettings() async =>
@@ -103,6 +132,7 @@ class FileDocumentStore implements DocumentStore {
 /// anything that must observably leave no trace.
 class MemoryDocumentStore implements DocumentStore {
   final Map<String, Map<String, Object?>> _games = {};
+  final Map<String, Map<String, Object?>> _unlocks = {};
   Map<String, Object?>? _settings;
 
   @override
@@ -115,6 +145,14 @@ class MemoryDocumentStore implements DocumentStore {
 
   @override
   Future<void> deleteGame(String id) async => _games.remove(id);
+
+  @override
+  Future<Map<String, Map<String, Object?>>> readUnlocks() async =>
+      Map.of(_unlocks);
+
+  @override
+  Future<void> writeUnlock(String opponentId, Map<String, Object?> json) async =>
+      _unlocks[opponentId] = Map.of(json);
 
   @override
   Future<Map<String, Object?>?> readSettings() async => _settings;

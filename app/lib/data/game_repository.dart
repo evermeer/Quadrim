@@ -55,3 +55,37 @@ abstract interface class SettingsRepository {
   Future<SettingsDocument> loadSettings();
   Future<SettingsDocument> saveSettings(SettingsDocument settings);
 }
+
+/// What the player has bought, and the one action that buys it.
+///
+/// Separate from [GameRepository] because they are separate contracts, even
+/// though 0.1's one implementation satisfies both — the same relationship
+/// [SettingsRepository] already has.
+///
+/// **Client-written and local, deliberately.** Points are earned against
+/// deterministic opponents on the player's own hardware, exactly like the
+/// computer rating, so editing them cheats nobody but yourself. Moving this to
+/// a server would mean sending computer-game results to a server, which spec
+/// §4 forbids categorically (spec §7.6).
+abstract interface class UnlockRepository {
+  /// Emits the current set on subscription and again on every purchase.
+  Stream<List<UnlockDocument>> watchUnlocks();
+
+  Future<List<UnlockDocument>> loadUnlocks();
+
+  /// Records [opponentId] as bought at [pricePaid].
+  ///
+  /// The price is passed in rather than looked up, because what must be stored
+  /// is what was actually charged — a cost table that moves later must not
+  /// rewrite what a player already spent (spec §8.8).
+  ///
+  /// Throws [StateError] if the opponent is already unlocked, and
+  /// [ArgumentError] if it is not the next one in roster order: only the
+  /// lowest-indexed locked opponent may ever be purchased (D229).
+  Future<UnlockDocument> purchase(
+    String opponentId, {
+    required int pricePaid,
+    UnlockSource source,
+  });
+}
+

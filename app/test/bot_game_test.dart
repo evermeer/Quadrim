@@ -45,7 +45,8 @@ void main() {
     final repo = await _repository();
     // A seeded source so the opening seat is fixed rather than a coin flip.
     await tester.pumpWidget(
-        QuadrimApp(repository: repo, settings: repo, random: Random(1)));
+        QuadrimApp(
+            repository: repo, settings: repo, unlocks: repo, random: Random(1)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('New game'));

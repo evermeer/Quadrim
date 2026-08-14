@@ -635,4 +635,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAbout => 'About';
+
+  @override
+  String get yourPath => 'Your path';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String unlockCost(int cost) {
+    final intl.NumberFormat costNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String costString = costNumberFormat.format(cost);
+
+    return '$costString points';
+  }
+
+  @override
+  String unlockProgress(int have, int cost) {
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+    final intl.NumberFormat costNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String costString = costNumberFormat.format(cost);
+
+    return '$haveString of $costString';
+  }
+
+  @override
+  String get unlockAction => 'Unlock';
+
+  @override
+  String unlockConfirmTitle(String name) {
+    return 'Unlock $name?';
+  }
+
+  @override
+  String unlockConfirmBody(int cost, int left) {
+    final intl.NumberFormat costNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String costString = costNumberFormat.format(cost);
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String leftString = leftNumberFormat.format(left);
+
+    return 'This costs $costString points and leaves you $leftString.';
+  }
+
+  @override
+  String unlockConfirmBook(String name) {
+    return '$name plays a proven strategy and is unbeatable when it moves first. From the second seat it plays by search, like the rest.';
+  }
+
+  @override
+  String unlockNotAffordable(int short) {
+    final intl.NumberFormat shortNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shortString = shortNumberFormat.format(short);
+
+    return 'You need $shortString more points.';
+  }
+
+  @override
+  String unlockDone(String name) {
+    return '$name unlocked.';
+  }
+
+  @override
+  String starsLabel(int count) {
+    return '$count of 3 stars';
+  }
+
+  @override
+  String get neverPlayed => 'Not played yet';
+
+  @override
+  String pathTileSemantics(String name, int rating, String state) {
+    return '$name, rated $rating. $state';
+  }
+
+  @override
+  String lockedWithPrice(int cost, int have) {
+    final intl.NumberFormat costNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String costString = costNumberFormat.format(cost);
+    final intl.NumberFormat haveNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String haveString = haveNumberFormat.format(have);
+
+    return 'Locked. $costString points, you have $haveString.';
+  }
 }

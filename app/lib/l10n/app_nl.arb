@@ -182,5 +182,19 @@
   "languageEnglish": "English",
   "languageDutch": "Nederlands",
   "settingsShowTutorial": "Uitleg opnieuw bekijken",
-  "settingsAbout": "Over"
+  "settingsAbout": "Over",
+  "yourPath": "Jouw pad",
+  "locked": "Op slot",
+  "unlockCost": "{cost} punten",
+  "unlockProgress": "{have} van {cost}",
+  "unlockAction": "Vrijspelen",
+  "unlockConfirmTitle": "{name} vrijspelen?",
+  "unlockConfirmBody": "Dit kost {cost} punten en je houdt {left} over.",
+  "unlockConfirmBook": "{name} speelt een bewezen strategie en is onverslaanbaar als hij begint. Vanaf de tweede zet speelt hij op zoekkracht, net als de rest.",
+  "unlockNotAffordable": "Je hebt nog {short} punten nodig.",
+  "unlockDone": "{name} vrijgespeeld.",
+  "starsLabel": "{count} van 3 sterren",
+  "neverPlayed": "Nog niet gespeeld",
+  "pathTileSemantics": "{name}, waardering {rating}. {state}",
+  "lockedWithPrice": "Op slot. {cost} punten, je hebt er {have}."
 }

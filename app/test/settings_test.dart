@@ -26,7 +26,8 @@ Future<LocalGameRepository> _open(
   addTearDown(repository.dispose);
   await repository.saveSettings(settings);
   await tester.pumpWidget(
-      QuadrimApp(repository: repository, settings: repository));
+      QuadrimApp(
+          repository: repository, settings: repository, unlocks: repository));
   await tester.pumpAndSettle();
   return repository;
 }
@@ -175,6 +176,7 @@ void main() {
       key: const ValueKey('relaunch'),
       repository: reopened,
       settings: reopened,
+      unlocks: reopened,
     ));
     await tester.pumpAndSettle();
 

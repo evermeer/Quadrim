@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_progression/quadrim_progression.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
 
 import '../data/documents.dart';
@@ -18,11 +19,28 @@ import 'opponent_name.dart';
 /// [opponentCatalogue] in tier order, so adding an opponent or moving one
 /// between tiers is a data change and this file does not move (criterion 21).
 class OpponentScreen extends StatefulWidget {
-  const OpponentScreen({super.key, required this.playerRating});
+  const OpponentScreen({
+    super.key,
+    required this.playerRating,
+    this.unlocked = const {},
+    this.points = 0,
+    this.onUnlock,
+  });
 
   /// The player's computer rating, so each opponent can be shown as a fair
   /// match or a mismatch relative to it (criterion 17).
   final int playerRating;
+
+  /// Catalogue ids the player has bought. The free five are not in here - the
+  /// rating rule in `isUnlocked` knows about them.
+  final Set<String> unlocked;
+
+  /// The spendable balance, shown against each locked opponent's price.
+  final int points;
+
+  /// Buys an opponent. Null in flows that cannot purchase, in which case
+  /// locked rows still show their price and simply cannot be acted on.
+  final Future<void> Function(BotConfig bot, int price)? onUnlock;
 
   @override
   State<OpponentScreen> createState() => _OpponentScreenState();
@@ -115,11 +133,34 @@ class _OpponentScreenState extends State<OpponentScreen> {
               ),
               if (entry.key == _open)
                 for (final bot in entry.value)
-                  _OpponentTile(
-                    bot: bot,
-                    playerRating: widget.playerRating,
-                    onTap: () => Navigator.of(context).pop(bot),
-                  ),
+                  Builder(builder: (context) {
+                    final locked = !isUnlocked(bot.id, widget.unlocked);
+                    final next = nextUnlockIndex(widget.unlocked);
+                    final index = rosterIndexOf(bot.id);
+                    return _OpponentTile(
+                      bot: bot,
+                      playerRating: widget.playerRating,
+                      locked: locked,
+                      price: locked && index != null ? unlockCost(index) : null,
+                      points: widget.points,
+                      // Only the next one in roster order may be bought, so
+                      // only it offers the action. The rest show their price,
+                      // because hiding the goal is what the ladder exists to
+                      // avoid (D229).
+                      onUnlock: locked &&
+                              index != null &&
+                              index == next &&
+                              widget.onUnlock != null
+                          ? () => widget.onUnlock!(bot, unlockCost(index))
+                          : null,
+                      // A locked opponent cannot be chosen to play. Tapping the
+                      // row would otherwise start a game against somebody the
+                      // player has not earned.
+                      onTap: locked
+                          ? null
+                          : () => Navigator.of(context).pop(bot),
+                    );
+                  }),
             ],
           ],
         ),
@@ -191,12 +232,27 @@ class _OpponentTile extends StatelessWidget {
   const _OpponentTile({
     required this.bot,
     required this.playerRating,
+    required this.locked,
+    required this.price,
+    required this.points,
+    required this.onUnlock,
     required this.onTap,
   });
 
   final BotConfig bot;
   final int playerRating;
-  final VoidCallback onTap;
+  final bool locked;
+
+  /// What this opponent costs, or null when it is free.
+  final int? price;
+
+  final int points;
+
+  /// Non-null only on the one opponent that may be bought right now.
+  final VoidCallback? onUnlock;
+
+  /// Null when the row cannot be chosen - that is, when it is locked.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -216,13 +272,18 @@ class _OpponentTile extends StatelessWidget {
       // Announced as one unit. Four separate nodes would make a screen reader
       // user swipe four times per opponent — eighty swipes to read the list —
       // and the pieces only mean anything together (criterion 22).
-      label: l10n.opponentSemantics(
-        botName(l10n, key),
-        tierLabel(l10n, bot.tier),
-        bot.rating,
-        _balanceLabel(l10n, balance),
-        blurb,
-      ),
+      // A locked row says so, and says the price, in the same single label.
+      // Grey alone is not a fact a screen reader can read (spec 8.13).
+      label: locked && price != null
+          ? '${l10n.opponentSemantics(botName(l10n, key), tierLabel(l10n, bot.tier), bot.rating, _balanceLabel(l10n, balance), blurb)} '
+              '${l10n.lockedWithPrice(price!, points)}'
+          : l10n.opponentSemantics(
+              botName(l10n, key),
+              tierLabel(l10n, bot.tier),
+              bot.rating,
+              _balanceLabel(l10n, balance),
+              blurb,
+            ),
       child: ExcludeSemantics(
         child: ListTile(
           onTap: onTap,
@@ -245,7 +306,10 @@ class _OpponentTile extends StatelessWidget {
             children: [
               if (blurb.isNotEmpty) Text(blurb),
               const SizedBox(height: 4),
-              _BalanceChip(balance: balance),
+              if (locked && price != null)
+                _LockedRow(price: price!, points: points, onUnlock: onUnlock)
+              else
+                _BalanceChip(balance: balance),
             ],
           ),
           isThreeLine: true,
@@ -300,3 +364,55 @@ String _balanceLabel(AppLocalizations l10n, MatchBalance balance) =>
       MatchBalance.opponentStronger => l10n.matchStronger,
       MatchBalance.opponentWeaker => l10n.matchWeaker,
     };
+
+/// A locked opponent's price, and - on the next one only - the way to buy it.
+///
+/// Locked opponents are shown in full rather than hidden. Hiding them would
+/// hide the goal, which is the entire motivation for the ladder (spec 11.3).
+class _LockedRow extends StatelessWidget {
+  const _LockedRow({
+    required this.price,
+    required this.points,
+    required this.onUnlock,
+  });
+
+  final int price;
+  final int points;
+  final VoidCallback? onUnlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(Icons.lock_outline,
+            size: 16, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            // The price, and the progress toward it - a number, not only a
+            // bar, because a bar cannot be read off.
+            onUnlock == null
+                ? l10n.unlockCost(price)
+                : l10n.unlockProgress(points, price),
+            style: theme.textTheme.labelMedium,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (onUnlock != null) ...[
+          const SizedBox(width: 8),
+          FilledButton.tonal(
+            onPressed: points >= price ? onUnlock : null,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(l10n.unlockAction),
+          ),
+        ],
+      ],
+    );
+  }
+}

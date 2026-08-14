@@ -53,6 +53,19 @@ class HomeSummary {
 
   int get played => wins + losses + draws;
 
+  /// The record against one catalogue id, or null if never played.
+  ///
+  /// Null rather than an empty record, because "never faced" and "faced and
+  /// never won" are different things and the interface must not show them the
+  /// same way — an opponent never played shows no star row at all.
+  OpponentRecord? recordFor(String botId) {
+    final key = botOpponent(botId);
+    for (final record in byOpponent) {
+      if (record.opponent == key) return record;
+    }
+    return null;
+  }
+
   static final HomeSummary empty = HomeSummary.from(const []);
 
   factory HomeSummary.from(List<GameDocument> completed) {

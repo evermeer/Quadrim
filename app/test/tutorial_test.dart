@@ -40,7 +40,8 @@ Future<void> _pumpApp(
   Locale? locale,
 }) async {
   await tester.pumpWidget(
-      QuadrimApp(repository: repo, settings: repo, locale: locale));
+      QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, locale: locale));
   await tester.pumpAndSettle();
 }
 

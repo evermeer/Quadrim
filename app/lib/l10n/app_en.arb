@@ -497,5 +497,128 @@
   },
   "languageDutch": "Nederlands",
   "settingsShowTutorial": "Show the tutorial again",
-  "settingsAbout": "About"
+  "settingsAbout": "About",
+  "yourPath": "Your path",
+  "@yourPath": {
+    "description": "Heading of the three-tile section showing the next opponent to unlock."
+  },
+  "locked": "Locked",
+  "unlockCost": "{cost} points",
+  "@unlockCost": {
+    "description": "The price of a locked opponent. Locale-formatted: the top of the ladder is seven digits.",
+    "placeholders": {
+      "cost": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "unlockProgress": "{have} of {cost}",
+  "@unlockProgress": {
+    "description": "Progress toward a locked opponent's price.",
+    "placeholders": {
+      "have": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "cost": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "unlockAction": "Unlock",
+  "unlockConfirmTitle": "Unlock {name}?",
+  "@unlockConfirmTitle": {
+    "description": "Title of the unlock confirmation. Bot names are never translated.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unlockConfirmBody": "This costs {cost} points and leaves you {left}.",
+  "@unlockConfirmBody": {
+    "description": "Body of the unlock confirmation.",
+    "placeholders": {
+      "cost": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "left": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "unlockConfirmBook": "{name} plays a proven strategy and is unbeatable when it moves first. From the second seat it plays by search, like the rest.",
+  "@unlockConfirmBook": {
+    "description": "Shown in the unlock confirmation for Oracle and Quadrim Prime only. Required: the two most expensive unlocks buy opponents that cannot be beaten half the time, and the player must be told before spending, not only in a store listing (spec §6.6, D181).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unlockNotAffordable": "You need {short} more points.",
+  "@unlockNotAffordable": {
+    "description": "Why the unlock button is unavailable.",
+    "placeholders": {
+      "short": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "unlockDone": "{name} unlocked.",
+  "@unlockDone": {
+    "description": "Confirmation after a successful unlock.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "starsLabel": "{count} of 3 stars",
+  "@starsLabel": {
+    "description": "Spoken form of the star row. Counted rather than merely drawn, so the row means something without sight of it.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "neverPlayed": "Not played yet",
+  "@neverPlayed": {
+    "description": "Shown instead of a star row for an opponent never faced. Unearned and failed must not look the same."
+  },
+  "pathTileSemantics": "{name}, rated {rating}. {state}",
+  "@pathTileSemantics": {
+    "description": "One Your Path tile as a single announced node — name, rating, then its record or its locked state and price.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "rating": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "lockedWithPrice": "Locked. {cost} points, you have {have}.",
+  "@lockedWithPrice": {
+    "description": "The locked half of a tile's spoken state.",
+    "placeholders": {
+      "cost": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "have": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  }
 }

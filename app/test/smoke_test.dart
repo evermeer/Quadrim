@@ -22,7 +22,7 @@ Future<LocalGameRepository> _repository() async {
 void main() {
   testWidgets('the main screen renders localized strings', (tester) async {
     final repo = await _repository();
-    await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo));
+    await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo, unlocks: repo));
     await tester.pumpAndSettle();
     expect(find.text('Quadrim'), findsOneWidget);
     expect(find.text('New game'), findsOneWidget);
@@ -32,7 +32,10 @@ void main() {
       (tester) async {
     final repo = await _repository();
     await tester.pumpWidget(QuadrimApp(
-        repository: repo, settings: repo, locale: const Locale('nl')));
+        repository: repo,
+        settings: repo,
+        unlocks: repo,
+        locale: const Locale('nl')));
     await tester.pumpAndSettle();
     expect(find.text('Nieuwe partij'), findsOneWidget);
     expect(find.text('New game'), findsNothing);

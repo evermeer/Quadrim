@@ -27,7 +27,11 @@ Future<LocalGameRepository> _game(
   addTearDown(repository.dispose);
   await repository.saveSettings(const SettingsDocument(tutorialOffered: true));
   await tester.pumpWidget(
-      QuadrimApp(repository: repository, settings: repository, locale: locale));
+      QuadrimApp(
+          repository: repository,
+          settings: repository,
+          unlocks: repository,
+          locale: locale));
   await tester.pumpAndSettle();
   await tester.tap(find.text(locale == null ? 'New game' : 'Nieuwe partij'));
   await tester.pumpAndSettle();

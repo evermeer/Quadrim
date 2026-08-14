@@ -218,9 +218,90 @@ class GameDocument {
   }
 }
 
-/// The only local document besides games (spec §8.6). The computer rating is
-/// deliberately absent: it is folded from completed games, so storing it would
-/// create a second copy that can drift.
+/// Where an unlock came from, so a refund can revoke exactly what it bought.
+///
+/// [purchase] is unreachable until 0.4 adds the one-time "unlock all
+/// opponents" product, and is present now because the field's shape should not
+/// change when it becomes reachable — the same reasoning that puts `timeout`
+/// and `abandonment` in [GameEndReason].
+enum UnlockSource { points, purchase }
+
+/// An opponent bought with points (spec §8.8).
+///
+/// **The one thing in this app that is not reconstructible from game history.**
+/// Points earned is a fold over the games; points *spent* is a decision, and a
+/// decision is not in the move list. Everything else stays derived — there is
+/// no stored balance, no stored streak length and no stored quest progress.
+///
+/// It is written under the same directory as games, so it is covered by the
+/// backup allowlist committed in ticket 001 with no manifest change. That
+/// matters from 0.1 rather than from whenever the cloud arrives: it is the only
+/// thing here a player cannot regenerate by playing, and losing it on a device
+/// change loses months of work.
+class UnlockDocument {
+  const UnlockDocument({
+    required this.opponentId,
+    required this.unlockedAt,
+    required this.pricePaid,
+    this.source = UnlockSource.points,
+    this.schemaVersion = kSchemaVersion,
+  });
+
+  final int schemaVersion;
+
+  /// The catalogue id, without the `bot:` prefix. **Also the document id**, so
+  /// buying the same opponent twice overwrites one record rather than storing
+  /// two and charging for both.
+  final String opponentId;
+
+  final DateTime unlockedAt;
+
+  /// What was **actually** paid, not what the table says today.
+  ///
+  /// Stored for the same reason a game stores the opponent's anchor rating: the
+  /// balance is earned minus the sum of these, so re-tuning a cost later can
+  /// never retroactively bankrupt someone who already spent at the old price.
+  final int pricePaid;
+
+  final UnlockSource source;
+
+  Map<String, Object?> toJson() => {
+        'schemaVersion': schemaVersion,
+        'opponentId': opponentId,
+        'unlockedAt': unlockedAt.toUtc().toIso8601String(),
+        'pricePaid': pricePaid,
+        'source': source.name,
+      };
+
+  /// Null when unreadable — see [GameDocument.fromJson]. A damaged unlock is
+  /// skipped rather than thrown, but it is the one record whose loss actually
+  /// costs the player something, which is why it is also the one that is
+  /// written under the backup allowlist.
+  static UnlockDocument? fromJson(Map<String, Object?> json) {
+    final version = json['schemaVersion'];
+    if (version is! int || version > kSchemaVersion) return null;
+    final opponentId = json['opponentId'];
+    final unlockedAt = DateTime.tryParse(json['unlockedAt'] as String? ?? '');
+    final pricePaid = json['pricePaid'];
+    if (opponentId is! String ||
+        opponentId.isEmpty ||
+        unlockedAt == null ||
+        pricePaid is! int) {
+      return null;
+    }
+    return UnlockDocument(
+      schemaVersion: version,
+      opponentId: opponentId,
+      unlockedAt: unlockedAt,
+      pricePaid: pricePaid,
+      source: _enumByName(UnlockSource.values, json['source'], UnlockSource.points),
+    );
+  }
+}
+
+/// The only local document besides games and unlocks (spec §8.6). The computer
+/// rating is deliberately absent: it is folded from completed games, so storing
+/// it would create a second copy that can drift.
 class SettingsDocument {
   const SettingsDocument({
     this.locale = 'system',

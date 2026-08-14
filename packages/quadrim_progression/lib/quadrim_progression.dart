@@ -22,3 +22,4 @@
 library;
 
 export 'src/points.dart';
+export 'src/unlocks.dart';

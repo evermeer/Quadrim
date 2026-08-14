@@ -6,6 +6,8 @@ import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/game/opponent_avatar.dart';
+import 'package:quadrim/home/game_row.dart';
+import 'package:quadrim/home/rating_card.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
@@ -42,8 +44,11 @@ void _phone(WidgetTester tester, {double textScale = 1}) {
 
 /// The game row holding [text].
 ///
-/// Opponent names appear twice on this screen — in the by-opponent breakdown
-/// and again on each game — so assertions about a row have to say which.
+/// An opponent name can appear twice on this screen — once on a Your Path tile
+/// and again on each game — so assertions about a row have to say which. Your
+/// Path shows the window around the *next unlock*, so on a fresh fixture that
+/// is Bramble, Willow and Vireo, and any other opponent appears only in the
+/// game rows.
 ///
 /// Outermost rather than innermost: a row's right-hand column now nests a Row
 /// of its own for the result and the rating change beside it, so the closest
@@ -52,9 +57,15 @@ void _phone(WidgetTester tester, {double textScale = 1}) {
 Finder _rowContaining(String text) =>
     find.ancestor(of: find.text(text), matching: find.byType(Row)).last;
 
+/// Scoped to the game rows, so Your Path's three tiles cannot satisfy an
+/// assertion meant for the list of games.
+Finder _inGameRows(Finder matching) =>
+    find.descendant(of: find.byType(GameRow), matching: matching);
+
 Future<void> _pumpHome(WidgetTester tester, LocalGameRepository repo) async {
   await tester.pumpWidget(
-      QuadrimApp(repository: repo, settings: repo, random: Random(1)));
+      QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, random: Random(1)));
   await tester.pumpAndSettle();
 }
 
@@ -97,39 +108,15 @@ void main() {
     await _pumpHome(tester, repo);
 
     expect(find.text('Against the computer'), findsOneWidget);
-    expect(find.text('$kSeedRating'), findsOneWidget);
+    // Scoped to the card: Vireo is rated 1200 and sits on a Your Path tile, so
+    // a bare finder for the seed matches twice.
+    expect(
+        find.descendant(
+            of: find.byType(RatingCard), matching: find.text('$kSeedRating')),
+        findsOneWidget);
     // Criterion 20: it must not read as a universal rating.
     expect(find.text('Your rating against the computer, on this device only.'),
         findsOneWidget);
-  });
-
-  testWidgets('each opponent is underlined by a bar as long as its rating',
-      (tester) async {
-    _phone(tester);
-    final repo = await _repository();
-    await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
-    await _completedGame(repo, botId: quadrimPrime.id,
-        rating: quadrimPrime.rating);
-    await _pumpHome(tester, repo);
-
-    // Read off the widgets rather than the pixels: the bar's meaning is its
-    // fraction, and a rendered width also encodes the column it sits in.
-    final bars = tester
-        .widgetList<LinearProgressIndicator>(
-            find.byType(LinearProgressIndicator))
-        .toList();
-    expect(bars, hasLength(2), reason: 'one per opponent played');
-
-    // Weakest first, so Pebble's bar is the first one.
-    expect(bars.last.value, 1.0,
-        reason: 'the top of the catalogue fills the bar');
-    expect(bars.first.value,
-        closeTo(pebble.rating / quadrimPrime.rating, 0.001));
-
-    // The scale is the catalogue's ceiling, not the strongest opponent on
-    // screen — otherwise every list would have a full bar in it and the bars
-    // would mean something different on each device.
-    expect(bars.first.value, lessThan(0.5), reason: '600 against 2400');
   });
 
   testWidgets('every row naming an opponent carries a rating pill after the '
@@ -139,15 +126,14 @@ void main() {
     await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
     await _pumpHome(tester, repo);
 
-    // Two rows name Pebble — the breakdown and the finished game — and both
-    // must carry the pill. Asserting over every occurrence rather than
-    // picking one means the test does not need to know which is which, and
-    // covers each section without a fixture per section.
+    // The pill must sit beside the name wherever a row carries one. Asserted
+    // over every occurrence rather than a chosen index, so the test does not
+    // need to know which row it found.
     final pills = find.text('600');
-    expect(pills, findsNWidgets(2),
-        reason: 'the by-opponent breakdown and the finished game');
+    expect(pills, findsOneWidget,
+        reason: 'the finished game; Pebble is outside the Your Path window');
 
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 1; i++) {
       final row =
           find.ancestor(of: pills.at(i), matching: find.byType(Row)).first;
       final name = tester.getRect(
@@ -192,12 +178,13 @@ void main() {
     expect(find.text('Pass and play'), findsOneWidget);
     // Nothing stadium-shaped on a row with nobody to rate. Checked by the
     // absence of any pill at all rather than of a particular number, since
-    // there is no number it could be showing.
-    expect(find.byType(LinearProgressIndicator), findsNothing);
+    // there is no number it could be showing. Scoped to the game rows: Your
+    // Path draws a progress bar toward the next unlock, which is a different
+    // claim about a different thing.
     expect(
-      find.byWidgetPredicate((w) =>
+      _inGameRows(find.byWidgetPredicate((w) =>
           w is Container && w.decoration is ShapeDecoration &&
-          (w.decoration! as ShapeDecoration).shape is StadiumBorder),
+          (w.decoration! as ShapeDecoration).shape is StadiumBorder)),
       findsNothing,
     );
   });
@@ -213,7 +200,7 @@ void main() {
     await _pumpHome(tester, repo);
 
     expect(find.bySemanticsLabel(RegExp(r'Kestrel\. Rating 1300\. ')),
-        findsNWidgets(2));
+        findsOneWidget);
     expect(find.bySemanticsLabel('1300'), findsNothing,
         reason: 'no pill announces itself on top of its row');
     handle.dispose();
@@ -284,38 +271,6 @@ void main() {
     expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
   });
 
-  testWidgets('the bar is scaled against the catalogue, not against the list',
-      (tester) async {
-    // The same weak opponent, alone. If the scale were relative to the list,
-    // Pebble would now fill the bar.
-    _phone(tester);
-    final repo = await _repository();
-    await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
-    await _pumpHome(tester, repo);
-
-    final bar = tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator));
-    expect(bar.value, closeTo(pebble.rating / quadrimPrime.rating, 0.001));
-  });
-
-  testWidgets('the rating a bar shows is also said, for a screen reader',
-      (tester) async {
-    // The bar carries the rating as a length, which a screen reader cannot
-    // see. Without this the row would be strictly less informative to a
-    // non-sighted player than to a sighted one (spec §7.10).
-    _phone(tester);
-    final handle = tester.ensureSemantics();
-    final repo = await _repository();
-    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
-    await _pumpHome(tester, repo);
-
-    // Both rows that name Kestrel say it: the breakdown, whose bar and pill are
-    // invisible to a screen reader, and the finished game, whose pill is.
-    expect(find.bySemanticsLabel(RegExp(r'Kestrel\. Rating 1300\. ')),
-        findsNWidgets(2));
-    handle.dispose();
-  });
-
   testWidgets('statistics and lists update when a game finishes, without a '
       'restart', (tester) async {
     _phone(tester);
@@ -347,24 +302,6 @@ void main() {
     expect(find.text('Finished games'), findsOneWidget);
     expect(find.text('1 won · 0 lost · 0 drawn'), findsOneWidget);
     expect(find.text('Won'), findsOneWidget);
-  });
-
-  testWidgets('breaks the record down by opponent, weakest first',
-      (tester) async {
-    _phone(tester);
-    final repo = await _repository();
-    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
-    await _completedGame(
-        repo, botId: pebble.id, rating: pebble.rating, playerWins: false);
-    await _pumpHome(tester, repo);
-
-    expect(find.text('By opponent'), findsOneWidget);
-    // The record strings are unique to the breakdown — the names themselves
-    // also appear in the finished-games list below it — so ordering is
-    // asserted on where they land, not on how many Texts say "Pebble".
-    final pebbleRow = tester.getTopLeft(find.text('0–1–0 in 1 games')).dy;
-    final kestrelRow = tester.getTopLeft(find.text('1–0–0 in 1 games')).dy;
-    expect(pebbleRow, lessThan(kestrelRow), reason: 'weakest first');
   });
 
   testWidgets('tapping a game in progress resumes it', (tester) async {
@@ -482,7 +419,7 @@ void main() {
     );
     // Sections are headers, so a screen reader can jump between them rather
     // than reading the whole page top to bottom.
-    for (final heading in ['By opponent', 'Finished games']) {
+    for (final heading in ['Your path', 'Finished games']) {
       expect(tester.getSemantics(find.text(heading)).flagsCollection.isHeader,
           isTrue,
           reason: '"$heading" must be a header');
@@ -497,6 +434,7 @@ void main() {
     await tester.pumpWidget(QuadrimApp(
       repository: repo,
       settings: repo,
+      unlocks: repo,
       locale: const Locale('nl'),
       random: Random(1),
     ));
@@ -505,11 +443,10 @@ void main() {
     expect(find.text('Nieuwe partij'), findsOneWidget);
     expect(find.text('Uitleg'), findsOneWidget);
     expect(find.text('Tegen de computer'), findsOneWidget);
-    expect(find.text('Per tegenstander'), findsOneWidget);
+    expect(find.text('Jouw pad'), findsOneWidget);
     expect(find.text('Voltooide partijen'), findsOneWidget);
     expect(find.text('1 gewonnen · 0 verloren · 0 remise'), findsOneWidget);
-    // Bot names are proper nouns and stay as they are. Pebble appears twice:
-    // once in the breakdown and once in the list of finished games.
+    // Bot names are proper nouns and stay as they are, in either language.
     expect(find.text('Pebble'), findsWidgets);
   });
 
@@ -522,16 +459,15 @@ void main() {
     await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _pumpHome(tester, repo);
 
-    // Kestrel finished last, so its row sits above Pebble's in the list. The
-    // breakdown above orders the other way — weakest first — so the two rows
-    // are located below the "Finished games" heading.
+    // Kestrel finished last, so its row sits above Pebble's in the list.
+    // Neither is inside the Your Path window, so each name appears exactly
+    // once and the rows are found directly.
     final heading = tester.getTopLeft(find.text('Finished games')).dy;
     final rows = <String, double>{};
     for (final name in ['Pebble', 'Kestrel']) {
       rows[name] = tester
-          .getTopLeft(find
-              .byWidgetPredicate((w) => w is Text && w.data == name)
-              .at(1))
+          .getTopLeft(_inGameRows(
+              find.byWidgetPredicate((w) => w is Text && w.data == name)))
           .dy;
     }
     expect(rows['Pebble']!, greaterThan(heading));
@@ -596,42 +532,6 @@ void main() {
       expect(tester.getRect(row.first).height, greaterThanOrEqualTo(48));
     });
 
-    testWidgets('the by-opponent breakdown carries avatars too', (tester) async {
-      _phone(tester);
-      final repo = await _repository();
-      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
-      await _pumpHome(tester, repo);
-
-      // Two rows name Kestrel — the breakdown and the finished game — and both
-      // must show a face.
-      expect(find.byType(OpponentAvatar), findsNWidgets(2));
-      for (final avatar in tester.widgetList<OpponentAvatar>(
-        find.byType(OpponentAvatar),
-      )) {
-        expect(avatar.id, kestrel.id);
-      }
-    });
-
-    testWidgets('the two sections share a left edge for their names',
-        (tester) async {
-      // The reason both use one slot widget: unequal slots would step the
-      // names in and out between sections that sit directly above each other.
-      _phone(tester);
-      final repo = await _repository();
-      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
-      await _pumpHome(tester, repo);
-
-      Set<double> leftEdgesOf(Finder finder) => finder
-          .evaluate()
-          .map((e) => tester.getRect(find.byWidget(e.widget)).left)
-          .toSet();
-
-      expect(leftEdgesOf(find.byType(OpponentAvatar)).length, 1,
-          reason: 'avatars must start at the same x');
-      expect(leftEdgesOf(find.text('Kestrel')).length, 1,
-          reason: 'names must start at the same x');
-    });
-
     testWidgets('a computer game shows that opponent, not just any avatar',
         (tester) async {
       _phone(tester);
@@ -640,7 +540,7 @@ void main() {
       await _pumpHome(tester, repo);
 
       final avatar = tester.widget<OpponentAvatar>(
-        find.byType(OpponentAvatar).first,
+        _inGameRows(find.byType(OpponentAvatar)),
       );
       expect(avatar.id, kestrel.id);
       expect(avatar.tier, kestrel.tier);
@@ -654,14 +554,17 @@ void main() {
       await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
+      // Scoped to the game rows. Your Path's avatars are deliberately the
+      // full width of their tile — the ladder is meant to read as a
+      // progression of faces — so a bare finder would measure the wrong one.
       final avatar =
-          tester.widget<OpponentAvatar>(find.byType(OpponentAvatar).first);
+          tester.widget<OpponentAvatar>(_inGameRows(find.byType(OpponentAvatar)));
       expect(avatar.size, lessThan(44),
           reason: 'smaller than the selection screen default');
       final line = tester.getRect(
         find.descendant(of: _rowContaining('Won'), matching: find.text('Kestrel')),
       );
-      expect(tester.getRect(find.byType(OpponentAvatar).first).height,
+      expect(tester.getRect(_inGameRows(find.byType(OpponentAvatar))).height,
           lessThanOrEqualTo(line.height + 16),
           reason: 'the avatar must not drive the row height');
     });
@@ -679,7 +582,7 @@ void main() {
       await _pumpHome(tester, repo);
 
       expect(find.text('Pass and play'), findsOneWidget);
-      expect(find.byType(OpponentAvatar), findsNothing);
+      expect(_inGameRows(find.byType(OpponentAvatar)), findsNothing);
       expect(find.byIcon(Icons.people_outline), findsWidgets);
     });
 
@@ -718,11 +621,11 @@ void main() {
       await _finish(repo, game, const [0, 16, 1, 17, 2, 18, 3]);
       await _pumpHome(tester, repo);
 
-      // Twice: once in the by-opponent breakdown, once in the game row. Both
-      // show the raw key, which is deliberately obviously wrong rather than a
-      // plausible invented name.
-      expect(find.text('bot:nonesuch'), findsNWidgets(2));
-      expect(find.byType(OpponentAvatar), findsNothing);
+      // The raw key, which is deliberately obviously wrong rather than a
+      // plausible invented name. Once, in the game row — an opponent this
+      // build does not know is not on the roster and so is not on a tile.
+      expect(find.text('bot:nonesuch'), findsOneWidget);
+      expect(_inGameRows(find.byType(OpponentAvatar)), findsNothing);
     });
   });
 

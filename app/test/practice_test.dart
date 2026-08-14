@@ -29,7 +29,7 @@ void _phone(WidgetTester tester) {
 /// Opens the tutorial, walks to the last step, and starts the practice game.
 Future<void> _openPractice(
     WidgetTester tester, LocalGameRepository repo) async {
-  await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo));
+  await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo, unlocks: repo));
   await tester.pumpAndSettle();
   await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
   await tester.pumpAndSettle();
@@ -326,7 +326,11 @@ void main() {
       _phone(tester);
       final repo = await _repository();
       await tester.pumpWidget(
-          QuadrimApp(repository: repo, settings: repo, locale: const Locale('nl')));
+          QuadrimApp(
+              repository: repo,
+              settings: repo,
+              unlocks: repo,
+              locale: const Locale('nl')));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Uitleg'));
       await tester.pumpAndSettle();

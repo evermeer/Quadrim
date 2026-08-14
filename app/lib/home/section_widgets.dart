@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../data/documents.dart';
 import '../l10n/app_localizations.dart';
@@ -7,8 +6,12 @@ import '../l10n/app_localizations.dart';
 /// The small shared pieces the main screen's sections are built from.
 ///
 /// They live together because each is used by more than one section and none
-/// is large enough to earn a file: a heading, the two ways a rating is drawn,
-/// and the sliver pair that gives a list of games its heading (ticket 030).
+/// is large enough to earn a file: a heading, the rating pill, and the sliver
+/// pair that gives a list of games its heading (ticket 030).
+///
+/// The rating *bar* used to live here too. Its only caller was the by-opponent
+/// breakdown, which ticket 032 deleted when Your Path replaced it, so it went
+/// with it rather than staying as an unused public widget.
 
 /// A heading followed by one lazily-built tile per game.
 ///
@@ -50,11 +53,6 @@ class SectionHeading extends StatelessWidget {
 
 /// An opponent's rating as a number, beside its name.
 ///
-/// The bar under the row says how strong this opponent is *relative to the
-/// ladder*, which is the comparison worth making at a glance; this says which
-/// number it is. Both, because a length cannot be read off precisely and a
-/// number cannot be compared at a glance.
-///
 /// Carries no semantics of its own — the row already announces the rating
 /// once, and a screen reader that met it twice would be worse off than one
 /// that met it never.
@@ -79,46 +77,6 @@ class RatingPill extends StatelessWidget {
         AppLocalizations.of(context)!.ratingValue(rating),
         style: theme.textTheme.labelSmall
             ?.copyWith(color: theme.colorScheme.onSecondaryContainer),
-      ),
-    );
-  }
-}
-
-/// An opponent's rating drawn as a length, under its row.
-///
-/// Full width is the top of the catalogue rather than the strongest opponent
-/// the player happens to have met, so a bar means the same thing on a fresh
-/// install as on a finished one, and beating someone new never shortens the
-/// bars already on the screen.
-///
-/// The scale starts at zero rather than at Pebble, so Pebble reads as a
-/// quarter of Quadrim Prime — which is what the ratings say. Stretching the
-/// bottom of the ladder to fill the bar would make the roster look evenly
-/// spread when it is not.
-class RatingBar extends StatelessWidget {
-  const RatingBar({super.key, required this.rating});
-
-  final int rating;
-
-  /// The catalogue is ordered weakest first and a test pins that, so the last
-  /// entry is the ceiling without a constant to keep in step with it.
-  static final int _strongest = opponentCatalogue.last.rating;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(2),
-      child: LinearProgressIndicator(
-        // Clamped because a stored anchor comes from the game it was played
-        // in, and a recalibration could leave one above today's ceiling.
-        value: (rating / _strongest).clamp(0.0, 1.0),
-        minHeight: 4,
-        // The unfilled track is drawn rather than left blank: without it a bar
-        // is only comparable to the other bars on screen, and the claim being
-        // made is against the top of the ladder, which may not be on screen.
-        backgroundColor: scheme.surfaceContainerHighest,
-        color: scheme.primary,
       ),
     );
   }

@@ -20,7 +20,8 @@ Widget _app({int playerRating = kSeedRating, Locale? locale}) => MaterialApp(
       locale: locale,
       localizationsDelegates: _delegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: OpponentScreen(playerRating: playerRating),
+      home: OpponentScreen(
+          playerRating: playerRating, unlocked: _allUnlocked),
     );
 
 /// Pumps the screen into a viewport tall enough to build an open section in
@@ -56,6 +57,11 @@ Future<void> _openTier(WidgetTester tester, BotTier tier) async {
   await tester.tap(find.text(_tierLabels[tier]!));
   await tester.pumpAndSettle();
 }
+
+/// Every catalogue id, so a test about tiers, ratings or match balance is not
+/// silently also a test about the unlock ladder. Locked rows are covered in
+/// `your_path_test.dart` and in the locked cases below.
+final Set<String> _allUnlocked = {for (final bot in opponentCatalogue) bot.id};
 
 void main() {
   group('the accordion', () {
@@ -207,7 +213,9 @@ void main() {
                 chosen = await Navigator.of(context).push<BotConfig>(
                   MaterialPageRoute<BotConfig>(
                     builder: (_) =>
-                        const OpponentScreen(playerRating: kSeedRating),
+                        OpponentScreen(
+                            playerRating: kSeedRating,
+                            unlocked: _allUnlocked),
                   ),
                 );
               },
@@ -239,7 +247,9 @@ void main() {
                 final bot = await Navigator.of(context).push<BotConfig>(
                   MaterialPageRoute<BotConfig>(
                     builder: (_) =>
-                        const OpponentScreen(playerRating: kSeedRating),
+                        OpponentScreen(
+                            playerRating: kSeedRating,
+                            unlocked: _allUnlocked),
                   ),
                 );
                 returned = bot?.id ?? 'null';
@@ -311,7 +321,8 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-            child: const OpponentScreen(playerRating: 1182),
+            child: OpponentScreen(
+                playerRating: 1182, unlocked: _allUnlocked),
           ),
         ),
       );

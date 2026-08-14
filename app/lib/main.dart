@@ -22,7 +22,11 @@ Future<void> main() async {
   final store =
       await FileDocumentStore.open(Directory('${support.path}/quadrim'));
   final repository = await LocalGameRepository.open(store);
-  runApp(QuadrimApp(repository: repository, settings: repository));
+  runApp(QuadrimApp(
+    repository: repository,
+    settings: repository,
+    unlocks: repository,
+  ));
 }
 
 class QuadrimApp extends StatefulWidget {
@@ -30,12 +34,17 @@ class QuadrimApp extends StatefulWidget {
     super.key,
     required this.repository,
     required this.settings,
+    required this.unlocks,
     this.locale,
     this.random,
   });
 
   final GameRepository repository;
   final SettingsRepository settings;
+
+  /// What the player has bought. A third contract satisfied by the same local
+  /// implementation, kept separate so 0.3a can move one without the others.
+  final UnlockRepository unlocks;
 
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
@@ -103,6 +112,7 @@ class _QuadrimAppState extends State<QuadrimApp> {
       home: HomeScreen(
         repository: widget.repository,
         settings: widget.settings,
+        unlocks: widget.unlocks,
         random: widget.random,
       ),
     );

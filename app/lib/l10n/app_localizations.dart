@@ -1147,6 +1147,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About'**
   String get settingsAbout;
+
+  /// Heading of the three-tile section showing the next opponent to unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your path'**
+  String get yourPath;
+
+  /// No description provided for @locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get locked;
+
+  /// The price of a locked opponent. Locale-formatted: the top of the ladder is seven digits.
+  ///
+  /// In en, this message translates to:
+  /// **'{cost} points'**
+  String unlockCost(int cost);
+
+  /// Progress toward a locked opponent's price.
+  ///
+  /// In en, this message translates to:
+  /// **'{have} of {cost}'**
+  String unlockProgress(int have, int cost);
+
+  /// No description provided for @unlockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockAction;
+
+  /// Title of the unlock confirmation. Bot names are never translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock {name}?'**
+  String unlockConfirmTitle(String name);
+
+  /// Body of the unlock confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'This costs {cost} points and leaves you {left}.'**
+  String unlockConfirmBody(int cost, int left);
+
+  /// Shown in the unlock confirmation for Oracle and Quadrim Prime only. Required: the two most expensive unlocks buy opponents that cannot be beaten half the time, and the player must be told before spending, not only in a store listing (spec §6.6, D181).
+  ///
+  /// In en, this message translates to:
+  /// **'{name} plays a proven strategy and is unbeatable when it moves first. From the second seat it plays by search, like the rest.'**
+  String unlockConfirmBook(String name);
+
+  /// Why the unlock button is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {short} more points.'**
+  String unlockNotAffordable(int short);
+
+  /// Confirmation after a successful unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} unlocked.'**
+  String unlockDone(String name);
+
+  /// Spoken form of the star row. Counted rather than merely drawn, so the row means something without sight of it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 3 stars'**
+  String starsLabel(int count);
+
+  /// Shown instead of a star row for an opponent never faced. Unearned and failed must not look the same.
+  ///
+  /// In en, this message translates to:
+  /// **'Not played yet'**
+  String get neverPlayed;
+
+  /// One Your Path tile as a single announced node — name, rating, then its record or its locked state and price.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, rated {rating}. {state}'**
+  String pathTileSemantics(String name, int rating, String state);
+
+  /// The locked half of a tile's spoken state.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked. {cost} points, you have {have}.'**
+  String lockedWithPrice(int cost, int have);
 }
 
 class _AppLocalizationsDelegate

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:quadrim_engine/quadrim_engine.dart' as engine;
+import 'package:quadrim_progression/quadrim_progression.dart' as progression;
 
 import 'document_store.dart';
 import 'documents.dart';
@@ -13,12 +14,14 @@ import 'game_repository.dart';
 /// Documents are held in memory after the initial load. Local history is small
 /// and never behind a network, and this is what lets the main screen fold one
 /// list four ways instead of sweeping storage four times (spec §9.5).
-class LocalGameRepository implements GameRepository, SettingsRepository {
+class LocalGameRepository
+    implements GameRepository, SettingsRepository, UnlockRepository {
   LocalGameRepository._(
     this._store,
     this._now,
     this._newId,
     this._games,
+    this._unlocks,
     this._settings,
   );
 
@@ -27,6 +30,11 @@ class LocalGameRepository implements GameRepository, SettingsRepository {
   final String Function() _newId;
 
   final Map<String, GameDocument> _games;
+
+  /// Keyed by opponent id, which is also the document id — so buying the same
+  /// opponent twice overwrites one record rather than charging twice.
+  final Map<String, UnlockDocument> _unlocks;
+
   SettingsDocument _settings;
 
   final StreamController<void> _changes = StreamController<void>.broadcast();
@@ -44,12 +52,18 @@ class LocalGameRepository implements GameRepository, SettingsRepository {
       final doc = GameDocument.fromJson(json);
       if (doc != null) games[doc.id] = doc;
     }
+    final unlocks = <String, UnlockDocument>{};
+    for (final json in (await store.readUnlocks()).values) {
+      final doc = UnlockDocument.fromJson(json);
+      if (doc != null) unlocks[doc.opponentId] = doc;
+    }
     final settings = SettingsDocument.fromJson(await store.readSettings() ?? {});
     return LocalGameRepository._(
       store,
       now ?? () => DateTime.now().toUtc(),
       newId ?? _randomId,
       games,
+      unlocks,
       settings ?? const SettingsDocument(),
     );
   }
@@ -225,6 +239,49 @@ class LocalGameRepository implements GameRepository, SettingsRepository {
       throw StateError('game $id is already complete');
     }
     return game;
+  }
+
+  /// Oldest first, so the list reads as the ladder the player climbed.
+  List<UnlockDocument> _unlockList() => _unlocks.values.toList()
+    ..sort((a, b) {
+      final byTime = a.unlockedAt.compareTo(b.unlockedAt);
+      return byTime != 0 ? byTime : a.opponentId.compareTo(b.opponentId);
+    });
+
+  @override
+  Stream<List<UnlockDocument>> watchUnlocks() => _watch(_unlockList);
+
+  @override
+  Future<List<UnlockDocument>> loadUnlocks() async => _unlockList();
+
+  @override
+  Future<UnlockDocument> purchase(
+    String opponentId, {
+    required int pricePaid,
+    UnlockSource source = UnlockSource.points,
+  }) async {
+    final owned = _unlocks.keys.toSet();
+    if (progression.isUnlocked(opponentId, owned)) {
+      throw StateError('$opponentId is already unlocked');
+    }
+    // Sequential, always. Checked here rather than only in the UI because this
+    // is the only writer, and "four wins buys the *next* opponent" stops being
+    // a promise the moment some other path can skip ahead (D229).
+    final next = progression.nextUnlockIndex(owned);
+    if (next == null || engine.opponentCatalogue[next].id != opponentId) {
+      throw ArgumentError.value(
+          opponentId, 'opponentId', 'not the next opponent in roster order');
+    }
+    final unlock = UnlockDocument(
+      opponentId: opponentId,
+      unlockedAt: _now(),
+      pricePaid: pricePaid,
+      source: source,
+    );
+    await _store.writeUnlock(opponentId, unlock.toJson());
+    _unlocks[opponentId] = unlock;
+    _emit();
+    return unlock;
   }
 
   @override

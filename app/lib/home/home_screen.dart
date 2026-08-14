@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_progression/quadrim_progression.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
@@ -15,9 +16,10 @@ import '../settings/settings_screen.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
 import 'finished_games.dart';
-import 'opponent_section.dart';
 import 'rating_card.dart';
 import 'section_widgets.dart';
+import 'unlock_confirmation.dart';
+import 'your_path.dart';
 
 /// The app's home: what the player has done, what they are in the middle of,
 /// and the one button that starts something new.
@@ -36,10 +38,15 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.repository,
     required this.settings,
+    required this.unlocks,
     this.random,
   });
 
   final GameRepository repository;
+
+  /// What the player has bought. Separate contract from [repository] even
+  /// though 0.1's one implementation satisfies both.
+  final UnlockRepository unlocks;
 
   /// Read on first frame to decide whether to offer the tutorial, and written
   /// once the offer has been made. Separate from [repository] because they are
@@ -56,10 +63,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<GameDocument>>? _active;
   StreamSubscription<List<GameDocument>>? _completed;
+  StreamSubscription<List<UnlockDocument>>? _unlocks;
 
   List<GameDocument> _activeGames = const [];
   List<GameDocument> _completedGames = const [];
   HomeSummary _summary = HomeSummary.empty;
+  List<UnlockDocument> _unlockList = const [];
+
+  /// True while a purchase is in flight, which is what stops a second tap
+  /// buying a second time before the first write lands.
+  bool _unlocking = false;
   /// What each finished ladder game did to the rating, by game id. Computed
   /// with the summary rather than per row, which would re-fold the history
   /// once for every row on the screen.
@@ -83,6 +96,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     // After the first frame, not during it: showing a dialog needs a Navigator
     // above this widget, and there is none until the tree is built.
+    _unlocks = widget.unlocks
+        .watchUnlocks()
+        .listen((list) => setState(() => _unlockList = list));
     WidgetsBinding.instance.addPostFrameCallback((_) => _offerTutorial());
   }
 
@@ -113,7 +129,38 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _active?.cancel();
     _completed?.cancel();
+    _unlocks?.cancel();
     super.dispose();
+  }
+
+  Set<String> get _unlockedIds =>
+      {for (final unlock in _unlockList) unlock.opponentId};
+
+  /// The balance: earned minus the prices **actually paid**, clamped at zero.
+  ///
+  /// The prices come from the stored records rather than from the cost table,
+  /// so re-tuning a cost can never retroactively bankrupt someone who already
+  /// spent at the old price (spec §8.8).
+  int get _balance => balance(
+        earned: _summary.points,
+        pricesPaid: [for (final unlock in _unlockList) unlock.pricePaid],
+      );
+
+  Future<void> _unlock(BotConfig bot, int price) async {
+    if (_unlocking) return;
+    setState(() => _unlocking = true);
+    try {
+      await runUnlock(
+        context,
+        bot: bot,
+        price: price,
+        points: _balance,
+        purchase: (id, paid) =>
+            widget.unlocks.purchase(id, pricePaid: paid),
+      );
+    } finally {
+      if (mounted) setState(() => _unlocking = false);
+    }
   }
 
   Future<void> _openGame(String id) async {
@@ -161,7 +208,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mode == GameMode.vsComputer) {
       bot = await Navigator.of(context).push<BotConfig>(
         MaterialPageRoute<BotConfig>(
-          builder: (_) => OpponentScreen(playerRating: _summary.computerRating),
+          builder: (_) => OpponentScreen(
+            playerRating: _summary.computerRating,
+            unlocked: _unlockedIds,
+            points: _balance,
+            onUnlock: _unlock,
+          ),
         ),
       );
       if (bot == null || !mounted) return;
@@ -209,11 +261,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     sliver: SliverList.list(
                       children: [
-                        RatingCard(summary: _summary),
-                        if (_summary.byOpponent.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          OpponentSection(records: _summary.byOpponent),
-                        ],
+                        RatingCard(summary: _summary, balance: _balance),
+                        const SizedBox(height: 16),
+                        YourPath(
+                          summary: _summary,
+                          unlocked: _unlockedIds,
+                          onUnlock: _unlocking ? null : _unlock,
+                        ),
                         if (_activeGames.isEmpty && _completedGames.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),
