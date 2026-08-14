@@ -204,15 +204,15 @@ void main() {
 
   testWidgets('the pill says the rating once, not twice, to a screen reader',
       (tester) async {
-    // The row already announces "Ember. Rating 1300." — a pill that announced
+    // The row already announces "Kestrel. Rating 1300." — a pill that announced
     // itself as well would make the row read the number twice.
     _phone(tester);
     final handle = tester.ensureSemantics();
     final repo = await _repository();
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _pumpHome(tester, repo);
 
-    expect(find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
+    expect(find.bySemanticsLabel(RegExp(r'Kestrel\. Rating 1300\. ')),
         findsNWidgets(2));
     expect(find.bySemanticsLabel('1300'), findsNothing,
         reason: 'no pill announces itself on top of its row');
@@ -222,7 +222,7 @@ void main() {
   testWidgets('a finished game shows what it did to the rating', (tester) async {
     _phone(tester);
     final repo = await _repository();
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _completedGame(repo,
         botId: pebble.id, rating: pebble.rating, playerWins: false);
     await _pumpHome(tester, repo);
@@ -256,7 +256,7 @@ void main() {
     final repo = await _repository();
     for (var i = 0; i < 5; i++) {
       await _completedGame(repo,
-          botId: ember.id, rating: ember.rating, playerWins: i.isEven);
+          botId: kestrel.id, rating: kestrel.rating, playerWins: i.isEven);
     }
     await _pumpHome(tester, repo);
 
@@ -306,12 +306,12 @@ void main() {
     _phone(tester);
     final handle = tester.ensureSemantics();
     final repo = await _repository();
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _pumpHome(tester, repo);
 
-    // Both rows that name Ember say it: the breakdown, whose bar and pill are
+    // Both rows that name Kestrel say it: the breakdown, whose bar and pill are
     // invisible to a screen reader, and the finished game, whose pill is.
-    expect(find.bySemanticsLabel(RegExp(r'Ember\. Rating 1300\. ')),
+    expect(find.bySemanticsLabel(RegExp(r'Kestrel\. Rating 1300\. ')),
         findsNWidgets(2));
     handle.dispose();
   });
@@ -353,7 +353,7 @@ void main() {
       (tester) async {
     _phone(tester);
     final repo = await _repository();
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _completedGame(
         repo, botId: pebble.id, rating: pebble.rating, playerWins: false);
     await _pumpHome(tester, repo);
@@ -363,8 +363,8 @@ void main() {
     // also appear in the finished-games list below it — so ordering is
     // asserted on where they land, not on how many Texts say "Pebble".
     final pebbleRow = tester.getTopLeft(find.text('0–1–0 in 1 games')).dy;
-    final emberRow = tester.getTopLeft(find.text('1–0–0 in 1 games')).dy;
-    expect(pebbleRow, lessThan(emberRow), reason: 'weakest first');
+    final kestrelRow = tester.getTopLeft(find.text('1–0–0 in 1 games')).dy;
+    expect(pebbleRow, lessThan(kestrelRow), reason: 'weakest first');
   });
 
   testWidgets('tapping a game in progress resumes it', (tester) async {
@@ -519,15 +519,15 @@ void main() {
     // Distinguishable by opponent name rather than by result, because every
     // fixture game ends the same way.
     await _completedGame(repo, botId: pebble.id, rating: pebble.rating);
-    await _completedGame(repo, botId: ember.id, rating: ember.rating);
+    await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
     await _pumpHome(tester, repo);
 
-    // Ember finished last, so its row sits above Pebble's in the list. The
+    // Kestrel finished last, so its row sits above Pebble's in the list. The
     // breakdown above orders the other way — weakest first — so the two rows
     // are located below the "Finished games" heading.
     final heading = tester.getTopLeft(find.text('Finished games')).dy;
     final rows = <String, double>{};
-    for (final name in ['Pebble', 'Ember']) {
+    for (final name in ['Pebble', 'Kestrel']) {
       rows[name] = tester
           .getTopLeft(find
               .byWidgetPredicate((w) => w is Text && w.data == name)
@@ -535,8 +535,8 @@ void main() {
           .dy;
     }
     expect(rows['Pebble']!, greaterThan(heading));
-    expect(rows['Ember']!, greaterThan(heading));
-    expect(rows['Ember']!, lessThan(rows['Pebble']!),
+    expect(rows['Kestrel']!, greaterThan(heading));
+    expect(rows['Kestrel']!, lessThan(rows['Pebble']!),
         reason: 'most recently finished first');
   });
 
@@ -564,14 +564,14 @@ void main() {
       // while saying nothing more (D189).
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
-      // Scoped to the row: "Ember" also appears in the by-opponent breakdown
+      // Scoped to the row: "Kestrel" also appears in the by-opponent breakdown
       // further up the screen, so a bare text finder is ambiguous.
       final row = _rowContaining('Won');
       final name =
-          tester.getRect(find.descendant(of: row, matching: find.text('Ember')));
+          tester.getRect(find.descendant(of: row, matching: find.text('Kestrel')));
       final result =
           tester.getRect(find.descendant(of: row, matching: find.text('Won')));
       expect(result.center.dy, closeTo(name.center.dy, 4),
@@ -586,7 +586,7 @@ void main() {
       // so they are the worst control to make small (D189).
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
       final row = find.ancestor(
@@ -599,16 +599,16 @@ void main() {
     testWidgets('the by-opponent breakdown carries avatars too', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
-      // Two rows name Ember — the breakdown and the finished game — and both
+      // Two rows name Kestrel — the breakdown and the finished game — and both
       // must show a face.
       expect(find.byType(OpponentAvatar), findsNWidgets(2));
       for (final avatar in tester.widgetList<OpponentAvatar>(
         find.byType(OpponentAvatar),
       )) {
-        expect(avatar.id, ember.id);
+        expect(avatar.id, kestrel.id);
       }
     });
 
@@ -618,7 +618,7 @@ void main() {
       // names in and out between sections that sit directly above each other.
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
       Set<double> leftEdgesOf(Finder finder) => finder
@@ -628,7 +628,7 @@ void main() {
 
       expect(leftEdgesOf(find.byType(OpponentAvatar)).length, 1,
           reason: 'avatars must start at the same x');
-      expect(leftEdgesOf(find.text('Ember')).length, 1,
+      expect(leftEdgesOf(find.text('Kestrel')).length, 1,
           reason: 'names must start at the same x');
     });
 
@@ -636,14 +636,14 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
       final avatar = tester.widget<OpponentAvatar>(
         find.byType(OpponentAvatar).first,
       );
-      expect(avatar.id, ember.id);
-      expect(avatar.tier, ember.tier);
+      expect(avatar.id, kestrel.id);
+      expect(avatar.tier, kestrel.tier);
     });
 
     testWidgets('the avatar is smaller here than on the selection screen',
@@ -651,7 +651,7 @@ void main() {
       // It rides a single line of text, so it may not set the row's height.
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
       final avatar =
@@ -659,7 +659,7 @@ void main() {
       expect(avatar.size, lessThan(44),
           reason: 'smaller than the selection screen default');
       final line = tester.getRect(
-        find.descendant(of: _rowContaining('Won'), matching: find.text('Ember')),
+        find.descendant(of: _rowContaining('Won'), matching: find.text('Kestrel')),
       );
       expect(tester.getRect(find.byType(OpponentAvatar).first).height,
           lessThanOrEqualTo(line.height + 16),
@@ -690,7 +690,7 @@ void main() {
       final handle = tester.ensureSemantics();
       _phone(tester);
       final repo = await _repository();
-      await _completedGame(repo, botId: ember.id, rating: ember.rating);
+      await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
       // The rating sits between the two facts now that the row shows it as a
@@ -699,7 +699,7 @@ void main() {
       // still one node. The change is matched as a pattern rather than a
       // literal because its value depends on the whole fold, and hard-coding
       // it here would pin the rating maths in the wrong file.
-      expect(find.bySemanticsLabel(RegExp(r'^Ember\. Rating 1300\. Won\. \+\d+$')),
+      expect(find.bySemanticsLabel(RegExp(r'^Kestrel\. Rating 1300\. Won\. \+\d+$')),
           findsOneWidget);
       handle.dispose();
     });

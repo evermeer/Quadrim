@@ -61,9 +61,9 @@ void main() {
   group('the accordion', () {
     testWidgets('opens the tier nearest the player and no other',
         (tester) async {
-      // A seeded player at 1200 sits on Kestrel exactly, so Casual opens.
+      // A seeded player at 1200 sits on Vireo exactly, so Casual opens.
       await _pumpTall(tester, playerRating: kSeedRating);
-      expect(find.text('Kestrel'), findsOneWidget);
+      expect(find.text('Vireo'), findsOneWidget);
       expect(find.text('Pebble'), findsNothing, reason: 'Novice must be shut');
       expect(find.text('Titan'), findsNothing, reason: 'Expert must be shut');
     });
@@ -90,11 +90,11 @@ void main() {
 
     testWidgets('opening one closes the one that was open', (tester) async {
       await _pumpTall(tester);
-      expect(find.text('Kestrel'), findsOneWidget);
+      expect(find.text('Vireo'), findsOneWidget);
 
       await _openTier(tester, BotTier.master);
       expect(find.text('Oracle'), findsOneWidget);
-      expect(find.text('Kestrel'), findsNothing,
+      expect(find.text('Vireo'), findsNothing,
           reason: 'Casual should have closed when Master opened');
 
       await _openTier(tester, BotTier.novice);
@@ -104,9 +104,9 @@ void main() {
 
     testWidgets('tapping the open tier closes it', (tester) async {
       await _pumpTall(tester);
-      expect(find.text('Kestrel'), findsOneWidget);
+      expect(find.text('Vireo'), findsOneWidget);
       await _openTier(tester, BotTier.casual);
-      expect(find.text('Kestrel'), findsNothing);
+      expect(find.text('Vireo'), findsNothing);
       // All five headings survive with nothing open.
       for (final label in _tierLabels.values) {
         expect(find.text(label), findsOneWidget);
@@ -219,10 +219,10 @@ void main() {
     );
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
-    // Kestrel is in the tier that opens for a seeded player.
-    await tester.tap(find.text('Kestrel'));
+    // Vireo is in the tier that opens for a seeded player.
+    await tester.tap(find.text('Vireo'));
     await tester.pumpAndSettle();
-    expect(chosen?.id, 'kestrel');
+    expect(chosen?.id, 'vireo');
     expect(chosen?.rating, 1200);
   });
 
@@ -329,7 +329,7 @@ void main() {
     await _pumpTall(tester, locale: const Locale('nl'));
     expect(find.text('Kies een tegenstander'), findsOneWidget);
     expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Kestrel'), findsOneWidget);
+    expect(find.text('Vireo'), findsOneWidget);
   });
 
   group('tierNearest', () {
@@ -353,7 +353,7 @@ void main() {
     });
 
     test('the midpoint between two tiers resolves without throwing', () {
-      // 1350 is exactly between Ember (1300) and Basalt (1400). Whichever it
+      // 1350 is exactly between Kestrel (1300) and Marlin (1400). Whichever it
       // picks, it must pick one — the first wins on a tie, which is Casual.
       expect(tierNearest(1350), BotTier.casual);
     });

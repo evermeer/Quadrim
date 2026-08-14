@@ -213,7 +213,7 @@ final class BotConfig {
   /// opponent's structure worries it more than its own pleases it.
   ///
   /// Derived from [aggression] rather than configured separately (D150), so
-  /// Marlin and Vireo differ in temperament by one number, in the rule order
+  /// Ember and Basalt differ in temperament by one number, in the rule order
   /// and in the evaluation at once — which is what "opposing temperaments"
   /// has to mean if the two are to be distinguishable in play.
   double get defence => 2 * (1 - aggression);
@@ -227,7 +227,7 @@ const Set<StrategicRule> _allRules = {
 };
 
 // ---------------------------------------------------------------------------
-// The catalogue. Configurations realise the personalities in idea-v1 §6.4;
+// The catalogue. Configurations realise the personalities in idea-v3 §6.4;
 // the ratings there are fixed and these parameters are what gets tuned when
 // measured strength disagrees with them (D144).
 // ---------------------------------------------------------------------------
@@ -279,8 +279,8 @@ const BotConfig bramble = BotConfig(
 // groups is worth far more than the percentage point of blunder rate that
 // separates neighbours here — and the blunder rates *cannot* spread, because
 // they must fall as rating rises and the tier is bracketed by Bramble at 0.15
-// and Ember at 0.08. So the ladder is: Bramble prefers none of the sixteen,
-// Finch and Kestrel prefer eight each, and Willow and Ember prefer all
+// and Kestrel at 0.08. So the ladder is: Bramble prefers none of the sixteen,
+// Willow and Vireo prefer eight each, and Finch and Kestrel prefer all
 // sixteen. Spec 8.4 gives the whole tier a centre preference, so this is the
 // tier conforming to it rather than departing from it.
 //
@@ -288,11 +288,11 @@ const BotConfig bramble = BotConfig(
 // there is nothing to compare their magnitudes against, so an opponent that
 // ranks corners above centres above everything else plays identically at
 // (0.55, 0.35) and at (0.8, 0.6) — measured, byte for byte, when a first
-// attempt at this tried to weaken Kestrel by lowering both.
+// attempt at this tried to weaken Vireo by lowering both.
 
 /// All four rules and a strong pull to the middle of the cube.
-const BotConfig finch = BotConfig(
-  id: 'finch',
+const BotConfig willow = BotConfig(
+  id: 'willow',
   tier: BotTier.casual,
   rating: 1100,
   rules: _allRules,
@@ -305,8 +305,8 @@ const BotConfig finch = BotConfig(
 ///
 /// It sees the centre too, and ranks it below the corners — the extra eight
 /// good cells are what pay for a third of its denials going missing.
-const BotConfig kestrel = BotConfig(
-  id: 'kestrel',
+const BotConfig vireo = BotConfig(
+  id: 'vireo',
   tier: BotTier.casual,
   rating: 1200,
   rules: _allRules,
@@ -317,8 +317,8 @@ const BotConfig kestrel = BotConfig(
 );
 
 /// Defensive: denies before it builds, and takes good squares while it does.
-const BotConfig willow = BotConfig(
-  id: 'willow',
+const BotConfig finch = BotConfig(
+  id: 'finch',
   tier: BotTier.casual,
   rating: 1250,
   rules: _allRules,
@@ -331,10 +331,10 @@ const BotConfig willow = BotConfig(
 /// The tier's ceiling: all four rules cleanly applied, the full sixteen good
 /// squares, and nothing given away.
 ///
-/// What Basalt adds on top is the building term — the cell on the most lines
+/// What Marlin adds on top is the building term — the cell on the most lines
 /// it is already working — which is a lever this one does not have at all.
-const BotConfig ember = BotConfig(
-  id: 'ember',
+const BotConfig kestrel = BotConfig(
+  id: 'kestrel',
   tier: BotTier.casual,
   rating: 1300,
   rules: _allRules,
@@ -345,13 +345,13 @@ const BotConfig ember = BotConfig(
 
 /// The first opponent with a plan: all four rules plus the full positional
 /// ladder — centre, then corner, then the cell on the most lines it is
-/// already building — and only a 6% blunder rate (idea-v1 §6.4).
+/// already building — and only a 6% blunder rate (idea-v3 §6.4).
 ///
 /// The weights realise the ladder as an order: any centre cell (1.00 … 1.25)
 /// outscores any corner (0.50 … 0.75), which outscores any other cell
 /// (0.00 … 0.25), and the building term decides within each class.
-const BotConfig basalt = BotConfig(
-  id: 'basalt',
+const BotConfig marlin = BotConfig(
+  id: 'marlin',
   tier: BotTier.club,
   rating: 1400,
   rules: _allRules,
@@ -361,13 +361,13 @@ const BotConfig basalt = BotConfig(
   lineBias: 0.25,
 );
 
-// The Club tier's searching opponents. All four are Basalt's rules and
+// The Club tier's searching opponents. All four are Marlin's rules and
 // positional ladder plus a look ahead; what separates them is how far they
 // look, at what, and with which temperament.
 
 /// Two plies, weighted towards its own structure.
-const BotConfig marlin = BotConfig(
-  id: 'marlin',
+const BotConfig ember = BotConfig(
+  id: 'ember',
   tier: BotTier.club,
   rating: 1500,
   searchDepth: 2,
@@ -382,12 +382,12 @@ const BotConfig marlin = BotConfig(
 /// Three plies and a short look for forced wins, weighted towards what the
 /// opponent is building.
 ///
-/// Deeper than Marlin, and looking two forcing moves ahead, because
+/// Deeper than Ember, and looking two forcing moves ahead, because
 /// temperament alone does not separate them: measured over 400 games at equal
 /// depth the two are level, and defensive weighting turns out to be worth
 /// nothing at all in a game of 76 competing lines (D154).
-const BotConfig vireo = BotConfig(
-  id: 'vireo',
+const BotConfig basalt = BotConfig(
+  id: 'basalt',
   tier: BotTier.club,
   rating: 1550,
   searchDepth: 3,
@@ -403,7 +403,7 @@ const BotConfig vireo = BotConfig(
 /// Three plies and a five-move forcing search, even-handed. The first
 /// opponent that will beat a competent human more often than not.
 ///
-/// Its edge over Vireo is entirely the forcing search. Depth is the weakest
+/// Its edge over Basalt is entirely the forcing search. Depth is the weakest
 /// of the three levers this engine has, and past three plies it does not
 /// separate opponents at all (D154, D156).
 const BotConfig onyx = BotConfig(
@@ -441,8 +441,8 @@ const BotConfig sable = BotConfig(
 // ---------------------------------------------------------------------------
 
 /// Iterative deepening under a transposition table.
-const BotConfig quartz = BotConfig(
-  id: 'quartz',
+const BotConfig corvus = BotConfig(
+  id: 'corvus',
   tier: BotTier.expert,
   rating: 1800,
   nodeBudget: 500000,
@@ -455,10 +455,10 @@ const BotConfig quartz = BotConfig(
   lineBias: 0.25,
 );
 
-/// Quartz with a longer look, and the first opponent that checks what its own
+/// Corvus with a longer look, and the first opponent that checks what its own
 /// move hands over (D169).
-const BotConfig corvus = BotConfig(
-  id: 'corvus',
+const BotConfig lyra = BotConfig(
+  id: 'lyra',
   tier: BotTier.expert,
   rating: 1900,
   nodeBudget: 900000,
@@ -473,9 +473,9 @@ const BotConfig corvus = BotConfig(
 );
 
 /// A budget large enough to reach the middle of the ticket's depth range, and
-/// two more moves of defence than Corvus.
-const BotConfig lyra = BotConfig(
-  id: 'lyra',
+/// two more moves of defence than Lyra.
+const BotConfig quartz = BotConfig(
+  id: 'quartz',
   tier: BotTier.expert,
   rating: 2000,
   nodeBudget: 1800000,
@@ -489,7 +489,7 @@ const BotConfig lyra = BotConfig(
   lineBias: 0.25,
 );
 
-/// Lyra plus exact endgame solving, defence as deep as it repays, and no
+/// Quartz plus exact endgame solving, defence as deep as it repays, and no
 /// deliberate blunders at all.
 ///
 /// Once ten cells remain it stops estimating: the result it returns is proved,
@@ -580,18 +580,18 @@ const List<BotConfig> opponentCatalogue = [
   mote,
   clover,
   bramble,
+  willow,
+  vireo,
   finch,
   kestrel,
-  willow,
+  marlin,
   ember,
   basalt,
-  marlin,
-  vireo,
   onyx,
   sable,
-  quartz,
   corvus,
   lyra,
+  quartz,
   titan,
   oracle,
   quadrimPrime,

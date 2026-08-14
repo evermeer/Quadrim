@@ -42,7 +42,7 @@ List<GameState> _endgames(int empties, int want, Random random) {
         found.add(state);
         break;
       }
-      state = applyMove(state, chooseMove(state, ember, random));
+      state = applyMove(state, chooseMove(state, kestrel, random));
     }
   }
   return found;

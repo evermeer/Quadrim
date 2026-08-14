@@ -317,18 +317,18 @@ Twenty opponents across five tiers. **Ratings are fixed anchors.** The `#` colum
 | # | Name | Rating | Prefers | Blunder | Aggression |
 |---|---|---|---|---|---|
 | 4 | Bramble | 1000 | none of the sixteen | 0.15 | 0.5 |
-| 5 | Finch | 1100 | the 8 centres | 0.13 | 0.5 |
-| 6 | Kestrel | 1200 | all 16, corners first | 0.11 | 0.67 |
-| 7 | Willow | 1250 | all 16, centres first | 0.10 | 0.30 |
-| 8 | Ember | 1300 | all 16, centres first | 0.08 | 0.5 |
+| 5 | Willow | 1100 | the 8 centres | 0.13 | 0.5 |
+| 6 | Vireo | 1200 | all 16, corners first | 0.11 | 0.67 |
+| 7 | Finch | 1250 | all 16, centres first | 0.10 | 0.30 |
+| 8 | Kestrel | 1300 | all 16, centres first | 0.08 | 0.5 |
 
-**Club** — Basalt's rules and full positional ladder, plus a look ahead.
+**Club** — Marlin's rules and full positional ladder, plus a look ahead.
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
-| 9 | Basalt | 1400 | Full positional ladder including the building term, 6% blunder rate, no search |
-| 10 | Marlin | 1500 | 2-ply, aggressive weighting, 5% |
-| 11 | Vireo | 1550 | 2-ply, defensive weighting, 4% |
+| 9 | Marlin | 1400 | Full positional ladder including the building term, 6% blunder rate, no search |
+| 10 | Ember | 1500 | 2-ply, aggressive weighting, 5% |
+| 11 | Basalt | 1550 | 2-ply, defensive weighting, 4% |
 | 12 | Onyx | 1650 | 4-ply, 3% |
 | 13 | Sable | 1700 | 4-ply plus threat-space search, 2% |
 
@@ -336,9 +336,9 @@ Twenty opponents across five tiers. **Ratings are fixed anchors.** The `#` colum
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
-| 14 | Quartz | 1800 | 500k nodes, transposition table, 1.5% |
-| 15 | Corvus | 1900 | 900k nodes, deeper threat search, first with a **defensive** forcing search, 1% |
-| 16 | Lyra | 2000 | 1.8M nodes, deeper defence, 0.5% |
+| 14 | Corvus | 1800 | 500k nodes, transposition table, 1.5% |
+| 15 | Lyra | 1900 | 900k nodes, deeper threat search, first with a **defensive** forcing search, 1% |
+| 16 | Quartz | 2000 | 1.8M nodes, deeper defence, 0.5% |
 | 17 | Titan | 2100 | 2.5M nodes, exact solving below 10 empty cells, unstarved defence, no deliberate blunders |
 
 **Master** — the first opponents that stop estimating and start knowing.
@@ -451,18 +451,18 @@ Keeping these separate is what lets the rating stay honest. A rating you could s
 | Mote | 2 | 4 |
 | Clover | 3 | 8 |
 | Bramble | 4 | 16 |
-| Finch | 5 | 32 |
-| Kestrel | 6 | 64 |
-| Willow | 7 | 128 |
-| Ember | 8 | 256 |
-| Basalt | 9 | 512 |
-| Marlin | 10 | 1,024 |
-| Vireo | 11 | 2,048 |
+| Willow | 5 | 32 |
+| Vireo | 6 | 64 |
+| Finch | 7 | 128 |
+| Kestrel | 8 | 256 |
+| Marlin | 9 | 512 |
+| Ember | 10 | 1,024 |
+| Basalt | 11 | 2,048 |
 | Onyx | 12 | 4,096 |
 | Sable | 13 | 8,192 |
-| Quartz | 14 | 16,384 |
-| Corvus | 15 | 32,768 |
-| Lyra | 16 | 65,536 |
+| Corvus | 14 | 16,384 |
+| Lyra | 15 | 32,768 |
+| Quartz | 16 | 65,536 |
 | Titan | 17 | 131,072 |
 | Oracle | 18 | 262,144 |
 | Quadrim Prime | 19 | 524,288 |
@@ -477,19 +477,19 @@ The five opponents rated 1000 and below are available from first launch. The oth
 
 | Unlock | Costs | = four wins against |
 |---|---|---|
-| Finch | 64 | Bramble |
-| Kestrel | 128 | Finch |
-| Willow | 256 | Kestrel |
-| Ember | 512 | Willow |
-| Basalt | 1,024 | Ember |
-| Marlin | 2,048 | Basalt |
-| Vireo | 4,096 | Marlin |
-| Onyx | 8,192 | Vireo |
+| Willow | 64 | Bramble |
+| Vireo | 128 | Willow |
+| Finch | 256 | Vireo |
+| Kestrel | 512 | Finch |
+| Marlin | 1,024 | Kestrel |
+| Ember | 2,048 | Marlin |
+| Basalt | 4,096 | Ember |
+| Onyx | 8,192 | Basalt |
 | Sable | 16,384 | Onyx |
-| Quartz | 32,768 | Sable |
-| Corvus | 65,536 | Quartz |
-| Lyra | 131,072 | Corvus |
-| Titan | 262,144 | Lyra |
+| Corvus | 32,768 | Sable |
+| Lyra | 65,536 | Corvus |
+| Quartz | 131,072 | Lyra |
+| Titan | 262,144 | Quartz |
 | Oracle | 524,288 | Titan |
 | Quadrim Prime | 1,048,576 | Oracle |
 
@@ -925,7 +925,7 @@ Every item here is a business, account or measurement decision. **None is functi
 | **App name availability** | Checked against both stores and trademark registers. Not yet done. |
 | **The reference device** | The twenty-second ceiling (§6.8) is a device number, and the node-to-seconds conversion must be confirmed on real hardware. |
 | **The progression numbers** | The shape is settled and the values are derived from a stated target rather than measured (§7.7). They are the first thing to instrument once real players exist. Watch the median time to each unlock and the rung at which players stop. |
-| **Two Casual-tier rating inversions** | Kestrel measures above Willow, and Finch above Kestrel, by about 40 points each. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Ember's 0.08. The fix is a roster change, owned by 1.0. A rebuilder starting from this document should instead design the Casual tier so that its personalities and its rungs agree. |
+| **Two Casual-tier rating inversions** | Vireo measures above Finch, and Willow above Vireo, by about 40 points each. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Kestrel's 0.08. The fix is a roster change, owned by 1.0. A rebuilder starting from this document should instead design the Casual tier so that its personalities and its rungs agree. |
 
 **Things earlier editions listed as open that are now closed:** push on desktop and web (§10 — a stated platform limitation, not a problem to solve); the size and obtainability of the strategy book (§6.6 — 54,745 bytes, published, permissively granted); anchor calibration (§6.7 — a built harness); auto-match cold start (§8.9 — a computer opponent after a short wait); the per-game Firebase cost, negligible in steady state now that the migration burst that dominated it no longer exists; the business model (§4.1); and the large-screen layout, which is cancelled rather than deferred (§8.1).
 

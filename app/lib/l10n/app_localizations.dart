@@ -416,6 +416,18 @@ abstract class AppLocalizations {
   /// **'Bramble'**
   String get botBramble;
 
+  /// No description provided for @botWillow.
+  ///
+  /// In en, this message translates to:
+  /// **'Willow'**
+  String get botWillow;
+
+  /// No description provided for @botVireo.
+  ///
+  /// In en, this message translates to:
+  /// **'Vireo'**
+  String get botVireo;
+
   /// No description provided for @botFinch.
   ///
   /// In en, this message translates to:
@@ -428,11 +440,11 @@ abstract class AppLocalizations {
   /// **'Kestrel'**
   String get botKestrel;
 
-  /// No description provided for @botWillow.
+  /// No description provided for @botMarlin.
   ///
   /// In en, this message translates to:
-  /// **'Willow'**
-  String get botWillow;
+  /// **'Marlin'**
+  String get botMarlin;
 
   /// No description provided for @botEmber.
   ///
@@ -446,18 +458,6 @@ abstract class AppLocalizations {
   /// **'Basalt'**
   String get botBasalt;
 
-  /// No description provided for @botMarlin.
-  ///
-  /// In en, this message translates to:
-  /// **'Marlin'**
-  String get botMarlin;
-
-  /// No description provided for @botVireo.
-  ///
-  /// In en, this message translates to:
-  /// **'Vireo'**
-  String get botVireo;
-
   /// No description provided for @botOnyx.
   ///
   /// In en, this message translates to:
@@ -470,12 +470,6 @@ abstract class AppLocalizations {
   /// **'Sable'**
   String get botSable;
 
-  /// No description provided for @botQuartz.
-  ///
-  /// In en, this message translates to:
-  /// **'Quartz'**
-  String get botQuartz;
-
   /// No description provided for @botCorvus.
   ///
   /// In en, this message translates to:
@@ -487,6 +481,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lyra'**
   String get botLyra;
+
+  /// No description provided for @botQuartz.
+  ///
+  /// In en, this message translates to:
+  /// **'Quartz'**
+  String get botQuartz;
 
   /// No description provided for @botTitan.
   ///
@@ -620,47 +620,47 @@ abstract class AppLocalizations {
   /// **'Knows all the basics, and plays them with no feel for the board.'**
   String get blurbBramble;
 
-  /// No description provided for @blurbFinch.
+  /// No description provided for @blurbWillow.
   ///
   /// In en, this message translates to:
   /// **'Crowds the middle of the cube and answers the obvious threats.'**
+  String get blurbWillow;
+
+  /// No description provided for @blurbVireo.
+  ///
+  /// In en, this message translates to:
+  /// **'Attacks from the corners, and would rather build than block.'**
+  String get blurbVireo;
+
+  /// No description provided for @blurbFinch.
+  ///
+  /// In en, this message translates to:
+  /// **'Cautious. Shuts your threats down before it starts its own.'**
   String get blurbFinch;
 
   /// No description provided for @blurbKestrel.
   ///
   /// In en, this message translates to:
-  /// **'Attacks from the corners, and would rather build than block.'**
+  /// **'Solid on the fundamentals and rarely gives anything away.'**
   String get blurbKestrel;
 
-  /// No description provided for @blurbWillow.
+  /// No description provided for @blurbMarlin.
   ///
   /// In en, this message translates to:
-  /// **'Cautious. Shuts your threats down before it starts its own.'**
-  String get blurbWillow;
+  /// **'Plays for good squares as well as good moves. The first real test.'**
+  String get blurbMarlin;
 
   /// No description provided for @blurbEmber.
   ///
   /// In en, this message translates to:
-  /// **'Solid on the fundamentals and rarely gives anything away.'**
+  /// **'Looks a move ahead, and spends it on attack.'**
   String get blurbEmber;
 
   /// No description provided for @blurbBasalt.
   ///
   /// In en, this message translates to:
-  /// **'Plays for good squares as well as good moves. The first real test.'**
-  String get blurbBasalt;
-
-  /// No description provided for @blurbMarlin.
-  ///
-  /// In en, this message translates to:
-  /// **'Looks a move ahead, and spends it on attack.'**
-  String get blurbMarlin;
-
-  /// No description provided for @blurbVireo.
-  ///
-  /// In en, this message translates to:
   /// **'Looks a move ahead, and spends it on defence.'**
-  String get blurbVireo;
+  String get blurbBasalt;
 
   /// No description provided for @blurbOnyx.
   ///
@@ -674,23 +674,23 @@ abstract class AppLocalizations {
   /// **'Hunts for the double threat that cannot be answered.'**
   String get blurbSable;
 
-  /// No description provided for @blurbQuartz.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculates hard, and remembers what it has already worked out.'**
-  String get blurbQuartz;
-
   /// No description provided for @blurbCorvus.
   ///
   /// In en, this message translates to:
-  /// **'Takes the centre early, then goes looking for a forcing line.'**
+  /// **'Calculates hard, and remembers what it has already worked out.'**
   String get blurbCorvus;
 
   /// No description provided for @blurbLyra.
   ///
   /// In en, this message translates to:
-  /// **'Thinks further ahead the longer it is given. Hard to surprise.'**
+  /// **'Takes the centre early, then goes looking for a forcing line.'**
   String get blurbLyra;
+
+  /// No description provided for @blurbQuartz.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinks further ahead the longer it is given. Hard to surprise.'**
+  String get blurbQuartz;
 
   /// No description provided for @blurbTitan.
   ///

@@ -42,11 +42,11 @@ void main() {
       final ratings = opponentCatalogue.map((b) => b.rating).toList();
       expect(ratings, orderedEquals(ratings.toList()..sort()));
       expect(ids, containsAll(['pebble', 'twig', 'mote', 'clover', 'bramble',
-        'finch', 'kestrel', 'willow', 'ember', 'basalt', 'marlin', 'vireo',
+        'willow', 'vireo', 'finch', 'kestrel', 'marlin', 'ember', 'basalt',
         'onyx', 'sable']));
     });
 
-    test('the configurations match the roster in idea-v1 6.4', () {
+    test('the configurations match the roster in idea-v3 6.4', () {
       expect(twig.rules, {StrategicRule.winNow});
       expect(mote.rules, {StrategicRule.winNow, StrategicRule.blockNow});
       expect(mote.blunderRate, 0.40);
@@ -55,11 +55,11 @@ void main() {
       expect(bramble.rules.length, 4);
       expect(bramble.centreBias, 0, reason: 'no positional sense');
       expect(bramble.cornerBias, 0);
-      expect(finch.centreBias, greaterThan(0.5), reason: 'strong centre');
-      expect(kestrel.cornerBias, greaterThan(0.5));
-      expect(kestrel.aggression, greaterThan(0.5));
-      expect(willow.aggression, lessThan(0.5), reason: 'blocks before it builds');
-      expect(ember.blunderRate, 0.08);
+      expect(willow.centreBias, greaterThan(0.5), reason: 'strong centre');
+      expect(vireo.cornerBias, greaterThan(0.5));
+      expect(vireo.aggression, greaterThan(0.5));
+      expect(finch.aggression, lessThan(0.5), reason: 'blocks before it builds');
+      expect(kestrel.blunderRate, 0.08);
       // Among opponents that both win and block, blunder rate falls as rating
       // rises. Twig is excluded deliberately: it never blunders, and its
       // weakness is that it only knows one rule.
@@ -78,7 +78,7 @@ void main() {
       // Light holds 0, 1, 2; cell 3 completes the x-axis line.
       final state = GameState.fromMoves([0, 21, 1, 22, 2, 26]);
       expect(threats(state, Player.first).single.emptyCell.index, 3);
-      for (final bot in [twig, mote, ember]) {
+      for (final bot in [twig, mote, kestrel]) {
         // No blunder can hide it: run enough seeds that the rule must show.
         final taken = [
           for (var s = 0; s < 60; s++) chooseMove(state, bot, Random(s)).index,
@@ -126,7 +126,7 @@ void main() {
       expect(threats(state, Player.first).single.emptyCell.index, 3);
       expect(threats(state, Player.second).single.emptyCell.index, 19);
       final chosen = [
-        for (var s = 0; s < 40; s++) chooseMove(state, ember, Random(s)).index,
+        for (var s = 0; s < 40; s++) chooseMove(state, kestrel, Random(s)).index,
       ];
       expect(chosen.where((c) => c == 3).length, greaterThan(30));
     });
@@ -252,7 +252,7 @@ void main() {
       final state = GameState.fromMoves([0, 21, 1, 22, 2, 26]);
       expect(_immediateWinCells(state, state.sideToMove), [3]);
 
-      for (final bot in [mote, clover, ember]) {
+      for (final bot in [mote, clover, kestrel]) {
         const trials = 3000;
         var blundered = 0;
         final random = Random(11);
@@ -309,13 +309,13 @@ void main() {
     // The claim the roster makes is about strength, so it is tested by
     // playing rather than by inspecting configuration.
     final random = Random(2026);
-    final emberVsPebble = _match(ember, pebble, 60, random);
-    expect(emberVsPebble.wins, greaterThan(emberVsPebble.losses * 3),
-        reason: 'Ember $emberVsPebble against Pebble');
+    final kestrelVsPebble = _match(kestrel, pebble, 60, random);
+    expect(kestrelVsPebble.wins, greaterThan(kestrelVsPebble.losses * 3),
+        reason: 'Kestrel $kestrelVsPebble against Pebble');
 
-    final emberVsMote = _match(ember, mote, 60, random);
-    expect(emberVsMote.wins, greaterThan(emberVsMote.losses),
-        reason: 'Ember $emberVsMote against Mote');
+    final kestrelVsMote = _match(kestrel, mote, 60, random);
+    expect(kestrelVsMote.wins, greaterThan(kestrelVsMote.losses),
+        reason: 'Kestrel $kestrelVsMote against Mote');
 
     final twigVsPebble = _match(twig, pebble, 60, random);
     expect(twigVsPebble.wins, greaterThan(twigVsPebble.losses),

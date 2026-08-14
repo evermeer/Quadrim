@@ -305,11 +305,11 @@ void main() {
 
   group('the Expert tier', () {
     test('the four exist, with budgets in nodes and rising strength', () {
-      expect([quartz.id, corvus.id, lyra.id, titan.id],
-          ['quartz', 'corvus', 'lyra', 'titan']);
-      expect([quartz.rating, corvus.rating, lyra.rating, titan.rating],
+      expect([corvus.id, lyra.id, quartz.id, titan.id],
+          ['corvus', 'lyra', 'quartz', 'titan']);
+      expect([corvus.rating, lyra.rating, quartz.rating, titan.rating],
           [1800, 1900, 2000, 2100]);
-      for (final bot in [quartz, corvus, lyra, titan]) {
+      for (final bot in [corvus, lyra, quartz, titan]) {
         expect(bot.nodeBudget, greaterThan(0),
             reason: '${bot.id} must be budgeted in nodes, never in time');
         expect(bot.searchDepth, 0,
@@ -317,27 +317,27 @@ void main() {
         expect(bot.maxSearchDepth, greaterThan(0));
       }
       // Budget and forcing depth both rise with the rating.
-      expect([quartz, corvus, lyra, titan].map((b) => b.nodeBudget).toList(),
+      expect([corvus, lyra, quartz, titan].map((b) => b.nodeBudget).toList(),
           _ascending);
       expect(
-          [quartz, corvus, lyra, titan].map((b) => b.threatSearchDepth).toList(),
+          [corvus, lyra, quartz, titan].map((b) => b.threatSearchDepth).toList(),
           _ascending);
       // Defence is the dial that separates this tier: raising the node budget
       // alone left it flat, and this did not (D169).
       expect(
-          [quartz, corvus, lyra, titan]
+          [corvus, lyra, quartz, titan]
               .map((b) => b.defenceSearchDepth)
               .toList(),
           _ascending);
-      expect(quartz.defenceSearchDepth, 0,
+      expect(corvus.defenceSearchDepth, 0,
           reason: 'the bottom of the tier is the baseline the rest are '
               'measured against');
       // Only Titan proves the endgame, and only Titan never blunders.
       expect(titan.exactEmpties, greaterThan(0));
       expect(titan.blunderRate, 0);
-      expect(quartz.blunderRate, 0.015);
-      expect(corvus.blunderRate, 0.01);
-      expect(lyra.blunderRate, 0.005);
+      expect(corvus.blunderRate, 0.015);
+      expect(lyra.blunderRate, 0.01);
+      expect(quartz.blunderRate, 0.005);
     });
 
     test('every one returns only legal moves', () {
@@ -412,7 +412,7 @@ List<GameState> _endgames(int empties, int want, Random random) {
   final found = <GameState>[];
   var attempts = 0;
   // A deep endgame is rare on purpose: a position with ten cells left and no
-  // completed line means neither side won for fifty-four plies, and Ember
+  // completed line means neither side won for fifty-four plies, and Kestrel
   // usually finishes sooner. Sixty attempts yielded one or two positions where
   // the callers want five or more, which read as assertion failures about the
   // solver rather than about the fixture. Each attempt is one fast self-play
@@ -424,7 +424,7 @@ List<GameState> _endgames(int empties, int want, Random random) {
         found.add(state);
         break;
       }
-      state = applyMove(state, chooseMove(state, ember, random));
+      state = applyMove(state, chooseMove(state, kestrel, random));
     }
   }
   return found;

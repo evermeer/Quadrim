@@ -3,7 +3,7 @@
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D256**.
+Numbering continues from [idea-v1-decisions.md](idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D257**.
 
 Date: 2026-08-14
 Status: agreed, pre-implementation. No code written for any of it.
@@ -15,6 +15,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 | 3 | Progression — points, unlocks, quests, streaks | D228–D239 |
 | 4 | The main screen | D240–D252 |
 | 5 | Scope, platforms and staging | D253–D256 |
+| 6 | The roster rename | D257 |
 
 ---
 
@@ -80,7 +81,7 @@ Status: agreed, pre-implementation. No code written for any of it.
 
 ## D228 — Fifteen of the twenty opponents are earned
 **Question:** Which opponents are locked at first launch?
-**Decision:** Those rated **above 1000** — Finch through Quadrim Prime. Pebble, Twig, Mote, Clover and Bramble are free. The rule is the rating threshold, not the count; nothing hard-codes "five".
+**Decision:** Those rated **above 1000** — Willow through Quadrim Prime. Pebble, Twig, Mote, Clover and Bramble are free. The rule is the rating threshold, not the count; nothing hard-codes "five".
 **Cost:** A new player meets five opponents rather than twenty, which is a smaller first impression. It buys the only long-running goal a single-player game has. Expressing it as a threshold means a future roster revision does not silently change which opponents are free by leaving a magic number behind.
 
 ## D229 — Unlocking is strictly sequential
@@ -230,6 +231,37 @@ Status: agreed, pre-implementation. No code written for any of it.
 **Question:** Android auto-backup is on with an explicit allowlist. Does the new record belong in it?
 **Decision:** Yes, from 0.1 — not from whenever the cloud arrives.
 **Cost:** One more entry in the allowlist and one more thing whose absence must be tested for on restore. The unlock records are the only thing in the app a player cannot regenerate by playing; losing them on a device change loses months of work.
+
+---
+
+# Group 6 — The roster rename
+
+## D257 — Ten opponents change name so the avatars read as a progression
+**Question:** The avatars (see [Avatars.md](Avatars.md)) are a single forest world getting steadily more powerful — cute, then animal, then guardian, then mythical, then godlike. Drawn against the roster as it stood, that progression did not hold: a crystal guardian sat below a raven king, a rock giant below a fish. Can the order be fixed without disturbing a calibrated ladder?
+**Decision:** Yes, because a name is a label on a slot and nothing else. **Ten names move; no rating, configuration, tier, blurb text or roster index changes.** The new order is:
+
+| Rating | Was | Is now |
+|---|---|---|
+| 1100 | Finch | **Willow** |
+| 1200 | Kestrel | **Vireo** |
+| 1250 | Willow | **Finch** |
+| 1300 | Ember | **Kestrel** |
+| 1400 | Basalt | **Marlin** |
+| 1500 | Marlin | **Ember** |
+| 1550 | Vireo | **Basalt** |
+| 1800 | Quartz | **Corvus** |
+| 1900 | Corvus | **Lyra** |
+| 2000 | Lyra | **Quartz** |
+
+Pebble, Twig, Mote, Clover, Bramble, Onyx, Sable, Titan, Oracle and Quadrim Prime keep their slots. As a permutation this is a swap (Finch ↔ Willow), a five-cycle (Kestrel → Vireo → Basalt → Marlin → Ember → Kestrel) and a three-cycle (Quartz → Corvus → Lyra → Quartz), which is why a sequential find-and-replace would have collided and the change had to be applied in one atomic pass.
+
+**Three things that had to follow the slot rather than the name:**
+
+- **Blurbs describe behaviour, so they stay with the configuration.** The text now under `blurbVireo` is the one that used to be under `blurbKestrel`, because it describes the 1200 bot and the 1200 bot did not change. The *key* moves with the name; the *value* does not. Getting this backwards would have left every opponent in the Casual and Club tiers described as playing in a way it does not.
+- **Prose about a slot follows the slot.** "Basalt's rules and full positional ladder" in §6.4 now reads "Marlin's", because it names the 1400 rules-only bot and that bot is now called Marlin. The same is true of the two accepted Casual-tier inversions, which are now Willow above Vireo and Vireo above Finch — the same three configurations, the same measurement, different labels.
+- **Historical documents keep the old names.** The done tickets, `doc/history`, idea-v1, idea-v2 and `codereview-main.md` describe what was true when they were written, and rewriting them would falsify a record. Ticket 009 is still called `009-positional-rules-and-basalt.md` and still built what is now Marlin. This table is how those documents stay readable.
+
+**Cost:** Two real ones. **Stored games name their opponent by id**, so a game recorded against `finch` at 1100 now resolves to a bot called Finch rated 1250 — the rating fold stays correct because each game stores its own anchor rating (§5), but the name and avatar shown for that historical game are wrong. Only closed testers hold such games and only pre-release, so this is accepted rather than migrated; a rename after the first public release would need a stored-id migration and should be treated as a much larger change. Second, **blurbs were written for the old pairings** and now describe the right behaviour under a new name — several land well (Corvus, a corvid, is the one that "remembers what it has already worked out") but a polish pass over the twenty one-liners belongs to whoever owns opponent content, and was deliberately not done here.
 
 ---
 

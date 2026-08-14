@@ -20,9 +20,9 @@ The idea was written three times, and the versions are kept apart on purpose.
 | [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
 | [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
 | **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
-| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D256. The decisions that turned v2 and the additions into v3 |
+| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D257. The decisions that turned v2 and the additions into v3 |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 256 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 257 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
 
 ## Starting the Vibe coding workflow
 
@@ -59,7 +59,7 @@ Use the Matt Skills to-spec skill to turn the doc/idea-v1.md plus the doc/idea-v
 into a spec for the game: goal, scope, non-goals, exposed endpoints, data and
 acceptance criteria. Ask clarifying questions and don't finalize the spec until
 any ambiguities are resolved. Follow recomended strategy A from the brainstorming document.
-Use the sugested bots Pebble, Mote, Bramble, Ember, Basalt and Onyx.
+Use the sugested bots Pebble, Mote, Bramble, Kestrel, Marlin and Onyx.
 Put the result in the file doc/idea-v1-spec.md
 Add all decisions to the file doc/idea-v1-decisions.md
 ```

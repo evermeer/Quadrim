@@ -92,12 +92,12 @@ void main() {
     test('the totals equal the sum of the per-opponent records', () {
       final summary = HomeSummary.from([
         _game(id: 'a', opponent: 'bot:pebble', opponentRating: 600),
-        _game(id: 'b', opponent: 'bot:ember', opponentRating: 1300),
+        _game(id: 'b', opponent: 'bot:kestrel', opponentRating: 1300),
         _game(
-            id: 'c', opponent: 'bot:ember', opponentRating: 1300, winnerSeat: 1),
+            id: 'c', opponent: 'bot:kestrel', opponentRating: 1300, winnerSeat: 1),
         _game(
             id: 'd',
-            opponent: 'bot:basalt',
+            opponent: 'bot:marlin',
             opponentRating: 1400,
             outcome: GameOutcome.draw),
       ]);
@@ -116,13 +116,13 @@ void main() {
   group('per-opponent breakdown', () {
     test('one row per opponent, weakest first', () {
       final summary = HomeSummary.from([
-        _game(id: 'a', opponent: 'bot:basalt', opponentRating: 1400),
+        _game(id: 'a', opponent: 'bot:marlin', opponentRating: 1400),
         _game(id: 'b', opponent: 'bot:pebble', opponentRating: 600),
-        _game(id: 'c', opponent: 'bot:ember', opponentRating: 1300),
+        _game(id: 'c', opponent: 'bot:kestrel', opponentRating: 1300),
         _game(id: 'd', opponent: 'bot:pebble', opponentRating: 600),
       ]);
       expect(summary.byOpponent.map((r) => r.opponent),
-          ['bot:pebble', 'bot:ember', 'bot:basalt']);
+          ['bot:pebble', 'bot:kestrel', 'bot:marlin']);
       expect(summary.byOpponent.first.played, 2);
     });
 
@@ -130,8 +130,8 @@ void main() {
       // Recalibration (D144) moves an opponent's anchor. The player's history
       // against it must not split in two.
       final summary = HomeSummary.from([
-        _game(id: 'a', opponent: 'bot:kestrel', opponentRating: 1200),
-        _game(id: 'b', opponent: 'bot:kestrel', opponentRating: 1250),
+        _game(id: 'a', opponent: 'bot:vireo', opponentRating: 1200),
+        _game(id: 'b', opponent: 'bot:vireo', opponentRating: 1250),
       ]);
       expect(summary.byOpponent.length, 1);
       expect(summary.byOpponent.single.played, 2);
@@ -141,11 +141,11 @@ void main() {
       final summary = HomeSummary.from([
         _game(id: 'a', opponent: 'bot:pebble', opponentRating: 600),
         _game(
-            id: 'b', opponent: 'bot:ember', opponentRating: 1300, winnerSeat: 1),
+            id: 'b', opponent: 'bot:kestrel', opponentRating: 1300, winnerSeat: 1),
       ]);
       final byId = {for (final r in summary.byOpponent) r.opponent: r};
       expect(byId['bot:pebble']!.everBeaten, isTrue);
-      expect(byId['bot:ember']!.everBeaten, isFalse);
+      expect(byId['bot:kestrel']!.everBeaten, isFalse);
     });
 
     test('an opponent with no stored rating sorts last, not first', () {
@@ -162,7 +162,7 @@ void main() {
   test('the computer rating is the same fold the result screen uses', () {
     final games = [
       _game(id: 'a', opponent: 'bot:pebble', opponentRating: 600),
-      _game(id: 'b', opponent: 'bot:ember', opponentRating: 1300),
+      _game(id: 'b', opponent: 'bot:kestrel', opponentRating: 1300),
     ];
     expect(HomeSummary.from(games).computerRating, greaterThan(kSeedRating));
   });

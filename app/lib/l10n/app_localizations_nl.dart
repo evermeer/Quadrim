@@ -201,13 +201,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get botBramble => 'Bramble';
 
   @override
+  String get botWillow => 'Willow';
+
+  @override
+  String get botVireo => 'Vireo';
+
+  @override
   String get botFinch => 'Finch';
 
   @override
   String get botKestrel => 'Kestrel';
 
   @override
-  String get botWillow => 'Willow';
+  String get botMarlin => 'Marlin';
 
   @override
   String get botEmber => 'Ember';
@@ -216,25 +222,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get botBasalt => 'Basalt';
 
   @override
-  String get botMarlin => 'Marlin';
-
-  @override
-  String get botVireo => 'Vireo';
-
-  @override
   String get botOnyx => 'Onyx';
 
   @override
   String get botSable => 'Sable';
 
   @override
-  String get botQuartz => 'Quartz';
-
-  @override
   String get botCorvus => 'Corvus';
 
   @override
   String get botLyra => 'Lyra';
+
+  @override
+  String get botQuartz => 'Quartz';
 
   @override
   String get botTitan => 'Titan';
@@ -317,30 +317,30 @@ class AppLocalizationsNl extends AppLocalizations {
       'Kent alle basisregels en speelt ze zonder enig gevoel voor het bord.';
 
   @override
-  String get blurbFinch =>
+  String get blurbWillow =>
       'Verdringt zich in het midden van de kubus en pareert de duidelijke dreigingen.';
 
   @override
-  String get blurbKestrel =>
+  String get blurbVireo =>
       'Valt aan vanuit de hoeken en bouwt liever dan dat het blokkeert.';
 
   @override
-  String get blurbWillow =>
+  String get blurbFinch =>
       'Voorzichtig. Legt jouw dreigingen stil voordat het aan zijn eigen begint.';
 
   @override
-  String get blurbEmber => 'Degelijk in de basis en geeft zelden iets weg.';
-
-  @override
-  String get blurbBasalt =>
-      'Speelt om goede velden en niet alleen om goede zetten. De eerste echte test.';
+  String get blurbKestrel => 'Degelijk in de basis en geeft zelden iets weg.';
 
   @override
   String get blurbMarlin =>
+      'Speelt om goede velden en niet alleen om goede zetten. De eerste echte test.';
+
+  @override
+  String get blurbEmber =>
       'Kijkt één zet vooruit en gebruikt dat om aan te vallen.';
 
   @override
-  String get blurbVireo =>
+  String get blurbBasalt =>
       'Kijkt één zet vooruit en gebruikt dat om te verdedigen.';
 
   @override
@@ -352,15 +352,15 @@ class AppLocalizationsNl extends AppLocalizations {
       'Jaagt op de dubbele dreiging die niet te beantwoorden is.';
 
   @override
-  String get blurbQuartz =>
+  String get blurbCorvus =>
       'Rekent hard en onthoudt wat het al heeft uitgerekend.';
 
   @override
-  String get blurbCorvus =>
+  String get blurbLyra =>
       'Neemt vroeg het centrum en gaat dan op zoek naar een forcerende variant.';
 
   @override
-  String get blurbLyra =>
+  String get blurbQuartz =>
       'Denkt verder vooruit naarmate het meer tijd krijgt. Moeilijk te verrassen.';
 
   @override

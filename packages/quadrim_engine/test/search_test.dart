@@ -331,27 +331,27 @@ void main() {
 
   group('the Club tier', () {
     test('the four exist with the configurations calibration settled on', () {
-      expect([marlin.id, vireo.id, onyx.id, sable.id],
-          ['marlin', 'vireo', 'onyx', 'sable']);
-      expect([marlin.rating, vireo.rating, onyx.rating, sable.rating],
+      expect([ember.id, basalt.id, onyx.id, sable.id],
+          ['ember', 'basalt', 'onyx', 'sable']);
+      expect([ember.rating, basalt.rating, onyx.rating, sable.rating],
           [1500, 1550, 1650, 1700]);
-      expect([marlin.blunderRate, vireo.blunderRate, onyx.blunderRate,
+      expect([ember.blunderRate, basalt.blunderRate, onyx.blunderRate,
         sable.blunderRate], [0.05, 0.04, 0.03, 0.02]);
-      // Depths are what calibration settled on, not what idea-v1 6.4's
+      // Depths are what calibration settled on, not what idea-v3 6.4's
       // prose says (D154): forcing depth is the lever that works, and past
       // three plies ordinary depth separates nothing (D156).
-      expect(marlin.searchDepth, 2);
-      expect(vireo.searchDepth, 3);
+      expect(ember.searchDepth, 2);
+      expect(basalt.searchDepth, 3);
       expect(onyx.searchDepth, 3);
       expect(sable.searchDepth, 4);
-      expect(marlin.threatSearchDepth, 0);
-      expect([vireo, onyx, sable].map((b) => b.threatSearchDepth),
+      expect(ember.threatSearchDepth, 0);
+      expect([basalt, onyx, sable].map((b) => b.threatSearchDepth),
           orderedEquals([3, 6, 9]),
           reason: 'the forcing search deepens with every rung');
       // Opposing temperaments, expressed in one number each.
-      expect(marlin.aggression, greaterThan(0.5));
-      expect(vireo.aggression, lessThan(0.5));
-      expect(marlin.defence, lessThan(vireo.defence));
+      expect(ember.aggression, greaterThan(0.5));
+      expect(basalt.aggression, lessThan(0.5));
+      expect(ember.defence, lessThan(basalt.defence));
     });
 
     test('a search opponent still answers within the recorded budget', () {
@@ -360,7 +360,7 @@ void main() {
       // of magnitude on purpose: it is a guard against a change that makes
       // the search catastrophically slower, not a device measurement.
       final random = Random(3);
-      for (final bot in [marlin, vireo, onyx, sable]) {
+      for (final bot in [ember, basalt, onyx, sable]) {
         var state = GameState.initial();
         var worst = 0;
         while (outcome(state) is Ongoing) {
@@ -375,18 +375,18 @@ void main() {
     }, timeout: const Timeout(Duration(minutes: 2)));
 
     test('each beats the one below it over a significant number of games', () {
-      // The ladder these numbers produced is in D154; it is the reason Vireo
+      // The ladder these numbers produced is in D154; it is the reason Basalt
       // searches three plies and Onyx has a threat search at all.
       final random = Random(31);
-      // Sample sizes follow the measured margins: Marlin over Basalt and
-      // Vireo over Marlin are around 58% and need games to show, while Onyx
+      // Sample sizes follow the measured margins: Ember over Marlin and
+      // Basalt over Ember are around 58% and need games to show, while Onyx
       // and Sable win their rungs by two to four to one.
-      for (final pair in [(marlin, basalt), (vireo, marlin)]) {
+      for (final pair in [(ember, marlin), (basalt, ember)]) {
         final r = _match(pair.$1, pair.$2, 200, random);
         expect(r.wins, greaterThan(r.losses),
             reason: '${pair.$1.id} $r against ${pair.$2.id}');
       }
-      for (final pair in [(onyx, vireo), (sable, onyx)]) {
+      for (final pair in [(onyx, basalt), (sable, onyx)]) {
         final r = _match(pair.$1, pair.$2, 40, random);
         expect(r.wins, greaterThan(r.losses),
             reason: '${pair.$1.id} $r against ${pair.$2.id}');
@@ -399,7 +399,7 @@ void main() {
       // claim is about legality, which does not need thousands of samples to
       // hold. The catalogue-wide sweeps cover the cheap opponents.
       final random = Random(6060);
-      for (final bot in [marlin, vireo, onyx, sable]) {
+      for (final bot in [ember, basalt, onyx, sable]) {
         for (var i = 0; i < 150; i++) {
           final state = _randomPosition(random);
           final move = chooseMove(state, bot, random);

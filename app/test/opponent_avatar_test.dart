@@ -99,7 +99,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: OpponentAvatar(id: 'lyra', tier: BotTier.expert),
+          body: OpponentAvatar(id: 'quartz', tier: BotTier.expert),
         ),
       ),
     );

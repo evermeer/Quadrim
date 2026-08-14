@@ -200,13 +200,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botBramble => 'Bramble';
 
   @override
+  String get botWillow => 'Willow';
+
+  @override
+  String get botVireo => 'Vireo';
+
+  @override
   String get botFinch => 'Finch';
 
   @override
   String get botKestrel => 'Kestrel';
 
   @override
-  String get botWillow => 'Willow';
+  String get botMarlin => 'Marlin';
 
   @override
   String get botEmber => 'Ember';
@@ -215,25 +221,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botBasalt => 'Basalt';
 
   @override
-  String get botMarlin => 'Marlin';
-
-  @override
-  String get botVireo => 'Vireo';
-
-  @override
   String get botOnyx => 'Onyx';
 
   @override
   String get botSable => 'Sable';
 
   @override
-  String get botQuartz => 'Quartz';
-
-  @override
   String get botCorvus => 'Corvus';
 
   @override
   String get botLyra => 'Lyra';
+
+  @override
+  String get botQuartz => 'Quartz';
 
   @override
   String get botTitan => 'Titan';
@@ -317,30 +317,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Knows all the basics, and plays them with no feel for the board.';
 
   @override
-  String get blurbFinch =>
+  String get blurbWillow =>
       'Crowds the middle of the cube and answers the obvious threats.';
 
   @override
-  String get blurbKestrel =>
+  String get blurbVireo =>
       'Attacks from the corners, and would rather build than block.';
 
   @override
-  String get blurbWillow =>
+  String get blurbFinch =>
       'Cautious. Shuts your threats down before it starts its own.';
 
   @override
-  String get blurbEmber =>
+  String get blurbKestrel =>
       'Solid on the fundamentals and rarely gives anything away.';
 
   @override
-  String get blurbBasalt =>
+  String get blurbMarlin =>
       'Plays for good squares as well as good moves. The first real test.';
 
   @override
-  String get blurbMarlin => 'Looks a move ahead, and spends it on attack.';
+  String get blurbEmber => 'Looks a move ahead, and spends it on attack.';
 
   @override
-  String get blurbVireo => 'Looks a move ahead, and spends it on defence.';
+  String get blurbBasalt => 'Looks a move ahead, and spends it on defence.';
 
   @override
   String get blurbOnyx =>
@@ -351,15 +351,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hunts for the double threat that cannot be answered.';
 
   @override
-  String get blurbQuartz =>
+  String get blurbCorvus =>
       'Calculates hard, and remembers what it has already worked out.';
 
   @override
-  String get blurbCorvus =>
+  String get blurbLyra =>
       'Takes the centre early, then goes looking for a forcing line.';
 
   @override
-  String get blurbLyra =>
+  String get blurbQuartz =>
       'Thinks further ahead the longer it is given. Hard to surprise.';
 
   @override

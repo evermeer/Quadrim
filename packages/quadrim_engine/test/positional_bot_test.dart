@@ -84,21 +84,21 @@ void main() {
     });
   });
 
-  group('Basalt', () {
-    test('has the configuration given in idea-v1 6.4', () {
-      expect(basalt.id, 'basalt');
-      expect(basalt.rating, 1400);
-      expect(basalt.rules.length, 4);
-      expect(basalt.blunderRate, 0.06);
-      expect(basalt.searchDepth, 0, reason: 'search is ticket 010');
-      expect(basalt.lineBias, greaterThan(0), reason: 'the third rule');
-      expect(opponentCatalogue, contains(basalt));
-      expect(botById('basalt'), same(basalt));
+  group('Marlin', () {
+    test('has the configuration given in idea-v3 6.4', () {
+      expect(marlin.id, 'marlin');
+      expect(marlin.rating, 1400);
+      expect(marlin.rules.length, 4);
+      expect(marlin.blunderRate, 0.06);
+      expect(marlin.searchDepth, 0, reason: 'search is ticket 010');
+      expect(marlin.lineBias, greaterThan(0), reason: 'the third rule');
+      expect(opponentCatalogue, contains(marlin));
+      expect(botById('marlin'), same(marlin));
     });
 
     test('the ladder is an order for every opponent that uses it', () {
       // The order is a property of the weights, not of the code (D149), so a
-      // later opponent copying Basalt and raising lineBias would silently
+      // later opponent copying Marlin and raising lineBias would silently
       // invert it. The building term tops out at lineBias, so each class gap
       // must exceed it.
       for (final bot in opponentCatalogue.where((b) => b.lineBias > 0)) {
@@ -113,7 +113,7 @@ void main() {
       final empty = GameState.initial();
       final centre = [
         for (var s = 0; s < 200; s++)
-          if (isCentreCell(chooseMove(empty, basalt, Random(s)))) s,
+          if (isCentreCell(chooseMove(empty, marlin, Random(s)))) s,
       ].length;
       // It blunders 6% of the time, and a blundered move only lands in the
       // centre by chance, so the bar is the rate rather than every seed.
@@ -135,16 +135,16 @@ void main() {
       expect(isCentreCell(const Cell(21)), isTrue);
       expect(isCornerCell(const Cell(3)), isTrue);
 
-      final basaltCentre = [
-        for (var s = 0; s < 100; s++) chooseMove(state, basalt, Random(s)).index,
+      final marlinCentre = [
+        for (var s = 0; s < 100; s++) chooseMove(state, marlin, Random(s)).index,
       ].where((c) => c == 21).length;
-      expect(basaltCentre, greaterThan(85),
-          reason: 'Basalt took the centre win $basaltCentre/100');
+      expect(marlinCentre, greaterThan(85),
+          reason: 'Marlin took the centre win $marlinCentre/100');
 
       // Bramble has the same rule and no positional sense at all, so it
-      // splits. It is the control rather than Ember because the roster test
-      // pins its two biases at zero, where Ember only had them at zero by
-      // accident — and D210 gave Ember the centre preference spec 8.4 gives
+      // splits. It is the control rather than Kestrel because the roster test
+      // pins its two biases at zero, where Kestrel only had them at zero by
+      // accident — and D210 gave Kestrel the centre preference spec 8.4 gives
       // the whole Casual tier, which silently turned this control into a
       // second copy of the assertion above it.
       final brambleCentre = [
@@ -156,17 +156,17 @@ void main() {
               'got $brambleCentre/100');
     });
 
-    test('beats Ember over a significant number of self-play games', () {
-      final result = _match(basalt, ember, 120, Random(20260812));
+    test('beats Kestrel over a significant number of self-play games', () {
+      final result = _match(marlin, kestrel, 120, Random(20260812));
       expect(result.wins, greaterThan(result.losses),
-          reason: 'Basalt $result against Ember');
+          reason: 'Marlin $result against Kestrel');
     }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('returns only legal moves across thousands of positions', () {
       final random = Random(909);
       for (var i = 0; i < 3000; i++) {
         final state = _randomPosition(random);
-        final move = chooseMove(state, basalt, random);
+        final move = chooseMove(state, marlin, random);
         expect(legalMoves(state).map((c) => c.index), contains(move.index));
         applyMove(state, move);
       }
