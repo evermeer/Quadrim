@@ -23,6 +23,10 @@ The three things it does that are not just resizing:
 * **The cube's edges are faded.** It is a full-bleed forest scene and it has to
   sit inside the rating panel without a seam, so alpha falls off over the outer
   third.
+* **Every sign's background is flood-filled away from the border.** They were
+  delivered three different ways — real alpha, flat black, and a *painted*
+  transparency checkerboard — and a threshold would eat the dark outlines or
+  the tutorial board's cream pages. Only what touches the edge is background.
 * **The logo's black is knocked out.** It is gold drawn over opaque black,
   which is exactly a premultiply, so alpha comes from luminance and the colour
   is divided back out. Thresholding alone would leave a dark fringe on every
@@ -37,7 +41,7 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "doc" / "designs"
@@ -187,15 +191,65 @@ def background() -> None:
     _save(im.resize((1080, 1620), Image.LANCZOS), "background.webp", 76)
 
 
-def plaques() -> None:
-    print("plaques")
-    # Already RGBA, but authored with a body alpha of 253 rather than 255. Left
-    # alone that is a 1% veil over every plank; snapped, they are opaque.
-    for name, width in (("new_game", 1024), ("your-path", 896), ("tutorial", 768)):
-        im = _load(name).convert("RGBA")
-        px = np.array(im)
-        px[..., 3] = np.where(px[..., 3] >= 250, 255, px[..., 3])
-        im = Image.fromarray(px, "RGBA").crop(Image.fromarray(px, "RGBA").getbbox())
+def _knockout(im: Image.Image) -> Image.Image:
+    """Removes the background the art was delivered on, whatever it is.
+
+    The four signs arrived three different ways: one with a real alpha channel,
+    one on flat black, and two on a *painted* light-grey transparency
+    checkerboard — a picture of transparency rather than the thing itself. All
+    three become the same RGBA here.
+
+    **A flood fill from the border, not a threshold.** Every one of these signs
+    has dark outlines, and the tutorial board has cream book pages; a rule that
+    said "black is background" would eat the outlines and one that said "light
+    and unsaturated is background" would eat the pages. Only what is connected
+    to the edge of the canvas is background, which is what the eye means by it.
+    """
+    from scipy import ndimage
+
+    rgb = np.array(im.convert("RGB"))
+    if im.mode == "RGBA":
+        existing = np.array(im)[..., 3]
+        if existing.min() < 250:
+            # Delivered with real alpha; snap the body to opaque and keep it.
+            return Image.fromarray(
+                np.dstack([rgb, np.where(existing >= 250, 255, existing)]), "RGBA"
+            )
+
+    high = rgb.max(axis=2).astype(int)
+    low = rgb.min(axis=2).astype(int)
+    candidate = (high < 26) | ((high > 232) & ((high - low) < 14))
+    labels, _ = ndimage.label(candidate)
+    edge = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+    edge.discard(0)
+    background = np.isin(labels, list(edge))
+
+    # Feathered by one pixel of blur so the cut edge is not a staircase, then
+    # pushed back to full opacity inside so the body does not go translucent.
+    alpha = Image.fromarray(np.where(background, 0, 255).astype(np.uint8))
+    alpha = alpha.filter(ImageFilter.GaussianBlur(1.2))
+    a = np.array(alpha).astype(np.float32)
+    a = np.clip((a - 40) * (255 / 170), 0, 255).astype(np.uint8)
+    return Image.fromarray(np.dstack([rgb, a]), "RGBA")
+
+
+def signs() -> None:
+    """The four wooden signs, blank — the lettering is drawn by the app.
+
+    Delivered without text so it can be localised (D297). What ships is the
+    wood; `WoodenSign` puts the words on it in Cinzel at the tilt each board
+    was painted at, which is why these files must not be cropped to their own
+    bounding box: the app positions text by a fraction of the image, and a crop
+    that moved by a few pixels would move every caption with it.
+    """
+    print("signs")
+    for source, name, width in (
+        ("new-game-background", "new_game", 1024),
+        ("tutorial-background", "tutorial", 768),
+        ("title-banner-1", "banner_short", 896),
+        ("title-banner-2", "banner_long", 896),
+    ):
+        im = _knockout(_load(source))
         height = round(im.height * width / im.width)
         _save(im.resize((width, height), Image.LANCZOS), f"{name}.webp", 88)
 
@@ -292,7 +346,7 @@ def main() -> int:
     cube()
     mark = logo()
     background()
-    plaques()
+    signs()
     launcher_icon(mark)
     fonts()
     total = sum(f.stat().st_size for f in ART.rglob("*")) + sum(

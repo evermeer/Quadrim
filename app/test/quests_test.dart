@@ -175,7 +175,14 @@ void main() {
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
 
-      expect(find.text('First win against Pebble'), findsNothing);
+      // Scoped to the section that ranks by closeness. The name now also
+      // appears in the recently-completed panel below it, which is the point
+      // of that panel (D298).
+      expect(
+          find.descendant(
+              of: find.byType(QuestsSection),
+              matching: find.text('First win against Pebble')),
+          findsNothing);
       // Not by luck of the ranking: nothing on offer is finished.
       for (final tile in tester.widgetList<QuestTile>(find.byType(QuestTile))) {
         expect(tile.status.achieved, isFalse, reason: tile.status.quest.id);

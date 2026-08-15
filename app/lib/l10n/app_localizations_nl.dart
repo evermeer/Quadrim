@@ -857,4 +857,18 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get playThisOpponent => 'Start een partij';
+
+  @override
+  String get questsCompleted => 'Onlangs voltooid';
+
+  @override
+  String questAwardValue(int points) {
+    String _temp0 = intl.Intl.pluralLogic(
+      points,
+      locale: localeName,
+      other: '+$points punten',
+      one: '+1 punt',
+    );
+    return '$_temp0';
+  }
 }

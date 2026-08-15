@@ -691,6 +691,10 @@ A quest a free player cannot reach (§7.4) shows its requirement plainly and wha
 
 Achieving a quest during a game is acknowledged **when that game ends**, together with the points it paid — not silently recorded and not interrupting play.
 
+**A second panel lists the four completed most recently**, below the four closest, and only once there is at least one. They answer different questions and a single list answers neither; the recent panel is also the only place a quest's award can honestly be shown, because until a volume or streak quest fires there is no figure for it (D280, D298).
+
+---
+
 ### 8.7 Opponent selection
 
 Twenty opponents is too many for a flat list on a phone. Present them as an **accordion by tier, opened at the tier containing the player's own rating** — where they are standing, not at the top or the bottom. Each row carries name, avatar, rating, tier description, blurb, record, stars, and a marker for pairings that are lopsided (§5.1).
@@ -804,7 +808,9 @@ The mockup draws things this release does not have — a "today's journey" panel
 
 **Portraits.** Each of the twenty opponents has a painted portrait, drawn in a circle with a gold ring. A locked opponent is drawn as a **silhouette** rather than dimmed: what has not been bought has not been met (D291).
 
-**Carved wood.** New Game and Tutorial are wooden plaques rather than buttons, pinned below the scroll so the primary action never scrolls away. Your Path's heading is a carved sign. The lettering on all three is painted into the artwork in English; the accessible name is still localised, and the sign is still a semantic heading in both languages (D292).
+**Carved wood.** New Game and Tutorial are wooden signs rather than buttons, pinned below the scroll so the primary action never scrolls away. **Every section heading is a carved sign too** — the words are written on the wood by the app rather than painted into it, so they are localised, and which of two planks a heading gets depends on how long it is rather than on which section it is (D297). Your Path's sign hangs off its card's top-left corner, its top fifth above the card.
+
+Captions on wood do not grow with the system font slider: the plank is a picture and cannot grow with them. Every sign is a button with an accessible name or a heading with a semantic label, so a screen reader gets the same words at whatever size it likes.
 
 **Type.** Cinzel for display — headings, the rating, section titles. EB Garamond for anything read in sentences. Both are bundled, never fetched: the release manifest declares no network permission, so a font resolved over the network would not be a slow font, it would be no font.
 

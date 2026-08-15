@@ -122,6 +122,7 @@ class QuestStatus {
     required this.current,
     required this.achieved,
     required this.award,
+    this.achievedAt,
   });
 
   final Quest quest;
@@ -137,6 +138,16 @@ class QuestStatus {
   /// the answer depends on *which* games earn it and there is no honest number
   /// before they exist.
   final int award;
+
+  /// When the game that completed it finished, in local time, or null while it
+  /// is unearned — or if that game carries no completion time, which the older
+  /// documents do not.
+  ///
+  /// Not a second source of truth: every branch below already had to know which
+  /// game finished the quest in order to price it, so this is that game's
+  /// timestamp rather than anything new. It is what lets the app show what was
+  /// achieved *recently* without folding the history a second time.
+  final DateTime? achievedAt;
 
   /// For ranking, and for the number beside the bar.
   double get fraction => current / quest.target;
@@ -162,13 +173,17 @@ List<QuestStatus> questStatuses(
 }) {
   final ordered = games.toList();
 
-  // Won at all, and won from the second seat, per opponent.
-  final beaten = <int>{};
-  final beatenSecond = <int>{};
+  // Won at all, and won from the second seat, per opponent — and *when*, which
+  // is the first such win rather than the latest. `putIfAbsent` over a list in
+  // completion order is what makes it the first.
+  final beaten = <int, DateTime?>{};
+  final beatenSecond = <int, DateTime?>{};
   for (final game in ordered) {
     if (!game.won) continue;
-    beaten.add(game.rosterIndex);
-    if (game.movedSecond) beatenSecond.add(game.rosterIndex);
+    beaten.putIfAbsent(game.rosterIndex, () => game.completedAt);
+    if (game.movedSecond) {
+      beatenSecond.putIfAbsent(game.rosterIndex, () => game.completedAt);
+    }
   }
 
   final days = _byDay(ordered);
@@ -186,8 +201,8 @@ List<QuestStatus> questStatuses(
   ];
 }
 
-QuestStatus _milestone(Quest quest, Set<int> done) {
-  final achieved = done.contains(quest.rosterIndex);
+QuestStatus _milestone(Quest quest, Map<int, DateTime?> done) {
+  final achieved = done.containsKey(quest.rosterIndex);
   return QuestStatus(
     quest: quest,
     current: achieved ? 1 : 0,
@@ -195,6 +210,7 @@ QuestStatus _milestone(Quest quest, Set<int> done) {
     // One win against the opponent it names — 2ⁱ, the same amount whenever it
     // is claimed, which is what makes deferring it worth nothing (spec P9).
     award: achieved ? _award(quest.multipleQuarters, quest.rosterIndex!) : 0,
+    achievedAt: done[quest.rosterIndex],
   );
 }
 
@@ -218,6 +234,9 @@ QuestStatus _volume(Quest quest, List<List<ScoredGame>> days) {
           quest.multipleQuarters,
           _meanIndex(day.take(quest.target)),
         ),
+        // The Nth game of that day — the one that reached the rung, not the
+        // last of a day that went on well past it.
+        achievedAt: day.take(quest.target).last.completedAt,
       );
     }
   }
@@ -242,6 +261,7 @@ QuestStatus _streak(Quest quest, List<StreakRun> runs, int live) {
         achieved: true,
         award: _award(quest.multipleQuarters,
             _meanIndex(qualifyingGames(run, quest.target))),
+        achievedAt: qualifyingGames(run, quest.target).last.completedAt,
       );
     }
   }
@@ -336,6 +356,41 @@ List<QuestStatus> closestQuests(
         return a.quest.id.compareTo(b.quest.id);
       });
   return open.take(count).toList();
+}
+
+/// The most recently achieved, newest first, for the main screen.
+///
+/// The mirror of [closestQuests]: that one answers "what next", this one
+/// answers "what just happened". Only achieved quests are candidates, and they
+/// are ordered by [QuestStatus.achievedAt].
+///
+/// **A quest whose completing game carries no timestamp sorts last, not first.**
+/// Documents written before completion times were stored have none, and a null
+/// treated as "now" would pin the oldest history permanently at the top of a
+/// list about recency.
+List<QuestStatus> recentlyAchieved(
+  Iterable<QuestStatus> statuses, {
+  int count = 4,
+}) {
+  final done =
+      [
+        for (final s in statuses)
+          if (s.achieved) s,
+      ]..sort((a, b) {
+        final at = a.achievedAt;
+        final bt = b.achievedAt;
+        if (at == null && bt == null) return a.quest.id.compareTo(b.quest.id);
+        if (at == null) return 1;
+        if (bt == null) return -1;
+        final byTime = bt.compareTo(at);
+        if (byTime != 0) return byTime;
+        // Two quests finished by the same game — the fifth game of a day can
+        // complete a volume rung and a streak rung at once. The bigger award
+        // leads, and the id settles it so the order does not wander.
+        final byAward = b.award.compareTo(a.award);
+        return byAward != 0 ? byAward : a.quest.id.compareTo(b.quest.id);
+      });
+  return done.take(count).toList();
 }
 
 /// Where a quest sits in roster order. The volume and streak families name no

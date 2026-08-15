@@ -70,7 +70,7 @@ class RatingCard extends StatelessWidget {
               // without sight — and the same number the sighted reader sees
               // beside it, so neither is told something the other is not.
               '${trend == null ? '' : '$trend '}'
-              '${l10n.computerRatingNote}',
+              '${l10n.computerRatingHeading}',
         child: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,10 +163,10 @@ class RatingCard extends StatelessWidget {
                                 ?.copyWith(color: QuadrimPalette.cream))),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(l10n.computerRatingNote,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: QuadrimPalette.creamSoft)),
+                // The "on this device only" note is gone from this panel. It
+                // is still said where it is actually needed — the end-of-game
+                // result, where a rating change has just happened and the
+                // question "does this go anywhere?" is live.
               ],
             ),
           ),

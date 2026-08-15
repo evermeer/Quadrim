@@ -355,4 +355,94 @@ void main() {
       expect(newlyAchieved(const [], const []), isEmpty);
     });
   });
+
+  group('recentlyAchieved', () {
+    ScoredGame game(int index, int day, {bool won = true}) => ScoredGame(
+          rosterIndex: index,
+          won: won,
+          movedSecond: false,
+          completedAt: DateTime(2026, 3, day, 12),
+        );
+
+    test('is the mirror of closestQuests: only finished, newest first', () {
+      final statuses = questStatuses(
+        [game(0, 1), game(1, 2), game(2, 3)],
+        today: DateTime(2026, 3, 3),
+      );
+      final recent = recentlyAchieved(statuses);
+      expect(recent, hasLength(3), reason: 'three first wins');
+      expect(recent.every((s) => s.achieved), isTrue);
+      // Newest first: Mote was beaten on the 3rd, Pebble on the 1st.
+      expect(recent.first.quest.rosterIndex, 2);
+      expect(recent.last.quest.rosterIndex, 0);
+    });
+
+    test('takes four at most, newest first, whatever family they are', () {
+      // Six wins on six consecutive days finishes six per-opponent quests and
+      // the five-day streak as well — and the streak is *not* a special case
+      // to be filtered out. Asserted as a property rather than as a
+      // hand-written list of roster indices, which is what the first version
+      // of this test did and which quietly assumed only one family could fire.
+      final statuses = questStatuses(
+        [for (var i = 0; i < 6; i++) game(i, i + 1)],
+        today: DateTime(2026, 3, 7),
+      );
+      final recent = recentlyAchieved(statuses);
+      expect(recent, hasLength(4));
+      expect(recent.every((s) => s.achieved), isTrue);
+      for (var i = 1; i < recent.length; i++) {
+        expect(recent[i].achievedAt!.isAfter(recent[i - 1].achievedAt!), isFalse,
+            reason: 'entry $i is not newer than the one before it');
+      }
+      // The newest is the sixth day's win, and nothing older than the third
+      // day survives the cut.
+      expect(recent.first.achievedAt, DateTime(2026, 3, 6, 12));
+      expect(recent.last.achievedAt!.day, greaterThanOrEqualTo(3));
+      expect(
+          questStatuses([for (var i = 0; i < 6; i++) game(i, i + 1)],
+                  today: DateTime(2026, 3, 7))
+              .where((s) => s.achieved)
+              .length,
+          greaterThan(4),
+          reason: 'more were finished than the four shown');
+    });
+
+    test('a quest earned by a game with no completion time sorts last', () {
+      // Documents written before completion times were stored have none. A
+      // null read as "now" would pin the oldest history at the top of a list
+      // about recency, which is the one thing it must not do.
+      final statuses = questStatuses(
+        [
+          const ScoredGame(
+              rosterIndex: 0, won: true, movedSecond: false, completedAt: null),
+          game(1, 1),
+        ],
+        today: DateTime(2026, 3, 2),
+      );
+      final recent = recentlyAchieved(statuses);
+      expect(recent.first.quest.rosterIndex, 1);
+      expect(recent.last.quest.rosterIndex, 0);
+      expect(recent.last.achievedAt, isNull);
+    });
+
+    test('the volume family is timed by the game that reached the rung, not '
+        'the last of the day', () {
+      // Ten games on one day: the five-game rung was completed by the fifth,
+      // and a day that carried on to ten does not make it more recent.
+      final day = [
+        for (var i = 0; i < 10; i++)
+          ScoredGame(
+            rosterIndex: 0,
+            won: true,
+            movedSecond: false,
+            completedAt: DateTime(2026, 3, 1, 9, i),
+          ),
+      ];
+      final five = questStatuses(day, today: DateTime(2026, 3, 1))
+          .firstWhere((s) =>
+              s.quest.family == QuestFamily.gamesInDay && s.quest.target == 5);
+      expect(five.achieved, isTrue);
+      expect(five.achievedAt, DateTime(2026, 3, 1, 9, 4));
+    });
+  });
 }

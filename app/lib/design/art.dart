@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -16,8 +18,12 @@ abstract final class Art {
   static const logo = 'assets/art/logo.webp';
   static const cube = 'assets/art/cube.webp';
   static const newGame = 'assets/art/new_game.webp';
-  static const yourPath = 'assets/art/your-path.webp';
   static const tutorial = 'assets/art/tutorial.webp';
+
+  /// The two carved signs a section heading is written on. Which one is used
+  /// depends on how long the heading is, not on which section it is.
+  static const bannerShort = 'assets/art/banner_short.webp';
+  static const bannerLong = 'assets/art/banner_long.webp';
 
   /// One opponent's portrait, by catalogue id. The files are cut to a circle by
   /// `tools/artgen`, so nothing here has to clip.
@@ -121,38 +127,256 @@ class OpponentArt extends StatelessWidget {
   }
 }
 
-/// A carved-wood plaque used as a button.
+/// Where the lettering goes on one piece of carved artwork.
 ///
-/// The artwork carries its own lettering, in English, in every locale. That was
-/// chosen with its cost understood (D292): the plaques are the design, and
-/// re-lettering wood grain convincingly is not something this pipeline can do.
-/// [label] is therefore not drawn — it is the accessible name, so a Dutch
-/// screen reader still says "Nieuwe partij" over a plank that reads NEW GAME.
-class Plaque extends StatelessWidget {
-  const Plaque({
-    super.key,
+/// The signs ship **blank** and the app writes on them (D297), which is what
+/// makes them localisable — ticket 038 shipped the words baked into the wood
+/// and D292 recorded that as a ceiling. This is that ceiling removed.
+///
+/// Every measurement is a fraction of the picture rather than a pixel, so the
+/// same numbers hold at any size the sign is drawn. They were read off the art
+/// itself: [tiltDegrees] for the tutorial board is 8.2, which is the angle the
+/// original lettering was painted at, measured by fitting a line through its
+/// glyphs rather than guessed.
+class SignArt {
+  const SignArt({
     required this.asset,
-    required this.label,
+    required this.aspect,
+    required this.centre,
+    required this.tiltDegrees,
+    required this.widthFraction,
+    required this.fontFraction,
+  });
+
+  final String asset;
+
+  /// Width over height of the file. The sign is always drawn to this, because
+  /// [centre] and the rest are fractions of it.
+  final double aspect;
+
+  /// Where the caption's middle sits, in `Alignment` coordinates (-1 to 1).
+  final Alignment centre;
+
+  /// How far the plank is rotated. Positive turns clockwise, which is the way
+  /// the tutorial board leans.
+  final double tiltDegrees;
+
+  /// How much of the sign's width the caption may occupy before it is shrunk.
+  final double widthFraction;
+
+  /// The caption's nominal font size, as a fraction of the sign's height. Text
+  /// that would not fit shrinks; text that fits is left at this size, so the
+  /// same sign does not change lettering size between locales for no reason.
+  final double fontFraction;
+
+  static const tutorial = SignArt(
+    asset: Art.tutorial,
+    aspect: 768 / 512,
+    // Low and slightly right of centre — the open book takes the top third.
+    centre: Alignment(0.02, 0.24),
+    // The one sign that is not level. 8.2 degrees, measured off the lettering
+    // the artwork used to carry.
+    tiltDegrees: 8.2,
+    widthFraction: 0.50,
+    fontFraction: 0.20,
+  );
+
+  static const newGame = SignArt(
+    asset: Art.newGame,
+    aspect: 1024 / 383,
+    centre: Alignment(0.01, -0.13),
+    tiltDegrees: 0,
+    widthFraction: 0.58,
+    fontFraction: 0.26,
+  );
+
+  /// The heading sign for a short caption.
+  static const bannerShort = SignArt(
+    asset: Art.bannerShort,
+    aspect: 896 / 299,
+    centre: Alignment(-0.004, -0.01),
+    // Both banners droop a little; the numbers are small and they are what
+    // keeps the words sitting on the plank rather than across its edge.
+    tiltDegrees: -1.3,
+    widthFraction: 0.62,
+    fontFraction: 0.34,
+  );
+
+  /// The heading sign for a long one. A plainer, longer plank.
+  static const bannerLong = SignArt(
+    asset: Art.bannerLong,
+    aspect: 896 / 358,
+    centre: Alignment(0.008, -0.06),
+    tiltDegrees: -0.6,
+    widthFraction: 0.70,
+    fontFraction: 0.30,
+  );
+
+  /// Which banner a heading of [characters] is written on.
+  ///
+  /// By length, not by section: "Finished games" needs the long plank in
+  /// English and "Voltooide partijen" needs it more in Dutch, while "Quests"
+  /// and "Bezig" would rattle around on it.
+  static SignArt bannerFor(String caption) =>
+      caption.length > 12 ? bannerLong : bannerShort;
+}
+
+/// A piece of carved artwork with words written on it.
+///
+/// The words are drawn rather than painted in, so they are localised, and the
+/// wood is a picture, so they are not scaled by the system font slider — a
+/// caption that grew to 200% would run off a plank that cannot grow with it.
+/// That is not an accessibility regression: every sign is either a button with
+/// an accessible name or a heading with a semantic label, and the text on it
+/// is the same string either way (D297).
+class WoodenSign extends StatelessWidget {
+  const WoodenSign({
+    super.key,
+    required this.art,
+    required this.caption,
+    required this.height,
+    this.width,
+  });
+
+  final SignArt art;
+
+  /// What is written on it, in the player's language.
+  final String caption;
+
+  /// Required, like [Plaque]'s was and for the same reason: an `Image` reports
+  /// no size until it has decoded, so a sign that took its height from the
+  /// picture would be a zero-height sign on the first frame (D295).
+  final double height;
+
+  /// Defaults to [SignArt.aspect] times [height]. Given explicitly only where
+  /// a row has already decided how wide the sign may be.
+  final double? width;
+
+  /// How wide the sign has to be for [caption] to fit at its nominal size.
+  ///
+  /// **The plank stretches to the word, not the word to the plank.** Sizing a
+  /// sign by its height alone and shrinking the caption to fit made a long
+  /// heading render at half the size of a short one on the same screen — and
+  /// worse, made it *smaller*, because the long plank is proportionally
+  /// shorter and so came out narrower at equal height. Wood grain runs the
+  /// length of a plank, so stretching one horizontally is invisible; shrinking
+  /// lettering is not.
+  static double widthFor(String caption, SignArt art, double height) {
+    final painter = TextPainter(
+      text: TextSpan(text: caption, style: _style(height * art.fontFraction)),
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.noScaling,
+    )..layout();
+    return math.max(height * art.aspect, painter.width / art.widthFraction);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = width ?? widthFor(caption, art, height);
+    final fontSize = height * art.fontFraction;
+    return SizedBox(
+      width: w,
+      height: height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(art.asset,
+              fit: BoxFit.fill, filterQuality: FilterQuality.medium),
+          Align(
+            alignment: art.centre,
+            child: Transform.rotate(
+              angle: art.tiltDegrees * math.pi / 180,
+              // Rotated *outside* the box that measures the text, so the
+              // shrink-to-fit below is computed on the unrotated line. Inside,
+              // a tilted line would report a taller, wider box and shrink
+              // itself for a reason that has nothing to do with the plank.
+              child: SizedBox(
+                width: w * art.widthFraction,
+                height: fontSize * 1.35,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _CarvedText(caption, fontSize: fontSize),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Gold lettering with a dark rim, which is how every word in this art is
+/// drawn.
+///
+/// **One `Text`, with shadows.** The obvious build is two stacked `Text`s — a
+/// stroked one behind a filled one — and it looks identical. It also puts the
+/// caption into the widget tree twice, so every `find.text('Quests')` in the
+/// suite starts matching two widgets and a dozen tests fail for a reason that
+/// has nothing to do with what they assert. Eight offset shadows draw the same
+/// rim from a single node.
+/// The lettering's metrics, shared by what measures it and what draws it — a
+/// second copy here would let the sign be sized for one font and painted in
+/// another.
+TextStyle _style(double fontSize) => TextStyle(
+      fontFamily: QuadrimFonts.display,
+      fontSize: fontSize,
+      fontWeight: FontWeight.w700,
+      letterSpacing: fontSize * 0.02,
+      height: 1.1,
+    );
+
+class _CarvedText extends StatelessWidget {
+  const _CarvedText(this.text, {required this.fontSize});
+
+  final String text;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final rim = fontSize * 0.055;
+    return MediaQuery.withNoTextScaling(
+      child: Text(
+        text,
+        maxLines: 1,
+        softWrap: false,
+        style: _style(fontSize).copyWith(
+          color: QuadrimPalette.carvedGold,
+          shadows: [
+            for (final dx in [-rim, 0.0, rim])
+              for (final dy in [-rim, 0.0, rim])
+                if (dx != 0 || dy != 0)
+                  Shadow(
+                      color: QuadrimPalette.carvedRim,
+                      offset: Offset(dx, dy),
+                      blurRadius: rim * 0.6),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A [WoodenSign] that is a button.
+///
+/// Replaces `Plaque`, which drew artwork whose lettering was part of the
+/// picture and could only be English (D292). The accessible name is still the
+/// caption, so nothing about how it is announced has changed — what changed is
+/// that a Dutch player now reads the same word the screen reader says.
+class SignButton extends StatelessWidget {
+  const SignButton({
+    super.key,
+    required this.art,
+    required this.caption,
     required this.onPressed,
     required this.height,
     this.width,
   });
 
-  final String asset;
-
-  /// What this button is called, in the player's language.
-  final String label;
-
+  final SignArt art;
+  final String caption;
   final VoidCallback? onPressed;
-
-  /// Required, unlike [width]. A `SizedBox` with neither dimension sizes to its
-  /// child, and an undecoded `Image` reports zero — so an optional height let
-  /// this widget express the exact 316x0 untappable button it exists to
-  /// prevent. The type now refuses it (D295).
   final double height;
-
-  /// Null means "take the width you are given", which is what the New Game
-  /// plaque does inside an `Expanded`.
   final double? width;
 
   @override
@@ -161,7 +385,7 @@ class Plaque extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: enabled,
-      label: label,
+      label: caption,
       excludeSemantics: true,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
@@ -170,20 +394,8 @@ class Plaque extends StatelessWidget {
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(16),
-            // Sized by the box, never by the picture. An `Image` with no
-            // height reports zero until it has decoded, so a plaque that let
-            // the artwork set its own size would be a zero-height button on
-            // the first frame — and permanently so in a widget test, where
-            // nothing ever decodes. That is how this was caught.
-            child: SizedBox(
-              height: height,
-              width: width,
-              child: Image.asset(
-                asset,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
-              ),
-            ),
+            child: WoodenSign(
+                art: art, caption: caption, height: height, width: width),
           ),
         ),
       ),

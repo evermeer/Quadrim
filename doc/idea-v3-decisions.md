@@ -743,6 +743,8 @@ The alternative was baking twenty silhouettes at build time: twice the files, tw
 
 ## D292 — Three plaques carry English lettering in every locale
 
+> **Superseded by D297.** The signs were redrawn without their lettering, so the app writes it and it is localised after all. What follows is kept because the reasoning was sound on the art that existed at the time: the alternative on the table was retouching wood grain from a script, and that was correctly refused.
+
 **Question:** `new_game.png`, `your-path.png` and `tutorial.png` have their words painted into the wood — "NEW GAME / Start a new adventure", "YOUR PATH", "Tutorial". The Dutch strings differ (`Nieuwe partij`, `Jouw pad`, `Uitleg`), and `check.sh` exists to stop user-facing text escaping l10n. What ships?
 
 **Decision:** The artwork ships as drawn, in both locales. Asked and answered by the owner, with the alternatives on the table.
@@ -823,6 +825,40 @@ The picture has a near-white clearing at the top — exactly where the app bar s
 **Cost:** The forest is dimmer than the source art. That is the trade the mockup itself makes — every panel in `Design-alt0.png` sits on a visibly darkened frame — and the alternative was a design that looks right in a screenshot and cannot be read at the top of the screen.
 
 ---
+
+## D297 — The signs ship blank and the app writes on them
+
+**Question:** D292 accepted English lettering baked into three pieces of artwork, because the alternative was inpainting wood grain from a script. New art has arrived with the words left off. What now?
+
+**Decision:** The wood ships blank and every caption is drawn by the app, in Cinzel, at the tilt each board was painted at. D292's ceiling is removed rather than lived with.
+
+**The geometry is measured, not guessed.** Each sign carries a `SignArt` record of where its caption sits, how big it is and how far the plank leans — all as *fractions of the picture*, so one set of numbers holds at any size it is drawn. The tutorial board's **8.2°** is the angle of the lettering the old artwork carried, recovered by fitting a line through its glyphs; the colour, `#FDDE7C` on a `#5C300C` rim, is the median of those same pixels. The board was redrawn without its text and the app now writes at the angle the painter used.
+
+**Captions do not scale with the system font slider,** and that is deliberate rather than an oversight. The wood is a picture and cannot grow; a caption at 200% would run off the plank it is written on. Nothing is lost — every sign is either a button whose accessible name is the caption or a heading whose semantic label is the caption, so a screen reader gets the same string either way, at whatever size the reader wants it.
+
+**One `Text` with eight shadows, not two stacked `Text`s.** A stroked layer behind a filled one is the obvious way to draw an outline and looks identical. It also puts every caption in the widget tree twice, so `find.text('Quests')` starts matching two widgets and a dozen tests fail for reasons unrelated to what they assert. That is not a testing inconvenience to be worked around with `findsNWidgets`; it is a signal that the widget was lying about how many things it was.
+
+**Every section wears one now**, not only Your Path. A wooden sign that one section had and the others did not read as an accident rather than as a hierarchy. Which of the two banner planks is used depends on how long the caption is rather than on which section it is — "Finished games" needs the long one in English and "Voltooide partijen" needs it more in Dutch, while "Quests" and "Bezig" would rattle around on it.
+
+**Your Path's sign hangs off the card's corner.** Its left edge lines up with the card's own and its top fifth rises above it. `Transform.translate` moves it without changing what it is measured as, so the column below still reserves only the four fifths that are inside — a sign that had been *laid out* where it is drawn would have pushed the whole section down by the amount it overhangs.
+
+**Cost:** Four more numbers per sign, and they are only correct for the art they were measured against. New artwork means measuring again — which is the same cost the baked-in lettering had, except that it now buys two languages instead of one.
+
+---
+
+## D298 — What was just finished is a second panel, not a filter on the first
+
+**Question:** The main screen ranks quests by how close they are to done. Where do the finished ones go?
+
+**Decision:** Their own panel below it, showing the four completed most recently, and absent entirely until there is one.
+
+"What should I do next" and "what have I just done" are different questions, and a single list answers neither. The closest-to-completion ranking has no room for finished work — a finished thing is not close to finishing — and D280 already settled that the closest panel shows *no reward*, because until a volume or streak quest fires there is no honest figure for it. The recent panel is the one place that figure exists, so it is the one place it is shown.
+
+**`QuestStatus` gained `achievedAt`, and it is not a new source of truth.** Every branch of the fold already had to identify the game that completed a quest in order to price it: the first win against an opponent, the Nth game of the day that reached a volume rung, the last qualifying game of a streak run. The timestamp is that game's, so recency costs one field and no second pass. Nothing is stored, which is the rule the whole progression system is built on (spec §8.8).
+
+**A quest whose completing game has no timestamp sorts last.** Documents written before completion times were stored carry none, and a null read as "now" would pin the oldest history permanently at the top of a list about recency — the one thing it must not do.
+
+**Cost:** A seventh section on a screen that already had six, and the two test files whose tall viewports exist to keep lazily built rows on screen had to grow with it. Criterion U21's real-phone test is untouched and still applies the pressure; what it caught this time was a section list written in the wrong order, which had been harmless only because nothing had ever sat between the two entries that were the wrong way round.
 
 ## Open items
 

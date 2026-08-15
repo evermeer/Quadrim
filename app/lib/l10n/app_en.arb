@@ -820,5 +820,18 @@
   "playThisOpponent": "Start a game",
   "@playThisOpponent": {
     "description": "The action at the bottom of an unlocked opponent's detail page."
+  },
+  "questsCompleted": "Recently completed",
+  "@questsCompleted": {
+    "description": "Heading of the section listing the four most recently completed quests. Shown only once at least one has been."
+  },
+  "questAwardValue": "{points, plural, =1{+1 point} other{+{points} points}}",
+  "@questAwardValue": {
+    "description": "What one completed quest paid, beside its name.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
   }
 }

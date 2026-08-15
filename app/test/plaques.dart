@@ -1,15 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/design/art.dart';
 
-/// Finds a carved-wood button by what it is called (ticket 038).
+/// Finds a carved-wood button by what is written on it (ticket 038, D297).
 ///
-/// The plaques draw their lettering as part of the picture, so `find.text` no
-/// longer reaches them and every test that used to tap "New game" needs this
-/// instead. It matches on [Plaque.label] — the same string the screen reader is
-/// given — so a test written in Dutch still finds "Nieuwe partij", and a plaque
-/// whose accessible name was dropped stops being findable at all, which is the
-/// failure worth having.
+/// The signs draw their caption on the wood rather than in a `Text` of their
+/// own, so `find.text` does not reach them. This matches [SignButton.caption] —
+/// the same string that is both drawn and given to the screen reader — so a
+/// test written in Dutch finds "Nieuwe partij", and a sign whose caption was
+/// dropped stops being findable at all, which is the failure worth having.
 Finder plaqueLabelled(String label) => find.byWidgetPredicate(
-      (widget) => widget is Plaque && widget.label == label,
-      description: 'Plaque labelled "$label"',
+      (widget) => widget is SignButton && widget.caption == label,
+      description: 'sign captioned "\$label"',
     );

@@ -58,8 +58,12 @@ Future<GameDocument> _play(
   return game;
 }
 
+// 4400 rather than 3600, for the same reason home_screen_test.dart raised its
+// own: the recently-completed panel (D298) is a seventh section, and the lazily
+// built game rows below it have to stay built for a finder to reach them. The
+// smallest-phone test below passes a real size explicitly and is untouched.
 void _phone(WidgetTester tester,
-    {double textScale = 1, Size size = const Size(1080, 3600)}) {
+    {double textScale = 1, Size size = const Size(1080, 4400)}) {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 2.5;
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
@@ -478,16 +482,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 
-      // Five scrolling sections, reached by scrolling — the sixth, the primary
-      // button, is pinned below the scroll view and must be reachable without
-      // it.
-      // Your Path is found by type rather than by its heading: its heading is
-      // a carved sign and the words are in the semantics tree, not in a Text.
+      // Six scrolling sections, reached by scrolling — the seventh, the
+      // primary button, is pinned below the scroll view and must be reachable
+      // without it.
+      //
+      // **In layout order, top to bottom.** `scrollUntilVisible` only scrolls
+      // one way, so a list in any other order asks it to find something it has
+      // already scrolled past. That is what broke when the recently-completed
+      // panel (D298) landed between the quests and the game lists: the old
+      // list named "In progress" before "Quests", which had been harmless only
+      // because nothing sat between them.
+      //
+      // Your Path is found by type rather than by its heading, because its
+      // heading is written on a carved sign that hangs off the card's corner
+      // and `find.text` for it would also match the sign inside every other
+      // section on a screen that has several.
       for (final section in <({String name, Finder finder})>[
         (name: 'Against the computer', finder: find.text('Against the computer')),
         (name: 'Your path', finder: find.byType(YourPath)),
-        (name: 'In progress', finder: find.text('In progress')),
         (name: 'Quests', finder: find.text('Quests')),
+        (name: 'Recently completed', finder: find.text('Recently completed')),
+        (name: 'In progress', finder: find.text('In progress')),
         (name: 'Finished games', finder: find.text('Finished games')),
       ]) {
         await tester.scrollUntilVisible(section.finder, 200,

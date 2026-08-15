@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
+import '../design/art.dart';
+import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 
@@ -59,6 +61,10 @@ List<Widget> gameSectionSlivers({
       ),
     ];
 
+/// A section's heading, on the same carved sign every other section wears.
+///
+/// The words are drawn on the wood by the app rather than painted into it, so
+/// this is one widget for every heading in both languages (D297).
 class SectionHeading extends StatelessWidget {
   const SectionHeading(this.text, {super.key});
 
@@ -67,9 +73,19 @@ class SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 4),
-        child: Semantics(
-          header: true,
-          child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Semantics(
+            header: true,
+            label: text,
+            child: ExcludeSemantics(
+              child: WoodenSign(
+                art: SignArt.bannerFor(text),
+                caption: text,
+                height: kBannerHeight,
+              ),
+            ),
+          ),
         ),
       );
 }

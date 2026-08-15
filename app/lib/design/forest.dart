@@ -145,37 +145,58 @@ class DarkPanel extends StatelessWidget {
       );
 }
 
-/// Width over height of the carved section signs. They are drawn from one
-/// template, so one number covers them all.
-const double kBannerAspect = 896 / 326;
+/// How tall a section's carved heading sign is drawn.
+const double kBannerHeight = 56;
 
-/// A parchment card with a heading, which is what every list section on the
-/// main screen is.
+/// A parchment card with a carved heading sign.
 ///
-/// [banner] replaces the heading with artwork where there is artwork for it —
-/// only Your Path has a carved sign. The text heading is still built when a
-/// banner is given, hidden from sight and kept for the screen reader, because
-/// the words on the sign are painted into a picture and a picture says nothing.
+/// Every section on the main screen wears one now, not only Your Path: the
+/// headings used to be a line of Cinzel and a wooden sign was a thing only one
+/// of them had, which read as an accident rather than a hierarchy.
+///
+/// [overhang] hangs the sign off the card's top-left corner instead of sitting
+/// it inside the padding — the top fifth of the picture rises above the card
+/// and its left edge lines up with the card's own. `Transform.translate` moves
+/// it without moving what it is measured as, so the column below still reserves
+/// the four fifths that are actually inside the card.
 class ParchmentSection extends StatelessWidget {
   const ParchmentSection({
     super.key,
     required this.heading,
     required this.child,
-    this.banner,
     this.trailing,
+    this.overhang = false,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 12, 12),
   });
 
   final String heading;
   final Widget child;
-  final String? banner;
   final Widget? trailing;
+  final bool overhang;
   final EdgeInsetsGeometry padding;
+
+  /// How much of the sign rises above the card when it [overhang]s.
+  static const double _kOverhang = 0.2;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final inset = padding.resolve(TextDirection.ltr);
+    final art = SignArt.bannerFor(heading);
+    // A heading, and a picture of one. The sign carries the words, so the
+    // semantics node carries them too and the artwork itself is excluded —
+    // otherwise a screen reader meets a heading with nothing in it.
+    final sign = Semantics(
+      header: true,
+      label: heading,
+      child: ExcludeSemantics(
+        child: WoodenSign(
+            art: art, caption: heading, height: kBannerHeight),
+      ),
+    );
     return Card(
+      // Never clipped: an overhanging sign is drawn outside these bounds on
+      // purpose, and the default would cut its top fifth off.
+      clipBehavior: Clip.none,
       child: Padding(
         padding: padding,
         child: Column(
@@ -184,33 +205,17 @@ class ParchmentSection extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: banner == null
-                      ? Semantics(
-                          header: true,
-                          child: Text(heading,
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(color: QuadrimPalette.ink)),
-                        )
-                      : Semantics(
-                          header: true,
-                          label: heading,
-                          child: ExcludeSemantics(
-                            // A fixed box, for the same reason the plaques have
-                            // one: the picture's own size is not known until it
-                            // decodes, and a heading that resizes a frame later
-                            // shifts everything under it.
+                  child: overhang
+                      ? SizedBox(
+                          height: kBannerHeight * (1 - _kOverhang),
+                          child: Transform.translate(
+                            offset: Offset(
+                                -inset.left, -inset.top - kBannerHeight * _kOverhang),
                             child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: SizedBox(
-                                height: 46,
-                                width: 46 * kBannerAspect,
-                                child: Image.asset(banner!,
-                                    fit: BoxFit.contain,
-                                    filterQuality: FilterQuality.medium),
-                              ),
-                            ),
+                                alignment: Alignment.topLeft, child: sign),
                           ),
-                        ),
+                        )
+                      : Align(alignment: Alignment.centerLeft, child: sign),
                 ),
                 ?trailing,
               ],

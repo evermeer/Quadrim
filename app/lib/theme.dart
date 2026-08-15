@@ -46,6 +46,12 @@ abstract final class QuadrimPalette {
   /// Carved wood, for the warm buttons.
   static const bark = Color(0xFF905813);
 
+  /// The lettering on the wooden signs, and its rim. Measured off the word the
+  /// tutorial sign used to carry, so the drawn captions match the art they sit
+  /// on rather than approximating it (D297).
+  static const carvedGold = Color(0xFFFDDE7C);
+  static const carvedRim = Color(0xFF5C300C);
+
   /// The rating pill's green. Dark enough to carry [cream] at label size.
   static const moss = Color(0xFF3F5222);
 

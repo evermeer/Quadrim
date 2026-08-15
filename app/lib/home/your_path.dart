@@ -117,13 +117,13 @@ class _YourPathState extends State<YourPath> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final next = nextUnlockIndex(widget.unlocked);
-    // The carved sign replaces the text heading. It is a picture of the words
-    // "YOUR PATH", so `ParchmentSection` keeps the heading as an invisible
-    // semantic header underneath it — a screen reader still meets a heading,
-    // and in Dutch it still says "Jouw pad" (D292).
+    // The carved sign carries the heading, written on it by the app rather
+    // than painted into it, so it reads "Jouw pad" in Dutch (D297). It hangs
+    // off the card's top-left corner, which is what makes it read as a sign
+    // nailed to the panel rather than a picture inside it.
     return ParchmentSection(
       heading: l10n.yourPath,
-      banner: Art.yourPath,
+      overhang: true,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

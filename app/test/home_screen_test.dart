@@ -47,7 +47,12 @@ Future<LocalGameRepository> _repository() async {
 /// does not, and it is not meant to — the screen scrolls. Layout at real sizes
 /// and at the largest font scale is ticket 035's six-section test and ticket
 /// 021's audit, both of which use a real phone and would catch what this hides.
-void _phone(WidgetTester tester, {double textScale = 1, double height = 3600}) {
+// 4400 rather than 3600: the recently-completed panel (D298) is a seventh
+// section, and this file's viewport exists to keep the lazily built game rows
+// on screen so assertions about them can reach them. Criterion 23's real-phone
+// test lives in main_screen_test.dart and is not affected — the pressure this
+// height relieves is deliberately applied there instead.
+void _phone(WidgetTester tester, {double textScale = 1, double height = 4400}) {
   tester.view.physicalSize = Size(1080, height);
   tester.view.devicePixelRatio = 2.5;
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
@@ -127,9 +132,11 @@ void main() {
         find.descendant(
             of: find.byType(RatingCard), matching: find.text('$kSeedRating')),
         findsOneWidget);
-    // Criterion 20: it must not read as a universal rating.
+    // Criterion 20 is still met, and no longer on this panel: the
+    // device-only note now appears where a rating change has just happened —
+    // the end-of-game result — rather than permanently under the number.
     expect(find.text('Your rating against the computer, on this device only.'),
-        findsOneWidget);
+        findsNothing);
   });
 
   testWidgets('every row naming an opponent carries a rating pill after the '

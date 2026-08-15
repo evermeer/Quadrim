@@ -1375,6 +1375,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start a game'**
   String get playThisOpponent;
+
+  /// Heading of the section listing the four most recently completed quests. Shown only once at least one has been.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently completed'**
+  String get questsCompleted;
+
+  /// What one completed quest paid, beside its name.
+  ///
+  /// In en, this message translates to:
+  /// **'{points, plural, =1{+1 point} other{+{points} points}}'**
+  String questAwardValue(int points);
 }
 
 class _AppLocalizationsDelegate

@@ -43,7 +43,8 @@ void main() {
       Art.logo,
       Art.cube,
       Art.newGame,
-      Art.yourPath,
+      Art.bannerShort,
+      Art.bannerLong,
       Art.tutorial,
     ]) {
       final bytes = await load(asset);
@@ -85,7 +86,8 @@ void main() {
       Art.logo,
       Art.cube,
       Art.newGame,
-      Art.yourPath,
+      Art.bannerShort,
+      Art.bannerLong,
       Art.tutorial,
       'assets/fonts/Cinzel-Regular.ttf',
       'assets/fonts/Cinzel-Bold.ttf',

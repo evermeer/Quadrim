@@ -19,6 +19,7 @@ import '../settings/settings_screen.dart';
 import '../theme.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
+import 'completed_quests.dart';
 import 'finished_games.dart';
 import 'history_screen.dart';
 import 'opponent_detail.dart';
@@ -44,10 +45,10 @@ import 'your_path.dart';
 /// (The class's own doc comment is below; the constant between them belongs to
 /// the layout rather than to the screen's contract.)
 
-/// How tall the two carved plaques at the bottom of the main screen are. Fixed
-/// rather than intrinsic, and unscaled by the font slider — they carry no live
-/// text to grow.
-const double _kPlaqueHeight = 92;
+/// How tall the two carved signs at the bottom of the main screen are. Fixed
+/// rather than intrinsic: the wood is a picture and cannot grow, so the words
+/// written on it do not grow either (D297).
+const double _kSignHeight = 92;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -100,6 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// stored (spec §8.8).
   List<QuestStatus> _quests = const [];
 
+  /// The four finished most recently, from the *same* fold — `questsFrom` is
+  /// called once and read twice, because folding fifty-three quests over the
+  /// whole history a second time to sort the same list differently would be a
+  /// second pass for a `sort`.
+  List<QuestStatus> _completedQuests = const [];
+
   /// Consecutive days played, folded with the quests from the same list.
   int _streak = 0;
 
@@ -140,7 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _deltas = fold.ratingDeltas(games);
         _series = fold.computerRatingSeries(games);
         final today = (widget.now ?? DateTime.now)();
-        _quests = closestQuests(points_fold.questsFrom(games, today));
+        final quests = points_fold.questsFrom(games, today);
+        _quests = closestQuests(quests);
+        _completedQuests = recentlyAchieved(quests);
         _streak = points_fold.streakFrom(games, today);
       });
     });
@@ -414,6 +423,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 16),
                           QuestsSection(quests: _quests),
                         ],
+                        // Only once something has actually been finished. A
+                        // heading over an empty list is a heading for nothing.
+                        if (_completedQuests.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          CompletedQuestsSection(quests: _completedQuests),
+                        ],
                         // On a card, not loose on the background. It is the
                         // only text on this screen that would otherwise sit
                         // directly on a photograph of leaves.
@@ -493,24 +508,27 @@ class _HomeScreenState extends State<HomeScreen> {
           // decorative and must not resize when a picture finishes decoding,
           // and this strip is pinned above the bottom edge on every phone.
           child: SizedBox(
-            height: _kPlaqueHeight,
+            height: _kSignHeight,
             child: Row(
               children: [
                 Expanded(
-                  child: Plaque(
-                    asset: Art.newGame,
-                    label: l10n.newGame,
+                  child: SignButton(
+                    art: SignArt.newGame,
+                    caption: l10n.newGame,
                     onPressed: _newGame,
-                    height: _kPlaqueHeight,
+                    height: _kSignHeight,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Plaque(
-                  asset: Art.tutorial,
-                  label: l10n.tutorial,
+                // Its own aspect rather than a square. The tutorial board is
+                // 3:2 and the word written on it has to be legible; squeezing
+                // it into the height made the caption too small to read.
+                SignButton(
+                  art: SignArt.tutorial,
+                  caption: l10n.tutorial,
                   onPressed: _openTutorial,
-                  height: _kPlaqueHeight,
-                  width: _kPlaqueHeight,
+                  height: _kSignHeight,
+                  width: _kSignHeight * SignArt.tutorial.aspect,
                 ),
               ],
             ),

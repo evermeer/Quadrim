@@ -499,7 +499,8 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | U23 ＋ | Backing out of the opponent list cancels the whole flow rather than falling back to a default opponent |
 | U24 ＋ | Every screen sits on the forest background; no screen shows a white or otherwise undesigned surface |
 | U25 ＋ | Every one of the twenty opponents draws its own portrait, and a locked one draws as a silhouette rather than a dimmed face |
-| U26 ＋ | The carved plaques are buttons with an accessible name in the player's language, and Your Path's carved sign is still a semantic heading in both languages |
+| U26 ＋ | Every carved sign carries its caption in the player's language, drawn by the app; buttons announce it as their name and headings as a semantic header |
+| U28 ＋ | A section listing the four most recently completed quests appears below the closest-four section, with what each paid, and is absent until at least one has been completed |
 | U27 ＋ | The shipped artwork and fonts together stay under 3 MB, and decorative artwork is not drawn at text scales where it would push a section off the screen |
 
 ### 11.4 Tutorial
@@ -626,6 +627,7 @@ Approach **B** with main-screen approach **M2** (D266, D267). Bottom-up was reje
 | **035** | The ten-game trend graph; the finished-game row changes; the end-of-game panel; the portrait lock | U10, U15, U19, U20, U21 |
 | **037** | Your Path scrolls the whole roster and rests on the rating rather than the unlock; the opponent detail page and its one action | U13, U13a, U13b, U13c |
 | **038** | The forest design: one theme, the background on every screen, the twenty painted portraits and their locked silhouettes, the carved plaques, Cinzel and EB Garamond, the new launcher icon, and `tools/artgen` | U24–U27 |
+| **039** | Blank signs lettered by the app so the wood is localisable; a carved heading on every section; Your Path's sign overhanging its card; the recently-completed quests panel | U26, U28 |
 
 Each of 031–034 crosses every layer, so a real unlock is on screen after 032. The package's *shape* — the signatures in §7.3 — is fixed before 031 starts, so the passes after it extend a settled interface rather than renegotiating one.
 
