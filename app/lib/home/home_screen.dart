@@ -45,10 +45,15 @@ import 'your_path.dart';
 /// (The class's own doc comment is below; the constant between them belongs to
 /// the layout rather than to the screen's contract.)
 
-/// How tall the two carved signs at the bottom of the main screen are. Fixed
-/// rather than intrinsic: the wood is a picture and cannot grow, so the words
-/// written on it do not grow either (D297).
-const double _kSignHeight = 92;
+/// How tall the *wood* is on the two carved signs at the bottom of the main
+/// screen — not how tall their pictures are, which differ by whatever leaf and
+/// margin each one carries (D301). Fixed rather than intrinsic: the wood is a
+/// picture and cannot grow, so the words written on it do not grow either.
+const double _kSignPlank = 46;
+
+/// The strip the two of them sit in. Both pictures are taller than their plank
+/// and by different amounts, so the row is given room for the taller.
+const double _kSignRow = 104;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -519,15 +524,16 @@ class _HomeScreenState extends State<HomeScreen> {
           // decorative and must not resize when a picture finishes decoding,
           // and this strip is pinned above the bottom edge on every phone.
           child: SizedBox(
-            height: _kSignHeight,
+            height: _kSignRow,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: SignButton(
                     art: SignArt.newGame,
                     caption: l10n.newGame,
                     onPressed: _newGame,
-                    height: _kSignHeight,
+                    plankHeight: _kSignPlank,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -538,8 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   art: SignArt.tutorial,
                   caption: l10n.tutorial,
                   onPressed: _openTutorial,
-                  height: _kSignHeight,
-                  width: _kSignHeight * SignArt.tutorial.aspect,
+                  plankHeight: _kSignPlank,
                 ),
               ],
             ),

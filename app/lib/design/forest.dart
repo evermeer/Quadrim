@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -147,11 +145,13 @@ class DarkPanel extends StatelessWidget {
       );
 }
 
-/// How tall every carved heading sign is drawn.
+/// How tall the **wood** is on every carved heading sign.
 ///
-/// **One height for all of them**, with each sign's own width following from
-/// its proportions. Signs at different sizes read as different signs (D299).
-const double kBannerHeight = 62;
+/// One number for all of them, and it is the plank rather than the picture:
+/// the two banner files carry very different amounts of transparent margin, so
+/// equal file heights gave visibly unequal boards (D301). Each sign's width
+/// follows from its own proportions.
+const double kPlankHeight = 34;
 
 /// How much of a heading sign rises above the card it labels.
 const double _kOverhang = 0.52;
@@ -196,69 +196,121 @@ class ParchmentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      // Never clipped: the sign is drawn outside these bounds on purpose, and
-      // the default would cut off everything that overhangs.
+    final sign = SectionSign(heading);
+    // **The sign is a sibling of the card, not a child of it.** `Material`
+    // paints its shape's border *over* its children, so a heading inside the
+    // card had the card's own top edge drawn as a line straight through the
+    // lettering. The sliver-backed sections never showed it — their parchment
+    // is a `DecoratedSliver`, which paints behind — which is exactly why one
+    // section looked right and the rest did not (D301).
+    return Stack(
       clipBehavior: Clip.none,
-      child: Padding(
-        padding: padding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      children: [
+        Card(
+          child: Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                    child: SectionHeading(heading,
-                        inset: padding.resolve(TextDirection.ltr))),
-                ?trailing,
+                Row(
+                  children: [
+                    // A plain spacer for the part of the plank inside the card.
+                    // The sign itself is placed by the `Positioned` below, so
+                    // nothing here has to reason about where it is drawn.
+                    Expanded(child: SizedBox(height: kSignReserve)),
+                    ?trailing,
+                  ],
+                ),
+                child,
               ],
             ),
-            child,
-          ],
+          ),
         ),
-      ),
+        // Relative to the card, which fills this stack: the plank's top sits
+        // `_kOverhang` of its own height above the card's top edge, and the
+        // picture starts however far above that its transparent margin runs.
+        Positioned(
+          left: -_kOverhangLeft,
+          top: -(kPlankHeight * _kOverhang + sign.marginAbovePlank),
+          child: sign,
+        ),
+      ],
     );
   }
 }
 
-/// A section's heading: a carved sign hung off the corner of its panel.
+/// How much room a panel leaves for the part of the heading plank inside it.
 ///
-/// [inset] is the padding the panel puts around its content, which the sign has
-/// to climb back out of to reach the card's own edge. A heading with no panel
-/// around it passes zero.
+/// The card's own top padding then becomes the gap between the wood and the
+/// first row, which is what it is for — an earlier version subtracted that
+/// padding back out to "tighten" the panel and left four pixels of reserve, so
+/// every row sat under the sign.
+const double kSignReserve = kPlankHeight * (1 - _kOverhang);
+
+/// The carved sign itself: artwork, caption, and the heading a screen reader
+/// meets. It sizes itself, so it can be positioned freely.
+class SectionSign extends StatelessWidget {
+  const SectionSign(this.text, {super.key});
+
+  final String text;
+
+  SignArt get art => SignArt.bannerFor(text);
+
+  /// How far the picture's top edge is above the plank's, at [kPlankHeight].
+  double get marginAbovePlank =>
+      art.plankTop * (kPlankHeight / art.plankFraction);
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        header: true,
+        label: text,
+        // A heading, and a picture of one. The sign carries the words, so the
+        // semantics node carries them too and the artwork is excluded —
+        // otherwise a screen reader meets a heading with nothing in it.
+        child: ExcludeSemantics(
+          child: WoodenSign(
+              art: art, caption: text, plankHeight: kPlankHeight),
+        ),
+      );
+}
+
+/// A section's heading where the panel is a sliver rather than a card.
+///
+/// `gameSectionSlivers` cannot wrap its list in a `Stack` without giving up the
+/// laziness that list exists for, so here the sign is laid out in the flow and
+/// lifted into place. It needs no protection from a border painted over it:
+/// that parchment is a `DecoratedSliver`, which paints behind its children.
 class SectionHeading extends StatelessWidget {
   const SectionHeading(this.text, {super.key, this.inset = EdgeInsets.zero});
 
   final String text;
+
+  /// The padding the sliver puts around its content, which the sign climbs
+  /// back out of to reach the panel's own edge.
   final EdgeInsets inset;
 
   @override
   Widget build(BuildContext context) {
-    final art = SignArt.bannerFor(text);
-    // What is reserved is what the sign occupies *inside* the card, less the
-    // padding it is already sitting in — otherwise the content starts a
-    // padding's width below the sign's bottom edge rather than at it, and the
-    // panel carries a band of empty parchment nobody asked for.
-    final inside =
-        math.max(0.0, kBannerHeight * (1 - _kOverhang) - inset.top);
+    final sign = SectionSign(text);
     return SizedBox(
-      height: inside,
+      height: kSignReserve,
       child: Transform.translate(
         offset: Offset(-inset.left - _kOverhangLeft,
-            -inset.top - kBannerHeight * _kOverhang),
-        child: Align(
+            -(inset.top + sign.marginAbovePlank + kPlankHeight * _kOverhang)),
+        // **`OverflowBox`, not `Align`.** The box around this reserves only the
+        // part of the sign that is inside the panel, and every ordinary widget
+        // passes its own maximum height down — so the sign was clamped to the
+        // few pixels reserved for it and drawn as a wide thin sliver, by a
+        // different amount on each banner because each reserves a different
+        // amount. Reserving space and constraining the child are the same
+        // thing in Flutter unless you say otherwise. This says otherwise.
+        child: OverflowBox(
           alignment: Alignment.topLeft,
-          // A heading, and a picture of one. The sign carries the words, so
-          // the semantics node carries them too and the artwork is excluded —
-          // otherwise a screen reader meets a heading with nothing in it.
-          child: Semantics(
-            header: true,
-            label: text,
-            child: ExcludeSemantics(
-              child: WoodenSign(
-                  art: art, caption: text, height: kBannerHeight),
-            ),
-          ),
+          minWidth: 0,
+          maxWidth: double.infinity,
+          minHeight: 0,
+          maxHeight: double.infinity,
+          child: sign,
         ),
       ),
     );

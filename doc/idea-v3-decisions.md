@@ -896,6 +896,22 @@ Recorded rather than edited into D137, because the reasoning there was sound and
 
 **Cost:** One-handed play on a large phone is worse than it was. If that turns out to matter, the honest fix is an alignment the player chooses, not a default nobody sees. And forty pixels between sections is real vertical budget on a small phone — spent to make the headings read as labels rather than as pictures.
 
+## D301 — One height means the plank, and three ways a sign can be the wrong size
+
+**Question:** With every heading on the same carved sign at the same height, why did four of the five still look different?
+
+**Decision:** Because "the same height" was measured on the wrong thing, and because two Flutter behaviours quietly resized or overdrew the result. Three separate causes, found together.
+
+**The height was the file's, not the wood's.** The four signs carry very different amounts of transparent margin and leaf: the short banner's plank is **0.555** of its picture and the long banner's is **0.385**, measured on the shipped files. Drawing both at the same picture height gave the long one two thirds of the board. `SignArt` now records `plankTop` and `plankFraction`, and `WoodenSign` takes a `plankHeight` — so one number means one size of wood, and the margin is free to be whatever the artist drew. The caption's size is a fraction of the plank too, which is why the same number now produces the same lettering everywhere.
+
+**Reserving space and constraining a child are the same thing** unless you say otherwise. The sign hangs mostly outside its panel, so the layout reserves only the part inside — and a `SizedBox` of that height passed its maximum *down*, squashing each sign to the few pixels reserved for it. Every banner came out a different wide thin sliver, because each reserves a different amount. `OverflowBox` is the way to say otherwise. This is the same class of mistake as D295's undecoded images: a box that was meant to describe layout was silently also describing the child.
+
+**`Material` paints its border over its children.** A heading inside a `Card` had the card's own top edge drawn as a line straight through the lettering. The sections built from `gameSectionSlivers` never showed it, because their parchment is a `DecoratedSliver`, which paints *behind* — and that is exactly why the owner reported that one section looked right and the rest did not. `ParchmentSection` now puts the sign in a `Stack` as a **sibling** of the card rather than a child of it.
+
+**Cost:** Two ways to hang a sign — positioned beside a card, translated inside a sliver — because the lazy game lists cannot be wrapped in a `Stack` without giving up the laziness they exist for. They share `SectionSign` so the artwork and the semantics stay in one place, and the difference is confined to who does the placing.
+
+**What this says about looking.** Each of the three is invisible in a diff, none fails a test, and all three were reported by the owner from a screenshot in a single sentence. `flutter analyze` and 322 green tests had nothing to say about any of them.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

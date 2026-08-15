@@ -66,3 +66,27 @@ wood.
 `error|warning` and read "clean" three times over a deprecated `tolerance` that
 `check.sh` rejected — the analyzer fails on `info` too. Read its last line, not
 a filtered view.
+
+---
+
+## Follow-up: the headings were still three different sizes
+
+Reported from a screenshot in one sentence — "only In progress is right" — and it
+was three separate causes at once (D301).
+
+1. **The height was the picture's, not the wood's.** The short banner's plank is
+   0.555 of its file and the long banner's is 0.385, so equal picture heights
+   gave the long one two thirds of the board. `SignArt` now carries `plankTop`
+   and `plankFraction`, and `WoodenSign` takes a `plankHeight`.
+2. **Reserving space also constrained the sign.** It hangs mostly outside its
+   panel, so the layout reserves only the part inside — and that `SizedBox`
+   passed its maximum down, squashing each banner to a different wide thin
+   sliver. `OverflowBox` is how you reserve without constraining.
+3. **`Material` paints its border over its children**, so a heading inside a
+   `Card` had the card's top edge drawn through the lettering. The
+   sliver-backed sections paint their parchment behind, which is precisely why
+   In progress looked right and the rest did not. The sign is now a sibling of
+   the card in a `Stack`, not a child of it.
+
+None of the three is visible in a diff, none fails a test, and all three were
+obvious in a screenshot.
