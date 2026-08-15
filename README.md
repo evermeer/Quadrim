@@ -303,4 +303,26 @@ Get text fonts and colours from the mockup.
 ```
 
 
+Tweaking the design.
 
+**Prompt**
+```
+I have a new image for the tutorial named tutorial-background.png and that image is without the tutoral text on top of it. 
+Replace the image in the game and put the text on it from code so that it can be multi lingual.
+Make sure you use the same font and colour as currently in the image and also use the same tilt.
+
+I also have a new image for your path and that is title-banner-1.png
+replace the current image with this one and put the text on it from code.
+The other pannels only have text. I wouls also like to have the title-banner-1.png there with the text on top of it.
+If texts are longer then use title-banner-2.png
+Currently the your path image is inside the pannel.
+I would like to move that image up and to the left so that the top and the left side of that image is at the verry beginning of that pannel and the top 20% of the image is above the pannel
+
+I also have a new image for the new game button and that is new-game-background.png
+replace the current image with this one and put the text on it from code.
+The current image has a sub line. that one can be skipped. The text 'New Game' is enough.
+
+In the top pannel of the main screen you can remove the line 'Your rating against the computer, on this device only'
+
+If there are quests completed, then i would like the main screen to have an extra pannel below the quests with a top 4 of the most recent completed quests.
+```
