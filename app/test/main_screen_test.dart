@@ -13,6 +13,7 @@ import 'package:quadrim/home/home_screen.dart';
 import 'package:quadrim/home/trend_graph.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_rating/quadrim_rating.dart';
 
 /// The last of the 0.1 interface (ticket 035): the trend graph, the finished
 /// rows, the end-of-game panel and the portrait lock.
@@ -141,6 +142,67 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('counts the first game, by measuring from the seed',
+        (tester) async {
+      // The bug this pins: `series` holds the rating *after* each game, so
+      // measuring from its first entry drops the first game's own result. A
+      // player who had won once was told their last ten games were worth
+      // nothing (D289).
+      _phone(tester);
+      final repo = await _repository();
+      await _play(repo);
+      await _play(repo);
+      final series = computerRatingSeries(await repo.loadCompletedGames());
+
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+      final expected = series.last - kSeedRating;
+      expect(
+          find.descendant(
+              of: find.byType(TrendGraph), matching: find.text('+$expected')),
+          findsOneWidget);
+      // And the two are not the same number, or the test would pass either way.
+      expect(series.last - series.first, lessThan(expected));
+    });
+
+    testWidgets('measures from the seed at exactly ten games too',
+        (tester) async {
+      // `>=` here instead of `>` was the same slip in a place nobody looks:
+      // with exactly ten games there is no eleventh entry to reach back to.
+      _phone(tester);
+      final repo = await _repository();
+      for (var i = 0; i < 10; i++) {
+        await _play(repo);
+      }
+      final series = computerRatingSeries(await repo.loadCompletedGames());
+      expect(series, hasLength(10));
+
+      await tester.pumpWidget(_home(repo));
+      await tester.pumpAndSettle();
+      expect(
+          find.descendant(
+              of: find.byType(TrendGraph),
+              matching: find.text('+${series.last - kSeedRating}')),
+          findsOneWidget);
+    });
+
+    testWidgets('draws the point it measures from, so the line agrees with '
+        'the number', (tester) async {
+      _phone(tester);
+      final repo = await _repository();
+      for (var i = 0; i < 14; i++) {
+        await _play(repo, botId: 'onyx', won: i.isEven);
+      }
+      final series = computerRatingSeries(await repo.loadCompletedGames());
+      // Eleven plotted points for a ten-game window: the baseline, then one
+      // per game. The baseline is a real earlier rating here rather than the
+      // seed, because there are more than ten games on record.
+      expect(TrendGraph.pointsOf(series), hasLength(11));
+      expect(TrendGraph.pointsOf(series).first, series[series.length - 11]);
+      expect(TrendGraph.changeIn(series),
+          series.last - series[series.length - 11]);
+    });
+
     testWidgets('covers the last ten and no more', (tester) async {
       _phone(tester);
       final repo = await _repository();
@@ -158,6 +220,7 @@ void main() {
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
       final expected = series.last - series[series.length - 11];
+
       expect(
           find.descendant(
               of: find.byType(TrendGraph),

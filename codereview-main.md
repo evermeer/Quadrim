@@ -4047,3 +4047,47 @@ rediscovering it.
   test that pinned "the middle one is the next unlock" is now the test that
   pins "rests on the first opponent above the player", with a comment naming
   both decisions and the reason the premise changed.
+
+---
+
+# Ticket 035 follow-up — the trend graph's baseline
+
+> Reviewed: 2026-08-15 · Defect found by the owner on the running app.
+
+### [MAJOR] The stated change dropped the first game of the window — `bug`
+
+**File:** `app/lib/home/trend_graph.dart:changeIn` (as shipped in ticket 035)
+
+**Evidence, as it stood:**
+
+```dart
+final before = series.length <= kTrendGames
+    ? null
+    : series[series.length - kTrendGames - 1];
+return window.last - (before ?? window.first);
+```
+
+**Problem:** `computerRatingSeries` holds the rating **after** each game, so
+`window.first` already contains the first game's result. Subtracting it removes
+that game from the total. A player with two wins was shown the second one only;
+a player with a single win was shown `+0`.
+
+Two distinct cases, one cause:
+
+- **Fewer than ten games** — the baseline should be the seed, 800.
+- **Exactly ten games** — `<=` sent it down the same path, because there is no
+  eleventh entry to reach back to. `>` is correct.
+
+And above ten games, the baseline was subtracted but never drawn, so the rise
+visible on the line disagreed with the printed number by exactly the first game
+in the window — the same defect wearing a different hat.
+
+**Fix applied:** `baselineOf` is always a real number (the pre-window rating,
+or the seed), `changeIn` measures from it, and `pointsOf` plots it as the
+line's first point so the picture and the number agree.
+
+**Why the ticket-035 tests missed it:** they asserted that a signed number was
+present and that its sign was right, never its value. The three tests added
+here compute the expected figure independently from the series and the seed,
+and one asserts that the correct answer and the old incorrect one are different
+numbers — so the case cannot pass by accident if the baseline is dropped again.

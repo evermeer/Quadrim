@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:quadrim_rating/quadrim_rating.dart';
+
 import '../l10n/app_localizations.dart';
 import 'game_row.dart' show signedDelta;
 
@@ -34,7 +36,7 @@ class TrendGraph extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final window = _window(series);
+    final points = pointsOf(series);
     final change = changeIn(series);
     final rising = change >= 0;
     final colour = change == 0
@@ -59,7 +61,7 @@ class TrendGraph extends StatelessWidget {
                 height: 32,
                 child: CustomPaint(
                   painter: _TrendPainter(
-                    series: window,
+                    series: points,
                     colour: colour,
                     track: theme.colorScheme.outlineVariant,
                   ),
@@ -81,20 +83,35 @@ class TrendGraph extends StatelessWidget {
       ? series
       : series.sublist(series.length - kTrendGames);
 
+  /// Where the change is measured from: the rating the player held **before**
+  /// the window, or the seed when the window reaches back to the start of
+  /// their history.
+  ///
+  /// The seed case is not an edge case, it is every new player. `series` holds
+  /// the rating *after* each game, so its first entry already contains the
+  /// first game's result; measuring from there silently drops that game from
+  /// the total. A player who has won once would be told their last ten games
+  /// were worth nothing.
+  ///
+  /// The same slip applies at exactly ten games, where there is no eleventh
+  /// entry to reach back to — which is why the test is `length > kTrendGames`
+  /// and not `>=`.
+  static int baselineOf(List<int> series) => series.length > kTrendGames
+      ? series[series.length - kTrendGames - 1]
+      : kSeedRating;
+
+  /// What the line plots: the baseline, then one point per game in the window.
+  ///
+  /// The baseline is drawn rather than merely subtracted, so the rise the eye
+  /// measures off the line is the number printed beside it. Without it the two
+  /// disagree by exactly the first game in the window, in the direction that
+  /// makes a good run look flat.
+  static List<int> pointsOf(List<int> series) =>
+      [baselineOf(series), ..._window(series)];
+
   /// The signed change over the window — what the card announces, and the
   /// number drawn beside the line.
-  ///
-  /// Measured against where the player stood **before** the window, so "the
-  /// last ten games" means the ten games and not the nine gaps between them.
-  /// With fewer than ten on record the window starts at the first game, whose
-  /// own starting point is the seed the fold began from.
-  static int changeIn(List<int> series) {
-    final window = _window(series);
-    final before = series.length <= kTrendGames
-        ? null
-        : series[series.length - kTrendGames - 1];
-    return window.last - (before ?? window.first);
-  }
+  static int changeIn(List<int> series) => series.last - baselineOf(series);
 }
 
 class _TrendPainter extends CustomPainter {

@@ -687,6 +687,24 @@ The two screens are entered with different intentions. §8.7 is behind the *new 
 
 ---
 
+## D289 — The trend graph measures from a real baseline, and draws it
+
+**Question:** The ten-game trend states its change as a signed number beside the line. `computerRatingSeries` holds the rating **after** each game. Measured from the first entry of the window, what is the number?
+
+**Decision:** Wrong, and it was shipped that way in ticket 035. The change is now measured from a **baseline** — the rating held *before* the window — which is the seed when the window reaches back to the start of the player's history. The baseline is also **plotted**, as the line's first point.
+
+The defect was found by the owner on the running app: a player with a couple of games saw a number that did not include their first one. The first entry of `series` already contains the first game's result, so subtracting it removes exactly that game from the total. A player who had won once was told their last ten games were worth nothing.
+
+**The same slip sat at exactly ten games**, in a place nobody would have looked: the test was `series.length <= kTrendGames`, so a window of exactly ten reached for a non-existent eleventh entry, found none, and fell back to measuring from within itself. It is `> kTrendGames` now, and a test names the case.
+
+**And drawing the baseline is part of the fix, not a flourish.** Above ten games the old code measured from a point it never plotted, so the rise the eye took off the line and the number printed beside it disagreed by exactly the first game in the window — in the direction that makes a good run look flat. The line now starts where the measurement starts. That is eleven plotted points for a ten-game window: the baseline, then one per game, so criterion U15's "one dot per completed game" still holds and the origin is visible rather than implied.
+
+**Cost:** One extra point on the line, and a graph that starts at the seed for a player's first nine games rather than at their first result — which is the honest picture, since the seed is where they actually started.
+
+**What this says about the tests that missed it.** Ticket 035's trend tests asserted the *presence* of a signed number and its sign, never its value against an independently computed one. The three tests added here each compute the expected figure from the series and the seed, and one of them asserts that the right answer and the old wrong answer are different numbers — so it cannot pass by accident if the baseline is dropped again.
+
+---
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).
