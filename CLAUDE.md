@@ -22,6 +22,29 @@ export PATH="/c/D/flutter/bin:$PATH" && timeout 2400 bash tool/check.sh
 
 Always give long runs a hard `timeout`. A hung suite is indistinguishable from a slow one, and this repo has already lost days to that (D178).
 
+**The Android build needs `JAVA_TOOL_OPTIONS` on this machine.** Gradle dies at
+once with `java.io.IOException: Unable to establish loopback connection`, which
+names the wrong layer: TCP loopback is fine, and so is the `afunix` driver. What
+fails is an **AF_UNIX `connect` under `%LOCALAPPDATA%\Temp`**, which returns
+`Invalid argument` there and succeeds in every other directory tested. The JDK
+places every `Selector`'s internal socket pair in that directory, so
+`Selector.open()` fails 100% of the time and the Gradle client cannot talk to
+the daemon it has just started. Moving only the socket directory fixes it:
+
+```bash
+export JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:\Users\EdwinVermeer\.gradle\unixsock'
+```
+
+It is set as a user environment variable, so a **new** shell needs no export; a
+shell that was already open when it was set does. Both the Gradle client and its
+daemon need it, which is why it is `JAVA_TOOL_OPTIONS` and not `GRADLE_OPTS` —
+the client reads `GRADLE_OPTS`, the daemon does not.
+
+This is a machine condition rather than a project one: nothing in the repo
+caused it and nothing in the repo fixes it, which is why no path is committed
+and CI is untouched. The likely culprit is a security filter driver on the temp
+path. If AF_UNIX ever works under `%TEMP%` again the variable becomes a no-op.
+
 Individual pieces:
 
 ```bash
