@@ -910,7 +910,9 @@ Recorded rather than edited into D137, because the reasoning there was sound and
 
 **Cost:** Two ways to hang a sign — positioned beside a card, translated inside a sliver — because the lazy game lists cannot be wrapped in a `Stack` without giving up the laziness they exist for. They share `SectionSign` so the artwork and the semantics stay in one place, and the difference is confined to who does the placing.
 
-**What this says about looking.** Each of the three is invisible in a diff, none fails a test, and all three were reported by the owner from a screenshot in a single sentence. `flutter analyze` and 322 green tests had nothing to say about any of them.
+**And then a fourth, from the same rewrite.** Splitting the two placements dropped the `inset` argument at the one call site that needs it, so the sliver headings never climbed out of their panel's padding and sat twelve pixels down and to the right of the card-backed ones. `SectionHeading.inset` defaults to zero for the case that has no panel around it, and a default is exactly what lets a required value go missing quietly. It is documented at the call site now; the honest alternative is to make it required and give the no-panel case an explicit `EdgeInsets.zero`.
+
+**What this says about looking.** Each of the four is invisible in a diff, none fails a test, and all four were reported by the owner from a screenshot in a single sentence. `flutter analyze` and 322 green tests had nothing to say about any of them.
 
 ## Open items
 

@@ -44,7 +44,15 @@ List<Widget> gameSectionSlivers({
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                sliver: SliverToBoxAdapter(child: SectionHeading(heading)),
+                // The inset is not optional here. It is what the sign climbs
+                // back out of to reach the panel's own corner, and dropping it
+                // leaves the heading sitting a padding's width down and to the
+                // right of where the card-backed sections put theirs — which
+                // is exactly how this shipped once (D301).
+                sliver: SliverToBoxAdapter(
+                  child: SectionHeading(heading,
+                      inset: const EdgeInsets.fromLTRB(12, 12, 12, 0)),
+                ),
               ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
