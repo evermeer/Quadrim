@@ -82,7 +82,7 @@ class OpponentDetail extends StatelessWidget {
             // as a silhouette rather than dimmed — what has not been bought has
             // not been met, and this is the page where the player decides
             // whether to buy it.
-            Center(child: OpponentArt(id: bot.id, size: 200, locked: locked)),
+            Center(child: OpponentArt(id: bot.id, size: 280, locked: locked)),
             const SizedBox(height: 16),
             // Name, rating and tier as one announcement: three facts that only
             // mean anything together, and the page title already says the name

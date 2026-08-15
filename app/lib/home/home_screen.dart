@@ -407,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             balance: _balance,
                             streak: _streak,
                             series: _series),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: kSectionGap),
                         YourPath(
                           summary: _summary,
                           unlocked: _unlockedIds,
@@ -419,14 +419,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         // zero, so the four it picks are arbitrary — and they
                         // would push the empty state off the first screen,
                         // which is the one moment it exists for.
+                      ],
+                    ),
+                  ),
+                  // Directly under Your Path, and above the quests: a game
+                  // waiting to be finished is the most actionable thing on the
+                  // screen, and it used to sit below two panels about what has
+                  // already happened.
+                  if (_activeGames.isNotEmpty)
+                    ...gameSectionSlivers(
+                      heading: l10n.inProgress,
+                      games: _activeGames,
+                      tile: (game) =>
+                          ActiveGameTile(game: game, onTap: () => _openGame(game.id)),
+                    ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    sliver: SliverList.list(
+                      children: [
                         if (_completedGames.isNotEmpty) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: kSectionGap),
                           QuestsSection(quests: _quests),
                         ],
                         // Only once something has actually been finished. A
                         // heading over an empty list is a heading for nothing.
                         if (_completedQuests.isNotEmpty) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: kSectionGap),
                           CompletedQuestsSection(quests: _completedQuests),
                         ],
                         // On a card, not loose on the background. It is the
@@ -448,13 +466,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  if (_activeGames.isNotEmpty)
-                    ...gameSectionSlivers(
-                      heading: l10n.inProgress,
-                      games: _activeGames,
-                      tile: (game) =>
-                          ActiveGameTile(game: game, onTap: () => _openGame(game.id)),
-                    ),
                   if (_completedGames.isNotEmpty) ...[
                     ...gameSectionSlivers(
                       heading: l10n.finishedGames,

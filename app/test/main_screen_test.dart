@@ -489,9 +489,10 @@ void main() {
       // **In layout order, top to bottom.** `scrollUntilVisible` only scrolls
       // one way, so a list in any other order asks it to find something it has
       // already scrolled past. That is what broke when the recently-completed
-      // panel (D298) landed between the quests and the game lists: the old
-      // list named "In progress" before "Quests", which had been harmless only
-      // because nothing sat between them.
+      // panel (D298) landed between the quests and the game lists — and again
+      // when the in-progress list moved up to sit directly under Your Path
+      // (D300). The order of this list is the order of the screen, and it has
+      // to be edited whenever that changes.
       //
       // Your Path is found by type rather than by its heading, because its
       // heading is written on a carved sign that hangs off the card's corner
@@ -500,9 +501,9 @@ void main() {
       for (final section in <({String name, Finder finder})>[
         (name: 'Against the computer', finder: find.text('Against the computer')),
         (name: 'Your path', finder: find.byType(YourPath)),
+        (name: 'In progress', finder: find.text('In progress')),
         (name: 'Quests', finder: find.text('Quests')),
         (name: 'Recently completed', finder: find.text('Recently completed')),
-        (name: 'In progress', finder: find.text('In progress')),
         (name: 'Finished games', finder: find.text('Finished games')),
       ]) {
         await tester.scrollUntilVisible(section.finder, 200,

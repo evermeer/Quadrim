@@ -70,6 +70,7 @@ class BoardView extends StatefulWidget {
     required this.onCellTap,
     this.highlight = const [],
     this.flash = const [],
+    this.captionColour = QuadrimPalette.cream,
   });
 
   final GameState state;
@@ -90,6 +91,14 @@ class BoardView extends StatefulWidget {
   /// boards: those are static illustrations, and a step that highlights eight
   /// cells at once would pulse them all (D203).
   final List<int> flash;
+
+  /// What colour the "Layer N" captions are.
+  ///
+  /// They are the one part of the board drawn on whatever is behind it rather
+  /// than on a cell, so the caller has to say. A real game puts the board on
+  /// the darkened forest and wants cream; the tutorial and the practice game
+  /// put it on parchment, where cream is invisible (D300).
+  final Color captionColour;
 
   static const _shear = 0.15; // horizontal skew; depth cue (see D135)
   static const _cellGap = 2.0;
@@ -163,7 +172,11 @@ class _BoardViewState extends State<BoardView>
             1.0, math.min(math.min(byWidth, byHeight), BoardView._maxCellSize));
         return Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          // Centred. D137 put the board against the right edge for one-handed
+          // reach; measured against that, a board that sits in the middle of
+          // the screen is what the owner asked for and what reads as the
+          // subject of the screen rather than something pushed aside (D300).
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             for (var z = 0; z < 4; z++)
               Padding(
@@ -178,6 +191,7 @@ class _BoardViewState extends State<BoardView>
                   flash: widget.flash,
                   flashAnimation: _flash,
                   cellSize: cellSize,
+                  captionColour: widget.captionColour,
                 ),
               ),
           ],
@@ -197,6 +211,7 @@ class _LayerView extends StatelessWidget {
     required this.flash,
     required this.flashAnimation,
     required this.cellSize,
+    required this.captionColour,
   });
 
   final int z;
@@ -207,6 +222,7 @@ class _LayerView extends StatelessWidget {
   final List<int> flash;
   final Animation<double> flashAnimation;
   final double cellSize;
+  final Color captionColour;
 
   /// One cell, built from a single [Cell] rather than three identical
   /// constructions of it inside the collection-for below.
@@ -263,7 +279,7 @@ class _LayerView extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .labelSmall
-                        ?.copyWith(color: QuadrimPalette.cream),
+                        ?.copyWith(color: captionColour),
                   ),
                 ),
               ),

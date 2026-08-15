@@ -146,6 +146,7 @@ class SignArt {
     required this.tiltDegrees,
     required this.widthFraction,
     required this.fontFraction,
+    this.maxLines = 1,
   });
 
   final String asset;
@@ -169,6 +170,16 @@ class SignArt {
   /// same sign does not change lettering size between locales for no reason.
   final double fontFraction;
 
+  /// How many lines the plank has room for.
+  ///
+  /// One, on every sign there is. Two lines were tried on the long banner —
+  /// its plank is proportionally taller, so it looked like the shape a wrapped
+  /// heading wants — and they overflow it: the writable band is barely a third
+  /// of the picture's height, and two lines of anything readable do not fit in
+  /// it. What the long plank actually buys is *length*, and a single line
+  /// scaled into it reads better than two cramped ones.
+  final int maxLines;
+
   static const tutorial = SignArt(
     asset: Art.tutorial,
     aspect: 768 / 512,
@@ -177,7 +188,7 @@ class SignArt {
     // The one sign that is not level. 8.2 degrees, measured off the lettering
     // the artwork used to carry.
     tiltDegrees: 8.2,
-    widthFraction: 0.50,
+    widthFraction: 0.62,
     fontFraction: 0.20,
   );
 
@@ -198,8 +209,8 @@ class SignArt {
     // Both banners droop a little; the numbers are small and they are what
     // keeps the words sitting on the plank rather than across its edge.
     tiltDegrees: -1.3,
-    widthFraction: 0.62,
-    fontFraction: 0.34,
+    widthFraction: 0.64,
+    fontFraction: 0.30,
   );
 
   /// The heading sign for a long one. A plainer, longer plank.
@@ -208,8 +219,8 @@ class SignArt {
     aspect: 896 / 358,
     centre: Alignment(0.008, -0.06),
     tiltDegrees: -0.6,
-    widthFraction: 0.70,
-    fontFraction: 0.30,
+    widthFraction: 0.74,
+    fontFraction: 0.28,
   );
 
   /// Which banner a heading of [characters] is written on.
@@ -252,27 +263,15 @@ class WoodenSign extends StatelessWidget {
   /// a row has already decided how wide the sign may be.
   final double? width;
 
-  /// How wide the sign has to be for [caption] to fit at its nominal size.
-  ///
-  /// **The plank stretches to the word, not the word to the plank.** Sizing a
-  /// sign by its height alone and shrinking the caption to fit made a long
-  /// heading render at half the size of a short one on the same screen — and
-  /// worse, made it *smaller*, because the long plank is proportionally
-  /// shorter and so came out narrower at equal height. Wood grain runs the
-  /// length of a plank, so stretching one horizontally is invisible; shrinking
-  /// lettering is not.
-  static double widthFor(String caption, SignArt art, double height) {
-    final painter = TextPainter(
-      text: TextSpan(text: caption, style: _style(height * art.fontFraction)),
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
-    )..layout();
-    return math.max(height * art.aspect, painter.width / art.widthFraction);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final w = width ?? widthFor(caption, art, height);
+    // Every sign is drawn at its own proportions. An earlier version stretched
+    // the plank horizontally so a long caption could keep its size, and the
+    // result was a row of signs at visibly different lengths — which reads as
+    // five different signs rather than one sign used five times. Uniform is
+    // worth more here than uniform lettering, so the wood keeps its shape and
+    // the words shrink into it (D299).
+    final w = width ?? height * art.aspect;
     final fontSize = height * art.fontFraction;
     return SizedBox(
       width: w,
@@ -292,10 +291,15 @@ class WoodenSign extends StatelessWidget {
               // itself for a reason that has nothing to do with the plank.
               child: SizedBox(
                 width: w * art.widthFraction,
-                height: fontSize * 1.35,
+                height: fontSize * 1.3 * art.maxLines,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: _CarvedText(caption, fontSize: fontSize),
+                  child: _CarvedText(caption,
+                      fontSize: fontSize,
+                      maxLines: art.maxLines,
+                      maxWidth: art.maxLines > 1
+                          ? w * art.widthFraction
+                          : null),
                 ),
               ),
             ),
@@ -327,19 +331,35 @@ TextStyle _style(double fontSize) => TextStyle(
     );
 
 class _CarvedText extends StatelessWidget {
-  const _CarvedText(this.text, {required this.fontSize});
+  const _CarvedText(this.text,
+      {required this.fontSize, this.maxLines = 1, this.maxWidth});
 
   final String text;
   final double fontSize;
+  final int maxLines;
+
+  /// The width a wrapping caption may use, and **only** set when it wraps.
+  ///
+  /// Without it a `FittedBox` hands the text unbounded width, the text lays out
+  /// on one line however many it was allowed, and the wrap never happens. With
+  /// it on a *single*-line caption the opposite breaks: the text is clamped to
+  /// the box, overflows inside it, and the `FittedBox` — which now measures the
+  /// box rather than the line — never scales it down. That shipped "Tutorial"
+  /// as "TUTORI" with the rest clipped off the plank.
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
     final rim = fontSize * 0.055;
     return MediaQuery.withNoTextScaling(
+      child: ConstrainedBox(
+        constraints:
+            BoxConstraints(maxWidth: maxWidth ?? double.infinity),
       child: Text(
         text,
-        maxLines: 1,
-        softWrap: false,
+        maxLines: maxLines,
+        softWrap: maxLines > 1,
+        textAlign: TextAlign.center,
         style: _style(fontSize).copyWith(
           color: QuadrimPalette.carvedGold,
           shadows: [
@@ -352,6 +372,7 @@ class _CarvedText extends StatelessWidget {
                       blurRadius: rim * 0.6),
           ],
         ),
+      ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import '../design/forest.dart';
 import '../game/board_view.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'practice_hint.dart';
 
 /// The seed the practice opponent plays from.
@@ -154,6 +155,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: BoardView(
+                  // Ink, because this board sits on parchment (D300).
+                  captionColour: QuadrimPalette.ink,
                   state: _state,
                   enabled: _playerToMove,
                   onCellTap: _play,

@@ -501,6 +501,7 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | U25 ＋ | Every one of the twenty opponents draws its own portrait, and a locked one draws as a silhouette rather than a dimmed face |
 | U26 ＋ | Every carved sign carries its caption in the player's language, drawn by the app; buttons announce it as their name and headings as a semantic header |
 | U28 ＋ | A section listing the four most recently completed quests appears below the closest-four section, with what each paid, and is absent until at least one has been completed |
+| U29 ＋ | Every heading sign is drawn at one height and overhangs its panel's top-left corner without being overlapped by the section above; the board is centred; layer captions are readable on both the forest and parchment |
 | U27 ＋ | The shipped artwork and fonts together stay under 3 MB, and decorative artwork is not drawn at text scales where it would push a section off the screen |
 
 ### 11.4 Tutorial
@@ -628,6 +629,7 @@ Approach **B** with main-screen approach **M2** (D266, D267). Bottom-up was reje
 | **037** | Your Path scrolls the whole roster and rests on the rating rather than the unlock; the opponent detail page and its one action | U13, U13a, U13b, U13c |
 | **038** | The forest design: one theme, the background on every screen, the twenty painted portraits and their locked silhouettes, the carved plaques, Cinzel and EB Garamond, the new launcher icon, and `tools/artgen` | U24–U27 |
 | **039** | Blank signs lettered by the app so the wood is localisable; a carved heading on every section; Your Path's sign overhanging its card; the recently-completed quests panel | U26, U28 |
+| **040** | One height for every heading sign, each overhanging its panel; In progress moved under Your Path; Your Path snaps to a tile; a bigger detail avatar; the board centred; readable layer captions on parchment | U26, U29 |
 
 Each of 031–034 crosses every layer, so a real unlock is on screen after 032. The package's *shape* — the signatures in §7.3 — is fixed before 031 starts, so the passes after it extend a settled interface rather than renegotiating one.
 

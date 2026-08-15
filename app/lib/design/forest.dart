@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -145,57 +147,58 @@ class DarkPanel extends StatelessWidget {
       );
 }
 
-/// How tall a section's carved heading sign is drawn.
-const double kBannerHeight = 56;
+/// How tall every carved heading sign is drawn.
+///
+/// **One height for all of them**, with each sign's own width following from
+/// its proportions. Signs at different sizes read as different signs (D299).
+const double kBannerHeight = 62;
 
-/// A parchment card with a carved heading sign.
+/// How much of a heading sign rises above the card it labels.
+const double _kOverhang = 0.52;
+
+/// The gap between one section and the next.
 ///
-/// Every section on the main screen wears one now, not only Your Path: the
-/// headings used to be a line of Cinzel and a wooden sign was a thing only one
-/// of them had, which read as an accident rather than a hierarchy.
+/// Big enough that a heading sign hangs into *empty space* rather than into the
+/// panel above it. A viewport paints its slivers back to front — the first one
+/// last — so an overhang that reaches the previous section is drawn underneath
+/// it, and the sign loses its top half to a panel it has nothing to do with.
+/// That is not a z-order to fight; it is a gap to leave (D300).
+const double kSectionGap = 40;
+
+/// How far left of the card's edge it hangs.
+const double _kOverhangLeft = 6;
+
+/// A parchment card with a carved heading sign nailed to its top-left corner.
 ///
-/// [overhang] hangs the sign off the card's top-left corner instead of sitting
-/// it inside the padding — the top fifth of the picture rises above the card
-/// and its left edge lines up with the card's own. `Transform.translate` moves
-/// it without moving what it is measured as, so the column below still reserves
-/// the four fifths that are actually inside the card.
+/// Every section on the main screen wears one, not only Your Path: the headings
+/// used to be a line of Cinzel, and a wooden sign that one section had and the
+/// others did not read as an accident rather than a hierarchy.
+///
+/// **The sign hangs off the card rather than sitting inside it.** Nearly half of
+/// it rises above the top edge and it overlaps the left edge, which is what
+/// makes it read as a label *on* the panel instead of a picture *in* it.
+/// `Transform.translate` moves it without changing what it is measured as, so
+/// the column below reserves only the part that is actually inside — and the
+/// content sits that much higher up the card.
 class ParchmentSection extends StatelessWidget {
   const ParchmentSection({
     super.key,
     required this.heading,
     required this.child,
     this.trailing,
-    this.overhang = false,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 12, 12),
   });
 
   final String heading;
   final Widget child;
   final Widget? trailing;
-  final bool overhang;
   final EdgeInsetsGeometry padding;
-
-  /// How much of the sign rises above the card when it [overhang]s.
-  static const double _kOverhang = 0.2;
 
   @override
   Widget build(BuildContext context) {
-    final inset = padding.resolve(TextDirection.ltr);
-    final art = SignArt.bannerFor(heading);
-    // A heading, and a picture of one. The sign carries the words, so the
-    // semantics node carries them too and the artwork itself is excluded —
-    // otherwise a screen reader meets a heading with nothing in it.
-    final sign = Semantics(
-      header: true,
-      label: heading,
-      child: ExcludeSemantics(
-        child: WoodenSign(
-            art: art, caption: heading, height: kBannerHeight),
-      ),
-    );
     return Card(
-      // Never clipped: an overhanging sign is drawn outside these bounds on
-      // purpose, and the default would cut its top fifth off.
+      // Never clipped: the sign is drawn outside these bounds on purpose, and
+      // the default would cut off everything that overhangs.
       clipBehavior: Clip.none,
       child: Padding(
         padding: padding,
@@ -205,24 +208,57 @@ class ParchmentSection extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: overhang
-                      ? SizedBox(
-                          height: kBannerHeight * (1 - _kOverhang),
-                          child: Transform.translate(
-                            offset: Offset(
-                                -inset.left, -inset.top - kBannerHeight * _kOverhang),
-                            child: Align(
-                                alignment: Alignment.topLeft, child: sign),
-                          ),
-                        )
-                      : Align(alignment: Alignment.centerLeft, child: sign),
-                ),
+                    child: SectionHeading(heading,
+                        inset: padding.resolve(TextDirection.ltr))),
                 ?trailing,
               ],
             ),
-            const SizedBox(height: 8),
             child,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A section's heading: a carved sign hung off the corner of its panel.
+///
+/// [inset] is the padding the panel puts around its content, which the sign has
+/// to climb back out of to reach the card's own edge. A heading with no panel
+/// around it passes zero.
+class SectionHeading extends StatelessWidget {
+  const SectionHeading(this.text, {super.key, this.inset = EdgeInsets.zero});
+
+  final String text;
+  final EdgeInsets inset;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = SignArt.bannerFor(text);
+    // What is reserved is what the sign occupies *inside* the card, less the
+    // padding it is already sitting in — otherwise the content starts a
+    // padding's width below the sign's bottom edge rather than at it, and the
+    // panel carries a band of empty parchment nobody asked for.
+    final inside =
+        math.max(0.0, kBannerHeight * (1 - _kOverhang) - inset.top);
+    return SizedBox(
+      height: inside,
+      child: Transform.translate(
+        offset: Offset(-inset.left - _kOverhangLeft,
+            -inset.top - kBannerHeight * _kOverhang),
+        child: Align(
+          alignment: Alignment.topLeft,
+          // A heading, and a picture of one. The sign carries the words, so
+          // the semantics node carries them too and the artwork is excluded —
+          // otherwise a screen reader meets a heading with nothing in it.
+          child: Semantics(
+            header: true,
+            label: text,
+            child: ExcludeSemantics(
+              child: WoodenSign(
+                  art: art, caption: text, height: kBannerHeight),
+            ),
+          ),
         ),
       ),
     );

@@ -860,6 +860,42 @@ The picture has a near-white clearing at the top — exactly where the app bar s
 
 **Cost:** A seventh section on a screen that already had six, and the two test files whose tall viewports exist to keep lazily built rows on screen had to grow with it. Criterion U21's real-phone test is untouched and still applies the pressure; what it caught this time was a section list written in the wrong order, which had been harmless only because nothing had ever sat between the two entries that were the wrong way round.
 
+## D299 — One height for every heading sign, and the words shrink into it
+
+**Question:** D297 stretched a heading's plank horizontally so a long caption could keep its lettering size. On a screen with five headings, that produced five signs of visibly different lengths. Which is worth more: lettering that is one size, or signs that are one size?
+
+**Decision:** The signs. Every heading is drawn at the same height and at its own natural proportions, and the caption shrinks into whatever room that leaves.
+
+Five planks at five lengths read as five different signs rather than one sign used five times, and the eye notices the shape of a wooden board long before it notices that one caption is two points smaller than another. The uniformity that matters here is the furniture, not the type.
+
+**The long banner earns its keep by taking two lines.** Its plank is proportionally taller than the short one, which is exactly the shape a wrapped heading needs — "Voltooide partijen" sits on it as two readable lines instead of being squeezed onto one line of a plank with no room for it. That is what the second piece of art is *for*, and the first version of this used it as merely a different picture.
+
+**Cost:** A long caption is smaller than a short one. That is the trade, and it was the owner's call.
+
+---
+
+## D300 — The board is centred, and D137 is reversed
+
+**Question:** D137 put the board against the right edge of the game screen, so a thumb could reach every cell one-handed. Should it stay there?
+
+**Decision:** No. It is centred.
+
+The reach argument was real and it is not what the screen looks like. A 4×4×4 board is the subject of the game screen, and a subject pushed against one edge with a column of empty forest beside it reads as something shoved aside rather than something to look at. The owner asked for centred; the one-handed case is a preference this project has no measurement for, and the composition is visible to everyone.
+
+Recorded rather than edited into D137, because the reasoning there was sound and the trade is what changed.
+
+**Two other things moved with it.** The in-progress list now sits directly under Your Path: a game waiting to be finished is the most actionable thing on the screen and it had been below two panels about what has already happened. And **Your Path snaps to a tile boundary**, so a flick always leaves three whole faces on screen rather than two and two halves — implemented by rewriting the fling's simulation rather than by animating after it ends, so it does not fight a finger that is still dragging.
+
+**The layer captions needed a colour the caller chooses.** They are the one part of the board drawn on whatever is behind it rather than on a cell. A real game puts the board on the darkened forest, where cream is right; the tutorial and the practice game put it on parchment, where cream is invisible — which is what the owner saw. `BoardView` takes the colour rather than guessing from a theme that cannot tell the two apart.
+
+**An overhanging heading needs a gap, not a z-order.** Hanging half of each sign above its card put it inside the *previous* section, and a viewport paints its slivers back to front — the first one last — so every heading lost its top half to a panel it had nothing to do with. There is no z-index to reach for; the fix is forty pixels of space between sections, so the sign hangs into nothing.
+
+**Two lines on the long plank were tried and abandoned.** Its writable band is barely a third of the picture's height and two readable lines simply do not fit in it — they spilled over the wood. What the long plank buys is length, and a single line scaled into it reads better than two cramped ones. The owner had already said the heading text could be smaller, which is what made that the easy call.
+
+**A note on how the gate was nearly slipped past.** `flutter analyze` fails on `info`-level findings, not only errors and warnings — and a grep for `error|warning` while iterating reported "clean" three times while the snap physics carried a deprecated `tolerance` that `check.sh` would have rejected. Read the analyzer's own last line, not a filtered view of its output.
+
+**Cost:** One-handed play on a large phone is worse than it was. If that turns out to matter, the honest fix is an alignment the player chooses, not a default nobody sees. And forty pixels between sections is real vertical budget on a small phone — spent to make the headings read as labels rather than as pictures.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

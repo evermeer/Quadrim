@@ -7,6 +7,7 @@ import '../data/game_repository.dart';
 import '../design/forest.dart';
 import '../game/board_view.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'practice_screen.dart';
 import 'tutorial_steps.dart';
 
@@ -264,6 +265,9 @@ class _StepView extends StatelessWidget {
                     label: step.boardLabel,
                     child: ExcludeSemantics(
                       child: BoardView(
+                        // Ink, because this board sits on parchment. Cream is
+                        // for the board on the darkened forest (D300).
+                        captionColour: QuadrimPalette.ink,
                         state: GameState.fromMoves(step.moves),
                         // Nothing on a tutorial board is placeable: the
                         // position is the lesson, and a stray tap that changed

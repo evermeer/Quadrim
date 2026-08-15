@@ -533,13 +533,15 @@ class _GameBody extends StatelessWidget {
           ),
         ),
         Expanded(
-          // Right-aligned column of four layers (D137). No scroll view:
+          // Centred column of four layers. No scroll view:
           // the board sizes itself to fit, so a scrollable would only
           // ever hide a layout bug.
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
             child: Align(
-              alignment: Alignment.centerRight,
+              // Centred rather than against the right edge (D300, reversing
+              // D137's one-handed-reach argument).
+              alignment: Alignment.center,
               child: BoardView(
                 state: state,
                 // Never while reviewing: the criterion is that no move can be

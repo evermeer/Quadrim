@@ -123,7 +123,6 @@ class _YourPathState extends State<YourPath> {
     // nailed to the panel rather than a picture inside it.
     return ParchmentSection(
       heading: l10n.yourPath,
-      overhang: true,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,6 +149,9 @@ class _YourPathState extends State<YourPath> {
             return SingleChildScrollView(
               controller: _controller,
               scrollDirection: Axis.horizontal,
+              // Lands on a tile boundary, so the row always shows three whole
+              // faces rather than two and two halves.
+              physics: _SnapToTile(_step),
               child: IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -187,6 +189,60 @@ class _YourPathState extends State<YourPath> {
       ),
     );
   }
+}
+
+/// Scroll physics that come to rest on a tile boundary.
+///
+/// The row is exactly three tiles wide, so any resting offset that is not a
+/// multiple of the tile pitch shows two whole faces and two halves — which
+/// looks like a list that has been left half-scrolled rather than a ladder.
+///
+/// It wraps the platform physics rather than replacing them: the fling still
+/// decelerates the way the platform does, and this only changes *where* it is
+/// allowed to stop. Snapping by rewriting the simulation, rather than by
+/// animating after the fling ends, is what keeps it from fighting a user who
+/// is still dragging.
+class _SnapToTile extends ScrollPhysics {
+  const _SnapToTile(this.pitch, {super.parent});
+
+  final double pitch;
+
+  @override
+  _SnapToTile applyTo(ScrollPhysics? ancestor) =>
+      _SnapToTile(pitch, parent: buildParent(ancestor));
+
+  double _nearest(double offset, ScrollMetrics position) =>
+      ((offset / pitch).roundToDouble() * pitch)
+          .clamp(position.minScrollExtent, position.maxScrollExtent);
+
+  @override
+  Simulation? createBallisticSimulation(
+      ScrollMetrics position, double velocity) {
+    // Out of range: let the parent spring it back, or the row would snap to a
+    // tile while still overscrolled.
+    if ((velocity <= 0 && position.pixels <= position.minScrollExtent) ||
+        (velocity >= 0 && position.pixels >= position.maxScrollExtent)) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+    // Where the fling would have ended, rounded to the nearest boundary. A
+    // flick that barely moves still commits to the next tile, which is what
+    // makes a small deliberate swipe do something.
+    final simulation = super.createBallisticSimulation(position, velocity);
+    final natural = simulation?.x(double.infinity) ?? position.pixels;
+    final limits = toleranceFor(position);
+    final target = _nearest(
+        velocity.abs() > limits.velocity &&
+                (natural - position.pixels).abs() < pitch / 2
+            ? position.pixels + pitch * velocity.sign
+            : natural,
+        position);
+    if ((target - position.pixels).abs() < limits.distance) return null;
+    return ScrollSpringSimulation(spring, position.pixels, target, velocity,
+        tolerance: limits);
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
 }
 
 /// The opponent the row rests on: the lowest-rated one rated **strictly

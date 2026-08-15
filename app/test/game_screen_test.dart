@@ -196,7 +196,7 @@ void main() {
     });
   }
 
-  testWidgets('the four layers stack vertically against the right edge',
+  testWidgets('the four layers stack vertically, centred on the screen',
       (tester) async {
     const width = 412.0;
     tester.view.physicalSize = const Size(width * 3, 915 * 3);
@@ -216,17 +216,18 @@ void main() {
           .bottom;
     }
 
-    // Right-aligned, leaving the left of the screen free. Measured on the
-    // board rather than a cell: getRect transforms the corner points, so a
+    // Centred, not right-aligned. D137 pushed the board against the right
+    // edge for one-handed reach and D300 reversed it: the board is the subject
+    // of this screen and reads as pushed aside anywhere else. Measured on the
+    // board rather than a cell — `getRect` transforms the corner points, so a
     // sheared cell's bottom-right lands one shear-step inside the edge.
     final board = tester.getRect(find.byType(BoardView));
-    expect(width - board.right, lessThan(12.0),
-        reason: 'board must hug the right edge');
-    // Four stacked layers fill the height, so the board lands at roughly half
-    // the width. The bound that matters is that a usable strip stays free on
-    // the left for the move list and scrubber (ticket 012).
-    expect(board.left, greaterThan(width * 0.3),
-        reason: 'board must leave a usable column free on the left');
+    expect(board.center.dx, closeTo(width / 2, 12.0),
+        reason: 'the board must be centred on the screen');
+    // Still narrower than the screen, so the shear has somewhere to go and the
+    // margins stay even.
+    expect(board.left, greaterThan(0));
+    expect(board.right, lessThan(width));
   });
 
   testWidgets('the whole board fits without scrolling at the smallest screen',
