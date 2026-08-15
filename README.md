@@ -326,3 +326,22 @@ In the top pannel of the main screen you can remove the line 'Your rating agains
 
 If there are quests completed, then i would like the main screen to have an extra pannel below the quests with a top 4 of the most recent completed quests.
 ```
+
+
+More tweaks.
+
+**Prompt**
+```
+the your path header can move more to the left and also up so that it's a clear header banner of that pannel. I noticed that the other pannels are stil inside their pannel. they should move the same way as the your path header. Besides that the images have different resize sizes. You should resize the height at the same height for all these images and let the width be proportially. The texts inside the header may be a little smaller. When the header of the pannel moves up, then the content of that pannel can also move up.
+
+Move the in progress pannel right below the your path pannel.
+
+When scrolling through the your path screen, when you stop the touch the cards shoud snap to the center of the screen so thant 3 full cards are visible.
+
+when you go to the detail screen of an opponent, then the avatar on that screen may be 40% bigger than that it is now.
+
+When a game is played, then layers are right alligned. could you center these. The same for the tutorial.
+
+The tutorial has white board layer labels. they are hard to read. Could you make them dark 
+
+```
