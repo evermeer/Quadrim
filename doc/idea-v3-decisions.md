@@ -315,6 +315,8 @@ The other thirty-two are far less exposed, because §3.1 assigns the first seat 
 
 ## D262 — Your Path centres on the next unlock, not the next rating rung
 
+> **Superseded by D287.** The reasoning below is correct for the *fixed three-tile window* it was written about, and that premise stopped holding when the row became scrollable. Left intact rather than rewritten, because it is the argument D287 had to answer.
+
 **Question:** §8.4 centres the middle tile on "the first opponent rated above the player's current rating". §7.3 unlocks strictly in roster order. Which ladder does the section follow?
 
 **Decision:** The unlock ladder. The middle tile is the **next locked opponent**, with its price and the player's progress toward it; one owned opponent behind it and one locked one ahead.
@@ -648,6 +650,40 @@ So the graph is `ExcludeSemantics` like the rest of the card's body, and the car
 **It must be the most recent finished game.** Opening an older game out of the history list would otherwise make an offer on the strength of points that everything played since had already spent or surpassed — true of a moment the player has left. This is the same distinction the rating change makes with its prefix fold, applied to a different quantity.
 
 **Cost:** One read of the unlock records per finished game shown, and a rule with two clauses where one would have looked sufficient. Both clauses have a test; the second one's test opens a game with a later game after it and asserts silence.
+
+---
+
+## D287 — Your Path rests on the rating ladder, because scrolling removed the reason it could not
+
+**Question:** D262 centred Your Path's middle tile on the **next unlock** and gave a specific reason: a fixed window centred on the player's *rating* would show a player seeded at 800 three opponents they already own, with their next unlock outside the window entirely, so the price ladder would be invisible on first launch. The owner has now asked for the middle tile to be the first opponent above the player's rating, and for the row to scroll. Does D262 still hold?
+
+**Decision:** **No, and the reason it fails is the scrolling, not the centring.** The row now scrolls horizontally over the whole roster and *rests* on the lowest-rated opponent rated strictly above the player's rating.
+
+D262's argument was never about which ladder is more interesting. It was about a **fixed** window: with three tiles and nothing beyond them, whatever the window is centred on is the only thing that exists, so centring on the rating genuinely hid the prices. A scrollable row does not have that property. The unlock ladder is one swipe right — and, unlike the old design, it is reachable from *every* point on the roster instead of only where the two ladders happen to coincide.
+
+What the resting position buys is an answer to "where am I", which is the question a player asks first and the one a rating answers. The old design answered "who is next" twice and "where am I" not at all — the mirror image of the complaint D262 made about its own alternative.
+
+**Rated strictly above, so the centre is always a step up.** Mote is rated exactly 800 and a player seeded at 800 rests on Clover at 900, with Mote one tile to the left. An even match is not "next", and the even-match marker (§5.1) already says what Mote is.
+
+**Cost:** The next unlock is no longer guaranteed to be on screen without scrolling, which is the thing D262 was protecting. Two things carry it instead: a locked tile still shows its price and progress wherever it appears, and the end-of-game panel offers the unlock outright at the moment it becomes affordable (D286) — which is a better moment than any resting position, because it is the moment the player earned it.
+
+**What this cost the build:** ticket 032's Your Path tests asserted the old resting position by name, including one written specifically to pin D262. They are rewritten rather than deleted, and the D262 test becomes the D287 test — the same fixture, the opposite expectation, and a comment saying which decision it now belongs to.
+
+---
+
+## D288 — The opponent detail page, and why opponent selection does not use it
+
+**Question:** Tapping a Your Path tile opens a detail page: avatar large at the top, then everything known about that opponent, then one action. Opponent selection (§8.7) already lists all twenty with the same facts and starts a game on tap. Should it route through the detail page too, for one consistent path to every opponent?
+
+**Decision:** **No.** Selection keeps starting the game on tap; the detail page is reached from Your Path.
+
+The two screens are entered with different intentions. §8.7 is behind the *new game* button, so the player has already said what they want to do and every extra screen is a tax on the commonest path in the app. Your Path is on the main screen, where the player is looking rather than deciding, and a tile is a summary that ought to expand into something.
+
+**One action at the bottom, never none.** Unlocked, it starts a game. Locked, it shows the price, the progress and an unlock button, reaching the same confirmation the other two routes reach — including the "unbeatable when it moves first" warning D181 requires for Oracle and Quadrim Prime. A page a player can reach and do nothing on is a dead end, and the locked opponents are exactly the ones they came to look at.
+
+**It stores nothing and derives everything** — the catalogue for the facts, the existing folds for the record and the balance. It adds a place to put what is already known, at a size worth looking at, and no new source of truth.
+
+**Cost:** A third route into the purchase flow. Mitigated by all three calling the same `runUnlock`, which is where the confirmation and the warning live; the alternative — a page that shows a price and cannot act on it — trades a real dead end for an imagined risk.
 
 ---
 

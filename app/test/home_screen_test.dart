@@ -141,9 +141,11 @@ void main() {
     // The pill must sit beside the name wherever a row carries one. Asserted
     // over every occurrence rather than a chosen index, so the test does not
     // need to know which row it found.
-    final pills = find.text('600');
-    expect(pills, findsOneWidget,
-        reason: 'the finished game; Pebble is outside the Your Path window');
+    // Scoped to the game rows. Your Path now builds a tile for every opponent
+    // in the roster, so every rating in the catalogue appears somewhere on the
+    // screen and a bare finder for one matches twice (ticket 037).
+    final pills = _inGameRows(find.text('600'));
+    expect(pills, findsOneWidget, reason: 'the finished game');
 
     for (var i = 0; i < 1; i++) {
       final row =
@@ -176,7 +178,7 @@ void main() {
     await _pumpHome(tester, repo);
 
     expect(find.text('In progress'), findsOneWidget);
-    expect(find.text('1700'), findsOneWidget);
+    expect(_inGameRows(find.text('1700')), findsOneWidget);
   });
 
   testWidgets('pass and play has no opponent, so it has no pill',

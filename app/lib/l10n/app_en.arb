@@ -798,5 +798,33 @@
         "type": "String"
       }
     }
+  },
+  "opponentHeadline": "{name}. Rating {rating}. {tier}.",
+  "@opponentHeadline": {
+    "description": "The opponent detail page's name, rating and tier, announced as one node because the three only mean anything together.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "rating": {
+        "type": "int"
+      },
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "winPays": "{points, plural, =1{A win pays 1 point} other{A win pays {points} points}}",
+  "@winPays": {
+    "description": "What a win against this opponent pays, on the detail page. The fact that makes the roster a ladder rather than a list.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "playThisOpponent": "Start a game",
+  "@playThisOpponent": {
+    "description": "The action at the bottom of an unlocked opponent's detail page."
   }
 }

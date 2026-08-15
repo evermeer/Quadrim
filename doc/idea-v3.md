@@ -621,7 +621,7 @@ Any pulsing stays well under **three flashes per second** (WCAG 2.3.1), and hold
 Top to bottom:
 
 1. **Rating card** — the computer rating, the win/loss/draw record, the points balance, a ten-game trend graph, and a line making clear it is a rating against the computer, on this device only
-2. **Your path** — three opponent tiles (§8.4)
+2. **Your path** — a scrollable row of opponent tiles (§8.4)
 3. **Games in progress**
 4. **Quests** — the four closest to completion (§8.6)
 5. **Finished games** — four rows and a way to see the rest (§8.5)
@@ -635,7 +635,7 @@ Top to bottom:
 
 Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and answered a question nobody was asking. This one answers "where am I, and who is next".
 
-**Three equal tiles across the width.** The middle tile is the **next unlock** — the lowest-indexed opponent still locked — highlighted, with its price and the player's progress toward it. One owned opponent behind it, one locked one ahead. Each tile stacks vertically:
+**A horizontally scrollable row of the whole roster, resting on the opponent the player is climbing toward.** Three tiles are visible at a time and the row starts scrolled so that the middle one is the **lowest-rated opponent rated above the player's rating** — Clover at 900 for a player seeded at 800. The player can scroll left through everyone they have beaten and right through everyone they have not, all twenty, in roster order. Each tile stacks vertically:
 
 - a full-tile-width avatar
 - the name
@@ -644,11 +644,15 @@ Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and a
 - three stars
 - a rematch button — icon only, with a spoken label, because no button text fits the width
 
-**It follows the unlock ladder, not the rating ladder, and that is the whole point of the section.** Centring on rating instead was the earlier design and it fails at exactly the moment that matters most. A player seeded at 800 (§5) would get a window of Mote (800), Clover (900) and Bramble (1000) — three opponents they already own — while their next unlock is Willow at 1100, outside the window entirely. The price ladder, which is the entire motivation for §7, would be invisible on the main screen until the rating climbed into it. The section asks "where am I, and who is next"; centred on rating it answers the first question twice and the second not at all. Where the player stands on the *rating* ladder is still available, in the place a player goes looking for it: §8.7's accordion opens at the tier containing their rating.
+**It rests on the rating ladder, and scrolling is what makes that safe.** A fixed three-tile window centred on the *unlock* ladder was the earlier design (D262), and its argument was sound while the window was fixed: a player seeded at 800 would have seen Mote, Clover and Bramble — three opponents they already own — with their next unlock at 1100 outside the window entirely, so the price ladder would have been invisible on first launch. A scrollable row removes that objection rather than answering it. Nothing is outside the window any more; the unlock ladder is one swipe right, and it is reachable at every point on the roster instead of only where the two ladders happen to coincide. What the resting position buys is the answer to "where am I", which is the question the player asks first and the one a rating answers.
 
-**The window clamps at both ends.** A player who has unlocked nothing beyond the free five, or everything, still sees three tiles; the window slides rather than shrinking. A two-tile row with a hole in it looks like a bug.
+**Rated strictly above, so the centre is always a step up.** An opponent rated exactly the player's own rating sits to the *left* of the resting tile. Mote at 800 is an even match for a player at 800 and the section is about who is next, not who is level; the even match is one tile away and clearly marked as even (§5.1).
+
+**The row clamps at both ends without leaving a hole.** A player below the whole roster rests at the first opponent, one above it rests at the last, and either way three tiles are on screen. A two-tile row with a gap in it looks like a bug.
 
 **Locked opponents appear in full**, greyed, with their price and the player's progress toward it. Hiding them would hide the goal, which is the entire motivation for the ladder. The full roster, with the same records and stars, remains browsable in opponent selection (§8.7).
+
+**Tapping a tile opens that opponent's detail page** (§8.15). The tile is a summary and the page is the whole of what is known about them.
 
 **The three stars count decisive games only.** Draws are ignored, on both sides of every comparison.
 
@@ -691,7 +695,9 @@ Achieving a quest during a game is acknowledged **when that game ends**, togethe
 
 Twenty opponents is too many for a flat list on a phone. Present them as an **accordion by tier, opened at the tier containing the player's own rating** — where they are standing, not at the top or the bottom. Each row carries name, avatar, rating, tier description, blurb, record, stars, and a marker for pairings that are lopsided (§5.1).
 
-Locked opponents show their unlock price and progress. The unlock action lives here and on the Your Path tiles, and both lead to the same confirmation — which, for Oracle and Quadrim Prime, must repeat what §6.6 requires the store listing to say.
+Locked opponents show their unlock price and progress. The unlock action lives here, on the Your Path tiles and on the detail page (§8.15), and all three lead to the same confirmation — which, for Oracle and Quadrim Prime, must repeat what §6.6 requires the store listing to say.
+
+**Tapping a row here starts a game**, as it always has. This screen is reached by pressing *new game*, so the player has already said what they want to do; routing them through the detail page first would add a tap to the commonest path in the app. The detail page is for browsing, and it is reached from Your Path.
 
 **Backing out of the opponent list cancels the whole flow.** Falling back to a default opponent gives the player a game against somebody they did not choose, which is worse than no game.
 
@@ -766,6 +772,23 @@ Language (system, or an explicit choice), theme (system, light, dark), a way to 
 **Language and theme are watched at the root of the app** and applied immediately, without a restart. "System" is the *absence* of an override, not a third value to translate into one.
 
 ---
+
+### 8.15 Opponent detail
+
+One opponent, in full. Reached by tapping a Your Path tile (§8.4).
+
+**The avatar is the top of the screen, at the largest size it is ever drawn.** These are twenty characters with names and faces, and the roster is the thing the player is working through; a page about one of them that leads with a table is a page about a number. Below it, in order:
+
+- the name, the rating and the tier
+- the blurb — the sentence that says how they play (§6.5)
+- how the pairing sits against the player's own rating: even, above, or below (§5.1)
+- the record: won, lost, drawn, and the three stars (§8.4)
+- what a win against them pays, in points (§7.2)
+- for Oracle and Quadrim Prime, the warning §6.6 requires
+
+**At the bottom, one action.** Unlocked, it is **start a game**, and it does exactly what selecting them in §8.7 does. Locked, it is the price, the progress toward it and an **unlock** button, leading to the same confirmation the other two routes lead to. The page is never a dead end: every opponent has something to do on it.
+
+**It reads the same catalogue and the same folds as everything else.** No new record, no second copy of a rating, no per-opponent document. What it adds is a place to put what is already known, at a size worth looking at.
 
 ## 9. Chat and safety
 
@@ -927,7 +950,7 @@ Four places must agree: the application id, the build namespace, the source pack
 17. The security rules pass an adversarial suite in which every attempt is denied.
 18. Account deletion and data export work in-app, and deletion states it does not cancel the subscription.
 19. An account is linked before its first rated game or purchase.
-20. The one portrait layout renders on the smallest and largest supported phone, in both themes, at the largest font scale — including the three-tile Your Path row.
+20. The one portrait layout renders on the smallest and largest supported phone, in both themes, at the largest font scale — including the Your Path row and the opponent detail page.
 21. The board is playable and legible for a colourblind player and navigable by screen reader, every fact shown visually is announced exactly once, and **no element carries meaning by colour alone** — the trend graph in particular states its change as a number.
 22. The tutorial runs end to end, including the practice game, which is never stored, never paid and never metered.
 23. Every string exists in English and Dutch, enforced by the build.

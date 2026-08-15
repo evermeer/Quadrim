@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
+import 'package:quadrim/home/your_path.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_progression/quadrim_progression.dart';
@@ -45,6 +46,22 @@ Future<void> _win(LocalGameRepository repo, String botId, int count) async {
     }
   }
 }
+
+/// Scrolls Your Path until [name]'s tile is on screen.
+///
+/// The row carries all twenty opponents now, so a tile outside the resting
+/// window is built but off screen and cannot be tapped until the row is
+/// scrolled — the way a player reaches it (D287).
+Future<void> scrollTo(WidgetTester tester, String name) async {
+  await tester.ensureVisible(tileFor(name));
+  await tester.pumpAndSettle();
+}
+
+/// [name]'s tile, scoped to the row. An opponent's name also appears on every
+/// game row against them, so a bare text finder is ambiguous the moment the
+/// player has played anyone twice.
+Finder tileFor(String name) =>
+    find.descendant(of: find.byType(YourPath), matching: find.text(name));
 
 void main() {
   group('the record', () {
@@ -147,7 +164,7 @@ void main() {
   });
 
   group('Your Path', () {
-    testWidgets('shows three tiles, the middle one the next unlock',
+    testWidgets('rests on the first opponent rated above the player',
         (tester) async {
       _phone(tester);
       final repo = await _repository();
@@ -156,13 +173,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Your path'), findsOneWidget);
-      // The window around the next unlock, which on a fresh install is Willow.
-      for (final name in ['Bramble', 'Willow', 'Vireo']) {
+      // This was the D262 test, inverted. A player seeded at 800 now rests on
+      // Clover — the lowest-rated opponent rated *strictly above* 800 — with
+      // Mote one tile left and Bramble one right. D262 refused this because a
+      // fixed window would have hidden the price ladder; the row scrolls now,
+      // so the ladder is one swipe right instead of invisible (D287).
+      for (final name in ['Mote', 'Clover', 'Bramble']) {
         expect(find.text(name), findsOneWidget, reason: name);
       }
-      // And *not* the rating-centred window a player seeded at 800 would get,
-      // which would have been three opponents they already own (D262).
-      expect(find.text('Mote'), findsNothing);
+      // Mote is rated exactly 800 and sits to the left, not in the middle: an
+      // even match is not "next".
+      expect(tester.getRect(find.text('Mote')).left,
+          lessThan(tester.getRect(find.text('Clover')).left));
+      // Willow, the next unlock, is built but off screen until the player
+      // scrolls — the row holds all twenty, so it exists without being visible.
+      final viewport = tester.getRect(find.byType(YourPath));
+      expect(tester.getRect(find.text('Willow')).left,
+          greaterThan(viewport.right),
+          reason: 'off the right-hand edge until scrolled to');
+      await scrollTo(tester, 'Willow');
+      expect(tester.getRect(find.text('Willow')).left,
+          lessThan(viewport.right));
     });
 
     testWidgets('a locked tile shows its price and the progress toward it',
@@ -173,6 +204,7 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
+      await scrollTo(tester, 'Willow');
       expect(find.text('64 points'), findsOneWidget, reason: "Willow's price");
       expect(find.text('0 of 64'), findsOneWidget);
       // The unlock button exists but cannot be pressed on nothing.
@@ -190,6 +222,7 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
+      await scrollTo(tester, 'Willow');
       expect(find.text('64 of 64'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
@@ -218,6 +251,7 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
+      await scrollTo(tester, 'Willow');
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
@@ -246,9 +280,12 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      // Bramble is unlocked and unplayed: it says so rather than drawing three
-      // empty stars, because unearned and failed must not look the same.
-      expect(find.text('Not played yet'), findsOneWidget);
+      // The three resting tiles are all unlocked and unplayed: each says so
+      // rather than drawing three empty stars, because unearned and failed
+      // must not look the same.
+      // Five: the free set, all unlocked and none played. The row builds every
+      // tile, so this counts the roster rather than what is on screen.
+      expect(find.text('Not played yet'), findsNWidgets(5));
       expect(find.byIcon(Icons.star_border), findsNothing);
     });
 
@@ -262,6 +299,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Grey alone is not a fact a screen reader can read, so the tile says it.
+      await scrollTo(tester, 'Willow');
       expect(
         find.bySemanticsLabel(
             RegExp(r'Willow, rated 1100\. Locked\. 64 points, you have 0\.')),
@@ -285,7 +323,14 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
+      await scrollTo(tester, 'Oracle');
+      // Only the next unlock carries a button, so there is exactly one on the
+      // row however many locked tiles are in view.
+      final button = find.widgetWithText(FilledButton, 'Unlock');
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.pumpAndSettle();
+      await tester.tap(button);
       await tester.pumpAndSettle();
 
       expect(find.text('Unlock Oracle?'), findsOneWidget);

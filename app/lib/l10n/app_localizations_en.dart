@@ -846,4 +846,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String unlockNowAffordable(String name) {
     return 'You can now unlock $name.';
   }
+
+  @override
+  String opponentHeadline(String name, int rating, String tier) {
+    return '$name. Rating $rating. $tier.';
+  }
+
+  @override
+  String winPays(int points) {
+    String _temp0 = intl.Intl.pluralLogic(
+      points,
+      locale: localeName,
+      other: 'A win pays $points points',
+      one: 'A win pays 1 point',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playThisOpponent => 'Start a game';
 }

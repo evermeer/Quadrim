@@ -18,6 +18,7 @@ import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
 import 'finished_games.dart';
 import 'history_screen.dart';
+import 'opponent_detail.dart';
 import 'quests_section.dart';
 import 'rating_card.dart';
 import 'section_widgets.dart';
@@ -286,6 +287,33 @@ class _HomeScreenState extends State<HomeScreen> {
     return () => _start(GameMode.vsComputer, bot);
   }
 
+  /// One opponent's page. It is handed everything it shows rather than a
+  /// repository, so it stays a view over the same folds the main screen already
+  /// has and adds no second source of truth (D288).
+  Future<void> _openOpponent(BotConfig bot) async {
+    final index = rosterIndexOf(bot.id);
+    if (index == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => OpponentDetail(
+          bot: bot,
+          record: _summary.recordFor(bot.id),
+          playerRating: _summary.computerRating,
+          locked: !isUnlocked(bot.id, _unlockedIds),
+          price: unlockCost(index),
+          points: _balance,
+          onStart: () {
+            // Pop first, so returning from the game lands on the main screen
+            // rather than back on the page that started it.
+            Navigator.of(context).pop();
+            unawaited(_start(GameMode.vsComputer, bot));
+          },
+          onUnlock: _unlocking ? null : () => unawaited(_unlock(bot, unlockCost(index))),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openHistory() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -342,6 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           summary: _summary,
                           unlocked: _unlockedIds,
                           onUnlock: _unlocking ? null : _unlock,
+                          onOpen: _openOpponent,
                         ),
                         // Not before the first finished game. "Closest to
                         // completion" ranks fifty-three quests that are all at

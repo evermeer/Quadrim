@@ -3933,3 +3933,117 @@ The doc comment explaining that the change is measured against the point
   reading that is hardest to argue with.
 - **Portrait is pinned in both halves** — manifest and framework — and a test
   asserts the manifest half, which is the one a foldable obeys.
+
+---
+
+# Ticket 037 — Your Path scrolls, and every opponent gets a page
+
+> Reviewed: 2026-08-15 · Base: `e6bc64d` on `main` · Working-tree changes
+
+New: `app/lib/home/opponent_detail.dart`, `app/test/opponent_detail_test.dart`.
+Modified: `your_path.dart` (rewritten), `home_screen.dart`, both `.arb` files,
+`app/test/{unlocks,home_screen}_test.dart`, and the three v3 documents.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 1 |
+| nit | 0 |
+
+---
+
+### [MAJOR] The row's height was a guess, and it was wrong twice — `layout`
+
+**File:** `app/lib/home/your_path.dart` (as written, before the fix)
+
+**Evidence, as it stood:**
+
+```dart
+return SizedBox(
+  // Tall enough for the tallest tile — a locked one, which carries
+  // a price, a progress line and a button under the avatar.
+  height: tile + 132,
+```
+
+**Problem:** a horizontal `ListView` needs a bounded height, so the first
+version predicted one. It overflowed by 18 pixels at the largest font scale.
+The second attempt scaled the allowance with the text scaler and overflowed by
+28 on a different phone. The number could not be right, because the avatar is
+sized by the tile width and does not grow with the font while everything under
+it does — so the correct height depends on a ratio that changes with both the
+screen and the font setting.
+
+**Fix applied:** stop predicting and measure. `SingleChildScrollView` +
+`IntrinsicHeight` + a stretched `Row` sizes the row to its tallest tile at
+whatever scale it is rendered.
+
+That means building all twenty tiles eagerly, which is worth stating rather
+than sliding past: **the roster is exactly twenty and cannot grow without a
+code change**, so this is a bounded list — unlike the finished-games list
+below it, which has no upper bound and stays lazy. It also removed a whole
+class of test friction, since a tile can now be found before it is scrolled to.
+
+Two consequences had to be chased down, and both were real bugs the change
+exposed rather than caused:
+
+- **`LayoutBuilder` cannot report intrinsic dimensions.** The tile sized its
+  avatar from one, which put a LayoutBuilder inside the intrinsic pass and
+  threw. The avatar size is now handed down from the row, which is where the
+  width is known anyway.
+- **Every rating in the catalogue is now on screen.** Two ticket-027 tests
+  looked for a rating with a bare finder and started matching twice — once in
+  a game row, once on a tile. They are scoped to the game rows.
+
+---
+
+### [MINOR] The resting rule was nearly added to the pure package — `architecture`
+
+**File:** `app/lib/home/your_path.dart:restingIndex`
+
+**Problem:** `pathWindow` lives in `quadrim_progression` and the obvious move
+was to put `restingIndex` beside it. That package's library doc promises **no
+function takes the player's rating or their current rung**, and a test asserts
+it — the promise is what makes it impossible to price a reward by how high the
+player has climbed (D261, D270).
+
+A presentation rule that reads the rating is not a reward, so the invariant
+would not have been *violated* in spirit. It would have been violated in fact,
+and the test would have had to be weakened to let it through — which is how an
+invariant stops being one.
+
+**Fix applied:** `restingIndex` lives in the app, beside `tierNearest`, which
+is the app's other rating-to-catalogue question. The doc comment says why, so
+the next person to reach for the package finds the reasoning rather than
+rediscovering it.
+
+---
+
+## Checked and clear
+
+- **The resting rule is exhaustive, not sampled.** A test walks every rating
+  from 500 to 2500 in steps of 25 and checks both halves of the definition:
+  the opponent landed on really is rated above the player, and no opponent
+  before it is. The boundary cases — below the whole roster, above it, and
+  exactly equal to Mote's 800 — are named individually.
+- **The row does not snap.** The resting position is recomputed only when the
+  rating changes, so a finished game elsewhere on the screen rebuilds the
+  section without undoing what the player scrolled to. A test scrolls to
+  Quadrim Prime, finishes a game, and checks it is still there.
+- **Opponent selection is untouched**, and a test asserts it: tapping a row
+  there still starts a game rather than opening the page (D288).
+- **The page adds no source of truth.** It is handed the catalogue entry, the
+  record from `HomeSummary` and the balance the main screen already folded;
+  it reads no repository.
+- **One action, never none.** Unlocked it starts a game and pops itself first,
+  so returning from the game lands on the main screen. Locked it shows the
+  price, the progress and an unlock button reaching the same `runUnlock` the
+  other two routes reach — including the Oracle warning, which the page also
+  states in its own body so a player deciding whether to spend does not have
+  to press Unlock to be told.
+- **D262's tests were rewritten, not deleted**, as the ticket required. The
+  test that pinned "the middle one is the next unlock" is now the test that
+  pins "rests on the first opponent above the player", with a comment naming
+  both decisions and the reason the premise changed.

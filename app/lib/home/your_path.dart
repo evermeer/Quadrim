@@ -14,20 +14,27 @@ import 'section_widgets.dart';
 /// Replaces the by-opponent breakdown, which listed all twenty weakest-first
 /// and answered a question nobody was asking.
 ///
-/// **The middle tile is the next unlock, not the next opponent above the
-/// player's rating.** Those diverge exactly where it matters: a player seeded
-/// at 800 would get a rating-centred window of Mote, Clover and Bramble —
-/// three opponents they already own — while their next unlock sits at 1100
-/// outside it, so the price ladder would be invisible on first launch (D262).
-/// Where the player stands on the *rating* ladder is still available, in the
-/// place a player goes looking for it: the tier accordion in opponent
-/// selection opens at their own tier.
-class YourPath extends StatelessWidget {
+/// **A scrollable row over the whole roster, resting on the rating ladder.**
+/// Three tiles are visible; the row starts scrolled so the middle one is the
+/// lowest-rated opponent rated *strictly above* the player's rating, and the
+/// player can scroll left through everyone weaker and right through everyone
+/// stronger.
+///
+/// This reverses D262, which centred a **fixed** window on the next unlock, and
+/// the reversal is about the fixedness rather than the ladder (D287). With
+/// three tiles and nothing beyond them, whatever the window is centred on is
+/// the only thing that exists, so centring on rating really did hide the price
+/// ladder on first launch. A scrollable row does not have that property: the
+/// unlock ladder is one swipe right, from every point on the roster rather than
+/// only where the two ladders happen to coincide.
+
+class YourPath extends StatefulWidget {
   const YourPath({
     super.key,
     required this.summary,
     required this.unlocked,
     required this.onUnlock,
+    required this.onOpen,
   });
 
   final HomeSummary summary;
@@ -40,37 +47,160 @@ class YourPath extends StatelessWidget {
   /// double tap buying twice.
   final Future<void> Function(BotConfig bot, int price)? onUnlock;
 
+  /// Opens one opponent's detail page.
+  final void Function(BotConfig bot) onOpen;
+
+  @override
+  State<YourPath> createState() => _YourPathState();
+}
+
+/// How many tiles are on screen at once. Three is what fits a phone with an
+/// avatar big enough to be a face rather than a bullet.
+const int _kVisibleTiles = 3;
+const double _kGap = 8;
+
+/// The horizontal padding the main screen puts around this section. It has to
+/// match `home_screen.dart`'s SliverPadding, because the tile width is derived
+/// from the screen width rather than measured.
+const double _kSectionPadding = 16;
+
+/// The tile card's own horizontal padding, subtracted to get the avatar's
+/// width. Passed down rather than measured, because a `LayoutBuilder` inside
+/// the row would break the intrinsic-height pass that sizes it.
+const double _kCardPadding = 6;
+
+class _YourPathState extends State<YourPath> {
+  ScrollController? _controller;
+
+  /// The index the row was last rested on, so a rating change moves it and a
+  /// rebuild for any other reason does not. Without this the row would snap
+  /// back to the resting tile every time a game finished elsewhere on the
+  /// screen, undoing whatever the player had scrolled to.
+  int _restedOn = -1;
+  double _step = 0;
+
+  double _offsetFor(int index, double width) {
+    // The resting tile is the middle of three, so the row starts one tile
+    // before it.
+    final maxOffset = _step * opponentCatalogue.length - width;
+    final wanted = (index - 1) * _step;
+    return wanted.clamp(0, maxOffset < 0 ? 0 : maxOffset).toDouble();
+  }
+
+  void _settle(double width) {
+    final resting = restingIndex(widget.summary.computerRating);
+    if (_controller != null && resting == _restedOn) return;
+    _restedOn = resting;
+    final offset = _offsetFor(resting, width);
+    if (_controller == null) {
+      _controller = ScrollController(initialScrollOffset: offset);
+      return;
+    }
+    // A rating change moves the row, after the frame that reported it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller!.hasClients) {
+        _controller!.animateTo(offset,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final next = nextUnlockIndex(unlocked);
+    final next = nextUnlockIndex(widget.unlocked);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeading(l10n.yourPath),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final index in pathWindow(next))
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: _PathTile(
-                    bot: opponentCatalogue[index],
-                    record: summary.recordFor(opponentCatalogue[index].id),
-                    locked: !isUnlocked(opponentCatalogue[index].id, unlocked),
-                    isNext: index == next,
-                    points: summary.points,
-                    price: unlockCost(index),
-                    onUnlock: onUnlock,
-                  ),
+        Builder(
+          builder: (context) {
+            // The width comes from the screen rather than from a LayoutBuilder:
+            // a LayoutBuilder cannot report intrinsic dimensions, and the row
+            // below is sized by the intrinsic height of its tallest tile.
+            final width =
+                MediaQuery.sizeOf(context).width - _kSectionPadding * 2;
+            final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
+            _step = tile + _kGap;
+            _settle(width);
+            // Sized by the tallest tile rather than by a number. Two guesses at
+            // a fixed height were both wrong — 18 pixels short at the largest
+            // font scale, then 28 — because the avatar is sized by the tile and
+            // does not grow with the font while everything under it does.
+            // `IntrinsicHeight` measures instead of predicting.
+            //
+            // Eager rather than lazy, and that is affordable here: the roster is
+            // exactly twenty and cannot grow without a code change, so this is a
+            // bounded list, unlike the finished-games list beneath it.
+            return SingleChildScrollView(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var index = 0;
+                        index < opponentCatalogue.length;
+                        index++)
+                      SizedBox(
+                        width: _step,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: _kGap),
+                          child: _PathTile(
+                            bot: opponentCatalogue[index],
+                            record: widget.summary
+                                .recordFor(opponentCatalogue[index].id),
+                            locked: !isUnlocked(
+                                opponentCatalogue[index].id, widget.unlocked),
+                            isNext: index == next,
+                            points: widget.summary.points,
+                            price: unlockCost(index),
+                            onUnlock: widget.onUnlock,
+                            avatarSize: tile - _kCardPadding * 2,
+                            onOpen: () =>
+                                widget.onOpen(opponentCatalogue[index]),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-          ],
+            );
+          },
         ),
       ],
     );
   }
+}
+
+/// The opponent the row rests on: the lowest-rated one rated **strictly
+/// above** [playerRating].
+///
+/// Strictly above, so the centre is always a step up. Mote is rated exactly
+/// 800 and a player seeded at 800 rests on Clover at 900, with Mote one tile to
+/// the left — an even match is not "next", and the even-match marker already
+/// says what Mote is (D287).
+///
+/// It lives here rather than in `quadrim_progression`, and that is deliberate:
+/// that package's library doc promises **no function takes the player's rating
+/// or their current rung**, and a test asserts it. The promise is what makes it
+/// impossible to price a reward by how high the player has climbed (D261,
+/// D270). A presentation rule that reads the rating is not a reward, but the
+/// invariant is worth more than the convenience — so this sits beside
+/// `tierNearest`, which is the app's other rating-to-catalogue question.
+///
+/// A player above the whole roster rests at the last opponent.
+int restingIndex(int playerRating) {
+  for (var i = 0; i < opponentCatalogue.length; i++) {
+    if (opponentCatalogue[i].rating > playerRating) return i;
+  }
+  return opponentCatalogue.length - 1;
 }
 
 /// One opponent, stacked vertically so three fit across a phone.
@@ -88,6 +218,8 @@ class _PathTile extends StatelessWidget {
     required this.points,
     required this.price,
     required this.onUnlock,
+    required this.avatarSize,
+    required this.onOpen,
   });
 
   final BotConfig bot;
@@ -97,6 +229,15 @@ class _PathTile extends StatelessWidget {
   final int points;
   final int price;
   final Future<void> Function(BotConfig bot, int price)? onUnlock;
+
+  /// Handed down rather than measured: a `LayoutBuilder` here would sit inside
+  /// the row's intrinsic-height pass, and a LayoutBuilder cannot report
+  /// intrinsic dimensions.
+  final double avatarSize;
+
+  /// Opens this opponent's page. The tile is a summary; the page is the whole
+  /// of what is known about them (D288).
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -119,26 +260,28 @@ class _PathTile extends StatelessWidget {
 
     return Semantics(
       container: true,
+      button: true,
       label: l10n.pathTileSemantics(name, bot.rating, state),
       child: ExcludeSemantics(
         child: Card(
           margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
           color: isNext ? theme.colorScheme.primaryContainer : null,
-          child: Padding(
+          child: InkWell(
+            onTap: onOpen,
+            child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Full tile width, so the avatar is the thing the eye lands on
                 // and the ladder reads as a progression of faces.
-                LayoutBuilder(
-                  builder: (context, constraints) => Opacity(
-                    opacity: locked ? 0.45 : 1,
-                    child: OpponentAvatar(
-                      id: bot.id,
-                      tier: bot.tier,
-                      size: constraints.maxWidth,
-                    ),
+                Opacity(
+                  opacity: locked ? 0.45 : 1,
+                  child: OpponentAvatar(
+                    id: bot.id,
+                    tier: bot.tier,
+                    size: avatarSize,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -159,7 +302,8 @@ class _PathTile extends StatelessWidget {
                   )
                 else
                   _PlayedFooter(record: record, starCount: starCount),
-              ],
+                ],
+              ),
             ),
           ),
         ),

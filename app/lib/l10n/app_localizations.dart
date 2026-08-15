@@ -1375,6 +1375,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can now unlock {name}.'**
   String unlockNowAffordable(String name);
+
+  /// The opponent detail page's name, rating and tier, announced as one node because the three only mean anything together.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}. Rating {rating}. {tier}.'**
+  String opponentHeadline(String name, int rating, String tier);
+
+  /// What a win against this opponent pays, on the detail page. The fact that makes the roster a ladder rather than a list.
+  ///
+  /// In en, this message translates to:
+  /// **'{points, plural, =1{A win pays 1 point} other{A win pays {points} points}}'**
+  String winPays(int points);
+
+  /// The action at the bottom of an unlocked opponent's detail page.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a game'**
+  String get playThisOpponent;
 }
 
 class _AppLocalizationsDelegate

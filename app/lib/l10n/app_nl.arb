@@ -220,5 +220,8 @@
   "historyTitle": "Geschiedenis",
   "pointsEarnedLine": "{points, plural, =1{+1 punt} other{+{points} punten}}",
   "passAndPlayNoPoints": "Samen spelen levert geen punten op.",
-  "unlockNowAffordable": "Je kunt {name} nu vrijspelen."
+  "unlockNowAffordable": "Je kunt {name} nu vrijspelen.",
+  "opponentHeadline": "{name}. Rating {rating}. {tier}.",
+  "winPays": "{points, plural, =1{Winst levert 1 punt op} other{Winst levert {points} punten op}}",
+  "playThisOpponent": "Start een partij"
 }
