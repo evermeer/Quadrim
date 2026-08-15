@@ -280,3 +280,27 @@ After each ticket run the skill code-review-expert
 Commit the code to the main branch after each ticket is completed and reviewed.
 Then open the new app in the simulator.
 ```
+
+Starting with v0.2 the design.
+
+**Prompt**
+```
+Now that version 0.1 is functionally ready, i would like to start with the design.
+From the folder docs/designs
+There is a main screen mockup called design-al0.png which is an indication of what the result should be. 
+You do have to be aware that there is not a 100% match between the current functionality and that mockup.
+The current functionality should be leading.
+For instance the mockup does not have a graph and the mockup has a 'todays journey' section that we currently don't have.
+use background.png as the background image of every screen.
+For all computer opponents there is an avatar in that folder with the name of that opponent.
+For locked opponents i would likt to see a silouette instead of the full avatar.
+The new game button will be the new_game.png
+At the right of the new game button there is a tutorial button tutorial.png
+Instead of the title the your path section will get the your-path.png
+The application itself will get a new logo which is logo.png
+In the mockukp there is a cube visible in the header. this is the cube.png The edges of that image should fade out so that it looks like it blends into that pannel.
+Get text fonts and colours from the mockup.
+```
+
+
+
