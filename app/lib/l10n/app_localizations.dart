@@ -1303,6 +1303,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days, plural, =0{No days yet} =1{1 day in a row} other{{days} days in a row}}'**
   String streakValue(int days);
+
+  /// Heading of the ten-game rating trend graph.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 10 games'**
+  String get trendHeading;
+
+  /// What a screen reader hears for the trend graph. A line is a shape; the change in words is the only reading of it that works without sight.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 10 games: {change}.'**
+  String trendSemantics(String change);
+
+  /// The signed change over the last ten games, e.g. +43 or -12. A signed integer needs no translating; it goes through l10n so no screen holds a user-facing string.
+  ///
+  /// In en, this message translates to:
+  /// **'{change}'**
+  String trendChange(String change);
+
+  /// A finished game that ended today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get relativeToday;
+
+  /// A finished game that ended yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get relativeYesterday;
+
+  /// Two to seven days ago. Beyond that the device's own date format is used instead.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String relativeDaysAgo(int days);
+
+  /// Button on a finished game that starts a new game against the same opponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get challengeAgain;
+
+  /// Opens the full history screen. It does not expand the list in place.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// Title of the full history screen.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// What one finished game paid, on the end-of-game panel.
+  ///
+  /// In en, this message translates to:
+  /// **'{points, plural, =1{+1 point} other{+{points} points}}'**
+  String pointsEarnedLine(int points);
+
+  /// Said beside the no-rating line, because a player who sees neither number needs to know both are absent by design.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass and play earns no points.'**
+  String get passAndPlayNoPoints;
+
+  /// Offered at the end of a game whose points just paid for the next opponent.
+  ///
+  /// In en, this message translates to:
+  /// **'You can now unlock {name}.'**
+  String unlockNowAffordable(String name);
 }
 
 class _AppLocalizationsDelegate

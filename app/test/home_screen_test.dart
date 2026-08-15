@@ -241,10 +241,15 @@ void main() {
     expect(find.descendant(of: down, matching: find.textContaining('-')),
         findsOneWidget);
 
-    // Behind the result text, not in front of it.
+    // **Below** the result text, not beside it. Ticket 035 moved the label
+    // above the change to give the opponent's name back the width it was
+    // losing to a single long right-hand line.
     final won = tester.getRect(find.text('Won'));
-    expect(tester.getRect(find.byIcon(Icons.arrow_drop_up)).left,
-        greaterThan(won.right));
+    final arrow = tester.getRect(find.byIcon(Icons.arrow_drop_up));
+    expect(arrow.top, greaterThan(won.top));
+    // And still right-aligned in the same column, rather than drifting under
+    // the opponent's name.
+    expect(arrow.left, greaterThan(won.left - 24));
   });
 
   testWidgets('the numbers on the rows add up to the rating on the card',
@@ -259,8 +264,12 @@ void main() {
     }
     await _pumpHome(tester, repo);
 
+    // Scoped to the rows. The trend graph states its own signed change over
+    // the last ten games, and a bare scan of every Text on the screen would
+    // count that too and then complain the sum was wrong (ticket 035).
     var total = 0;
-    for (final text in tester.widgetList<Text>(find.byType(Text))) {
+    for (final text
+        in tester.widgetList<Text>(_inGameRows(find.byType(Text)))) {
       final data = text.data;
       if (data == null) continue;
       final signed = RegExp(r'^[+-]\d+$').firstMatch(data);
@@ -619,7 +628,11 @@ void main() {
       // still one node. The change is matched as a pattern rather than a
       // literal because its value depends on the whole fold, and hard-coding
       // it here would pin the rating maths in the wrong file.
-      expect(find.bySemanticsLabel(RegExp(r'^Kestrel\. Rating 1300\. Won\. \+\d+$')),
+      // Name, rating, outcome, what the outcome was worth, and — from ticket
+      // 035 — when it was. Five facts, still one node.
+      expect(
+          find.bySemanticsLabel(
+              RegExp(r'^Kestrel\. Rating 1300\. Won\. \+\d+\. \w')),
           findsOneWidget);
       handle.dispose();
     });

@@ -84,3 +84,20 @@ Map<String, int> ratingDeltas(List<GameDocument> completed) {
       ),
   ]);
 }
+
+/// The rating after each ladder game, oldest first — what the trend graph
+/// plots.
+///
+/// One pass over the history rather than one fold per point. Drawing ten dots
+/// by asking [computerRatingAround] ten times would re-fold the prefix ten
+/// times, which is the quadratic trap ticket 035 names.
+///
+/// Games not on the computer ladder are absent rather than repeated: a
+/// pass-and-play game changed nothing, and a flat segment in the line would
+/// say it was played and made no difference, which is a different claim.
+List<int> computerRatingSeries(List<GameDocument> completed) {
+  var rating = kSeedRating;
+  return [
+    for (final step in ratingSteps(ratedGamesFrom(completed))) rating += step,
+  ];
+}

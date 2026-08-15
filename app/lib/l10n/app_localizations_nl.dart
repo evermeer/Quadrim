@@ -795,4 +795,56 @@ class AppLocalizationsNl extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trendHeading => 'Laatste 10 partijen';
+
+  @override
+  String trendSemantics(String change) {
+    return 'Laatste 10 partijen: $change.';
+  }
+
+  @override
+  String trendChange(String change) {
+    return '$change';
+  }
+
+  @override
+  String get relativeToday => 'Vandaag';
+
+  @override
+  String get relativeYesterday => 'Gisteren';
+
+  @override
+  String relativeDaysAgo(int days) {
+    return '$days dagen geleden';
+  }
+
+  @override
+  String get challengeAgain => 'Opnieuw spelen';
+
+  @override
+  String get showMore => 'Meer tonen';
+
+  @override
+  String get historyTitle => 'Geschiedenis';
+
+  @override
+  String pointsEarnedLine(int points) {
+    String _temp0 = intl.Intl.pluralLogic(
+      points,
+      locale: localeName,
+      other: '+$points punten',
+      one: '+1 punt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get passAndPlayNoPoints => 'Samen spelen levert geen punten op.';
+
+  @override
+  String unlockNowAffordable(String name) {
+    return 'Je kunt $name nu vrijspelen.';
+  }
 }

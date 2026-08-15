@@ -32,3 +32,57 @@ Two traps in the rating-change column, both cheap to avoid and expensive to find
 - [ ] Any rating shown as a bar is zero-based against the top of the catalogue, draws its unfilled track, and shows the number as well
 - [ ] Every fact shown visually on the screen is announced exactly once
 - [ ] All new strings are present in English and Dutch
+
+---
+
+## Closed
+
+All four pieces are in, and the 0.1 interface is complete.
+
+**The trend graph** draws one dot per game over the last ten and states its
+change as a signed number beside the line. Nothing depends on the red/green
+pair: the number is there for the sighted reader and the same number is in the
+rating card's announcement for a screen reader. Below two rated games there is
+no graph at all — not an empty one. The window is measured against where the
+player stood *before* it, so "the last ten games" means ten games and not the
+nine gaps between them.
+
+**The finished rows** put the result above the rating change, which gives the
+opponent's name back the width it was losing to one long right-hand line. Each
+carries a relative date — `Today`, `Yesterday`, `2 days ago` … `7 days ago`,
+then `MaterialLocalizations`' own short date, which needs no string of ours —
+and a challenge button. The button sits *outside* `GameRow`, because the row
+excludes its children's semantics and re-says every fact once: a button
+swallowed by that exclusion would be invisible to a screen reader.
+
+**Show more** opens a screen (D284). The main list stops at ten.
+
+**The end-of-game panel** shows what the game paid, any quest it achieved with
+what that paid, and the next unlock if this win is what crossed the line
+(D286). A pass-and-play result now says *both* numbers are absent rather than
+only the rating.
+
+**Portrait** is pinned in two places, neither redundant: `screenOrientation`
+and `resizeableActivity="false"` in the manifest, which is what a freeform
+window manager and a foldable obey, and `SystemChrome.setPreferredOrientations`
+in `main()`, which is what the framework obeys. Ticket 017 stays cancelled, and
+a test asserts it is not sitting in `doc/tickets/` waiting to be built.
+
+**The one-pass requirement** was already met by `ratingDeltas` from ticket 027;
+this ticket adds `computerRatingSeries` on the same shape, so the graph costs
+one pass rather than ten folds. A test builds three hundred games, takes every
+delta in one call, and checks six of them against the per-game fold they
+replace.
+
+**One criterion is vacuously satisfied and it is worth saying so.** *"Any
+rating shown as a bar is zero-based against the top of the catalogue, draws its
+unfilled track, and shows the number as well."* There is no rating bar in the
+app: `RatingBar` was deleted in ticket 032 with the by-opponent breakdown that
+was its only caller. The three progress bars that remain — quest progress,
+unlock progress, tutorial progress — are not ratings, and each already shows
+its number. If a rating bar ever returns, this is the paragraph that says what
+it owes.
+
+**D284** ten then a screen; **D285** the graph declares no semantics and the
+card announces it; **D286** the offer fires on the crossing game and only from
+the latest one.

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/home_summary.dart';
 import '../l10n/app_localizations.dart';
+import 'game_row.dart' show signedDelta;
+import 'trend_graph.dart';
 
 /// The computer rating and the record that produced it, in a card of its own.
 ///
@@ -18,6 +20,7 @@ class RatingCard extends StatelessWidget {
     required this.summary,
     required this.balance,
     required this.streak,
+    required this.series,
   });
 
   final HomeSummary summary;
@@ -33,6 +36,10 @@ class RatingCard extends StatelessWidget {
   /// 034).
   final int streak;
 
+  /// The rating after each ladder game, oldest first. Below two entries no
+  /// graph is drawn at all — not an empty one (ticket 035).
+  final List<int> series;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -42,6 +49,9 @@ class RatingCard extends StatelessWidget {
         : l10n.recordLine(summary.wins, summary.losses, summary.draws);
     final points = l10n.pointsValue(balance);
     final days = l10n.streakValue(streak);
+    final trend = TrendGraph.worthDrawing(series)
+        ? l10n.trendSemantics(signedDelta(TrendGraph.changeIn(series)))
+        : null;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -54,6 +64,11 @@ class RatingCard extends StatelessWidget {
           label: '${l10n.computerRatingHeading}: ${summary.computerRating}. '
               '$record. ${l10n.pointsHeading}: $points. '
               '${l10n.streakHeading}: $days. '
+              // A line is a shape, and a shape says nothing out loud. The
+              // change in words is the only reading of the graph that works
+              // without sight — and the same number the sighted reader sees
+              // beside it, so neither is told something the other is not.
+              '${trend == null ? '' : '$trend '}'
               '${l10n.computerRatingNote}',
           child: ExcludeSemantics(
             child: Column(
@@ -64,6 +79,12 @@ class RatingCard extends StatelessWidget {
                 Text(l10n.ratingValue(summary.computerRating),
                     style: theme.textTheme.displaySmall),
                 Text(record, style: theme.textTheme.bodyMedium),
+                if (TrendGraph.worthDrawing(series)) ...[
+                  const SizedBox(height: 8),
+                  Text(l10n.trendHeading, style: theme.textTheme.labelLarge),
+                  const SizedBox(height: 4),
+                  TrendGraph(series: series),
+                ],
                 const SizedBox(height: 8),
                 // Its own labelled line rather than a fourth fact on the
                 // record row: points are spendable and the rating is not, and

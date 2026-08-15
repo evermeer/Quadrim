@@ -11,6 +11,7 @@ import '../data/game_repository.dart';
 import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart';
 import '../home/quests_section.dart';
+import '../home/unlock_confirmation.dart';
 import '../l10n/app_localizations.dart';
 import 'board_view.dart';
 import 'opponent_name.dart';
@@ -63,6 +64,7 @@ class GameScreen extends StatefulWidget {
     required this.gameId,
     this.random,
     this.now,
+    this.unlocks,
     this.opponentMove = chooseMoveInBackground,
   });
 
@@ -76,6 +78,13 @@ class GameScreen extends StatefulWidget {
   /// Local time, injected so a test can put the player on a chosen day. Read
   /// only when the game ends, to fold the quests it achieved.
   final DateTime Function()? now;
+
+  /// Read once, when a game ends, to decide whether the win just paid for the
+  /// next opponent. Optional rather than required: the panel simply makes no
+  /// offer without it, which is the right behaviour for a caller that has no
+  /// unlocks to speak of, and keeps a screen about *this game* from depending
+  /// on a second repository to draw its board.
+  final UnlockRepository? unlocks;
 
   /// How the opponent's move is computed. Defaults to a background isolate.
   final OpponentMove opponentMove;
@@ -99,6 +108,15 @@ class _GameScreenState extends State<GameScreen> {
   /// rather than by storing anything, which is the same discipline the rating
   /// and the balance follow (spec §8.8). Empty until the game completes.
   List<QuestStatus> _achieved = const [];
+
+  /// What this game paid, before any quest it also achieved. Zero for a draw,
+  /// a loss, and pass and play.
+  int _points = 0;
+
+  /// The opponent this game's points just paid for, or null. Offered here
+  /// because this is the moment the player is most interested, and making them
+  /// navigate to find out wastes it (ticket 035).
+  BotConfig? _offer;
 
   /// True from the moment a move is dispatched until it has been stored and
   /// observed. It guards both directions:
@@ -137,6 +155,8 @@ class _GameScreenState extends State<GameScreen> {
       _game = null;
       _rating = null;
       _achieved = const [];
+      _points = 0;
+      _offer = null;
       _busy = false;
       _review = null;
       _subscription =
@@ -181,13 +201,71 @@ class _GameScreenState extends State<GameScreen> {
     final index = completed.indexWhere((game) => game.id == widget.gameId);
     final upTo = index < 0 ? completed : completed.sublist(index);
     final before = index < 0 ? completed : completed.sublist(index + 1);
+    final earned =
+        points_fold.pointsFrom(upTo) - points_fold.pointsFrom(before);
+    final offer = await _offerFor(before, completed, isLatest: index == 0);
+    if (!mounted) return;
     setState(() {
       _rating = computerRatingAround(completed, widget.gameId);
+      _points = earned;
+      _offer = offer;
       _achieved = newlyAchieved(
         points_fold.questsFrom(before, today),
         points_fold.questsFrom(upTo, today),
       );
     });
+  }
+
+  /// The next opponent, if this game's points are what made it affordable.
+  ///
+  /// Only for the **most recent** finished game. Opening an older one from the
+  /// history list would otherwise offer an unlock on the strength of points
+  /// that everything played since had already spent or surpassed — an offer
+  /// that is true of a moment the player has left.
+  Future<BotConfig?> _offerFor(
+    List<GameDocument> before,
+    List<GameDocument> completed, {
+    required bool isLatest,
+  }) async {
+    final repository = widget.unlocks;
+    if (!isLatest || repository == null) return null;
+    final unlocks = await repository.loadUnlocks();
+    final next = nextUnlockIndex({for (final u in unlocks) u.opponentId});
+    if (next == null) return null;
+    final prices = [for (final u in unlocks) u.pricePaid];
+    final price = unlockCost(next);
+    final was = balance(
+        earned: points_fold.pointsFrom(before), pricesPaid: prices);
+    final now = balance(
+        earned: points_fold.pointsFrom(completed), pricesPaid: prices);
+    // Crossed the line *with this game*, not merely standing above it: an
+    // offer repeated after every subsequent win is an advertisement.
+    return was < price && now >= price ? opponentCatalogue[next] : null;
+  }
+
+  /// Buys the opponent this game paid for, from here rather than from the
+  /// main screen. The confirmation is the same one Your Path shows, so the
+  /// "unbeatable when it moves first" warning cannot be missing on one route
+  /// and present on the other (D181).
+  Future<void> _unlock() async {
+    final bot = _offer;
+    final repository = widget.unlocks;
+    if (bot == null || repository == null) return;
+    final completed = await widget.repository.loadCompletedGames();
+    final unlocks = await repository.loadUnlocks();
+    if (!mounted) return;
+    await runUnlock(
+      context,
+      bot: bot,
+      price: unlockCost(rosterIndexOf(bot.id)!),
+      points: balance(
+        earned: points_fold.pointsFrom(completed),
+        pricesPaid: [for (final u in unlocks) u.pricePaid],
+      ),
+      purchase: (id, paid) => repository.purchase(id, pricePaid: paid),
+    );
+    // Whether it was bought or cancelled, the offer has been answered.
+    if (mounted) setState(() => _offer = null);
   }
 
   bool _isOpponentsTurn(GameDocument game) =>
@@ -324,6 +402,9 @@ class _GameScreenState extends State<GameScreen> {
                 game: game,
                 rating: _rating,
                 achieved: _achieved,
+                points: _points,
+                offer: _offer,
+                onUnlock: _offer == null ? null : _unlock,
                 // Taps are the human's alone: a game against the computer
                 // must not let the player move for it while it thinks.
                 enabled: !_isOpponentsTurn(game),
@@ -342,6 +423,9 @@ class _GameBody extends StatelessWidget {
     required this.game,
     required this.rating,
     required this.achieved,
+    required this.points,
+    required this.offer,
+    required this.onUnlock,
     required this.enabled,
     required this.onCellTap,
     required this.onRematch,
@@ -354,6 +438,10 @@ class _GameBody extends StatelessWidget {
 
   /// The quests this game just achieved, passed through to the result panel.
   final List<QuestStatus> achieved;
+
+  final int points;
+  final BotConfig? offer;
+  final VoidCallback? onUnlock;
 
   final bool enabled;
   final void Function(Cell cell) onCellTap;
@@ -451,6 +539,9 @@ class _GameBody extends StatelessWidget {
               game: game,
               rating: rating,
               achieved: achieved,
+              points: points,
+              offer: offer,
+              onUnlock: onUnlock,
               onRematch: onRematch),
       ],
     );
@@ -553,6 +644,9 @@ class _ResultPanel extends StatelessWidget {
     required this.game,
     required this.rating,
     required this.achieved,
+    required this.points,
+    required this.offer,
+    required this.onUnlock,
     required this.onRematch,
   });
 
@@ -563,6 +657,13 @@ class _ResultPanel extends StatelessWidget {
   /// and rather than interrupting play — the game is over by the time this
   /// panel exists, which is what the ticket asks for.
   final List<QuestStatus> achieved;
+
+  /// What the game itself paid, separately from any quest it achieved.
+  final int points;
+
+  /// The opponent this game's points just paid for, or null.
+  final BotConfig? offer;
+  final VoidCallback? onUnlock;
 
   final VoidCallback onRematch;
 
@@ -597,12 +698,29 @@ class _ResultPanel extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
-            if (!vsComputer)
+            if (!vsComputer) ...[
               Text(
                 l10n.passAndPlayNoRating,
                 style: theme.textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
+              // Said plainly rather than left to be inferred from an empty
+              // space. A player who sees no number needs to know both are
+              // absent by design (ticket 035).
+              Text(
+                l10n.passAndPlayNoPoints,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+            if (vsComputer && points > 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.pointsEarnedLine(points),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(color: theme.colorScheme.primary),
+              ),
+            ],
             if (achieved.isNotEmpty) ...[
               const SizedBox(height: 12),
               Align(
@@ -612,6 +730,22 @@ class _ResultPanel extends StatelessWidget {
               ),
               for (final status in achieved)
                 _AchievedRow(status: status),
+            ],
+            if (offer != null && onUnlock != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.unlockNowAffordable(botName(l10n, botOpponent(offer!.id))),
+                style: theme.textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  onPressed: onUnlock,
+                  child: Text(l10n.unlockAction),
+                ),
+              ),
             ],
             const SizedBox(height: 12),
             Row(

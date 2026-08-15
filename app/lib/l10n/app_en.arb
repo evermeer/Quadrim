@@ -725,5 +725,78 @@
         "type": "int"
       }
     }
+  },
+  "trendHeading": "Last 10 games",
+  "@trendHeading": {
+    "description": "Heading of the ten-game rating trend graph."
+  },
+  "trendSemantics": "Last 10 games: {change}.",
+  "@trendSemantics": {
+    "description": "What a screen reader hears for the trend graph. A line is a shape; the change in words is the only reading of it that works without sight.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "trendChange": "{change}",
+  "@trendChange": {
+    "description": "The signed change over the last ten games, e.g. +43 or -12. A signed integer needs no translating; it goes through l10n so no screen holds a user-facing string.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "relativeToday": "Today",
+  "@relativeToday": {
+    "description": "A finished game that ended today."
+  },
+  "relativeYesterday": "Yesterday",
+  "@relativeYesterday": {
+    "description": "A finished game that ended yesterday."
+  },
+  "relativeDaysAgo": "{days} days ago",
+  "@relativeDaysAgo": {
+    "description": "Two to seven days ago. Beyond that the device's own date format is used instead.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeAgain": "Play again",
+  "@challengeAgain": {
+    "description": "Button on a finished game that starts a new game against the same opponent."
+  },
+  "showMore": "Show more",
+  "@showMore": {
+    "description": "Opens the full history screen. It does not expand the list in place."
+  },
+  "historyTitle": "History",
+  "@historyTitle": {
+    "description": "Title of the full history screen."
+  },
+  "pointsEarnedLine": "{points, plural, =1{+1 point} other{+{points} points}}",
+  "@pointsEarnedLine": {
+    "description": "What one finished game paid, on the end-of-game panel.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "passAndPlayNoPoints": "Pass and play earns no points.",
+  "@passAndPlayNoPoints": {
+    "description": "Said beside the no-rating line, because a player who sees neither number needs to know both are absent by design."
+  },
+  "unlockNowAffordable": "You can now unlock {name}.",
+  "@unlockNowAffordable": {
+    "description": "Offered at the end of a game whose points just paid for the next opponent.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

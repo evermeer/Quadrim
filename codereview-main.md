@@ -3831,3 +3831,105 @@ way to ask the same question.
 - **Pass-and-play and the practice game keep nothing alive.** They never become
   a `ScoredGame` at all, which `points_fold.dart` established in 033 and a
   widget test re-checks through the rating card.
+
+---
+
+# Ticket 035 — The main screen and the end of a game, finished
+
+> Reviewed: 2026-08-15 · Base: `761b490` on `main` · Working-tree changes
+> Scope: the 035 work only.
+
+New: `app/lib/home/trend_graph.dart`, `app/lib/home/history_screen.dart`,
+`app/test/main_screen_test.dart`.
+Modified: `game_row.dart`, `finished_games.dart`, `rating_card.dart`,
+`home_screen.dart`, `game_screen.dart`, `rating_fold.dart`, `main.dart`,
+`AndroidManifest.xml`, both `.arb` files, `app/test/home_screen_test.dart`.
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 |
+| minor | 1 |
+| nit | 0 |
+
+Both were in code written for this ticket and both are fixed here.
+
+---
+
+### [MAJOR] A semantics node declared inside an ExcludeSemantics, which says nothing — `accessibility`
+
+**File:** `app/lib/home/trend_graph.dart:57` (as written, before the fix)
+
+**Evidence, as it stood:**
+
+```dart
+return Semantics(
+  container: true,
+  // The line says nothing out loud; the change does. One node, said once.
+  label: l10n.trendSemantics(signedDelta(change)),
+  child: ExcludeSemantics(
+```
+
+**Problem:** `RatingCard` wraps its whole body in an `ExcludeSemantics` and
+re-says its facts once in a single label (D192). The graph lands inside that
+exclusion, so the node above was swallowed and the trend was announced to
+nobody — the element ticket 035 exists to make readable without colour was
+the one element on the card a screen reader could not read.
+
+It renders correctly and looks right, which is what makes it worth a finding
+rather than a note: the only symptom is a missing announcement.
+
+**Fix applied:** the graph declares nothing and the card's label carries the
+change, which is the same signed number drawn beside the line. Recorded as
+**D285**, including the general trap — several containers in this codebase
+announce themselves and exclude their children, so any new widget landing
+inside one must be given a line in the container's label rather than declaring
+its own.
+
+Pinned by *says its change out loud, once* in `app/test/main_screen_test.dart`.
+
+---
+
+### [MINOR] The trend window was computed twice, in two places that could drift — `duplication`
+
+**File:** `app/lib/home/trend_graph.dart:37`
+
+**Evidence, as it stood:** `build` sliced the last ten and computed the change
+inline; `changeIn`, added so the card could announce the same number, repeated
+both the slice and the arithmetic. Two copies of "what the last ten games did"
+is exactly the sort of pair that drifts, and it would drift *silently* — the
+drawn number and the spoken one would simply stop matching.
+
+**Fix applied:** one `_window` helper and one `changeIn`; `build` calls both.
+The doc comment explaining that the change is measured against the point
+*before* the window now lives in one place instead of being half-stated twice.
+
+---
+
+## Checked and clear
+
+- **The rating changes are computed in one pass.** `ratingDeltas` walks the
+  list once and returns every row's answer; `computerRatingSeries` does the
+  same for the graph. `FinishedGameTile` takes a precomputed `delta`, so there
+  is no per-row fold to be quadratic. A test builds three hundred games, takes
+  every delta in one call, and checks six against the per-game fold.
+- **A change that rounds to zero shows no arrow.** `RatingDelta` has carried
+  that since ticket 027 and this ticket did not disturb it; the reachable case
+  is beating an opponent far below you.
+- **Colour is confirmation, never information.** The arrow's direction and the
+  number's sign each carry the meaning on the rows; on the graph the number
+  does, and the same number is in the card's announcement.
+- **The challenge button is its own node.** It sits outside `GameRow` rather
+  than inside it, so the row's `ExcludeSemantics` cannot swallow it and tapping
+  it cannot also open the game underneath. It is absent where there is nobody
+  to challenge — pass and play, an unknown opponent, or a locked one.
+- **The offer cannot repeat or fire out of time.** Two clauses, both tested:
+  the balance must cross the price *with this game*, and this must be the most
+  recent finished game (D286).
+- **The relative date counts calendar days, not elapsed hours.** A game
+  finished at 23:50 is "yesterday" at 00:10 rather than "today", which is the
+  reading that is hardest to argue with.
+- **Portrait is pinned in both halves** — manifest and framework — and a test
+  asserts the manifest half, which is the one a foldable obeys.

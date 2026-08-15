@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -16,6 +17,16 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Portrait only, on every device (spec §5.2, ticket 035). No large-screen
+  // layout exists, so none must be reachable by rotating a phone or by
+  // resizing a window — ticket 017, which would have built one, is cancelled.
+  //
+  // Belt and braces on purpose, and neither half is redundant. The manifest's
+  // `screenOrientation` and `resizeableActivity="false"` are what a freeform
+  // window manager and a foldable obey; this call is what the framework obeys,
+  // and it is the half a test can see.
+  await SystemChrome.setPreferredOrientations(
+      const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   final support = await getApplicationSupportDirectory();
   // `quadrim/` under application support resolves to `files/quadrim/` on
   // Android, which is exactly the path the backup allowlist includes (D131).

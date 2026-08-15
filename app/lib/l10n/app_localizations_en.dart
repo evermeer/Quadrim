@@ -794,4 +794,56 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trendHeading => 'Last 10 games';
+
+  @override
+  String trendSemantics(String change) {
+    return 'Last 10 games: $change.';
+  }
+
+  @override
+  String trendChange(String change) {
+    return '$change';
+  }
+
+  @override
+  String get relativeToday => 'Today';
+
+  @override
+  String get relativeYesterday => 'Yesterday';
+
+  @override
+  String relativeDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get challengeAgain => 'Play again';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get historyTitle => 'History';
+
+  @override
+  String pointsEarnedLine(int points) {
+    String _temp0 = intl.Intl.pluralLogic(
+      points,
+      locale: localeName,
+      other: '+$points points',
+      one: '+1 point',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get passAndPlayNoPoints => 'Pass and play earns no points.';
+
+  @override
+  String unlockNowAffordable(String name) {
+    return 'You can now unlock $name.';
+  }
 }

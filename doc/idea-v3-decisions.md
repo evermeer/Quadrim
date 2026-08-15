@@ -609,6 +609,48 @@ The **head** is generous separately and for a different reason: a streak is aliv
 
 ---
 
+## D284 — The main screen shows ten finished games; the rest is a screen, not an expansion
+
+**Question:** Ticket 035 says **Show more** must open a full history screen rather than expand the list in place, but does not say how many the main screen shows first.
+
+**Decision:** **Ten**, then a *Show more* button that pushes `HistoryScreen`.
+
+Ten is one screenful on a phone and roughly a week of ordinary play, so the common case never sees the button at all. The reason it is a screen and not an expansion is the one the ticket gives and worth restating: the main screen now carries six sections, and expanding a list in the middle of it pushes the primary button below everything and leaves the player scrolling back up past all six to reach it. A pushed route also comes with a back button, which is the affordance for "I have finished looking at this" that an expanded section does not have.
+
+**Cost:** A second widget that renders finished games. It takes the list and the deltas from the caller rather than watching the repository itself, so there is still exactly one subscription and one fold.
+
+---
+
+## D285 — The trend graph declares no semantics; the rating card announces it
+
+**Question:** The graph is a line and a number. The line says nothing to a screen reader, so the change must be spoken. Where?
+
+**Decision:** **In the rating card's single label**, and the graph declares nothing of its own.
+
+Not a style preference — the first implementation gave the graph its own `Semantics(container: true, label: …)` and it was **silently dead**, because `RatingCard` wraps its whole body in an `ExcludeSemantics` and re-says its facts once in one announcement. A node declared inside that exclusion is swallowed, and the failure mode is the quiet one: the widget looks right, the test for the label fails, and nothing else does.
+
+So the graph is `ExcludeSemantics` like the rest of the card's body, and the card's label gains the change — the *same* signed number the sighted reader sees beside the line, so neither reader is told something the other is not.
+
+**The general trap, worth carrying forward:** in this codebase several containers announce themselves and exclude their children. Any new widget that lands inside one and wants to speak must be given a line in the container's label instead; declaring semantics locally compiles, renders, and says nothing.
+
+**Cost:** The card's label is now five facts long. That is the design it has had since D192, and the alternative — five stops for a screen reader on one card — is worse.
+
+---
+
+## D286 — The unlock offer fires on the crossing game, and only from the latest one
+
+**Question:** Ticket 035 asks the end-of-game panel to offer the next unlock "if the win just paid for it". Which wins count?
+
+**Decision:** Two conditions, both necessary.
+
+**It must be the crossing game.** The balance before this game is below the price and after it is at or above. Offering whenever the player merely *stands* above the price would repeat the offer after every subsequent win, which is an advertisement rather than a prompt.
+
+**It must be the most recent finished game.** Opening an older game out of the history list would otherwise make an offer on the strength of points that everything played since had already spent or surpassed — true of a moment the player has left. This is the same distinction the rating change makes with its prefix fold, applied to a different quantity.
+
+**Cost:** One read of the unlock records per finished game shown, and a rule with two clauses where one would have looked sufficient. Both clauses have a test; the second one's test opens a game with a later game after it and asserts silence.
+
+---
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).

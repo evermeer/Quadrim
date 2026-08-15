@@ -269,7 +269,7 @@ the ./doc/tickets folder.
 Add all decisions to the file doc/idea-v3-decisions.md
 ```
 
-And start the implementation again
+And start the implementation again (3 times a restart with this prompt)
 
 **Prompt**
 ```

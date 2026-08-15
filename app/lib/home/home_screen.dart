@@ -17,6 +17,7 @@ import '../settings/settings_screen.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
 import 'finished_games.dart';
+import 'history_screen.dart';
 import 'quests_section.dart';
 import 'rating_card.dart';
 import 'section_widgets.dart';
@@ -97,6 +98,19 @@ class _HomeScreenState extends State<HomeScreen> {
   /// once for every row on the screen.
   Map<String, int> _deltas = const {};
 
+  /// The rating after each ladder game, for the trend graph. Computed with the
+  /// summary rather than in the card, so the whole screen folds the history
+  /// once per change (ticket 035).
+  List<int> _series = const [];
+
+  /// How many finished games the main screen shows before offering the rest on
+  /// a screen of their own.
+  static const int _recentLimit = 10;
+
+  List<GameDocument> get _recentGames => _completedGames.length <= _recentLimit
+      ? _completedGames
+      : _completedGames.sublist(0, _recentLimit);
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _completedGames = games;
         _summary = HomeSummary.from(games);
         _deltas = fold.ratingDeltas(games);
+        _series = fold.computerRatingSeries(games);
         final today = (widget.now ?? DateTime.now)();
         _quests = closestQuests(points_fold.questsFrom(games, today));
         _streak = points_fold.streakFrom(games, today);
@@ -192,6 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
           repository: widget.repository,
           gameId: id,
           random: widget.random,
+          now: widget.now,
+          unlocks: widget.unlocks,
         ),
       ),
     );
@@ -241,6 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (bot == null || !mounted) return;
     }
 
+    await _start(mode, bot);
+  }
+
+  /// Creates a game and opens it. The one place a game is started, so the
+  /// challenge button on a finished row cannot drift from the new-game flow.
+  Future<void> _start(GameMode mode, BotConfig? bot) async {
     final game = await widget.repository.createGame(
       mode: mode,
       opponent: bot == null ? kGuestOpponent : botOpponent(bot.id),
@@ -249,6 +272,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted) return;
     await _openGame(game.id);
+  }
+
+  /// What the challenge button on [game] does, or null if there is nobody to
+  /// challenge — pass and play, an opponent this build does not know, or one
+  /// the player has not unlocked. The last case is not hypothetical: a game
+  /// against an opponent whose unlock was refunded is still in the history.
+  VoidCallback? _challenge(GameDocument game) {
+    final id = botIdOf(game.opponent);
+    if (id == null) return null;
+    final bot = botById(id);
+    if (bot == null || !isUnlocked(id, _unlockedIds)) return null;
+    return () => _start(GameMode.vsComputer, bot);
+  }
+
+  Future<void> _openHistory() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HistoryScreen(
+          games: _completedGames,
+          deltas: _deltas,
+          now: (widget.now ?? DateTime.now)(),
+          onOpen: (game) => _openGame(game.id),
+          onChallenge: _challenge,
+        ),
+      ),
+    );
   }
 
   @override
@@ -286,7 +335,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         RatingCard(
                             summary: _summary,
                             balance: _balance,
-                            streak: _streak),
+                            streak: _streak,
+                            series: _series),
                         const SizedBox(height: 16),
                         YourPath(
                           summary: _summary,
@@ -319,15 +369,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       tile: (game) =>
                           ActiveGameTile(game: game, onTap: () => _openGame(game.id)),
                     ),
-                  if (_completedGames.isNotEmpty)
+                  if (_completedGames.isNotEmpty) ...[
                     ...gameSectionSlivers(
                       heading: l10n.finishedGames,
-                      games: _completedGames,
+                      games: _recentGames,
                       tile: (game) => FinishedGameTile(
-                          game: game,
-                          delta: _deltas[game.id],
-                          onTap: () => _openGame(game.id)),
+                        game: game,
+                        delta: _deltas[game.id],
+                        now: (widget.now ?? DateTime.now)(),
+                        onChallenge: _challenge(game),
+                        onTap: () => _openGame(game.id),
+                      ),
                     ),
+                    // A screen, not an expanding list: expanding in place would
+                    // push the primary button off the bottom of a screen that
+                    // already carries six sections (ticket 035).
+                    if (_completedGames.length > _recentGames.length)
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        sliver: SliverToBoxAdapter(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: _openHistory,
+                              child: Text(l10n.showMore),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                   const SliverToBoxAdapter(child: SizedBox(height: 8)),
                 ],
               ),

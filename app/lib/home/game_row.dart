@@ -52,6 +52,7 @@ class GameRow extends StatelessWidget {
     required this.trailing,
     required this.onTap,
     this.delta,
+    this.subtitle,
   });
 
   final GameDocument game;
@@ -62,6 +63,10 @@ class GameRow extends StatelessWidget {
   /// What this game did to the computer rating, shown after [trailing]. Null
   /// where there is nothing to show — a game in progress, or pass and play.
   final int? delta;
+
+  /// A second line under the name — the relative date, on a finished game.
+  /// Null on a game in progress, which has not ended to have a date.
+  final String? subtitle;
 
   final VoidCallback onTap;
 
@@ -85,9 +90,15 @@ class GameRow extends StatelessWidget {
         // signed integer needs no translating, which is why it is appended
         // rather than routed through a placeholder of its own.
         label: rating == null
-            ? '$label. $trailing'
-            : l10n.opponentRowSemantics(label, rating,
-                delta == null ? trailing : '$trailing. ${signedDelta(delta!)}'),
+            ? '$label. $trailing${subtitle == null ? '' : '. $subtitle'}'
+            : l10n.opponentRowSemantics(
+                label,
+                rating,
+                [
+                  trailing,
+                  if (delta != null) signedDelta(delta!),
+                  ?subtitle,
+                ].join('. ')),
         child: ExcludeSemantics(
           // Constrained, not just padded. `ListTile` — which this replaced —
           // enforces a 48dp minimum; hand-rolling the row dropped it to 44,
@@ -103,35 +114,47 @@ class GameRow extends StatelessWidget {
                   OpponentAvatarSlot(opponent: game.opponent),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child:
-                              Text(label, overflow: TextOverflow.ellipsis),
+                        Row(
+                          children: [
+                            Flexible(
+                              child:
+                                  Text(label, overflow: TextOverflow.ellipsis),
+                            ),
+                            if (rating != null) ...[
+                              const SizedBox(width: 6),
+                              RatingPill(rating: rating),
+                            ],
+                          ],
                         ),
-                        if (rating != null) ...[
-                          const SizedBox(width: 6),
-                          RatingPill(rating: rating),
-                        ],
+                        ?switch (subtitle) {
+                          final String date => Text(date,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant)),
+                          _ => null,
+                        },
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // The result **above** the rating change rather than beside
+                  // it (ticket 035). Two short lines instead of one long one
+                  // give the opponent's name back the width it was losing, and
+                  // the pair still reads as one fact about the game.
                   Flexible(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: Text(
-                            trailing,
-                            textAlign: TextAlign.end,
-                            style: theme.textTheme.bodySmall,
-                          ),
+                        Text(
+                          trailing,
+                          textAlign: TextAlign.end,
+                          style: theme.textTheme.bodySmall,
                         ),
-                        if (delta != null) ...[
-                          const SizedBox(width: 6),
-                          RatingDelta(delta: delta!),
-                        ],
+                        if (delta != null) RatingDelta(delta: delta!),
                       ],
                     ),
                   ),

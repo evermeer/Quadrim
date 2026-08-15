@@ -208,5 +208,17 @@
   "questAward": "+{points}",
   "questAwardSemantics": "{name}. Behaald, {points} punten.",
   "streakHeading": "Reeks",
-  "streakValue": "{days, plural, =0{Nog geen dagen} =1{1 dag op rij} other{{days} dagen op rij}}"
+  "streakValue": "{days, plural, =0{Nog geen dagen} =1{1 dag op rij} other{{days} dagen op rij}}",
+  "trendHeading": "Laatste 10 partijen",
+  "trendSemantics": "Laatste 10 partijen: {change}.",
+  "trendChange": "{change}",
+  "relativeToday": "Vandaag",
+  "relativeYesterday": "Gisteren",
+  "relativeDaysAgo": "{days} dagen geleden",
+  "challengeAgain": "Opnieuw spelen",
+  "showMore": "Meer tonen",
+  "historyTitle": "Geschiedenis",
+  "pointsEarnedLine": "{points, plural, =1{+1 punt} other{+{points} punten}}",
+  "passAndPlayNoPoints": "Samen spelen levert geen punten op.",
+  "unlockNowAffordable": "Je kunt {name} nu vrijspelen."
 }
