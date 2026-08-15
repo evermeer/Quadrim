@@ -72,7 +72,8 @@ Twenty-two tickets are complete. Every remaining gap in 0.1 is §7 of idea-v3.md
 | Main screen | §11.3 | **Built, and being restructured** — ticket 013; see §12 |
 | Tutorial and practice game | §11.4 | **Built** — tickets 018–020 |
 | Settings, attribution | §11.3 | **Built** — ticket 028 |
-| Placeholder avatars, opponent content | §11.3 | **Built** — ticket 029 |
+| Placeholder avatars, opponent content | §11.3 | **Superseded** — ticket 029's drawn identicons existed to be replaced and were, by ticket 038's twenty painted portraits |
+| **The look: theme, background, portraits, plaques, fonts, launcher icon** | **§8.16** | **Built** — ticket 038 |
 | Build gate | §10 | **Built** — ticket 001 |
 | **Points, unlocks, quests, streaks** | **§7.3, §8.8, §11.6** | **Built** — tickets 031–034 |
 | **Your Path, trend graph, quests section, end-of-game panel** | **§11.3** | **Built** — tickets 030, 032, 035; revised by 037 |
@@ -496,6 +497,10 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | U21 ＋ | The whole main screen reaches its last row at the largest font scale on the smallest supported phone, with all six sections present |
 | U22 ＋ | A locked opponent's tile and row are one accessibility node each — name, rating, record, stars, locked state and price — announced once |
 | U23 ＋ | Backing out of the opponent list cancels the whole flow rather than falling back to a default opponent |
+| U24 ＋ | Every screen sits on the forest background; no screen shows a white or otherwise undesigned surface |
+| U25 ＋ | Every one of the twenty opponents draws its own portrait, and a locked one draws as a silhouette rather than a dimmed face |
+| U26 ＋ | The carved plaques are buttons with an accessible name in the player's language, and Your Path's carved sign is still a semantic heading in both languages |
+| U27 ＋ | The shipped artwork and fonts together stay under 3 MB, and decorative artwork is not drawn at text scales where it would push a section off the screen |
 
 ### 11.4 Tutorial
 
@@ -620,6 +625,7 @@ Approach **B** with main-screen approach **M2** (D266, D267). Bottom-up was reje
 | **034** | Streaks: the eight rungs, the injected day boundary, reset across month, year and time-zone boundaries | P16–P19 |
 | **035** | The ten-game trend graph; the finished-game row changes; the end-of-game panel; the portrait lock | U10, U15, U19, U20, U21 |
 | **037** | Your Path scrolls the whole roster and rests on the rating rather than the unlock; the opponent detail page and its one action | U13, U13a, U13b, U13c |
+| **038** | The forest design: one theme, the background on every screen, the twenty painted portraits and their locked silhouettes, the carved plaques, Cinzel and EB Garamond, the new launcher icon, and `tools/artgen` | U24–U27 |
 
 Each of 031–034 crosses every layer, so a real unlock is on screen after 032. The package's *shape* — the signatures in §7.3 — is fixed before 031 starts, so the passes after it extend a settled interface rather than renegotiating one.
 

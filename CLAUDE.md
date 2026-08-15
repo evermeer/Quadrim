@@ -62,6 +62,17 @@ cd tools/linegen && dart run bin/linegen.dart          # winning_lines.g.dart + 
 cd packages/quadrim_engine && dart run tool/bookgen.dart  # strategy_book.g.dart
 ```
 
+The art pipeline is the exception: its output is committed like theirs, but
+`check.sh` does **not** verify it, because the same picture re-encoded by a
+different Pillow build is different bytes and a gate that fails on a library
+upgrade is a gate people learn to skip (D290). Run it by hand when the source
+art in `doc/designs/` changes. `art_assets_test.dart` is what checks the result.
+
+```bash
+python -m pip install pillow fonttools brotli
+python tools/artgen/artgen.py
+```
+
 Measurement tools (not shipped; `tool/` is outside the purity scan, so these may use a clock):
 
 ```bash
@@ -81,6 +92,8 @@ app/                        Flutter app (UI + persistence). The only place Flutt
 packages/quadrim_engine/    Rules, search, opponents, strategy book. Pure Dart.
 packages/quadrim_rating/    ELO maths. Pure Dart.
 tools/linegen/              Build-time generator for the 76 winning lines.
+tools/artgen/               Art and font pipeline: doc/designs/ -> app/assets/ (D290).
+doc/designs/                Source art. Large, and what makes artgen re-runnable.
 third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
 doc/tickets/                The 7 tickets still open; the unit of work and of commits.
 doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
@@ -114,7 +127,9 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 - **"No data leaves the device" must never appear** in any privacy text — backup is enabled, so it is false (D72, ticket 022).
 - **`l10n.strategyCredit` must be rendered somewhere in `app/lib`.** Patashnik's dictionary may be used only if credited in the shipped app; `check.sh` greps for it (D174). Ticket 028 (settings screen) inherits this.
 - **The dictionary is vendored byte-for-byte and its SHA-256 is verified** on every check run. Never edit `third_party/patashnik/qubic.dictionary`. Only the dictionary was taken — the GPL-2.0 C++ from the same repository is deliberately untouched (D172).
-- **No user-facing string outside l10n.** `check.sh` rejects `Text('...')` with letters in `app/lib`.
+- **No user-facing string outside l10n.** `check.sh` rejects `Text('...')` with letters in `app/lib`. Three plaques carry English lettering *inside the artwork* and are the one exception, taken deliberately with its cost named (D292); their accessible names are still localised.
+- **Every image is drawn in a box the layout already knows** — both dimensions, before decode. An `Image` with an unknown dimension reports zero until its bytes arrive, which is a layout that jumps once on first launch and is permanently broken in a widget test. This cost three bugs in one ticket (D295).
+- **Nothing but cream sits on the background photograph**, and the photograph is darkened under everything so that cream always works. Ink over the bare picture measured 2.9:1 (D296).
 - **The application id is `nl.evict.quadrim` and is permanent** once published to any track, including closed testing (D213). Nothing has been uploaded yet, so today it is still changeable; the moment a closed test goes out it is not.
 - Keystore credentials stay out of version control (ticket 015).
 

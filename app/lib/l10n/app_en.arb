@@ -484,13 +484,7 @@
   "@settingsLanguage": {
     "description": "Overrides the device language. Half the closed testers are Dutch, and a Dutch tester whose phone is set to English cannot otherwise see the Dutch build at all (ticket 028)."
   },
-  "settingsTheme": "Theme",
   "settingsFollowDevice": "Follow the device",
-  "themeLight": "Light",
-  "@themeLight": {
-    "description": "The light colour scheme. Deliberately a separate key from sideLight, which names the light pieces — they are the same word in English and need not stay so."
-  },
-  "themeDark": "Dark",
   "languageEnglish": "English",
   "@languageEnglish": {
     "description": "A language names itself in its own language, so this is identical in every locale file and is not a translation error."

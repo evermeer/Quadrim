@@ -767,9 +767,11 @@ Six things learned building it:
 
 ### 8.14 Settings
 
-Language (system, or an explicit choice), theme (system, light, dark), a way to see the tutorial again, subscription and restore-purchases, and the attribution required by §6.6.
+Language (system, or an explicit choice), a way to see the tutorial again, subscription and restore-purchases, and the attribution required by §6.6.
 
-**Language and theme are watched at the root of the app** and applied immediately, without a restart. "System" is the *absence* of an override, not a third value to translate into one.
+**There is no theme choice.** §8.16 is one painted design and there is no second one to switch to, so the control that used to offer system/light/dark selected the same screen three ways (D293). The stored field survives for the day there is a second design.
+
+**Language is watched at the root of the app** and applied immediately, without a restart. "System" is the *absence* of an override, not a third value to translate into one.
 
 ---
 
@@ -789,6 +791,26 @@ One opponent, in full. Reached by tapping a Your Path tile (§8.4).
 **At the bottom, one action.** Unlocked, it is **start a game**, and it does exactly what selecting them in §8.7 does. Locked, it is the price, the progress toward it and an **unlock** button, leading to the same confirmation the other two routes lead to. The page is never a dead end: every opponent has something to do on it.
 
 **It reads the same catalogue and the same folds as everything else.** No new record, no second copy of a rating, no per-opponent document. What it adds is a place to put what is already known, at a size worth looking at.
+
+---
+
+### 8.16 The look
+
+**One painted design, on every screen, in every brightness setting.** The reference is `doc/designs/Design-alt0.png`, and the source art beside it. The mockup is an indication rather than a specification: where it and the built functionality disagree, the functionality leads.
+
+The mockup draws things this release does not have — a "today's journey" panel, rank names and a bar toward the next rank, a personal best, a five-tab bottom navigation, daily quests with a countdown and a claim button. **None of them is built.** Four of the five navigation destinations do not exist, there are no ranks, nothing stores a peak, and the quests are milestones that pay automatically rather than dailies that are claimed. Equally, the app has a trend graph, a points balance and a streak that the mockup does not draw; all three stay, inside the rating panel.
+
+**The frame.** A sunlit forest is painted behind a transparent scaffold on every screen and does not scroll — it is a place the app is in, not a thing on a page. On it sit two kinds of card: one dark green panel for the rating, which is the screen's headline number, and parchment for everything else. The main screen is a stack of short cards on the forest; every other screen puts a single sheet of parchment under its whole body, because ink over a photograph of leaves is unreadable at any size.
+
+**Portraits.** Each of the twenty opponents has a painted portrait, drawn in a circle with a gold ring. A locked opponent is drawn as a **silhouette** rather than dimmed: what has not been bought has not been met (D291).
+
+**Carved wood.** New Game and Tutorial are wooden plaques rather than buttons, pinned below the scroll so the primary action never scrolls away. Your Path's heading is a carved sign. The lettering on all three is painted into the artwork in English; the accessible name is still localised, and the sign is still a semantic heading in both languages (D292).
+
+**Type.** Cinzel for display — headings, the rating, section titles. EB Garamond for anything read in sentences. Both are bundled, never fetched: the release manifest declares no network permission, so a font resolved over the network would not be a slow font, it would be no font.
+
+**Decoration yields to text.** Above roughly a 1.4 text scale the cube beside the rating is not drawn. Artwork is the only thing on the screen carrying no information, so it is the first thing to go when the words need the room (D294).
+
+**The board keeps its geometry.** It gains the palette and the background and nothing else. It is the one screen where a mis-tap costs a game.
 
 ## 9. Chat and safety
 

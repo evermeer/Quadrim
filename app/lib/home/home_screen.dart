@@ -10,10 +10,13 @@ import '../data/game_repository.dart';
 import '../data/home_summary.dart';
 import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart' as fold;
+import '../design/art.dart';
+import '../design/forest.dart';
 import '../game/game_screen.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../settings/settings_screen.dart';
+import '../theme.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'active_games.dart';
 import 'finished_games.dart';
@@ -37,6 +40,15 @@ import 'your_path.dart';
 /// Each section is its own file beside it (ticket 030), because §11.3 adds a
 /// trend graph, a points balance, a Your Path row and a quests section to this
 /// screen, and every remaining 0.1 ticket touches it.
+///
+/// (The class's own doc comment is below; the constant between them belongs to
+/// the layout rather than to the screen's contract.)
+
+/// How tall the two carved plaques at the bottom of the main screen are. Fixed
+/// rather than intrinsic, and unscaled by the font slider — they carry no live
+/// text to grow.
+const double _kPlaqueHeight = 92;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -331,9 +343,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
+        // The mark, then the name, in the mockup's order. The logo is
+        // decorative — the title beside it says the same word out loud, and a
+        // picture of a letter Q announced as well would say it twice.
+        title: Row(
+          children: [
+            // Both dimensions given. An `Image` reports zero size until it has
+            // decoded, so a logo with only a height is a zero-width gap on the
+            // first frame and forever in a widget test.
+            const ExcludeSemantics(
+              child: SizedBox(
+                width: 30,
+                height: 30,
+                child: Image(
+                  image: AssetImage(Art.logo),
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(l10n.appTitle),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -381,12 +414,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 16),
                           QuestsSection(quests: _quests),
                         ],
+                        // On a card, not loose on the background. It is the
+                        // only text on this screen that would otherwise sit
+                        // directly on a photograph of leaves.
                         if (_activeGames.isEmpty && _completedGames.isEmpty)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Text(l10n.noGamesYet,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Text(l10n.noGamesYet,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -419,8 +461,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         sliver: SliverToBoxAdapter(
                           child: Align(
                             alignment: Alignment.centerLeft,
+                            // Cream, not the theme's bronze: this is the one
+                            // control on the screen that sits on the forest
+                            // rather than on parchment, and bronze on leaves
+                            // is not a legible pairing.
                             child: TextButton(
                               onPressed: _openHistory,
+                              style: TextButton.styleFrom(
+                                  foregroundColor: QuadrimPalette.cream),
                               child: Text(l10n.showMore),
                             ),
                           ),
@@ -431,29 +479,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _newGame,
-                      child: Text(l10n.newGame),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: _openTutorial,
-                      child: Text(l10n.tutorial),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
+        ),
+      ),
+      // The two carved plaques of the mockup, pinned below the scroll so the
+      // primary action never scrolls away. `NEW GAME` takes the width it can
+      // and `Tutorial` sits to its right, which is where the mockup puts it.
+      bottom: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          // A fixed height, not one the artwork chooses: the plaques are
+          // decorative and must not resize when a picture finishes decoding,
+          // and this strip is pinned above the bottom edge on every phone.
+          child: SizedBox(
+            height: _kPlaqueHeight,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Plaque(
+                    asset: Art.newGame,
+                    label: l10n.newGame,
+                    onPressed: _newGame,
+                    height: _kPlaqueHeight,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Plaque(
+                  asset: Art.tutorial,
+                  label: l10n.tutorial,
+                  onPressed: _openTutorial,
+                  height: _kPlaqueHeight,
+                  width: _kPlaqueHeight,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

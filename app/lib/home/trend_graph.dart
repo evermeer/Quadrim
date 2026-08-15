@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'game_row.dart' show signedDelta;
 
 /// How many games the trend covers.
@@ -39,13 +40,15 @@ class TrendGraph extends StatelessWidget {
     final points = pointsOf(series);
     final change = changeIn(series);
     final rising = change >= 0;
+    // Read against the dark panel this now sits on, not against the theme's
+    // surface — it is the one widget in the app that is always drawn on the
+    // rating card's green rather than on parchment (ticket 038). The
+    // brightness fork that used to pick these is gone with the second theme.
     final colour = change == 0
-        ? theme.colorScheme.onSurfaceVariant
+        ? QuadrimPalette.creamSoft
         : rising
-            ? (theme.brightness == Brightness.dark
-                ? const Color(0xFF7CD98C)
-                : const Color(0xFF2E7D32))
-            : theme.colorScheme.error;
+            ? const Color(0xFF9FDA6A)
+            : const Color(0xFFE8836F);
 
     // No semantics of its own. The rating card wraps its whole body in an
     // ExcludeSemantics and says its four facts once in a single label, so a
@@ -63,7 +66,7 @@ class TrendGraph extends StatelessWidget {
                   painter: _TrendPainter(
                     series: points,
                     colour: colour,
-                    track: theme.colorScheme.outlineVariant,
+                    track: const Color(0x66C3C79A),
                   ),
                 ),
               ),

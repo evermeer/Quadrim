@@ -4,10 +4,10 @@ import 'package:quadrim_progression/quadrim_progression.dart';
 
 import '../data/documents.dart';
 import '../data/home_summary.dart';
-import '../game/opponent_avatar.dart';
+import '../design/art.dart';
+import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
-import 'section_widgets.dart';
 
 /// Where the player is on the ladder, and who is next.
 ///
@@ -59,10 +59,12 @@ class YourPath extends StatefulWidget {
 const int _kVisibleTiles = 3;
 const double _kGap = 8;
 
-/// The horizontal padding the main screen puts around this section. It has to
-/// match `home_screen.dart`'s SliverPadding, because the tile width is derived
-/// from the screen width rather than measured.
-const double _kSectionPadding = 16;
+/// Everything between the screen edge and the scrolling row, per side. It has
+/// to match what actually surrounds this widget, because the tile width is
+/// derived from the screen width rather than measured: `home_screen.dart`'s
+/// SliverPadding (16), the parchment card's border (1.5) and the
+/// `ParchmentSection` padding this widget asks for (8).
+const double _kSectionInset = 16 + 1.5 + 8;
 
 /// The tile card's own horizontal padding, subtracted to get the avatar's
 /// width. Passed down rather than measured, because a `LayoutBuilder` inside
@@ -115,17 +117,24 @@ class _YourPathState extends State<YourPath> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final next = nextUnlockIndex(widget.unlocked);
-    return Column(
+    // The carved sign replaces the text heading. It is a picture of the words
+    // "YOUR PATH", so `ParchmentSection` keeps the heading as an invisible
+    // semantic header underneath it — a screen reader still meets a heading,
+    // and in Dutch it still says "Jouw pad" (D292).
+    return ParchmentSection(
+      heading: l10n.yourPath,
+      banner: Art.yourPath,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeading(l10n.yourPath),
         Builder(
           builder: (context) {
             // The width comes from the screen rather than from a LayoutBuilder:
             // a LayoutBuilder cannot report intrinsic dimensions, and the row
             // below is sized by the intrinsic height of its tallest tile.
             final width =
-                MediaQuery.sizeOf(context).width - _kSectionPadding * 2;
+                MediaQuery.sizeOf(context).width - _kSectionInset * 2;
             final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
             _step = tile + _kGap;
             _settle(width);
@@ -175,6 +184,7 @@ class _YourPathState extends State<YourPath> {
           },
         ),
       ],
+      ),
     );
   }
 }
@@ -276,14 +286,7 @@ class _PathTile extends StatelessWidget {
               children: [
                 // Full tile width, so the avatar is the thing the eye lands on
                 // and the ladder reads as a progression of faces.
-                Opacity(
-                  opacity: locked ? 0.45 : 1,
-                  child: OpponentAvatar(
-                    id: bot.id,
-                    tier: bot.tier,
-                    size: avatarSize,
-                  ),
-                ),
+                OpponentArt(id: bot.id, size: avatarSize, locked: locked),
                 const SizedBox(height: 6),
                 Text(name,
                     maxLines: 1,

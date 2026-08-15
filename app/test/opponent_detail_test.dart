@@ -11,6 +11,7 @@ import 'package:quadrim/home/your_path.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
+import 'plaques.dart';
 
 /// Ticket 037: the row scrolls and rests on the rating, and every opponent has
 /// a page.
@@ -289,7 +290,7 @@ void main() {
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('New game'));
+      await tester.tap(plaqueLabelled('New game'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Play the computer'));
       await tester.pumpAndSettle();

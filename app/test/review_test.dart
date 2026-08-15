@@ -10,6 +10,7 @@ import 'package:quadrim/game/game_screen.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'plaques.dart';
 
 void _phone(WidgetTester tester, {Size size = const Size(360, 844)}) {
   tester.view.physicalSize = size * 3;
@@ -33,7 +34,7 @@ Future<LocalGameRepository> _game(
           unlocks: repository,
           locale: locale));
   await tester.pumpAndSettle();
-  await tester.tap(find.text(locale == null ? 'New game' : 'Nieuwe partij'));
+  await tester.tap(plaqueLabelled(locale == null ? 'New game' : 'Nieuwe partij'));
   await tester.pumpAndSettle();
   await tester.tap(find.text(locale == null ? 'Pass and play' : 'Samen op één toestel'));
   await tester.pumpAndSettle();

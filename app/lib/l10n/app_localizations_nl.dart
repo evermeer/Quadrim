@@ -614,16 +614,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsLanguage => 'Taal';
 
   @override
-  String get settingsTheme => 'Thema';
-
-  @override
   String get settingsFollowDevice => 'Volg het toestel';
-
-  @override
-  String get themeLight => 'Licht';
-
-  @override
-  String get themeDark => 'Donker';
 
   @override
   String get languageEnglish => 'English';

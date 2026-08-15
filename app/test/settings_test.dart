@@ -7,6 +7,7 @@ import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/main.dart';
+import 'plaques.dart';
 
 void _phone(WidgetTester tester, {double textScale = 1}) {
   tester.view.physicalSize = const Size(1080, 2400);
@@ -77,7 +78,11 @@ void main() {
     await _open(tester);
     await _openSettings(tester);
     expect(find.text('Language'), findsOneWidget);
-    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('About'), findsOneWidget);
+    // No theme group. Ticket 038 replaced the seeded dark/light pair with one
+    // painted design, so the control selected the same screen three ways and
+    // went with the pair (D293).
+    expect(find.text('Theme'), findsNothing);
   });
 
   testWidgets('changing the language applies immediately, without a restart',
@@ -101,7 +106,7 @@ void main() {
     // by tooltip: the tooltip is Dutch by now too.
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('Nieuwe partij'), findsOneWidget);
+    expect(plaqueLabelled('Nieuwe partij'), findsOneWidget);
   });
 
   testWidgets('English can be forced too, not only Dutch', (tester) async {
@@ -138,21 +143,15 @@ void main() {
     expect((await repo.loadSettings()).locale, 'system');
   });
 
-  testWidgets('changing the theme applies immediately', (tester) async {
+  testWidgets('the design does not change with the device brightness',
+      (tester) async {
+    // Both slots carry the same ThemeData, so a phone set to dark gets the
+    // forest rather than a half-inverted version of it (D293).
     _phone(tester);
-    final repo = await _open(tester);
-    expect(_app(tester).themeMode, ThemeMode.system);
-
-    await _openSettings(tester);
-    await tester.tap(find.text('Dark'));
-    await tester.pumpAndSettle();
-    expect(_app(tester).themeMode, ThemeMode.dark);
-    expect((await repo.loadSettings()).theme, 'dark');
-
-    await tester.tap(find.text('Light'));
-    await tester.pumpAndSettle();
-    expect(_app(tester).themeMode, ThemeMode.light);
-    expect((await repo.loadSettings()).theme, 'light');
+    await _open(tester);
+    final app = _app(tester);
+    expect(app.theme, isNotNull);
+    expect(identical(app.theme, app.darkTheme), isTrue);
   });
 
   testWidgets('choices survive a restart', (tester) async {
@@ -161,8 +160,6 @@ void main() {
     await _open(tester, store: store);
     await _openSettings(tester);
     await tester.tap(find.text('Nederlands'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Donker'));
     await tester.pumpAndSettle();
 
     // A second app over the same bytes. Reading it back off the repository
@@ -181,8 +178,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_app(tester).locale, const Locale('nl'));
-    expect(_app(tester).themeMode, ThemeMode.dark);
-    expect(find.text('Nieuwe partij'), findsOneWidget);
+    expect(plaqueLabelled('Nieuwe partij'), findsOneWidget);
   });
 
   testWidgets('the tutorial can be restarted from here', (tester) async {
@@ -230,7 +226,7 @@ void main() {
     expect(nodes['Nederlands']!.isInMutuallyExclusiveGroup, isTrue);
     expect(nodes['Nederlands']!.isChecked, CheckedState.isFalse);
 
-    for (final heading in ['Language', 'Theme', 'About']) {
+    for (final heading in ['Language', 'Tutorial', 'About']) {
       expect(nodes[heading]?.isHeader, isTrue, reason: heading);
     }
     handle.dispose();
@@ -261,10 +257,7 @@ void main() {
 
     for (final text in [
       'Taal',
-      'Thema',
       'Volg het toestel',
-      'Licht',
-      'Donker',
       'Uitleg opnieuw bekijken',
       'Over',
     ]) {

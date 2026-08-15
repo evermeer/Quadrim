@@ -3,9 +3,9 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_progression/quadrim_progression.dart';
 
 import '../data/documents.dart';
+import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
-import 'section_widgets.dart';
 
 /// The four quests closest to completion.
 ///
@@ -26,12 +26,14 @@ class QuestsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeading(l10n.quests),
-        for (final status in quests) QuestTile(status: status),
-      ],
+    return ParchmentSection(
+      heading: l10n.quests,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final status in quests) QuestTile(status: status),
+        ],
+      ),
     );
   }
 }
@@ -52,7 +54,7 @@ class QuestTile extends StatelessWidget {
     final theme = Theme.of(context);
     final name = questName(l10n, status.quest);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Semantics(
         container: true,
         // State with progress, not decoration: a bar conveys nothing to a

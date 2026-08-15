@@ -12,6 +12,7 @@ import 'package:quadrim/tutorial/practice_hint.dart';
 import 'package:quadrim/tutorial/practice_screen.dart';
 import 'package:quadrim/tutorial/tutorial_steps.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'plaques.dart';
 
 Future<LocalGameRepository> _repository() async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
@@ -31,7 +32,7 @@ Future<void> _openPractice(
     WidgetTester tester, LocalGameRepository repo) async {
   await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo, unlocks: repo));
   await tester.pumpAndSettle();
-  await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
+  await tester.tap(plaqueLabelled('Tutorial'));
   await tester.pumpAndSettle();
   while (find.text('Next').evaluate().isNotEmpty) {
     await tester.tap(find.text('Next'));
@@ -261,7 +262,7 @@ void main() {
       await tester.tap(find.text('Finish the tutorial'));
       await tester.pumpAndSettle();
 
-      expect(find.text('New game'), findsOneWidget, reason: 'back on home');
+      expect(plaqueLabelled('New game'), findsOneWidget, reason: 'back on home');
       expect((await repo.loadSettings()).tutorialCompleted, isTrue);
     });
 
@@ -332,7 +333,7 @@ void main() {
               unlocks: repo,
               locale: const Locale('nl')));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(TextButton, 'Uitleg'));
+      await tester.tap(plaqueLabelled('Uitleg'));
       await tester.pumpAndSettle();
       while (find.text('Verder').evaluate().isNotEmpty) {
         await tester.tap(find.text('Verder'));

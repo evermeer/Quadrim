@@ -97,12 +97,6 @@ class _QuadrimAppState extends State<QuadrimApp> {
         _ => null,
       };
 
-  ThemeMode get _themeMode => switch (_settings.theme) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -110,9 +104,13 @@ class _QuadrimAppState extends State<QuadrimApp> {
       // the Dutch strings render, not exercising the settings document.
       locale: widget.locale ?? _locale,
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      theme: QuadrimTheme.light,
-      darkTheme: QuadrimTheme.dark,
-      themeMode: _themeMode,
+      // The same theme for both brightnesses. The design is one painting and
+      // there is no second one; handing `darkTheme` something different would
+      // give a device set to dark a half-inverted version of a design that was
+      // never inverted (D293). The stored `theme` field is left alone rather
+      // than migrated away, so 0.2 can revive the choice without a data change.
+      theme: QuadrimTheme.forest,
+      darkTheme: QuadrimTheme.forest,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

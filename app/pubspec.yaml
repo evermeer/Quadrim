@@ -28,3 +28,28 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  # Produced by `python tools/artgen/artgen.py` from doc/designs/ (D290).
+  # Declared by directory: adding an opponent's portrait is dropping a file in,
+  # and `art_assets_test.dart` is what notices when one is missing.
+  assets:
+    - assets/art/
+    - assets/art/opponents/
+    # The two OFL licence files. Bundled as assets rather than left on disk
+    # because the licence requires them to travel with the fonts, and only
+    # what is declared here ends up inside the APK.
+    - assets/fonts/
+
+  # Cinzel and EB Garamond, SIL OFL 1.1, instanced to the weights used and
+  # subset to Latin by artgen. Licences ship beside them in assets/fonts/.
+  fonts:
+    - family: Cinzel
+      fonts:
+        - asset: assets/fonts/Cinzel-Regular.ttf
+        - asset: assets/fonts/Cinzel-Bold.ttf
+          weight: 700
+    - family: EBGaramond
+      fonts:
+        - asset: assets/fonts/EBGaramond-Regular.ttf
+        - asset: assets/fonts/EBGaramond-SemiBold.ttf
+          weight: 600

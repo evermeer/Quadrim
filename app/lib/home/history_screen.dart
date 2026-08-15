@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
+import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
 import 'finished_games.dart';
 import 'section_widgets.dart';
@@ -38,11 +39,20 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(title: Text(l10n.historyTitle)),
       body: SafeArea(
+        // The list brings its own parchment (`gameSectionSlivers`); the empty
+        // state has to bring its own, or it is ink on a photograph of leaves.
         child: games.isEmpty
-            ? Center(child: Text(l10n.noGamesYet))
+            ? Center(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(l10n.noGamesYet),
+                  ),
+                ),
+              )
             : CustomScrollView(
                 slivers: [
                   ...gameSectionSlivers(

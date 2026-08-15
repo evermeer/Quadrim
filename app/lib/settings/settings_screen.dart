@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
+import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
 import '../tutorial/tutorial_screen.dart';
 
-/// The three things a player can change: language, theme, and another look at
-/// the tutorial.
+/// The two things a player can change: language, and another look at the
+/// tutorial.
 ///
 /// Small, and a blocker of the first upload for a reason that is easy to miss:
 /// half the closed testers are Dutch, and without a language override a Dutch
@@ -30,7 +31,7 @@ class SettingsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       // Watched rather than loaded once: the repository is stream-based so
       // that 0.3a's Firestore implementation can satisfy the same contract,
@@ -44,68 +45,55 @@ class SettingsScreen extends StatelessWidget {
           return SafeArea(
             // A list, so the whole screen still reaches its last row at the
             // largest system font scale.
-            child: ListView(
-              children: [
-                _Heading(l10n.settingsLanguage),
-                _Choice(
-                  label: l10n.settingsFollowDevice,
-                  value: 'system',
-                  group: current.locale,
-                  onSelected: (v) => _save(current.copyWith(locale: v)),
-                ),
-                _Choice(
-                  label: l10n.languageEnglish,
-                  value: 'en',
-                  group: current.locale,
-                  onSelected: (v) => _save(current.copyWith(locale: v)),
-                ),
-                _Choice(
-                  label: l10n.languageDutch,
-                  value: 'nl',
-                  group: current.locale,
-                  onSelected: (v) => _save(current.copyWith(locale: v)),
-                ),
-                const Divider(),
-                _Heading(l10n.settingsTheme),
-                _Choice(
-                  label: l10n.settingsFollowDevice,
-                  value: 'system',
-                  group: current.theme,
-                  onSelected: (v) => _save(current.copyWith(theme: v)),
-                ),
-                _Choice(
-                  label: l10n.themeLight,
-                  value: 'light',
-                  group: current.theme,
-                  onSelected: (v) => _save(current.copyWith(theme: v)),
-                ),
-                _Choice(
-                  label: l10n.themeDark,
-                  value: 'dark',
-                  group: current.theme,
-                  onSelected: (v) => _save(current.copyWith(theme: v)),
-                ),
-                const Divider(),
-                _Heading(l10n.tutorial),
-                ListTile(
-                  leading: const Icon(Icons.school_outlined),
-                  title: Text(l10n.settingsShowTutorial),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => TutorialScreen(settings: settings),
+            child: ParchmentSheet(
+              child: ListView(
+                children: [
+                  _Heading(l10n.settingsLanguage),
+                  _Choice(
+                    label: l10n.settingsFollowDevice,
+                    value: 'system',
+                    group: current.locale,
+                    onSelected: (v) => _save(current.copyWith(locale: v)),
+                  ),
+                  _Choice(
+                    label: l10n.languageEnglish,
+                    value: 'en',
+                    group: current.locale,
+                    onSelected: (v) => _save(current.copyWith(locale: v)),
+                  ),
+                  _Choice(
+                    label: l10n.languageDutch,
+                    value: 'nl',
+                    group: current.locale,
+                    onSelected: (v) => _save(current.copyWith(locale: v)),
+                  ),
+                  // The theme choice is gone. Ticket 038 replaced the seeded
+                  // dark/light pair with one painted design, so all three options
+                  // now select the same screen, and a control that does nothing
+                  // is worse than no control (D293). The stored field survives
+                  // untouched for the day there is a second design to pick.
+                  const Divider(),
+                  _Heading(l10n.tutorial),
+                  ListTile(
+                    leading: const Icon(Icons.school_outlined),
+                    title: Text(l10n.settingsShowTutorial),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => TutorialScreen(settings: settings),
+                      ),
                     ),
                   ),
-                ),
-                const Divider(),
-                _Heading(l10n.settingsAbout),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  child: Text(
-                    l10n.strategyCredit,
-                    style: theme.textTheme.bodySmall,
+                  const Divider(),
+                  _Heading(l10n.settingsAbout),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    child: Text(
+                      l10n.strategyCredit,
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -121,17 +109,17 @@ class _Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Semantics(
-          header: true,
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-          ),
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+    child: Semantics(
+      header: true,
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// One option in a mutually exclusive group.
@@ -154,13 +142,13 @@ class _Choice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => RadioListTile<String>(
-        title: Text(label),
-        value: value,
-        // ignore: deprecated_member_use
-        groupValue: group,
-        // ignore: deprecated_member_use
-        onChanged: (v) {
-          if (v != null && v != group) onSelected(v);
-        },
-      );
+    title: Text(label),
+    value: value,
+    // ignore: deprecated_member_use
+    groupValue: group,
+    // ignore: deprecated_member_use
+    onChanged: (v) {
+      if (v != null && v != group) onSelected(v);
+    },
+  );
 }

@@ -3,7 +3,7 @@ import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quadrim/game/opponent_avatar.dart';
+import 'package:quadrim/design/art.dart';
 import 'package:quadrim/game/opponent_screen.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
@@ -165,7 +165,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(OpponentScreen),
-        matching: find.byType(OpponentAvatar),
+        matching: find.byType(OpponentArt),
       ),
       findsWidgets,
     );

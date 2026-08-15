@@ -5,7 +5,8 @@ import 'package:quadrim_rating/quadrim_rating.dart';
 
 import '../data/documents.dart';
 import '../data/home_summary.dart';
-import '../game/opponent_avatar.dart';
+import '../design/art.dart';
+import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
 
@@ -65,26 +66,23 @@ class OpponentDetail extends StatelessWidget {
         : stars(wins: record!.wins, losses: record!.losses);
     final balance = matchBalance(own: playerRating, opponent: bot.rating);
 
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(title: Text(name)),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          children: [
+        child: ParchmentSheet(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            children: [
             // The avatar leads, at the largest size it is drawn anywhere.
             // These are twenty characters with names and faces and the roster
             // is the thing the player is working through; a page about one of
             // them that leads with a table is a page about a number.
-            Center(
-              // Decorative: the name is said just below it, and an avatar
-              // announced as well would say it twice.
-              child: ExcludeSemantics(
-                child: Opacity(
-                  opacity: locked ? 0.45 : 1,
-                  child: OpponentAvatar(id: bot.id, tier: bot.tier, size: 200),
-                ),
-              ),
-            ),
+            // Decorative: the name is said just below it, and a portrait
+            // announced as well would say it twice. A locked opponent is drawn
+            // as a silhouette rather than dimmed — what has not been bought has
+            // not been met, and this is the page where the player decides
+            // whether to buy it.
+            Center(child: OpponentArt(id: bot.id, size: 200, locked: locked)),
             const SizedBox(height: 16),
             // Name, rating and tier as one announcement: three facts that only
             // mean anything together, and the page title already says the name
@@ -197,7 +195,8 @@ class OpponentDetail extends StatelessWidget {
                   child: Text(l10n.playThisOpponent),
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

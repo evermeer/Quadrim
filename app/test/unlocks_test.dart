@@ -172,7 +172,7 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      expect(find.text('Your path'), findsOneWidget);
+      expect(find.byType(YourPath), findsOneWidget);
       // This was the D262 test, inverted. A player seeded at 800 now rests on
       // Clover — the lowest-rated opponent rated *strictly above* 800 — with
       // Mote one tile left and Bramble one right. D262 refused this because a

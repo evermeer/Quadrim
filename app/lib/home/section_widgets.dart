@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// The small shared pieces the main screen's sections are built from.
 ///
@@ -13,10 +14,13 @@ import '../l10n/app_localizations.dart';
 /// breakdown, which ticket 032 deleted when Your Path replaced it, so it went
 /// with it rather than staying as an unused public widget.
 
-/// A heading followed by one lazily-built tile per game.
+/// A heading followed by one lazily-built tile per game, on parchment.
 ///
 /// Slivers rather than a widget, because the finished-games list has no upper
-/// bound and every row of it must stay lazily built.
+/// bound and every row of it must stay lazily built. That is also why the
+/// parchment is a [DecoratedSliver] over a [SliverMainAxisGroup] rather than a
+/// `Card` around a column: a card would have to know its children's height, and
+/// knowing it means building all of them (ticket 038).
 List<Widget> gameSectionSlivers({
   required String heading,
   required List<GameDocument> games,
@@ -25,13 +29,32 @@ List<Widget> gameSectionSlivers({
     [
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-        sliver: SliverToBoxAdapter(child: SectionHeading(heading)),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        sliver: SliverList.builder(
-          itemCount: games.length,
-          itemBuilder: (_, i) => tile(games[i]),
+        sliver: DecoratedSliver(
+          decoration: BoxDecoration(
+            color: QuadrimPalette.parchment,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: QuadrimPalette.edge, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x660B160E), blurRadius: 10, offset: Offset(0, 3)),
+            ],
+          ),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                sliver: SliverToBoxAdapter(child: SectionHeading(heading)),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                sliver: SliverList.builder(
+                  itemCount: games.length,
+                  itemBuilder: (_, i) => tile(games[i]),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+            ],
+          ),
         ),
       ),
     ];
@@ -66,9 +89,9 @@ class RatingPill extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: ShapeDecoration(
-        color: theme.colorScheme.secondaryContainer,
-        shape: const StadiumBorder(),
+      decoration: const ShapeDecoration(
+        color: QuadrimPalette.moss,
+        shape: StadiumBorder(),
       ),
       child: Text(
         // Through l10n even though it is only digits: a rating is written 1200
@@ -76,7 +99,7 @@ class RatingPill extends StatelessWidget {
         // is a decision recorded next to the string rather than in the layout.
         AppLocalizations.of(context)!.ratingValue(rating),
         style: theme.textTheme.labelSmall
-            ?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+            ?.copyWith(color: QuadrimPalette.cream),
       ),
     );
   }

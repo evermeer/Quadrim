@@ -9,6 +9,7 @@ import 'package:quadrim/game/game_screen.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'plaques.dart';
 
 Future<LocalGameRepository> _repository() async {
   final repository = await LocalGameRepository.open(MemoryDocumentStore());
@@ -49,7 +50,7 @@ void main() {
             repository: repo, settings: repo, unlocks: repo, random: Random(1)));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New game'));
+    await tester.tap(plaqueLabelled('New game'));
     await tester.pumpAndSettle();
     expect(find.text('Play the computer'), findsOneWidget);
     expect(find.text('Pass and play'), findsOneWidget);

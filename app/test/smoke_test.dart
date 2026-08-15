@@ -5,6 +5,7 @@ import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim/main.dart';
+import 'plaques.dart';
 
 /// A repository whose first-launch tutorial offer has already been made.
 ///
@@ -25,7 +26,7 @@ void main() {
     await tester.pumpWidget(QuadrimApp(repository: repo, settings: repo, unlocks: repo));
     await tester.pumpAndSettle();
     expect(find.text('Quadrim'), findsOneWidget);
-    expect(find.text('New game'), findsOneWidget);
+    expect(plaqueLabelled('New game'), findsOneWidget);
   });
 
   testWidgets('Dutch locale renders Dutch strings, not the English fallback',
@@ -37,8 +38,8 @@ void main() {
         unlocks: repo,
         locale: const Locale('nl')));
     await tester.pumpAndSettle();
-    expect(find.text('Nieuwe partij'), findsOneWidget);
-    expect(find.text('New game'), findsNothing);
+    expect(plaqueLabelled('Nieuwe partij'), findsOneWidget);
+    expect(plaqueLabelled('New game'), findsNothing);
   });
 
   test('both locales are wired', () {

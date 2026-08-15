@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../data/documents.dart';
+import '../design/forest.dart';
 import '../game/board_view.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
@@ -96,7 +97,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _ => _thinking ? l10n.botThinking(opponentName) : l10n.yourTurn,
     };
 
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(
         title: Text(l10n.practiceTitle),
         leading: IconButton(
@@ -108,7 +109,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
+        child: ParchmentSheet(
+          child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -195,7 +197,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                     ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

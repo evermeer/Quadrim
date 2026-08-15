@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// How long a piece stays green after it is played, and how long the winning
 /// line pulses once a game is decided.
@@ -251,9 +252,18 @@ class _LayerView extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
+                  // Cream, because this caption is one of the very few things
+                  // in the app drawn straight onto the background photograph
+                  // rather than onto a card. `labelSmall` carries the ink
+                  // colour meant for parchment, and Layer 4's caption lands on
+                  // the lit path at the bottom of the picture, where ink is
+                  // invisible — seen on the running app, not deduced (D296).
                   child: Text(
                     l10n.layerLabel(z + 1),
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelSmall
+                        ?.copyWith(color: QuadrimPalette.cream),
                   ),
                 ),
               ),

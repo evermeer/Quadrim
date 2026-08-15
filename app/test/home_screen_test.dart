@@ -5,13 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
-import 'package:quadrim/game/opponent_avatar.dart';
+import 'package:quadrim/design/art.dart';
 import 'package:quadrim/home/game_row.dart';
 import 'package:quadrim/home/rating_card.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
+import 'plaques.dart';
 
 /// A repository whose first-launch tutorial offer has already been made, so
 /// the dialog does not open over the screen under test.
@@ -363,7 +364,7 @@ void main() {
     final repo = await _repository();
     await _pumpHome(tester, repo);
 
-    await tester.tap(find.text('New game'));
+    await tester.tap(plaqueLabelled('New game'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Pass and play'));
     await tester.pumpAndSettle();
@@ -381,7 +382,7 @@ void main() {
 
     // Both are real screens now — ticket 018 replaced one placeholder route
     // and ticket 028 the other, which is all the placeholder was ever for.
-    await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
+    await tester.tap(plaqueLabelled('Tutorial'));
     await tester.pumpAndSettle();
     expect(find.text('Step 1 of 12'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.close));
@@ -390,7 +391,7 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Language'), findsOneWidget);
-    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('About'), findsOneWidget);
   });
 
   testWidgets('pass-and-play games are listed but not counted', (tester) async {
@@ -426,7 +427,7 @@ void main() {
     await _pumpHome(tester, repo);
 
     expect(tester.takeException(), isNull);
-    expect(find.text('New game'), findsOneWidget);
+    expect(plaqueLabelled('New game'), findsOneWidget);
   });
 
   testWidgets('announces its sections and the rating to a screen reader',
@@ -447,10 +448,18 @@ void main() {
     );
     // Sections are headers, so a screen reader can jump between them rather
     // than reading the whole page top to bottom.
+    // By semantics label, not by text. Your Path's heading is a carved sign
+    // now, so the words exist only in the semantics tree — which is exactly
+    // where this test needs them, and exactly what would be lost if the banner
+    // were ever swapped in without one (D292).
     for (final heading in ['Your path', 'Finished games']) {
-      expect(tester.getSemantics(find.text(heading)).flagsCollection.isHeader,
+      expect(
+          tester
+              .getSemantics(find.bySemanticsLabel(heading))
+              .flagsCollection
+              .isHeader,
           isTrue,
-          reason: '"$heading" must be a header');
+          reason: '"\$heading" must be a header');
     }
     handle.dispose();
   });
@@ -468,10 +477,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nieuwe partij'), findsOneWidget);
-    expect(find.text('Uitleg'), findsOneWidget);
+    expect(plaqueLabelled('Nieuwe partij'), findsOneWidget);
+    expect(plaqueLabelled('Uitleg'), findsOneWidget);
     expect(find.text('Tegen de computer'), findsOneWidget);
-    expect(find.text('Jouw pad'), findsOneWidget);
+    // The carved sign carries no words, so the Dutch heading lives in the
+    // semantics tree. It still has to be there, and in Dutch.
+    expect(find.bySemanticsLabel('Jouw pad'), findsOneWidget);
     expect(find.text('Voltooide partijen'), findsOneWidget);
     expect(find.text('1 gewonnen · 0 verloren · 0 remise'), findsOneWidget);
     // Bot names are proper nouns and stay as they are, in either language.
@@ -567,11 +578,10 @@ void main() {
       await _completedGame(repo, botId: kestrel.id, rating: kestrel.rating);
       await _pumpHome(tester, repo);
 
-      final avatar = tester.widget<OpponentAvatar>(
-        _inGameRows(find.byType(OpponentAvatar)),
+      final avatar = tester.widget<OpponentArt>(
+        _inGameRows(find.byType(OpponentArt)),
       );
       expect(avatar.id, kestrel.id);
-      expect(avatar.tier, kestrel.tier);
     });
 
     testWidgets('the avatar is smaller here than on the selection screen',
@@ -586,13 +596,13 @@ void main() {
       // full width of their tile — the ladder is meant to read as a
       // progression of faces — so a bare finder would measure the wrong one.
       final avatar =
-          tester.widget<OpponentAvatar>(_inGameRows(find.byType(OpponentAvatar)));
+          tester.widget<OpponentArt>(_inGameRows(find.byType(OpponentArt)));
       expect(avatar.size, lessThan(44),
           reason: 'smaller than the selection screen default');
       final line = tester.getRect(
         find.descendant(of: _rowContaining('Won'), matching: find.text('Kestrel')),
       );
-      expect(tester.getRect(_inGameRows(find.byType(OpponentAvatar))).height,
+      expect(tester.getRect(_inGameRows(find.byType(OpponentArt))).height,
           lessThanOrEqualTo(line.height + 16),
           reason: 'the avatar must not drive the row height');
     });
@@ -610,7 +620,7 @@ void main() {
       await _pumpHome(tester, repo);
 
       expect(find.text('Pass and play'), findsOneWidget);
-      expect(_inGameRows(find.byType(OpponentAvatar)), findsNothing);
+      expect(_inGameRows(find.byType(OpponentArt)), findsNothing);
       expect(find.byIcon(Icons.people_outline), findsWidgets);
     });
 
@@ -657,7 +667,7 @@ void main() {
       // plausible invented name. Once, in the game row — an opponent this
       // build does not know is not on the roster and so is not on a tile.
       expect(find.text('bot:nonesuch'), findsOneWidget);
-      expect(_inGameRows(find.byType(OpponentAvatar)), findsNothing);
+      expect(_inGameRows(find.byType(OpponentArt)), findsNothing);
     });
   });
 

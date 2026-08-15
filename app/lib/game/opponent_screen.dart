@@ -5,7 +5,9 @@ import 'package:quadrim_rating/quadrim_rating.dart';
 
 import '../data/documents.dart';
 import '../l10n/app_localizations.dart';
-import 'opponent_avatar.dart';
+import '../design/art.dart';
+import '../design/forest.dart';
+import '../theme.dart';
 import 'opponent_name.dart';
 
 /// The twenty computer opponents, grouped by tier, weakest first.
@@ -94,7 +96,7 @@ class _OpponentScreenState extends State<OpponentScreen> {
       sections.putIfAbsent(bot.tier, () => <BotConfig>[]).add(bot);
     }
 
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(
         title: Text(l10n.chooseOpponent),
         bottom: PreferredSize(
@@ -110,16 +112,20 @@ class _OpponentScreenState extends State<OpponentScreen> {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 l10n.yourRating(widget.playerRating),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: QuadrimPalette.cream),
               ),
             ),
           ),
         ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 16),
-          children: [
+        child: ParchmentSheet(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 16),
+            children: [
             for (final entry in sections.entries) ...[
               _TierHeading(
                 tier: entry.key,
@@ -162,7 +168,8 @@ class _OpponentScreenState extends State<OpponentScreen> {
                     );
                   }),
             ],
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -287,7 +294,7 @@ class _OpponentTile extends StatelessWidget {
       child: ExcludeSemantics(
         child: ListTile(
           onTap: onTap,
-          leading: OpponentAvatar(id: bot.id, tier: bot.tier),
+          leading: OpponentArt(id: bot.id, locked: locked),
           title: Row(
             children: [
               Expanded(child: Text(botName(l10n, key))),

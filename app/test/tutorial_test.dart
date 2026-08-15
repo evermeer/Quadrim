@@ -8,6 +8,7 @@ import 'package:quadrim/l10n/app_localizations_en.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim/tutorial/tutorial_steps.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'plaques.dart';
 
 Future<LocalGameRepository> _repository({
   bool offered = false,
@@ -49,7 +50,7 @@ Future<void> _pumpApp(
 Future<void> _openFromHome(
     WidgetTester tester, LocalGameRepository repo) async {
   await _pumpApp(tester, repo);
-  await tester.tap(find.widgetWithText(TextButton, 'Tutorial'));
+  await tester.tap(plaqueLabelled('Tutorial'));
   await tester.pumpAndSettle();
 }
 
@@ -380,7 +381,7 @@ void main() {
 
       await tester.tap(find.text('Finish here'));
       await tester.pumpAndSettle();
-      expect(find.text('New game'), findsOneWidget, reason: 'back on home');
+      expect(plaqueLabelled('New game'), findsOneWidget, reason: 'back on home');
       // A player who only wanted the rules has finished what they came for,
       // so they are not asked again (ticket 019).
       expect((await repo.loadSettings()).tutorialCompleted, isTrue);
@@ -410,7 +411,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      expect(find.text('New game'), findsOneWidget, reason: 'back on home');
+      expect(plaqueLabelled('New game'), findsOneWidget, reason: 'back on home');
       expect((await repo.loadSettings()).tutorialCompleted, isFalse);
     });
 
@@ -507,7 +508,7 @@ void main() {
     _phone(tester);
     final repo = await _repository(offered: true);
     await _pumpApp(tester, repo, locale: const Locale('nl'));
-    await tester.tap(find.widgetWithText(TextButton, 'Uitleg'));
+    await tester.tap(plaqueLabelled('Uitleg'));
     await tester.pumpAndSettle();
 
     expect(find.text('Het doel'), findsOneWidget);

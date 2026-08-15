@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
 import '../data/game_repository.dart';
+import '../design/forest.dart';
 import '../game/board_view.dart';
 import '../l10n/app_localizations.dart';
 import 'practice_screen.dart';
@@ -83,7 +84,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
     final steps = tutorialSteps(l10n);
     final last = _index == steps.length - 1;
 
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(
         title: Text(l10n.tutorial),
         leading: IconButton(
@@ -93,7 +94,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
+        child: ParchmentSheet(
+          child: Column(
           children: [
             _Progress(
               index: _index,
@@ -161,7 +163,8 @@ class _TutorialScreenState extends State<TutorialScreen> {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -14,6 +14,8 @@ import 'package:quadrim/home/trend_graph.dart';
 import 'package:quadrim/l10n/app_localizations.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
+import 'plaques.dart';
+import 'package:quadrim/home/your_path.dart';
 
 /// The last of the 0.1 interface (ticket 035): the trend graph, the finished
 /// rows, the end-of-game panel and the portrait lock.
@@ -333,6 +335,12 @@ void main() {
       await tester.scrollUntilVisible(find.text('Show more'), 300,
           scrollable: find.byType(Scrollable).first);
       expect(find.text('Show more'), findsOneWidget);
+      // Scrolled *and* brought fully into view. `scrollUntilVisible` stops as
+      // soon as the sliver builds the widget, which happens inside the cache
+      // extent — below the fold — and the tap then lands on whatever is drawn
+      // at those coordinates, which is now a carved plaque.
+      await tester.ensureVisible(find.text('Show more'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Show more'));
       await tester.pumpAndSettle();
 
@@ -473,18 +481,20 @@ void main() {
       // Five scrolling sections, reached by scrolling — the sixth, the primary
       // button, is pinned below the scroll view and must be reachable without
       // it.
-      for (final heading in [
-        'Against the computer',
-        'Your path',
-        'In progress',
-        'Quests',
-        'Finished games',
+      // Your Path is found by type rather than by its heading: its heading is
+      // a carved sign and the words are in the semantics tree, not in a Text.
+      for (final section in <({String name, Finder finder})>[
+        (name: 'Against the computer', finder: find.text('Against the computer')),
+        (name: 'Your path', finder: find.byType(YourPath)),
+        (name: 'In progress', finder: find.text('In progress')),
+        (name: 'Quests', finder: find.text('Quests')),
+        (name: 'Finished games', finder: find.text('Finished games')),
       ]) {
-        await tester.scrollUntilVisible(find.text(heading), 200,
+        await tester.scrollUntilVisible(section.finder, 200,
             scrollable: find.byType(Scrollable).first);
-        expect(find.text(heading), findsOneWidget, reason: heading);
+        expect(section.finder, findsOneWidget, reason: section.name);
       }
-      expect(find.text('New game'), findsOneWidget);
+      expect(plaqueLabelled('New game'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

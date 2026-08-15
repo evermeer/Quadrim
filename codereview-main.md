@@ -4091,3 +4091,230 @@ present and that its sign was right, never its value. The three tests added
 here compute the expected figure independently from the series and the seed,
 and one asserts that the correct answer and the old incorrect one are different
 numbers — so the case cannot pass by accident if the baseline is dropped again.
+
+---
+
+# Ticket 038 — The forest design
+
+> Reviewed against `cca56a1` on `main`. Working tree, 52 files.
+> Scope: the design work only. Generated binaries under `app/assets/` were not
+> read byte by byte; `art_assets_test.dart` is what checks them.
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 2 |
+| minor | 2 |
+| nit | 1 |
+
+---
+
+## [MAJOR] Text drawn straight onto the background photograph has no guaranteed contrast — `accessibility`
+
+**Files:** `app/lib/design/forest.dart:30`, `app/lib/game/game_screen.dart:479`,
+`app/lib/theme.dart:158`, `app/lib/home/home_screen.dart:445`,
+`app/lib/game/opponent_screen.dart:115`
+
+**Evidence.** `ForestScaffold` paints the picture and nothing over it:
+
+```dart
+return DecoratedBox(
+  decoration: const BoxDecoration(
+    color: QuadrimPalette.canopy,
+    image: DecorationImage(image: AssetImage(Art.background), fit: BoxFit.cover, …),
+```
+
+Measured against the shipped `background.webp` (WCAG relative luminance):
+
+| Text | Where | vs background median | vs its brightest fifth |
+|---|---|---|---|
+| `cream` #F4EFDC | app-bar title, every screen | 3.45 | **1.01** |
+| `cream` #F4EFDC | "Show more" | 3.75 | **1.43** |
+| `ink` #2A2314 | game-screen turn banner and first-move caption | **2.90** | 11.2 |
+| `goldDeep` #6B4E12 | the `Resign` TextButton in the app bar | **2.06** | 7.1 |
+
+The picture is a forest: it has a near-white clearing at the top — exactly
+where the app bar sits — and dark trunks lower down. No single ink colour works
+over both, so *every* piece of text on it is illegible somewhere. Every other
+surface in the design is fine: ink on parchment is 11.44, cream on the panel
+11.94, the rating pill 7.47, the trend colours 8.33 and 5.18, the bark button
+5.08, and the worst pairing on any card is disabled `inkSoft` on
+`parchmentDeep` at 4.79 — all above AA.
+
+The game screen is the worst case and the one that matters most: its turn
+banner ("Your turn", "Kestrel is thinking") is a `liveRegion` that a player
+reads on every move, and it is ink over trees at 2.90.
+
+**Fix.** Two changes, both in one place each:
+
+1. A scrim in `ForestScaffold`, between the picture and the scaffold, so cream
+   on the forest is always legible and nothing has to know where the bright
+   part of the photograph is.
+2. The game screen's status strip onto parchment, like the result panel below
+   it already is; and the app bar's `Resign` button to cream, since
+   `textButtonTheme`'s bronze is chosen for parchment and this is the one
+   `TextButton` that is not on any.
+
+---
+
+## [MAJOR] `Plaque` still permits the zero-height bug it was written to prevent — `bug`
+
+**File:** `app/lib/design/art.dart:124`
+
+**Evidence:**
+
+```dart
+  final VoidCallback? onPressed;
+  final double? height;
+  final double? width;
+…
+            child: SizedBox(
+              height: height,
+              width: width,
+              child: Image.asset(asset, fit: BoxFit.contain, …),
+```
+
+Both dimensions are optional, and `SizedBox(height: null, width: null)` sizes
+to its child — an `Image` that reports zero until it has decoded. A caller who
+omits `height` gets a 316×0 button that cannot be tapped, which is the exact
+defect this widget's own comment says it exists to prevent, and which cost this
+ticket a debugging session.
+
+Today's two call sites both pass `height`, so nothing is broken. The API is
+what is wrong: it invites the bug back and the comment above it is the only
+guard.
+
+**Fix.** `required this.height` — one word, and the class stops being able to
+express the broken state.
+
+---
+
+## [MINOR] Three l10n keys are now rendered nowhere — `dead code`
+
+**File:** `app/lib/l10n/app_en.arb:487`
+
+**Evidence:**
+
+```json
+  "settingsTheme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+```
+
+`grep -rn 'settingsTheme\|themeLight\|themeDark' app/lib --include='*.dart'`
+returns only generated files under `lib/l10n/`. D293 removed the picker that was
+their only caller. They are carried in both `.arb` files and both generated
+locale classes, and `check.sh`'s completeness check will keep demanding a Dutch
+translation for strings nothing can display.
+
+Precedent: the ticket-034 review deleted `firstRunReaching` for exactly this,
+rather than leaving an unused export in place.
+
+**Fix.** Delete the three keys and `@themeLight` from `app_en.arb` and
+`app_nl.arb`, then `flutter gen-l10n`. `SettingsDocument.theme` stays — D293
+keeps the stored field on purpose, and that is a different thing from a string
+nobody renders.
+
+---
+
+## [MINOR] D294 overstates what the lazy sliver did — `documentation`
+
+**File:** `doc/idea-v3-decisions.md:772`
+
+**Evidence:**
+
+> a rating panel taller than the viewport meant Your Path, the quests and the
+> game lists were **never built at all**, so the failure did not look like an
+> overflow — it looked like four sections vanishing.
+
+That is what the *test* saw, and it is not what a player sees. `SliverList.list`
+not building children below the fold is correct lazy behaviour; scrolling builds
+them, and criterion U21 ("reaches its last row … with all six sections present")
+was satisfiable the whole time by scrolling. What was actually wrong was a
+rating panel taller than the whole screen at 200%.
+
+The decision and the fix are both right. The sentence describing the symptom is
+not, and this log is the project's memory — a future reader would go looking for
+a sliver bug that never existed.
+
+**Fix.** Reword the symptom to what it was: a panel that filled the viewport on
+its own, found by a test that could not see past it.
+
+---
+
+## [NIT] Two unused imports in the art pipeline — `dead code`
+
+**File:** `tools/artgen/artgen.py:34`
+
+**Evidence:**
+
+```python
+import shutil
+import subprocess
+```
+
+Neither name appears again in the file; an earlier draft shelled out to `cwebp`
+before Pillow turned out to encode WebP directly.
+
+**Fix.** Delete both lines.
+
+---
+
+## Functional validation
+
+No Jira issue key in the branch name or in `git log cca56a1..HEAD` — this
+repository tracks work in `doc/tickets/`, so the acceptance criteria of
+`doc/tickets/038-the-forest-design.md` are used instead.
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | `bash tool/check.sh` passes | ✅ | `ALL CHECKS PASSED`, 322 app tests |
+| 2 | Every screen on the forest; no undesigned surface | ⚠️ | All seven `Scaffold`s are `ForestScaffold` (`grep -c 'return ForestScaffold' lib` = 8), but see the contrast finding — "on the forest" is achieved and legibility is not |
+| 3 | Twenty portraits, locked ones as silhouettes | ✅ | `art_assets_test.dart:22`; `art.dart:32` `_silhouette` |
+| 4 | Art + fonts under 3 MB | ✅ | `art_assets_test.dart:76`; measured 2.22 MB |
+| 5 | Plaques are buttons with a localised accessible name | ✅ | `art.dart:140`; `test/plaques.dart`; `settings_test.dart` taps `plaqueLabelled('Nieuwe partij')` |
+| 6 | Your Path's sign is still a semantic heading in both languages | ✅ | `forest.dart:177`; `home_screen_test.dart` asserts `isHeader` on `find.bySemanticsLabel('Your path')` and `findsOneWidget` on `'Jouw pad'` |
+| 7 | Main screen survives 200% on the smallest phone | ✅ | `main_screen_test.dart:484`; `rating_card.dart:105` stands the cube down |
+| 8 | No string leaves l10n; both locales complete | ✅ | `check.sh` string grep and `untranslated.json` both clean — though see the orphaned-keys finding for the reverse problem |
+| 9 | Adaptive launcher icon with a monochrome layer | ✅ | `mipmap-anydpi-v26/ic_launcher.xml`, five densities, `values/ic_launcher_background.xml` |
+
+### Gaps
+
+Criterion 2 is the only one not fully met, and the contrast finding above is
+what closes it.
+
+---
+
+## Ticket 038 follow-up — three more contrast bugs, found on the device
+
+The review above measured the palette against the surfaces it *intended*, and
+all five findings were real. It still missed three, because it checked which
+colours were chosen and not which ones actually arrived. Screenshots of the
+running app found them in minutes.
+
+**All three are the same mistake**: a `Text` that passes
+`theme.textTheme.something` gets the ink colour meant for parchment, and no
+ancestor can override it. `DefaultTextStyle` is consulted only for text that has
+no style at all, and a `Theme` override does not help either — the caller
+resolved `Theme.of(context)` *above* the widget that would do the overriding, so
+the colour is baked into the `TextStyle` before the override exists. Both were
+tried; neither worked; the fix is at the call site.
+
+| What | Where | Was | Measured |
+|---|---|---|---|
+| `1 won · 2 lost · 0 drawn` | `rating_card.dart` inside `DarkPanel` | ink on dark green | 1.04 |
+| `1 day in a row` | `rating_card.dart` inside `DarkPanel` | ink on dark green | 1.04 |
+| `Layer 1`…`Layer 4` | `board_view.dart`, drawn straight on the forest | ink on the photograph | 2.90 at the top, worse on the lit path where Layer 4 lands |
+
+The layer captions are the worst of the three: Layer 4's sits over the bright
+path at the bottom of the picture, and on a screenshot it is not there at all.
+
+**Fixed** by naming `QuadrimPalette.cream` at each of the three call sites, and
+`DarkPanel`'s doc comment now says plainly that it cannot rescue a caller who
+passes an explicit style — which is every caller it has.
+
+**What this says about the review.** A static pass over a design change can
+confirm the palette and cannot confirm the rendering; `flutter analyze` and 322
+green tests said nothing about any of these, because a widget test asserts that
+text exists, not that it can be seen. Screenshots of the running app are part of
+reviewing a design ticket, not a nicety after it.

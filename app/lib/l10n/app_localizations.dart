@@ -1100,29 +1100,11 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get settingsLanguage;
 
-  /// No description provided for @settingsTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Theme'**
-  String get settingsTheme;
-
   /// No description provided for @settingsFollowDevice.
   ///
   /// In en, this message translates to:
   /// **'Follow the device'**
   String get settingsFollowDevice;
-
-  /// The light colour scheme. Deliberately a separate key from sideLight, which names the light pieces — they are the same word in English and need not stay so.
-  ///
-  /// In en, this message translates to:
-  /// **'Light'**
-  String get themeLight;
-
-  /// No description provided for @themeDark.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark'**
-  String get themeDark;
 
   /// A language names itself in its own language, so this is identical in every locale file and is not a translation error.
   ///

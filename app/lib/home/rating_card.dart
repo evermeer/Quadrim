@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../data/home_summary.dart';
+import '../design/art.dart';
+import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'game_row.dart' show signedDelta;
 import 'trend_graph.dart';
 
@@ -52,10 +55,8 @@ class RatingCard extends StatelessWidget {
     final trend = TrendGraph.worthDrawing(series)
         ? l10n.trendSemantics(signedDelta(TrendGraph.changeIn(series)))
         : null;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Semantics(
+    return DarkPanel(
+      child: Semantics(
           container: true,
           // One node, said once. The card shows four facts and a screen reader
           // meets them as a single announcement rather than as four stops —
@@ -70,18 +71,53 @@ class RatingCard extends StatelessWidget {
               // beside it, so neither is told something the other is not.
               '${trend == null ? '' : '$trend '}'
               '${l10n.computerRatingNote}',
-          child: ExcludeSemantics(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.computerRatingHeading,
-                    style: theme.textTheme.labelLarge),
-                Text(l10n.ratingValue(summary.computerRating),
-                    style: theme.textTheme.displaySmall),
-                Text(record, style: theme.textTheme.bodyMedium),
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                // The heading, the number and the record on the left; the cube
+                // on the right, as in the mockup. The cube's edges are faded by
+                // `artgen` so it sits in the panel without a seam — it is the
+                // only picture in the app that has no border of its own.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.computerRatingHeading,
+                              style: theme.textTheme.labelLarge
+                                  ?.copyWith(color: QuadrimPalette.creamSoft)),
+                          Text(l10n.ratingValue(summary.computerRating),
+                              style: theme.textTheme.displaySmall
+                                  ?.copyWith(color: QuadrimPalette.cream)),
+                          // Explicitly cream. `bodyMedium` carries the ink
+                          // colour meant for parchment, and this panel is not
+                          // parchment (D296).
+                          Text(record,
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(color: QuadrimPalette.cream)),
+                        ],
+                      ),
+                    ),
+                    // Decoration yields to text. The cube costs 96dp of width
+                    // at every font scale, and at the 200% the Android slider
+                    // reaches that is what pushes "Against the computer" onto
+                    // three lines and the card past the height of the screen —
+                    // taking Your Path off a lazily built sliver list with it.
+                    if (MediaQuery.textScalerOf(context).scale(16) <= 22)
+                      Image.asset(Art.cube,
+                          width: 96,
+                          height: 96,
+                          filterQuality: FilterQuality.medium),
+                  ],
+                ),
                 if (TrendGraph.worthDrawing(series)) ...[
                   const SizedBox(height: 8),
-                  Text(l10n.trendHeading, style: theme.textTheme.labelLarge),
+                  Text(l10n.trendHeading,
+                      style: theme.textTheme.labelLarge
+                          ?.copyWith(color: QuadrimPalette.creamSoft)),
                   const SizedBox(height: 4),
                   TrendGraph(series: series),
                 ],
@@ -99,11 +135,15 @@ class RatingCard extends StatelessWidget {
                     // reads to the build gate's grep exactly like a hardcoded
                     // one — correctly, since it cannot tell the two apart.
                     Text(l10n.pointsHeading,
-                        style: theme.textTheme.labelLarge),
+                        style: theme.textTheme.labelLarge
+                            ?.copyWith(color: QuadrimPalette.creamSoft)),
                     const SizedBox(width: 8),
+                    // Gold, not `colorScheme.primary`: primary is the deep
+                    // bronze that reads on parchment, and on this panel it is
+                    // very nearly the background.
                     Text(points,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.primary,
+                          color: QuadrimPalette.gold,
                           fontWeight: FontWeight.w600,
                         )),
                   ],
@@ -114,20 +154,23 @@ class RatingCard extends StatelessWidget {
                 // three headings would be a list.
                 Row(
                   children: [
-                    Icon(Icons.local_fire_department_outlined,
-                        size: 18, color: theme.colorScheme.primary),
+                    const Icon(Icons.local_fire_department_outlined,
+                        size: 18, color: QuadrimPalette.gold),
                     const SizedBox(width: 8),
                     Expanded(
-                        child: Text(days, style: theme.textTheme.bodyMedium)),
+                        child: Text(days,
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: QuadrimPalette.cream))),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(l10n.computerRatingNote, style: theme.textTheme.bodySmall),
+                Text(l10n.computerRatingNote,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: QuadrimPalette.creamSoft)),
               ],
             ),
           ),
         ),
-      ),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
-import '../game/opponent_avatar.dart';
+import '../design/art.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
 import 'section_widgets.dart';
@@ -34,7 +34,7 @@ class OpponentAvatarSlot extends StatelessWidget {
               size: size * 0.8,
               color: Theme.of(context).colorScheme.outline,
             )
-          : OpponentAvatar(id: bot.id, tier: bot.tier, size: size),
+          : OpponentArt(id: bot.id, size: size),
     );
   }
 }

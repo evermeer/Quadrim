@@ -10,9 +10,11 @@ import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart';
+import '../design/forest.dart';
 import '../home/quests_section.dart';
 import '../home/unlock_confirmation.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'board_view.dart';
 import 'opponent_name.dart';
 
@@ -371,7 +373,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final game = _game;
-    return Scaffold(
+    return ForestScaffold(
       appBar: AppBar(
         title: Text(game != null && game.mode == GameMode.vsComputer
             ? botName(l10n, game.opponent)
@@ -389,8 +391,13 @@ class _GameScreenState extends State<GameScreen> {
           if (game != null &&
               game.status == GameStatus.active &&
               _review == null)
+            // Cream, not the theme's bronze. Every other `TextButton` in the
+            // app sits on parchment; this one sits on the forest, where bronze
+            // measured 2.06:1 against the picture's midtones (D296).
             TextButton(
               onPressed: () => _resign(game),
+              style: TextButton.styleFrom(
+                  foregroundColor: QuadrimPalette.cream),
               child: Text(l10n.resign),
             ),
         ],
@@ -475,13 +482,32 @@ class _GameBody extends StatelessWidget {
 
     return Column(
       children: [
+        // On parchment, like the result panel below the board already is: the
+        // turn banner is a live region a player reads on every move, and ink
+        // over the background photograph measured 2.90:1 (D296).
+        //
+        // **A `DecoratedBox` around the existing padding, not a `Card`.** A
+        // card was tried and cost the board 20dp — its own margin plus its own
+        // padding on top of the padding already here — which put the cells
+        // under the audited floor on both 780dp screens. This spends the
+        // padding that was already being spent: the vertical numbers below are
+        // unchanged from what they were, and only the horizontal ones move
+        // (D204, D296).
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          // The scrubber *replaces* the banner rather than joining it. At the
-          // shortest supported screen the board has about 6dp of vertical
-          // slack before its cells fall under the audited floor, so a row that
-          // added height was never available (D204).
-          child: reviewing
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: QuadrimPalette.parchment,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: QuadrimPalette.edge, width: 1.5),
+            ),
+            child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+            // The scrubber *replaces* the banner rather than joining it. At the
+            // shortest supported screen the board has about 6dp of vertical
+            // slack before its cells fall under the audited floor, so a row
+            // that added height was never available (D204).
+            child: reviewing
               ? _ReviewBar(
                   game: game,
                   index: review!,
@@ -503,6 +529,8 @@ class _GameBody extends StatelessWidget {
                     ),
                   ],
                 ),
+            ),
+          ),
         ),
         Expanded(
           // Right-aligned column of four layers (D137). No scroll view:

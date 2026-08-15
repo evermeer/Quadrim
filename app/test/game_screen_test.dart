@@ -9,6 +9,7 @@ import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/game/board_view.dart';
 import 'package:quadrim/main.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
+import 'plaques.dart';
 
 /// Pumps the app over a throwaway store and opens the game screen.
 ///
@@ -27,7 +28,7 @@ Future<LocalGameRepository> _pumpGame(WidgetTester tester) async {
           repository: repository, settings: repository, unlocks: repository));
   // The main screen's one primary button opens a chooser; ticket 011 replaces
   // the chooser with the opponent list, and this route stays the same.
-  await tester.tap(find.text('New game'));
+  await tester.tap(plaqueLabelled('New game'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Pass and play'));
   await tester.pumpAndSettle();

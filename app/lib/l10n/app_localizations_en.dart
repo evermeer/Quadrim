@@ -613,16 +613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguage => 'Language';
 
   @override
-  String get settingsTheme => 'Theme';
-
-  @override
   String get settingsFollowDevice => 'Follow the device';
-
-  @override
-  String get themeLight => 'Light';
-
-  @override
-  String get themeDark => 'Dark';
 
   @override
   String get languageEnglish => 'English';
