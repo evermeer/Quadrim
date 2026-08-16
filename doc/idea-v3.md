@@ -2,10 +2,13 @@
 
 What Quadrim is and what it must do, written so that someone rebuilding it from nothing has no functional question left to ask.
 
-This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D270). D258 onward were taken by reading this document back against the twenty-two tickets already built, and the reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
+This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D306). D258 onward were taken by reading this document back against the tickets already built, and the reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
 
-Status: 0.1 built and playable up to the progression system, which is specified here and not yet built. 0.2 onward specified, not built.
-Date: 2026-08-14
+Status: 0.1 and 0.2 built — the complete offline game with its final art. 1.0 onward specified, not built.
+
+**The release plan was re-cut on 2026-08-16** and §12 is the current one. The Google Play Console account this project's schedule was built around cannot currently be reactivated, so the plan no longer has a single queue that one account can stop: 1.0 is an iOS release of the game that already exists, plus the things it can be sold with, and it ships to each store as that store becomes able to accept it (D302). Earlier sections that named 0.3a, 0.3b or 0.4 have been re-pointed at 1.0, 2.0 and 3.0; the reasoning for each is in D302–D306 rather than edited out here.
+
+Date: 2026-08-16
 
 ---
 
@@ -20,6 +23,8 @@ Four things are true of this document.
 **The mistakes are included.** v1 described a 2×2 grid of board layers, a solver sub-project, and a Casual tier ordered by blunder rate. All three were wrong and finding out cost real time. They appear below as corrections rather than being quietly replaced, so nobody spends that time again.
 
 **Two promises from v2 are withdrawn here, on purpose.** v2 said everything release 0.1 shipped would be free forever, and it planned a large-screen layout. This edition meters offline play and ships portrait phone only. Both reversals are recorded rather than edited out, because a rebuilder should see that the free-forever sentence was written before there was a business model and could not survive one.
+
+**And one future withdrawal is announced rather than sprung.** Online play arrives free at 2.0 and becomes part of a subscription at 3.0, because what makes it worth paying for — a rating that cannot be forged — does not exist until 3.0. Having already had to withdraw *free forever*, this edition will not repeat the shape of that mistake: the 2.0 copy says the price is coming, in the app and in the listing, from its first day (D304).
 
 ---
 
@@ -158,6 +163,16 @@ Three tiers and one permanent unlock, all through the App Store and Google Play.
 
 **Tiers 2 and 3 must be two plans of one product**, in a single iOS subscription group and a single Play subscription with two base plans. That is the only mechanism by which "subscribing to tier 3 cancels tier 2" actually happens — the store performs a plan change and prorates the remainder. An app that tries to sell tier 3 as a separate product while cancelling tier 2 itself produces double-billed users and a refund queue, and neither store offers an API that would let it do so correctly.
 
+**This table is the finished shape; it arrives in three steps** (§12).
+
+| | Arrives | Note |
+|---|---|---|
+| The one-time unlock, tier 2, and the meter that gives tier 2 its purpose | **1.0** | Entitlement is read from the store on the device, because there is no server yet (D303) |
+| Everything in the "Free" column that needs a human opponent | **2.0** | Online play is free at 2.0 and **says so is temporary** — it becomes tier 3 at 3.0, announced from its first day (D304) |
+| Tier 3, and the human rating that makes it worth buying | **3.0** | The second base plan is added to the subscription created at 1.0, so the upgrade path is store-native from the start |
+
+The subscription **product** is therefore created at 1.0 with one base plan, not at 3.0 with two. A subscription group cannot be retro-fitted around a product that already has subscribers, and getting that wrong is the double-billing failure the paragraph above describes.
+
 **Accepting a game is still free at every tier.** Invite links are the only way a new person ever reaches this app. Charging the *recipient* makes a friend's invitation arrive as a sales pitch and throttles the one growth loop the product has, at its highest-intent moment. Auto-match and the open challenge board — the surfaces a throwaway account would farm — stay paid, so the anti-abuse benefit is kept.
 
 **When a subscription lapses:**
@@ -168,7 +183,9 @@ Three tiers and one permanent unlock, all through the App Store and Google Play.
 - A lapsed tier 2 or 3 subscriber returns to the free cap. Their **free month does not restart** — it is consumed once, at first launch, and never again.
 - Opponents unlocked with points, or with the one-time purchase, **stay unlocked forever**. Nothing a player earned or bought outright is ever taken back by a billing event.
 
-Entitlement is checked when a game is **created and when one is joined** — never on a move, so the lapse behaviour above works. It is a server-written field no client can touch, set only after receipt validation, revoked on refund, chargeback or voided purchase.
+Entitlement is checked when a game is **created and when one is joined** — never on a move, so the lapse behaviour above works. From 2.0 it is a server-written field no client can touch, set only after receipt validation, revoked on refund, chargeback or voided purchase.
+
+**At 1.0 it cannot be that, and this is the one place the design is knowingly weaker than it should be.** There is no server until 2.0, so entitlement at 1.0 is the store's own signed transaction read on the device — StoreKit 2's `Transaction.currentEntitlements`, or the Play Billing purchase record. Both are signed by the store and both survive a reinstall, because the store re-issues them to the same store *account*; what they do not give is immediate revocation on refund, which lands on the store's next refresh. The migration at 2.0 is one-way and needs no player action: the server validates the same receipt and writes the field, and the local read is deleted rather than kept as a fallback (D303).
 
 ### 4.2 The meter
 
@@ -183,9 +200,15 @@ What survives of it is narrower and true: **no feature is held back, and there a
 
 **The paywall message must name the limit that actually bit.** "You have used this week's nine games" and "come back tomorrow" are different sentences and only one of them is true on a Thursday. Saying the wrong one teaches the player that the app does not know its own rules.
 
-**The meter arrives at 0.4**, with the store products (§12). Before then there is nothing to sell and therefore nothing to meter, and the closed test runs unmetered — which is correct, because a tester on a fourteen-day clock who is rate-limited to three games a day cannot give useful feedback about twenty opponents.
+**The meter arrives at 1.0**, with the store products (§12). Before then there is nothing to sell and therefore nothing to meter. 0.1 and 0.2 were built and tested unmetered, which was correct — a tester rate-limited to three games a day cannot give useful feedback about twenty opponents.
 
-**Where the month is remembered.** Against the account, which exists from 0.3a. A device-local month is reset by a reinstall and defeated by changing the system clock, and there is no reason to build the weaker version when the stronger one is already available by the release that needs it. Accounts that predate 0.4 start their month **at the 0.4 update**, not retroactively at whenever they first launched — otherwise every existing tester is metered the moment they update, having never had the month at all.
+**The re-cut moved this forward by three releases and that is worth stating rather than absorbing.** Under the old plan the meter arrived at 0.4, well after real players had used the app unmetered and after a fourteen-day closed test had measured whether the ladder brings people back. It now arrives in the first release the public ever sees. So 1.0 launches with no prior public build to compare against, and if retention disappoints there is nothing in the data that separates the ladder from the cap (D302). The tester cohort that precedes 1.0 is the only chance to see the ladder without the meter on top of it — which is an argument for keeping ticket 024's survey, not for dropping it along with the Play requirement that used to force it.
+
+**Where the month is remembered.** From 2.0, against the account. At 1.0 there is no account, so it is a local record under `files/quadrim/` beside games, settings and unlocks, and inside the same backup allowlist.
+
+**The local version is the weaker one and the weakness is not fixable at 1.0.** A device-local month is cleared by a reinstall and can be defeated by changing the system clock. Closing that needs either a device identifier — forbidden in every release, §11.6 — or a server, which is what 2.0 is. So the 1.0 meter is a speed bump against forgetting, not a wall against determination, and **the paywall copy must not imply otherwise** (D303). At 2.0 the local record is *adopted* by the account rather than replaced: a player who has already consumed their free month does not receive a second one for signing in.
+
+Players who predate the meter start their month **at the update that brings it**, not retroactively at whenever they first launched — otherwise every existing tester is metered the moment they update, having never had the month at all.
 
 ---
 
@@ -200,7 +223,7 @@ A player has **two independent ratings**. Neither influences the other.
 | Computed | On the device | On the server |
 | Stored | Derived, never stored | In the cloud, with the account |
 | Visible to | Only that device's owner | The player and their opponents |
-| Arrives in | 0.1 | 0.4 |
+| Arrives in | 0.1 | 3.0 |
 
 Both use the same maths:
 
@@ -224,7 +247,9 @@ Computer opponents have **fixed** ratings that never change. They are anchors: t
 
 **Why the split.** The two ratings measure different things under different trust models. A rating earned against a deterministic opponent on your own hardware cannot be verified by anyone and does not need to be — editing it cheats only yourself. A rating earned against another person must be trustworthy. Conflating them forces the worse property of each onto the other.
 
-**The human rating ships at 0.4, together with server-side move validation**, because they are the same feature. Without validation, a modified client can author a legal, replayable game naming any opponent and move that opponent's rating without them ever opening the app. Replay proves legality, never authorship. Release 0.3b therefore ships online play with a win/loss/draw record and no rating — and nobody has a rating to lose, because nobody has one yet.
+**The human rating ships at 3.0, together with server-side move validation**, because they are the same feature. Without validation, a modified client can author a legal, replayable game naming any opponent and move that opponent's rating without them ever opening the app. Replay proves legality, never authorship. Release 2.0 therefore ships online play with a win/loss/draw record and no rating — and nobody has a rating to lose, because nobody has one yet.
+
+This is also why online play is free at 2.0 and sold at 3.0 (§4.1): what 2.0 offers is games with a record, and the thing worth subscribing for is a rating that cannot be forged. Selling it a release early would charge the higher price for the weaker product.
 
 Because a rating is worth losing, it requires a **linked account** (§9).
 
@@ -541,11 +566,11 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 
 Four wins is one unlock, so a 30-day streak of real games, or a 100-game day against opponents near the player's own level, is worth roughly one free opponent. The same streak kept alive with one Pebble game a day is worth four points, and that is the intended answer rather than a shortcoming: showing up is what the streak measures, but *what you showed up to* is what the points measure. A per-opponent quest pays 2ⁱ — one win against the opponent it names — so the forty of them are worth about two extra wins against each opponent the player actually works through.
 
-**From 0.4, the volume ladder is subscriber-only by arithmetic, not by a rule.** Five games in a day exceeds the free cap of three, so no free player can complete even the first rung. This is deliberate and must be *stated* rather than left to be discovered: the quest tiles show the requirement, and a free player sees why it is out of reach and what would change it. A permanently unreachable goal presented without explanation reads as a bug.
+**From 1.0, the volume ladder is subscriber-only by arithmetic, not by a rule.** Five games in a day exceeds the free cap of three, so no free player can complete even the first rung. This is deliberate and must be *stated* rather than left to be discovered: the quest tiles show the requirement, and a free player sees why it is out of reach and what would change it. A permanently unreachable goal presented without explanation reads as a bug.
 
-**That copy ships with the meter, not before it.** The cap arrives at 0.4 (§4.2) and progression arrives at 0.1, so for the whole of the closed test every tester can complete the entire volume family and an explanation of why they cannot would be false. In 0.1 these are ordinary quests with no restriction copy; the explanation arrives in the release that makes it true.
+**That copy ships with the meter, not before it.** The cap arrives at 1.0 (§4.2) and progression arrived at 0.1, so through 0.1 and 0.2 every player can complete the entire volume family and an explanation of why they cannot would be false. In those releases these are ordinary quests with no restriction copy; the explanation arrives in the release that makes it true.
 
-**There is no remaining farm vector, and no rule is doing the work.** The daily-volume family was the last one, because it counts games rather than weighing them — but pricing it by the average opponent means a hundred games against Pebble pay a hundred games' worth of Pebble, which is four points. The paywall is no longer what contains it, which matters because the paywall does not exist until 0.4 and progression ships at 0.1; a containment rule that arrives three releases after the thing it contains is not a containment rule. This is the same property §7.3 has and for the same reason: the exponent does the work, so no anti-farming rule has to.
+**There is no remaining farm vector, and no rule is doing the work.** The daily-volume family was the last one, because it counts games rather than weighing them — but pricing it by the average opponent means a hundred games against Pebble pay a hundred games' worth of Pebble, which is four points. The paywall is no longer what contains it, which matters because the paywall does not exist until 1.0 and progression shipped at 0.1; a containment rule that arrives two releases after the thing it contains is not a containment rule. This is the same property §7.3 has and for the same reason: the exponent does the work, so no anti-farming rule has to.
 
 ### 7.5 Streaks
 
@@ -854,7 +879,9 @@ Your turn, new message, game ended, challenge received, streak about to lapse �
 
 ### 11.1 Stack
 
-Flutter for the client. **Android first; iOS from 0.3b** (§12). Firebase for the backend from 0.3a: Authentication, Firestore, Cloud Functions, Cloud Messaging.
+Flutter for the client. **Android first; iOS from 1.0** (§12). Firebase for the backend from 2.0: Authentication, Firestore, Cloud Functions, Cloud Messaging.
+
+**iOS does not inherit Android's enforcement.** Three of this document's guarantees are enforced by Android mechanisms with no iOS counterpart — chiefly "computer play makes no network call", which on Android is guaranteed by the *absence* of the INTERNET permission and on iOS cannot be guaranteed by anything, because an iOS app may open a socket without declaring it. On iOS the constraint drops from enforced to reviewed. Backup is the same story in reverse: Android needs an explicit allowlist, iOS backs up `Documents` by default, and each needs its own work to hold D11. The full accounting is in D306.
 
 **Structure the code as a Flutter app over pure-Dart packages**: the rules, search and opponents in one, the rating maths in another, both with **no dependency on Flutter, on any I/O library, on an ambient clock or on an ambient random source, and no runtime dependencies at all**.
 
@@ -874,9 +901,11 @@ One script that analyses and tests every package and additionally checks what th
 - the vendored dictionary's SHA-256 is unchanged
 - generated sources are not stale
 - every string exists in **both** languages — a missing translation fails the build
-- **the release manifest declares no networking permission**
+- **the release manifest declares no networking permission** — the **Android** manifest; see below
 
 That last one deserves comment. "Computer play makes no network call" is a negative, and grepping the source for an HTTP client only checks the spellings you thought of, while a transitive dependency could reach the network without any of them appearing. The **permission** is categorical: without it the platform refuses the call whatever the code asks for. When the online releases genuinely need networking, narrow the check to computer play rather than deleting it.
+
+**Two things at 1.0 press on this check** (D306). Play Billing may or may not inject `INTERNET` through manifest merge — that is a fact to establish empirically, and if it does, the narrowing arrives a release earlier than planned. And iOS has no manifest and no permission, so this gate covers one of the two platforms. It still covers the *code* both platforms share, which is most of what matters; what it stops covering is the platform's own refusal to carry out the call.
 
 Nothing is committed without this passing. Give every long run a hard timeout — a hung suite is indistinguishable from a slow one.
 
@@ -888,7 +917,7 @@ Make the repository **stream-based rather than future-based**, so the cloud impl
 
 **Game completion is decided in the repository**, once, not by each caller. Points are awarded there too, for the same reason: it is the one place that knows a game has just finished, and awarding from a caller means every future caller must remember to.
 
-### 11.4 Authority model, from 0.3a
+### 11.4 Authority model, from 2.0
 
 The client computes and renders moves immediately so play feels instant. A Firestore-triggered Cloud Function re-validates every move, detects the win, and writes the result and the rating change.
 
@@ -936,24 +965,30 @@ Four places must agree: the application id, the build namespace, the source pack
 |---|---|---|---|
 | **0.1** | The complete offline game: board, all twenty opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
 | **0.2** | Real art, polish | Android | no |
-| **0.3a** | Anonymous auth; a cloud repository passing the *identical* flow tests as the local one; one async game between two of the developer's own devices. No push, no rating, no functions | Android | no |
-| **0.3b** | Invite links, push, block/report/name validation, account deletion, privacy policy | **+ iOS** | **first public release** |
-| **0.4** | Human rating **and** server-side move validation, together. Subscriptions, the one-time unlock, and the meter | Android + iOS | yes |
-| **1.0** | Roster revision, remaining platforms | Android + iOS + whatever 1.0 adds | yes |
+| **1.0** | **iOS, with no new gameplay.** The one-time unlock, the tier-2 subscription and the meter, with entitlement read on the device. The Casual-tier roster fix | **+ iOS** | **first public release** |
+| **2.0** | Accounts and the cloud repository; async online play, free; invite links; push; chat with block, report and name validation; account deletion; privacy policy. Entitlement and the meter move to the server | Android + iOS | yes |
+| **3.0** | Human rating **and** server-side move validation, together. The tier-3 subscription, which is what makes online play paid | Android + iOS | yes |
+| **4.0** | The remaining platforms — web and desktop | + web + desktop | yes |
+
+**This plan replaced an earlier one on 2026-08-16, and the reason was not technical.** The old ladder was 0.3a → 0.3b → 0.4 → 1.0, and its critical path ran through a Google Play Console account that cannot currently be reactivated. Every release queued behind that account, so one blocked queue stopped everything. The re-cut removes the single queue rather than working around it (D302).
+
+**1.0 is one version with two release dates.** Whichever store can accept it goes first — on today's facts that is iOS — and the other follows when it can, with no version bump and no new work, because the Android build already exists and has been complete since 0.2. Google's twelve-testers-for-fourteen-days requirement has not gone away; it simply no longer decides when the *product* launches.
 
 **Why 0.1 is a complete game rather than a demo.** It costs a larger first release and buys something to actually test. A move-history scrubber, a result screen, statistics and replay are all cheap given an append-only move list.
 
-**Why progression is in 0.1 rather than later.** It is the reason to open the app on the second day, and a twelve-tester closed test that runs for fourteen days is precisely a measurement of whether people come back. Shipping the ladder afterwards would mean the one test that could have validated it ran against a build without it.
+**Why progression is in 0.1 rather than later.** It is the reason to open the app on the second day. Shipping the ladder afterwards would mean the first release anyone tested had nothing in it to come back for.
 
-**Why the meter is not.** There is nothing to sell before 0.4, so metering earlier would be a wall with no door. A closed tester limited to three games a day also cannot give useful feedback about twenty opponents.
+**Why 1.0 adds no gameplay.** It is a port plus a shop. Adding features to the release that also introduces a second platform, a second signing pipeline, a second store review and the first money would mean that anything going wrong has four candidate causes. The game it ships is the game 0.2 finished.
 
-**Why iOS waits for 0.3b.** Google Play requires a personal account to run a closed test with twelve testers for fourteen continuous days before granting production access. Starting that clock is the critical path, and it needs no Apple account, no Apple hardware and no second signing pipeline. iOS joins for the first public release, where a second platform starts earning something.
+**Why the meter arrives with the shop and not before.** There is nothing to sell before 1.0, so metering earlier would be a wall with no door. The consequence — that the cap now lands in the first public release rather than three releases into public life — is real and is recorded in §4.2 rather than smoothed over.
 
-**Why 0.3 is split.** Without the split, the first public release is also the first release in an unfamiliar stack, with no prior public exposure to learn from. 0.3a proves the layering privately; 0.3b opens the contact surface.
+**Why 0.3a and 0.3b merged.** The split existed so that the first *public* release would not also be the first release in an unfamiliar stack. 1.0 now takes that role: it goes public on a stack that is already proven, and by the time 2.0 introduces Firebase there is a live audience and a release process that has been through both stores. The reason for the split has been served by something else, so the split costs a release and buys nothing.
 
-**Why the human rating waits for 0.4.** It ships with the validation that makes it trustworthy, because they are the same feature (§5).
+**Why the human rating waits for 3.0.** It ships with the validation that makes it trustworthy, because they are the same feature (§5).
 
-**First success is twelve real people playing 0.1 on their own devices, with the release pipeline proven end to end** — signed builds, both testing channels, production access unlocked. Not "an app in the store".
+**Why the roster revision is gone.** It existed to carry one fix — the Casual-tier inversions — and that fix moves into 1.0, where it is still free to make because nothing has been sold (D305). A release whose only content was a change nobody asked for is not a release.
+
+**First success is a public 1.0 on at least one store, with the pipeline proven end to end** — signed builds, a testing channel, store review passed, and a purchase that works. Not "an app in the store", and no longer "twelve people on a fourteen-day clock", because no store now requires that of the release that matters.
 
 ---
 
@@ -973,8 +1008,8 @@ Four places must agree: the application id, the build namespace, the source pack
 12. All four matchmaking paths create playable games, and the computer fallback never offers a locked opponent.
 13. Chat works with block, report and profanity filtering, honours the more restrictive of the two preferences, is revocable, and fails closed on records that predate it.
 14. All subscription products and the one-time unlock purchase and restore; the subscriptions sit in one group so an upgrade is a store-native plan change; a lapse lets existing games finish and rate, blocks new ones, exempts from forfeit, permits one rematch in a series, and **never revokes an unlock**.
-15. **The meter counts started games, applies both limits, names the one that bit, and does not restart the free month on reinstall.**
-16. Entitlement cannot be written by any client and is revoked on refund or chargeback.
+15. **The meter counts started games, applies both limits, and names the one that bit.** *"Does not restart the free month on reinstall"* is true **from 2.0 only**, when the month is held against an account. At 1.0 a reinstall does restart it, and the copy does not claim otherwise (D303).
+16. Entitlement is revoked on refund or chargeback, and **from 2.0** cannot be written by any client. At 1.0 the authority is the store's own signed transaction, read on the device, and revocation follows the store's refresh rather than being immediate.
 17. The security rules pass an adversarial suite in which every attempt is denied.
 18. Account deletion and data export work in-app, and deletion states it does not cancel the subscription.
 19. An account is linked before its first rated game or purchase.
@@ -983,8 +1018,8 @@ Four places must agree: the application id, the build namespace, the source pack
 22. The tutorial runs end to end, including the practice game, which is never stored, never paid and never metered.
 23. Every string exists in English and Dutch, enforced by the build.
 24. Notification limitations on web and desktop are surfaced, and the streak reminder is separately toggleable.
-25. The release build declares no networking permission, enforced by the build.
-26. **The unlock records are in the explicit Android backup allowlist**, and a restore on a new device returns them.
+25. The **Android** release build declares no networking permission, enforced by the build. iOS has no equivalent mechanism, so there the guarantee is reviewed rather than enforced, and it is claimed at that strength and no higher (D306).
+26. **The unlock records survive a device change on both platforms** — in the explicit Android backup allowlist, and in the iOS `Documents` directory that iCloud backs up by default.
 
 ---
 
@@ -994,12 +1029,17 @@ Every item here is a business, account or measurement decision. **None is functi
 
 | Item | Why it is open |
 |---|---|
-| **Store price points** | $1.99 and $4.99 are the intended prices; the actual store tiers, tax treatment and per-country equivalents are not yet chosen. Needed before 0.4, not before code. |
-| **Store accounts and signing** | Requires the owner's Google account now and Apple account by 0.3b. The application id must be chosen before the first upload and is permanent thereafter (§11.7). |
+| **Store price points** | $1.99 and $4.99 are the intended prices; the actual store tiers, tax treatment and per-country equivalents are not yet chosen. Needed before 1.0, not before code. |
+| **Apple Developer enrolment** | **The critical path for 1.0, and not yet started.** A Mac is available; the account is not. Enrolment review takes days, and nothing about it can be parallelised by writing code (D302). |
+| **The Google Play Console account** | Cannot currently be reactivated. It no longer blocks the *product*, only the Android half of 1.0 (D302). The application id `nl.evict.quadrim` is chosen and is permanent from the first upload to either store (§11.7). |
+| **Whether Play Billing forces the INTERNET permission** | If the billing library's manifest merge injects it, `check.sh`'s categorical "no networking permission" check fails on a release that makes no network call, and must narrow to computer play a release earlier than planned. **Check it empirically; do not assume either answer** (D306). |
+| **How the 1.0 tester cohort is structured** | No store now imposes a size or a duration, so the discipline the Play requirement used to force must be chosen deliberately or it will not happen (D302). |
 | **App name availability** | Checked against both stores and trademark registers. Not yet done. |
 | **The reference device** | The twenty-second ceiling (§6.8) is a device number, and the node-to-seconds conversion must be confirmed on real hardware. |
 | **The progression numbers** | The shape is settled and the values are derived from a stated target rather than measured (§7.7). They are the first thing to instrument once real players exist. Watch the median time to each unlock and the rung at which players stop. |
-| **Two Casual-tier rating inversions** | Vireo measures above Finch, and Willow above Vireo, by about 40 points each. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Kestrel's 0.08. The fix is a roster change, owned by 1.0. **Progression gives it a visible symptom**: the roster index sets both the unlock price and the win payout, so across three consecutive rungs the player is shown increasing prices for decreasing strength — Willow at 64 is the strongest of the three, Finch at 256 the weakest by about 83 points. The economy survives (four Kestrel wins remain a faster 1,024 points than eight Finch wins, so §7.3's self-pricing property holds), but three prices are displayed as a public claim about difficulty and for these three the claim is false. Re-pricing by measured strength is not available — §6.4 pins pricing to the index and the ratings are anchors — so this is an argument for scheduling the 1.0 roster revision early, not for a tuning pass. A rebuilder starting from this document should instead design the Casual tier so that its personalities and its rungs agree. |
+**No longer open: the two Casual-tier rating inversions.** Vireo measures above Finch, and Willow above Vireo, by about 40 points each, while the roster prices Finch highest of the three. This is **not** a configuration defect and no parameter change closes it: the roster pins `aggression` in the direction that opens the gap (§6.5), and the blunder rate cannot spread far enough because it must fall as rating rises between Bramble's 0.15 and Kestrel's 0.08. Progression gives it a visible symptom, because the roster index sets both the unlock price and the win payout: across three consecutive rungs the player is shown increasing prices for decreasing strength. The economy survives — four Kestrel wins remain a faster 1,024 points than eight Finch wins, so §7.3's self-pricing property holds — but three prices are a public claim about difficulty, and for these three the claim is false.
+
+It was owned by a 1.0 roster revision that no longer exists, so it is **fixed before 1.0 instead**, by reordering those three entries so price and measured strength agree (D305). The timing is the whole argument: the index sets what everything costs and pays, nothing has been sold, and no unlock record exists outside the developer's own devices — so today the change is free and after 1.0 it is a migration. A rebuilder starting from this document should design the Casual tier so that its personalities and its rungs agree in the first place.
 
 **Things earlier editions listed as open that are now closed:** push on desktop and web (§10 — a stated platform limitation, not a problem to solve); the size and obtainability of the strategy book (§6.6 — 54,745 bytes, published, permissively granted); anchor calibration (§6.7 — a built harness); auto-match cold start (§8.9 — a computer opponent after a short wait); the per-game Firebase cost, negligible in steady state now that the migration burst that dominated it no longer exists; the business model (§4.1); and the large-screen layout, which is cancelled rather than deferred (§8.1).
 

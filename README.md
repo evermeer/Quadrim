@@ -345,3 +345,33 @@ When a game is played, then layers are right alligned. could you center these. T
 The tutorial has white board layer labels. they are hard to read. Could you make them dark 
 
 ```
+
+Version 0.2 is ready. I want a new plan
+
+**Prompt**
+```
+Now that version 0.2 is finished i need a google developer account to continue.
+i have an issue with re activating my google developer account. 
+Because of this i would like to change the release plan.
+Ask clarifying questions and don't finalize the spec until any ambiguities are resolved.
+For now only update idea-v3.md idea-v3-spec.md and idea-v3-decisions.md
+
+Sugestion for the new plan:
+
+version 1.0
+I would like to start by adding an iOS version withou extra functionalithy.
+I do like to have the functionality to buy the 1 time unlock and the subscription to have unlimited play.
+There will be no functionality to play against others.
+This is the version that will first get the internal tests and then go public.
+
+Version 2.0
+The rest of what is in the current version 0.3a and 0.3b (these 2 can be merged)
+
+Version 3.0
+Human rating and server-side move validation
+Adding the subscription to play online
+
+Version 4.0
+Remaining platforms
+We don't need a roster revision as was stated earlier for the 1.0 version.
+```

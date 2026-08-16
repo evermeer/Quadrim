@@ -914,6 +914,91 @@ Recorded rather than edited into D137, because the reasoning there was sound and
 
 **What this says about looking.** Each of the four is invisible in a diff, none fails a test, and all four were reported by the owner from a screenshot in a single sentence. `flutter analyze` and 322 green tests had nothing to say about any of them.
 
+## D302 — The release plan is re-cut around an account nobody controls
+
+**Supersedes D254, D255 and D259.** Those entries are left standing with their original text, as everything in this log is. What each of them decided is still *reasoned* correctly — they are wrong now only because the fact they rested on stopped being true.
+
+**Question:** The whole plan from 0.3a onward assumed a working Google Play Console account, because the fourteen-day closed test was the critical path and everything else queued behind it. That account cannot currently be reactivated. What replaces the plan?
+
+**Decision:** Four releases, re-cut so that no version's *date* depends on a store account being restored.
+
+| Was | Is | Contains |
+|---|---|---|
+| 0.3b + 0.4 (partly) | **1.0** | iOS, with no new gameplay. The one-time unlock, the unlimited-play subscription and the meter. The Casual-tier roster fix (D305) |
+| 0.3a + 0.3b | **2.0** | The two halves of 0.3 merged: accounts, the cloud repository, async play, invites, push, chat and its safety features, deletion, privacy policy |
+| 0.4 | **3.0** | The human rating and server-side move validation, together. The online subscription |
+| 1.0 | **4.0** | The remaining platforms |
+
+**1.0 is one version with two release dates.** Whichever store can accept it goes first — on today's facts, iOS — and the other follows when it can, without a version bump and without new work. This is the point of the re-cut: the previous plan had one queue, and a blocked account stopped the queue. Two independent queues cannot both be stopped by one account.
+
+**TestFlight replaces the closed test as the gate.** Google Play requires twelve testers for fourteen continuous days before granting production access, which is why 0.1 was shaped around it. Apple requires no such thing: an internal TestFlight build goes to the owner's own devices immediately, and App Store review is the only gate to public. The Play requirement does not go away — it applies whenever Android ships — but it stops setting the date of the first public release. Ticket 024's survey moves to TestFlight testers, and R8/R11 become Android-only gates.
+
+**Cost, and it is real.** The fourteen-day closed test was not only a store requirement; it was the measurement instrument. Twelve testers on a fourteen-day clock is a retention experiment, and G8 — a tester unlocking an opponent with points they earned — was to be measured by it. TestFlight internal testing is capped at 100 testers but has no minimum, no duration and no structure, so the *discipline* has to be supplied deliberately rather than imposed by Google. R13's two signals must be instrumented whatever the tester count turns out to be, or 1.0 launches with the progression numbers still unmeasured (§7.7).
+
+**And the first public release now carries a paywall it has never tested.** Under the old plan the meter arrived at 0.4, three releases after real users. Under this one it arrives in the first release anybody outside the developer's family ever sees. There is no prior public build to compare against, so if retention is poor at 1.0 there is no way to tell the ladder from the meter.
+
+## D303 — Selling before there is a server
+
+**Amends D225** — the free month is still consumed once at first launch, but for one release it is remembered on the device rather than against an account, because there is no account to remember it against.
+
+**Question:** 1.0 sells the one-time unlock and a subscription, and 1.0 has no backend. §4.1 says entitlement is "a server-written field no client can touch, set only after receipt validation, revoked on refund, chargeback or voided purchase". §4.2 says the free month is held against the account, and explicitly rejects a device-local month because a reinstall resets it and a clock change defeats it. Both of those servers arrive at 2.0. What gives?
+
+**Decision:** Entitlement and the meter are **local at 1.0**, and the weakness is written down rather than designed around.
+
+- **Entitlement** is the store's own signed transaction, read on the device — StoreKit 2's `Transaction.currentEntitlements` on iOS, the Play Billing purchase record on Android. Both are cryptographically signed by the store and both survive a reinstall, because the store re-issues them to the same store account. Refund and chargeback revocation happens on the store's next refresh, not immediately.
+- **The meter and the free month** are local records under `files/quadrim/`, alongside games, settings and unlocks, and are in the same backup allowlist.
+- At **2.0**, when an account first exists, both migrate. The local free-month record is *adopted* by the account rather than restarted, exactly as D-era §4.2 already required for accounts that predate the meter. A player who consumed their free month at 1.0 does not get a second one for signing in.
+
+**What this leaks, stated plainly.** A reinstall clears the local meter and starts a fresh free month. Nothing in this design stops that, and nothing may be added that would: closing it requires either a device identifier, which §5.2 forbids in every release, or a server, which is what 2.0 is. So the honest description of the 1.0 meter is that it is a **speed bump against forgetting, not a wall against determination** — and the paywall copy must not claim otherwise.
+
+**Why not pull a minimal backend forward.** It was considered. Receipt validation and a meter is a small Firebase project, and it would make entitlement authoritative from day one. It was rejected because it moves the privacy policy, the account plumbing, the data-safety declaration and the INTERNET permission question (D306) into the release whose entire purpose is to be the offline game on a second platform. 1.0 would stop being a port and become the first online release with the online features removed.
+
+**Cost:** S9 and S18 — entitlement server-written, meter server-authoritative — are no longer testable at 1.0 and become 2.0 criteria. Between 1.0 and 2.0 the app ships a paid tier that a motivated user can reset by reinstalling, and the revenue that leaks in that window is not recoverable afterwards.
+
+## D304 — Online play is free at 2.0 and paid at 3.0
+
+**Question:** Online play arrives at 2.0; the subscription that sells it arrives at 3.0. What is the status of online play in between?
+
+**Decision:** Free, and **labelled as a preview from its first day**.
+
+The reason it is free is sound: until 3.0 there is no human rating and no server-side validation, so what 2.0 offers is asynchronous games with a win/loss/draw record — worth having, not worth a subscription. Charging for it before the rating makes it meaningful sells the weaker product at the stronger price.
+
+The reason it must be *labelled* is that this project has already made this mistake once. v2 promised that everything release 0.1 shipped would be free forever, and D-era §4.2 had to withdraw it. That withdrawal was defensible only because nothing had shipped publicly and nobody lost anything. At 2.0 people will have shipped, and taking online play behind a paywall at 3.0 is precisely the withdrawal that promise was. So the copy at 2.0 says what it is — free while it has no rating, subscription when it does — in the release notes, on the online screen and in the store listing.
+
+**Cost:** A feature that announces its own future price is a worse-looking feature, and some players will not start using something they are told will cost money later. That is the price of not repeating the free-forever sentence.
+
+## D305 — The Casual-tier inversion is fixed now, because now is the last moment it is free
+
+**Question:** Willow measures about 33 points above Vireo and Vireo about 50 above Finch, while the roster prices Finch highest of the three. D268 assigned the fix to a 1.0 roster revision. That revision is cancelled. Does the inversion ship?
+
+**Decision:** No — it is fixed before 1.0, by reordering those three roster entries so that price and measured strength agree.
+
+**Why now rather than later, and this is the whole argument.** The roster index sets three things at once: the unlock price, the win payout, and the order in which opponents become available. Changing the index therefore changes what everything costs and what everything pays. Today that is free, because nothing has been sold and no unlock record exists outside the developer's own devices. The moment 1.0 ships, every reorder is a migration: a player who paid 128 points for an opponent that is now worth 64 either keeps a record that no longer matches the table, or is repriced. D-era §7.3 already handles the first case — the price paid is stored with the unlock, so old unlocks stand — but that mechanism exists to survive a *re-tune*, not to make a reorder painless for players comparing notes.
+
+So the choice is not "fix it at 1.0 or fix it at 4.0". It is "fix it before anybody buys anything, or accept it permanently". D268 assumed a roster revision was coming anyway and could absorb it; with that revision cancelled, the deferral has no destination.
+
+**Cost:** A calibration run must confirm the reorder, because the three ratings are anchors and the inversion was measured rather than argued — `calibrate.dart --only vireo`, `--only willow`, `--only finch` against the settled rest. It is also a change to shipped content in a build that has already been through art and layout: three opponents move position in Your Path, in the tier accordion and in every screenshot taken so far.
+
+## D306 — What iOS costs that the Android constraints were written without
+
+**Question:** Three of this project's hard constraints are enforced by Android mechanisms. What happens to them on a platform that has no such mechanisms?
+
+**Decision:** Each is re-stated for iOS, and where the enforcement genuinely does not transfer, that is recorded rather than papered over.
+
+**"Computer play makes no network call" loses its categorical enforcement.** On Android it is guaranteed by the *absence of the INTERNET permission* (D212), which is why `check.sh` greps the release manifest. iOS has no equivalent: an app may open a socket without declaring anything. So on iOS this constraint drops from *enforced* to *reviewed*, and the honest statement is that the Android build proves it and the iOS build shares the code that the Android build proves it about. That is weaker, and it is the best available.
+
+**Billing may cost the permission on Android too.** Play Billing requires `com.android.vending.BILLING`, and whether the library's manifest merge also injects `INTERNET` must be **checked empirically at implementation time, not assumed either way**. If it does, `check.sh`'s manifest grep fails on a release that has made no network call, and the check must narrow to computer play — the same instruction D212 already leaves for 0.3a, arriving one release earlier than expected.
+
+**Backup.** Android's explicit allowlist has no iOS counterpart; iOS backs up the app's `Documents` directory to iCloud by default. Unlock records must be there, so D11 — a restore on a new device returns every unlock — holds on both platforms. From 2.0 the exclusions S15 requires (auth material, FCM token, Installations ID) need the iOS equivalent, which is `isExcludedFromBackup` on the specific files rather than a manifest list.
+
+**And two things iOS adds that Android never needed:** a privacy manifest (`PrivacyInfo.xcprivacy`) declaring required-reason API use, and App Store privacy labels. Both are declarations about a build that collects nothing, which makes them cheap to write and easy to forget.
+
+**Cost:** The single strongest privacy guarantee this project has — a platform-level refusal rather than a promise — is now true on one of its two platforms. Nothing in the code changes; what changes is what can be claimed.
+
 ## Open items
 
-Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples), and the two Casual-tier rating inversions, still owned by the 1.0 roster revision but now with a user-visible symptom attached (D268).
+Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
+
+**Closed since:** the two Casual-tier rating inversions, which had been owned by a 1.0 roster revision that no longer exists and are now fixed before 1.0 ships (D305).
+
+**Opened by the re-cut:** Apple Developer enrolment, which is the critical path for 1.0 and is not yet started (D302); whether Play Billing's manifest merge injects `INTERNET`, which decides whether `check.sh` keeps its categorical form on Android (D306); and how the 1.0 tester cohort is structured now that no store imposes a size or a duration (D302).

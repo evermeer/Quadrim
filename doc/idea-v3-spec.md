@@ -4,10 +4,12 @@ The buildable form of [idea-v3.md](idea-v3.md), with the findings from [idea-v3-
 
 **This is a successor to [idea-v1-spec.md](tickets/done/idea-v1-spec.md), not a replacement for it.** Section numbers and criterion ids are preserved exactly, because both are cited from source comments (`spec §8.3`, `spec E7`, `criterion S4`, `spec D2/S2`) and from twenty-two completed tickets. Criteria whose *content* changed keep their id and change their text; new criteria are appended; nothing is renumbered. Progression takes a new `P` prefix (D271, D272).
 
-Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D277, continuing [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) D01–D217.
+Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D306, continuing [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) D01–D217.
 
-Date: 2026-08-14
-Status: 0.1 built through ticket 029 and playable. Progression specified here and not yet built.
+Date: 2026-08-16
+Status: **0.1 and 0.2 built** — the complete offline game with its final art, twenty-five tickets. 1.0 specified here and not yet built.
+
+**The release ladder was re-cut on 2026-08-16** (§4.1, D302). Criterion ids are still never renumbered, so criteria that named a release in their text now name a different one; the ▲ marker shows which.
 
 ---
 
@@ -19,26 +21,29 @@ Three things make it hard to build well and are the reason most attempts stop. S
 
 ## 2. Solution
 
-A phone game with twenty named computer opponents whose ratings are measured rather than asserted, an unlock ladder that gives the single-player game a spine, and — from 0.3b — asynchronous play against real people.
+A phone game with twenty named computer opponents whose ratings are measured rather than asserted, an unlock ladder that gives the single-player game a spine, and — from 2.0 — asynchronous play against real people.
 
 The offline game is complete, private and makes no network call. The online game is a separate store with a separate rating and a separate trust model. Nothing crosses between them.
 
 ## 3. Goal
 
-Twelve real people playing release 0.1 on their own devices, with the release pipeline proven end to end, and enough of them still playing on day ten to say the ladder works.
+**Release 1.0 publicly available on at least one store, selling, with the pipeline proven end to end** — and enough players still playing on day ten to say the ladder works.
+
+This goal changed on 2026-08-16 (D302). It used to be "twelve real people playing release 0.1 on their own devices", because Google Play's twelve-testers-for-fourteen-days requirement was the gate to everything and starting that clock was the critical path. That account cannot currently be reactivated, so the gate is now Apple's — TestFlight and store review — and the goal is the public release rather than the private test that used to precede it.
 
 ### 3.1 Success criteria
 
 | # | Criterion |
 |---|---|
-| G1 | Twelve friends-and-family testers have 0.1 installed on their own devices and have opened it |
-| G2 | Signed builds are produced and published to a closed testing track by a repeatable process |
+| G1 ▲ | A tester cohort has the pre-1.0 build installed on their own devices and has opened it. **The size is now ours to choose**, not Google's to impose (D302) |
+| G2 ▲ | Signed builds are produced and published to a testing track by a repeatable process, **on each platform that has an account** |
 | G3 | All twenty opponents are distinguishable in play and calibrated by a self-play harness |
 | G4 | A player can complete a whole game from launch to result using a screen reader |
 | G5 | The app is complete in English and Dutch, enforced by the build |
-| G6 | Production access is unlocked at the end of the fourteen-day closed test |
+| G6 ▲ | **1.0 passes store review and is publicly available.** Superseded "production access is unlocked at the end of the fourteen-day closed test", which was a Play-account concept and is now an Android-only gate (R11) rather than the gate |
 | G7 | A player has a real computer rating that moves as they play, computed and stored entirely on their own device |
 | **G8** | **A tester unlocks at least one opponent with points they earned.** The single behavioural signal that §7 works; without it the ladder is decoration. Measured by ticket 024's survey (D259) |
+| **G9 ＋** | **A purchase completes and restores on a reinstall**, for both the one-time unlock and the subscription. 1.0 is the first release with anything to get wrong here |
 
 ## 4. Scope
 
@@ -48,18 +53,31 @@ Twelve real people playing release 0.1 on their own devices, with the release pi
 |---|---|---|---|
 | **0.1** | The complete offline game: board, all twenty opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
 | **0.2** | Real art, polish | Android | no |
-| **0.3a** | Anonymous auth; a cloud repository passing the *identical* flow tests as the local one; one async game between two of the developer's own devices. No push, no rating, no functions | Android | no |
-| **0.3b** | Invite links, push, block/report/name validation, account deletion, privacy policy | **+ iOS** | **first public release** |
-| **0.4** | Human rating **and** server-side move validation, together. Subscriptions, the one-time unlock, and the meter | Android + iOS | yes |
-| **1.0** | Roster revision, remaining platforms | Android + iOS + more | yes |
+| **1.0** | **iOS, with no new gameplay.** The one-time unlock, the tier-2 subscription and the meter, entitlement read on the device. The Casual-tier roster fix | **+ iOS** | **first public release** |
+| **2.0** | Accounts and the cloud repository; async online play, free; invite links; push; chat with block, report and name validation; account deletion; privacy policy. Entitlement and the meter move to the server | Android + iOS | yes |
+| **3.0** | Human rating **and** server-side move validation, together. The tier-3 subscription, which makes online play paid | Android + iOS | yes |
+| **4.0** | The remaining platforms — web and desktop | + web + desktop | yes |
+
+**Re-cut on 2026-08-16 (D302).** The previous ladder was 0.3a → 0.3b → 0.4 → 1.0 and its critical path ran through a Google Play Console account that cannot currently be reactivated. The new one has no single queue: **1.0 is one version with two release dates**, shipping to each store as that store can accept it, iOS first on today's facts. 0.3a and 0.3b merge into 2.0 because the split existed to keep the first public release off an unfamiliar stack, and 1.0 now does that job. The 1.0 roster revision is gone; its one real item moves into 1.0 (D305).
 
 ### 4.2 Release 0.1 — in scope
 
 The board and all four layers drawn at once. Pass-and-play. All twenty computer opponents. The computer rating. **Points, the unlock ladder, quests and streaks.** History, replay and a move scrubber. The tutorial including an interactive practice game. Settings. English and Dutch. Portrait phone only.
 
+### 4.2a Release 1.0 — in scope
+
+Everything 0.2 shipped, on iOS as well as Android, plus exactly four things:
+
+- **The shop.** The one-time unlock at $4.99 and the tier-2 subscription at $1.99/yr, as one subscription product with one base plan so 3.0 can add the second (§4.1 of idea-v3.md).
+- **The meter.** Three computer games a day and nine a week after an unmetered first month, counted at game *start*, with the paywall naming the limit that actually bit.
+- **Entitlement, read on the device.** No server exists yet; the store's signed transaction is the authority, and the reinstall leak this leaves is documented rather than hidden (D303).
+- **The Casual-tier roster fix.** Willow, Vireo and Finch reordered so that price and measured strength agree, confirmed by a calibration run (D305).
+
+Out of scope for 1.0: everything online, every account, the human rating, chat, push. Those are 2.0 and 3.0.
+
 ### 4.3 What is already built
 
-Twenty-two tickets are complete. Every remaining gap in 0.1 is §7 of idea-v3.md or a consequence of it.
+Twenty-five tickets are complete: **0.1 and 0.2 are both done**, the second being the art and polish pass in tickets 038–040. Everything below is built; the work that remains is 1.0's.
 
 | Area | Spec section | State |
 |---|---|---|
@@ -77,7 +95,8 @@ Twenty-two tickets are complete. Every remaining gap in 0.1 is §7 of idea-v3.md
 | Build gate | §10 | **Built** — ticket 001 |
 | **Points, unlocks, quests, streaks** | **§7.3, §8.8, §11.6** | **Built** — tickets 031–034 |
 | **Your Path, trend graph, quests section, end-of-game panel** | **§11.3** | **Built** — tickets 030, 032, 035; revised by 037 |
-| Store accounts, closed test, survey | §11.7 | **Not built** — tickets 015, 016, 024 |
+| Store accounts, testing, survey | §11.7 | **Not built** — tickets 015, 016, 024, re-pointed at Apple by D302 |
+| **iOS port, the shop, the meter, the roster fix** | **§4.2a** | **Not built** — 1.0's work, not yet cut into tickets |
 
 ## 5. Non-Goals
 
@@ -90,7 +109,7 @@ Online play of any kind. Accounts. The human rating. Chat. Push notifications. S
 - **A large-screen or landscape layout.** Cancelled rather than deferred (D253). Ticket 017 is closed unbuilt.
 - **Takebacks, undo and draw offers.** A submitted move is final.
 - **Any device identifier**, in any release.
-- **A network call during computer play**, in any release. Enforced by the absence of the permission, not by reading the code.
+- **A network call during computer play**, in any release. On Android, enforced by the absence of the permission rather than by reading the code. **On iOS there is no permission to withhold**, so there it is reviewed rather than enforced, and claimed at that strength (D306, S20).
 - **A solver sub-project.** Patashnik solved this in 1980 and the dictionary is obtainable (§7.1).
 - **An import path from local storage to the cloud.** Offline games stay local for the life of the app.
 - **Ads.**
@@ -109,11 +128,13 @@ Online play of any kind. Accounts. The human rating. Chat. Push notifications. S
 
 **Learning (0.1).** As a new player I am offered a tutorial once, can decline it permanently, can restart it from settings, and can play a practice game with hints derived from the opponents' own rules.
 
-**Later releases.** Playing a friend asynchronously over days (0.3b); a rating earned against real people that neither of us can forge (0.4); lifting the daily cap by subscribing (0.4).
+**Later releases.** Lifting the daily cap by subscribing, and opening the whole roster at once by buying it (1.0); playing a friend asynchronously over days (2.0); a rating earned against real people that neither of us can forge (3.0).
 
 ## 7. Exposed Endpoints
 
-Releases 0.1 and 0.2 have **no network surface at all**. The exposed contracts are the public APIs of the modules. Network endpoints appear at 0.3a and are specified in §7.6.
+Releases 0.1 and 0.2 have **no network surface at all**. The exposed contracts are the public APIs of the modules. Network endpoints appear at 2.0 and are specified in §7.6.
+
+**1.0 is the awkward middle case and is stated rather than left implicit.** It has no endpoint of ours, and it does talk to a store: StoreKit on iOS, Play Billing on Android. That traffic is the platform's, made by the platform's own process on the app's behalf, and it carries no game data of any kind — no result, no rating, no move. §5.2's rule is unchanged and unweakened: no network call happens during computer play.
 
 ### 7.1 `quadrim_engine` — pure Dart
 
@@ -150,7 +171,7 @@ No Flutter, no Firebase, no `dart:io`, no ambient clock, no ambient random, and 
 | `updatedRating(current, k, score, expected)` | Rounded, floored at 100 |
 | `ratingFrom(Iterable<CompletedGame>)` | Folds games ordered by `completedAt`, game id as tie-break, **from the 800 seed**, using each game's stored `opponentRating` |
 
-The seed changed from 1200 to 800 (D226). The human ladder seeds at 1000 and is computed on the server from 0.4.
+The seed changed from 1200 to 800 (D226). The human ladder seeds at 1000 and is computed on the server from 3.0.
 
 The human rating is **not** this fold. Human Elo is not separable per player, so recomputing it is a global chronological replay across every account rather than a per-player fold. The maths is shared; the traversal is not.
 
@@ -176,7 +197,7 @@ All the arithmetic of §7 of idea-v3.md. Same purity rules as the other two pack
 
 ### 7.4 `GameRepository` — the testing seam
 
-Unchanged from the v1 spec except for one addition. The interface is what 0.3a's Firestore implementation must satisfy by passing the *same* flow tests the local one passes.
+Unchanged from the v1 spec except for one addition. The interface is what 2.0's Firestore implementation must satisfy by passing the *same* flow tests the local one passes.
 
 | Member | Contract |
 |---|---|
@@ -192,24 +213,26 @@ Unchanged from the v1 spec except for one addition. The interface is what 0.3a's
 
 **Points are awarded in the repository, not by the caller.** It is the one place that knows a game has just finished; awarding from a caller means every future caller must remember to. Completion is decided there for the same reason.
 
-Streams, not futures, even locally, because 0.3a's implementation is push-based and a future-shaped interface would force a UI rewrite.
+Streams, not futures, even locally, because 2.0's implementation is push-based and a future-shaped interface would force a UI rewrite.
 
 ### 7.5 `tools/linegen` — build-time generator
 
-Not shipped. Emits from one definition: the 76-line table as Dart; the same table as TypeScript for 0.3's Cloud Functions; and a JSON corpus of complete games with known outcomes covering every winning-line family, forced draws and illegal-move cases. Generated files are committed and marked do-not-edit; the gate fails if they are stale.
+Not shipped. Emits from one definition: the 76-line table as Dart; the same table as TypeScript for 2.0's Cloud Functions; and a JSON corpus of complete games with known outcomes covering every winning-line family, forced draws and illegal-move cases. Generated files are committed and marked do-not-edit; the gate fails if they are stale.
 
-### 7.6 Network endpoints — from 0.3a only
+### 7.6 Network endpoints — from 2.0 only
 
-Nothing here exists in 0.1 or 0.2, and nothing here is ever reached by computer play.
+Nothing here exists in 0.1, 0.2 or 1.0, and nothing here is ever reached by computer play.
 
 | Surface | From | Contract |
 |---|---|---|
-| Firebase Authentication | 0.3a | Anonymous to try; **linked to Google, Apple or email before a first rated game or any purchase** |
-| Firestore — games | 0.3a | A client may write **only** its own move to a game it is in when it is its turn |
-| Firestore — profile | 0.3a | A named, **field-level** allowlist of its own profile fields |
-| Cloud Function — validate | 0.4 | Firestore-triggered. Re-validates every move, detects the win, writes the result and the rating change |
-| Cloud Function — entitlement | 0.4 | Server-written after receipt validation; revoked on refund, chargeback or voided purchase |
-| Cloud Messaging | 0.3b | Your turn, new message, game ended, challenge received, streak about to lapse — each individually toggleable |
+| Firebase Authentication | 2.0 | Anonymous to try; **linked to Google, Apple or email before a first rated game or any purchase** |
+| Firestore — games | 2.0 | A client may write **only** its own move to a game it is in when it is its turn |
+| Firestore — profile | 2.0 | A named, **field-level** allowlist of its own profile fields |
+| Cloud Messaging | 2.0 | Your turn, new message, game ended, challenge received, streak about to lapse — each individually toggleable |
+| Cloud Function — entitlement | 2.0 | Server-written after receipt validation; revoked on refund, chargeback or voided purchase. **Takes over from 1.0's on-device read**, and the local path is deleted rather than kept as a fallback (D303) |
+| Cloud Function — validate | 3.0 | Firestore-triggered. Re-validates every move, detects the win, writes the result and the rating change |
+
+**1.0 has a store-billing surface and no endpoint of ours** — see §7 above.
 
 A client may **never** write results, either rating, entitlement, totals, timestamps, or another player's data.
 
@@ -292,7 +315,7 @@ Code-side constants, not persisted. Defined once in §6.4 of idea-v3.md and not 
 
 `tutorialOffered` is separate from `tutorialCompleted` because declining is not the same as having learnt the game, and a dialog dismissed by tapping outside returns no answer — so the offer is recorded *before* it is shown (D193).
 
-Release 0.4 adds `chatAvailability` with values `everyGame`, `friendsOnly` and `never`, defaulting to `friendsOnly`.
+Release 2.0 adds `chatAvailability` with values `everyGame`, `friendsOnly` and `never`, defaulting to `friendsOnly`.
 
 The computer rating and the points balance are deliberately **not** here.
 
@@ -300,7 +323,7 @@ The computer rating and the points balance are deliberately **not** here.
 
 One JSON document per record, keyed by id, under `files/quadrim/` in the platform application-support directory. Writes are atomic — temporary file then rename — so a kill mid-write cannot corrupt a record. A record whose `schemaVersion` is greater than the reader understands is skipped; equal or lower is read and upgraded.
 
-**Backup.** Android's system backup is deliberately enabled, with an **explicit allowlist** committed rather than the platform default. The allowlist is `files/quadrim/`, which already covers games, settings and — from ticket 031 — unlocks, with no manifest change required. At 0.3a this same directory gains Firebase authentication material that must never be restored onto a second device, so the exclusions in S15 become mandatory then.
+**Backup.** Android's system backup is deliberately enabled, with an **explicit allowlist** committed rather than the platform default. The allowlist is `files/quadrim/`, which already covers games, settings and — from ticket 031 — unlocks, with no manifest change required. At 2.0 this same directory gains Firebase authentication material that must never be restored onto a second device, so the exclusions in S15 become mandatory then.
 
 It follows that **"no data leaves the device" must never appear in any privacy text.** It is false, and the backup is a deliberate trade.
 
@@ -322,7 +345,7 @@ Points *earned* is still a fold over stored games. Points *spent* is a decision,
 ```
 
 - **`pricePaid` is stored for the same reason a game stores the opponent's anchor rating.** Re-tuning a cost later must never retroactively bankrupt someone who already spent at the old price. The balance is *earned minus the sum of prices actually paid*, which is stable under any future change to the cost table.
-- **`source`** distinguishes points from the one-time purchase (0.4), so a refund of the purchase can revoke exactly what it bought and nothing a player earned.
+- **`source`** distinguishes points from the one-time purchase (1.0), so a refund of the purchase can revoke exactly what it bought and nothing a player earned.
 - Everything else stays derived. **No stored balance, no stored streak length, no stored quest progress** — all three are folds and all three would drift.
 - A downward re-tune of the *quest* table is handled by a rule rather than a second stored table: **the balance clamps at zero and no unlock is ever revoked** (D264).
 
@@ -347,7 +370,7 @@ No Flutter, no Firebase, no `dart:io`, no ambient clock, no ambient random sourc
 
 ### 9.3 The 76 lines have exactly one definition
 
-Generated at build time, committed, checked for staleness. Win detection, threat detection, evaluation, the tutorial's illustrations and 0.4's server-side validator all read the same table.
+Generated at build time, committed, checked for staleness. Win detection, threat detection, evaluation, the tutorial's illustrations and 3.0's server-side validator all read the same table.
 
 ### 9.4 Bots are data
 
@@ -359,7 +382,7 @@ Statistics, the rating, the points balance, the streak and quest progress are fo
 
 ### 9.6 Streams, not futures
 
-Even locally, so 0.3a's push-based implementation satisfies the same contract without a UI rewrite.
+Even locally, so 2.0's push-based implementation satisfies the same contract without a UI rewrite.
 
 ### 9.7 The progression maths is a package, not part of the engine
 
@@ -383,7 +406,7 @@ Ticket 015 has no code dependency and its clocks run long, so it starts on day o
 
 ### 9.12 Android backup is enabled deliberately
 
-With an explicit allowlist (§8.7). From 0.3a the exclusions in S15 are mandatory.
+With an explicit allowlist (§8.7). From 2.0 the exclusions in S15 are mandatory. iOS has no allowlist to write — it backs up `Documents` by default — so there the same requirement is met by marking those specific files excluded from backup instead (D306).
 
 ### 9.13 The three irreversible decisions
 
@@ -403,7 +426,9 @@ One script, run before every commit, that analyses and tests every package and a
 - every string exists in **both** languages
 - **the release manifest declares no networking permission**
 
-That last one is how "computer play makes no network call" is enforced. Grepping for an HTTP client only checks the spellings you thought of, and a transitive dependency could reach the network without any of them appearing; the **permission** is categorical. When 0.3a genuinely needs networking, narrow the check to computer play rather than deleting it.
+That last one is how "computer play makes no network call" is enforced. Grepping for an HTTP client only checks the spellings you thought of, and a transitive dependency could reach the network without any of them appearing; the **permission** is categorical. When 2.0 genuinely needs networking, narrow the check to computer play rather than deleting it.
+
+**Two things at 1.0 may reach that check earlier than planned** (D306). Play Billing needs `com.android.vending.BILLING`, and whether its manifest merge also injects `INTERNET` must be checked empirically rather than assumed — if it does, the check must narrow one release early. And **iOS has no counterpart at all**: an iOS app may open a socket without declaring anything, so on that platform this guarantee drops from enforced to reviewed. The Android build still proves it, about code both platforms share; that is weaker than a platform refusal and is claimed at its real strength.
 
 Every long run gets a hard timeout. A hung suite is indistinguishable from a slow one.
 
@@ -463,9 +488,9 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | F12 | A pass-and-play game completing | any rating is read | nothing has changed |
 | F13 | Any game against a computer opponent | it is played from first move to result | no network call is made at any point |
 | F14 ＋ | A move by the strongest opponent | it is chosen on a reference device | it completes within twenty seconds, and a moving indication of thinking is on screen throughout |
-| F15 ＋ | A subscription that lapses mid-series *(0.4)* | games in progress finish | they rate normally for both players, one rematch is permitted, and the lapsed player is exempt from the inactivity forfeit |
-| F16 ＋ | A player at the daily or weekly cap *(0.4)* | a new computer game is started | it is refused, and the message names **the limit that actually bit** |
-| F17 ＋ | A game started and abandoned *(0.4)* | the meter is read | it counted, because a game counts when it is started |
+| F15 ＋ | A subscription that lapses mid-series *(3.0)* | games in progress finish | they rate normally for both players, one rematch is permitted, and the lapsed player is exempt from the inactivity forfeit |
+| F16 ＋ | A player at the daily or weekly cap *(1.0)* | a new computer game is started | it is refused, and the message names **the limit that actually bit** |
+| F17 ＋ | A game started and abandoned *(1.0)* | the meter is read | it counted, because a game counts when it is started |
 
 ### 11.3 Interface
 
@@ -570,19 +595,35 @@ New section, new prefix.
 
 | # | Gate |
 |---|---|
-| R1 | Google Play Console account created and the application id chosen — **permanent once published to any track** |
-| R2 | Apple Developer enrolment started — no code depends on it, and its clock runs long |
+| R1 ▲ | The application id chosen — **permanent once published to any track, on either store**. Chosen: `nl.evict.quadrim`. The Google Play Console account it was paired with cannot currently be reactivated, which is what re-cut the plan (D302) |
+| R2 ▲ | **Apple Developer enrolment — now the critical path, and not yet started.** A Mac is available and the account is not. No code depends on it and its clock runs long, which is exactly why it is the thing to start first |
 | R3 | Release signing configured, upload keystore backed up and the backup **verified by restoring it** |
 | R4 | 12 friends-and-family testers recruited and opted into the closed test — a real task with a real lead time |
 | R5 | Play Data Safety declaration completed, with the reasoning and the date checked recorded. **A task, not a foregone conclusion**, given that backup is enabled |
-| R6 | Content rating questionnaire and target-audience declaration completed. The audience answer silently constrains 0.4 |
+| R6 | Content rating questionnaire and target-audience declaration completed. The audience answer silently constrains 1.0 |
 | R7 | Closed-testing listing sufficient for testers to install, in English and Dutch |
 | R8 | A build published to closed testing, all 12 testers installed and opened it, and the 14-day continuous clock started — with its start date recorded |
 | R9 | The tester survey instrument exists and was given to testers **at install**, with its pass thresholds committed in advance |
 | R10 ▲ | Every acceptance criterion in §11.1 to **§11.6** passing |
-| R11 | Production access unlocked at the end of the 14 days — banked for 0.3b, not used |
+| R11 ▲ | Production access unlocked at the end of the 14 days — **an Android-only gate now, and no longer the gate to going public**. It is what the Android half of 1.0 waits for; the iOS half waits for store review instead (D302) |
 | R12 ＋ | **Progression is complete before R8.** The clock starts against a build with the ladder in it, or the one test that could validate it runs against a product nobody intends to ship (D259) |
 | R13 ＋ | The survey instrument measures **median time to each unlock** and **the rung at which players stop** — the two signals §7.7 of idea-v3.md names as the first things to instrument |
+
+### 11.7a Release gates for 1.0
+
+1.0 is the **first public** release. Everything in §11.7 that survives is Android-only; these are what the public release itself needs.
+
+| # | Gate |
+|---|---|
+| R14 ＋ | **Apple Developer enrolment complete**, signing and provisioning configured, and the upload path proven by an actual TestFlight build |
+| R15 ＋ | Store products created on both stores: the one-time unlock as a non-consumable, and tier 2 as **one subscription product with one base plan** — the group that 3.0 adds tier 3 to must exist from the first sale (§4.1 of idea-v3.md) |
+| R16 ＋ | Price points chosen per country, with tax treatment confirmed. Closes the longest-standing open item |
+| R17 ＋ | **A purchase, a restore and a reinstall tested on real hardware on both stores**, in sandbox and then once in production. Closes G9 |
+| R18 ＋ | The iOS privacy manifest (`PrivacyInfo.xcprivacy`) and App Store privacy labels completed — declarations about a build that collects nothing, which makes them cheap to write and easy to forget (D306) |
+| R19 ＋ | iOS backup verified: unlock records survive a restore onto a different device, matching what the Android allowlist already guarantees (D11) |
+| R20 ＋ | **A tester cohort exists and its size and duration were chosen deliberately.** No store imposes either any more, so the discipline the Play requirement used to force must be supplied or it will not happen (D302) |
+| R21 ＋ | The Casual-tier roster fix is in, confirmed by `calibrate.dart`, and shipped **before** the first sale — after that it becomes a migration rather than an edit (D305) |
+| R22 ＋ | The paywall copy does not claim the 1.0 meter is stronger than it is (D303) |
 
 ### 11.8 Security and privacy
 
@@ -604,7 +645,7 @@ New section, new prefix.
 |---|---|
 | S7 | The adversarial rules suite passes: every listed attempt is denied |
 | S8 | The client write allowlist is field-level; ratings, entitlement, totals and timestamps are server-written only |
-| S9 | Entitlement is written only after receipt validation, by the server, and is revoked on refund, chargeback or voided purchase |
+| S9 ▲ | Entitlement is written only after receipt validation, by the server, and is revoked on refund, chargeback or voided purchase. **From 2.0.** At 1.0 there is no server, so the authority is the store's own signed transaction read on the device and revocation follows the store's refresh (D303) |
 | S10 | Invite codes resist enumeration, expire, are single-use, are revocable, and are checked against the creator's block list on join |
 | S11 | A block prevents challenge, invite acceptance and profile visibility, checked in the game-creation path |
 | S12 | Friendship requires acceptance; friend requests carry no free text and are rate-limited |
@@ -612,7 +653,9 @@ New section, new prefix.
 | S14 | Data export returns everything deletion would remove, in a machine-readable form |
 | S15 | Firebase auth material, the entitlement cache, the FCM token and the Installations ID are excluded from backup |
 | S16 | The backup allowlist is re-verified against the app directory at every release, because a new dependency can add state silently |
-| S18 ＋ | The meter is server-authoritative and the free month is held against the account, because it gates a purchase |
+| S18 ▲ | The meter is server-authoritative and the free month is held against the account, because it gates a purchase. **From 2.0**, and the 2.0 migration *adopts* the local record rather than restarting the month |
+| S19 ＋ | **At 1.0 the meter is local and a reinstall clears it.** Stated as a known limit rather than a defect: closing it needs a device identifier, forbidden by §5.2 in every release, or a server, which is 2.0. No code path may work around this by identifying the device (D303) |
+| S20 ＋ | **On iOS, "no network call during computer play" is reviewed, not enforced.** There is no permission to withhold. The Android build's categorical check covers the code both platforms share, and the claim is made at that strength (D306) |
 
 ## 12. Build order
 
@@ -639,11 +682,29 @@ Each of 031–034 crosses every layer, so a real unlock is on screen after 032. 
 
 Disposition of the tickets already open: **015** starts immediately and is the longest lead time on the critical path; **016** sequences behind 030–035 and gains R12; **017** is cancelled by §5.2 and closed unbuilt; **021**'s blockers re-point from 017 and 023 to 032, 033 and 035, and it gains U21 and U22; **022** depends on everything; **023** is absorbed into 033 and closed unbuilt; **024** gains R13 and a threshold for G8. Later releases are not cut into tickets here (D275).
 
+### 12.1 What the re-cut does to the five open tickets
+
+All five were written when Google Play was the only store and its closed test was the gate. None is cancelled; each changes what it points at (D302).
+
+| Ticket | Now |
+|---|---|
+| **015** Store accounts and release signing | **Split by platform.** The Apple half is the critical path and starts immediately; the Google half is blocked on reactivation and no longer blocks anything else. Gains R14 |
+| **016** First closed-test upload | Becomes **first TestFlight upload**, with the Play upload as its Android sibling whenever that account returns |
+| **021** Accessibility audit | Unchanged in content, and now runs on two platforms — VoiceOver as well as TalkBack |
+| **022** Release readiness | Grows the iOS declarations, R18 and R19, and the store-product gates R15–R17 |
+| **024** Closed-test survey and thresholds | Keeps its instrument and loses its imposed cohort. R20 is what replaces the twelve-and-fourteen that used to define it |
+
+**1.0's own work is not cut into tickets here.** The iOS port, the shop, the meter and the roster fix are four separable pieces and the sequencing between them is a planning question this document does not need to answer in advance (D275 applies unchanged).
+
 ## 13. Further Notes
 
 ### 13.1 What this edition reversed, and why it is recorded rather than edited out
 
 **Everything release 0.1 shipped is no longer free forever.** v2 said it was. That sentence was written before there was a business model and could not survive one. Nothing has shipped to a member of the public, so nobody is having anything taken away. What survives is narrower and true: no feature is held back and there are no ads; what is metered is how often a new computer game may be *started*.
+
+**The release ladder was re-cut around a blocked store account, and the old one is left in the record.** 0.3a → 0.3b → 0.4 → 1.0 became 1.0 → 2.0 → 3.0 → 4.0 on 2026-08-16 (D302). Nothing about the *game* changed; what changed is that a plan whose critical path ran through an account nobody controls was replaced by one that ships to each store as that store becomes able to accept it. Two things got harder in the process and are recorded rather than absorbed: the meter now lands in the first public release instead of the fourth (§4.2 of idea-v3.md), and entitlement is on-device for one release (D303).
+
+**Online play will be free before it is paid, and says so from the start.** 2.0 ships it free because the rating that makes it worth buying arrives at 3.0. Announcing the future price on day one is the direct lesson of the free-forever sentence above (D304).
 
 **The large-screen layout is cancelled, not deferred.** A second set of screens to design, build, test at every font scale and keep correct, for a form factor nobody has asked for. Coming back later is cheaper than carrying it unused.
 
@@ -655,12 +716,15 @@ Every item is a business, account or measurement decision. **None is functional,
 
 | Item | Why it is open |
 |---|---|
-| Store price points | $1.99 and $4.99 are intended; store tiers, tax treatment and per-country equivalents are not chosen. Needed before 0.4 |
-| Store accounts and signing | Requires the owner's Google account now and Apple account by 0.3b. Gates R1–R3 |
+| Store price points | $1.99 and $4.99 are intended; store tiers, tax treatment and per-country equivalents are not chosen. **Needed before 1.0**, which is three releases sooner than it used to be. Gates R16 |
+| **Apple Developer enrolment** | **The critical path for 1.0 and not yet started.** Mac available, account not. Gates R14, and through it everything else in §11.7a (D302) |
+| **The Google Play Console account** | Cannot currently be reactivated. It now blocks only the Android half of 1.0, which is the entire point of the re-cut. Gates R11 |
+| **Whether Play Billing forces the INTERNET permission** | Decides whether `check.sh` keeps its categorical form on Android at 1.0. **Check empirically; assume neither answer** (D306) |
+| **The 1.0 tester cohort** | No store imposes a size or a duration any more. Gates R20, and with it whether R13's two signals are ever measured (D302) |
 | App name availability | Against both stores and trademark registers. Not yet done |
 | The reference device | The twenty-second ceiling is a device number and the node-to-seconds conversion must be confirmed on real hardware. Gates F14 |
 | The progression numbers | The shape is settled; the values are derived from a stated target rather than measured. First thing to instrument. Gates R13 |
-| Two Casual-tier rating inversions | Willow measures above Vireo and Vireo above Finch. Not a configuration defect — the roster pins `aggression` in the direction that opens the gap and no parameter change closes it. Progression gives it a **visible symptom**: across three consecutive rungs the player is shown increasing prices for decreasing strength. The economy survives; the legibility does not. Owned by the 1.0 roster revision (D268) |
+| ~~Two Casual-tier rating inversions~~ | **Closed.** It was owned by a 1.0 roster revision that no longer exists, so it is fixed before 1.0 instead — the three entries reorder so price and measured strength agree. The timing is the argument: the index sets what everything costs and pays, and nothing has been sold yet, so today it is an edit and after 1.0 it is a migration. Gates R21 (D305) |
 | The remaining OI items | OI-06 through OI-27 in the v1 spec §12.4 are unchanged and still gate their stated releases |
 
 ### 13.3 Deviations from the requested process
