@@ -57,8 +57,6 @@ void main() {
       expect(bramble.cornerBias, 0);
       expect(willow.centreBias, greaterThan(0.5), reason: 'strong centre');
       expect(vireo.cornerBias, greaterThan(0.5));
-      expect(vireo.aggression, greaterThan(0.5));
-      expect(finch.aggression, lessThan(0.5), reason: 'blocks before it builds');
       expect(kestrel.blunderRate, 0.08);
       // Among opponents that both win and block, blunder rate falls as rating
       // rises. Twig is excluded deliberately: it never blunders, and its
@@ -69,6 +67,22 @@ void main() {
       for (var i = 1; i < rated.length; i++) {
         expect(rated[i].blunderRate, lessThanOrEqualTo(rated[i - 1].blunderRate),
             reason: '${rated[i].id} blunders more than ${rated[i - 1].id}');
+      }
+    });
+
+    test('no Casual opponent sets aggression', () {
+      // Vireo built at 0.67 and Finch blocked at 0.30 until ticket 044. Both
+      // read well and both are gone: `aggression` is a style axis rather than a
+      // strength one, and using it to space rungs made the tier measurably
+      // *non-transitive* (D314). This is the assertion that stops it coming
+      // back one plausible-sounding personality at a time — the two lines it
+      // replaces asserted the opposite, and were the design it broke.
+      //
+      // It says nothing about whether the tier is ordered. It is not, and
+      // D315 is where that is recorded; removing aggression shrank the cycle
+      // and did not close it.
+      for (final bot in opponentCatalogue.where((b) => b.tier == BotTier.casual)) {
+        expect(bot.aggression, 0.5, reason: '${bot.id} sets aggression');
       }
     });
   });

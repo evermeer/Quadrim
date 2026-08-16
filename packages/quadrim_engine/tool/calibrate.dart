@@ -11,6 +11,7 @@
 //   dart run tool/calibrate.dart                    # the whole ladder
 //   dart run tool/calibrate.dart --games 40
 //   dart run tool/calibrate.dart --only oracle      # one opponent, resettled
+//                                                   # against its whole tier
 //
 // Not part of the shipped package: `tool` is outside the purity gate's `lib`
 // scan, and this is one of the two places the engine is allowed a clock.
@@ -50,7 +51,7 @@ void main(List<String> args) {
   }
 
   final pairs = options.only == null
-      ? [..._adjacentPairs(), ..._crossTierPairs()]
+      ? [..._adjacentPairs(), ..._withinTierPairs(), ..._crossTierPairs()]
       : _pairsFor(options.only!);
   if (pairs.isEmpty) {
     print('no such opponent: ${options.only}');
@@ -92,6 +93,37 @@ List<(BotConfig, BotConfig)> _adjacentPairs() => [
         (opponentCatalogue[i], opponentCatalogue[i + 1]),
     ];
 
+/// Every pair **inside** a tier, not only the adjacent ones.
+///
+/// Added by ticket 044, and the reason is a defect this tool could not see.
+/// Adjacent pairs plus cross-tier braces left every non-adjacent within-tier
+/// pairing unplayed — and the Casual tier turned out to be **intransitive**:
+/// Willow beat Vireo, Vireo beat Finch, and Finch beat Willow by 207 points.
+/// A cycle cannot be detected from a chain, because a chain has no triangle in
+/// it. Three decision entries described that tier's ordering from adjacent
+/// measurements alone and none of them could have found this (D313).
+///
+/// A tier of five costs ten pairs where the chain paid four, so the whole run
+/// grows by roughly twenty pairs. That is minutes, against a defect that
+/// survived three releases.
+List<(BotConfig, BotConfig)> _withinTierPairs() {
+  final pairs = <(BotConfig, BotConfig)>[];
+  for (final tier in BotTier.values) {
+    final members = opponentCatalogue.where((b) => b.tier == tier).toList();
+    for (var i = 0; i < members.length; i++) {
+      for (var j = i + 1; j < members.length; j++) {
+        // Adjacent pairs are already played by _adjacentPairs; playing them
+        // twice would weight them double in the fit.
+        final adjacent = opponentCatalogue.indexOf(members[j]) -
+                opponentCatalogue.indexOf(members[i]) ==
+            1;
+        if (!adjacent) pairs.add((members[i], members[j]));
+      }
+    }
+  }
+  return pairs;
+}
+
 /// One pair per tier combination, to tie the chain down at longer range.
 ///
 /// A chain of adjacent measurements can drift: nineteen small errors in the
@@ -116,8 +148,13 @@ BotConfig _middleOf(BotTier tier) {
 
 /// The spread one opponent is measured against when the rest are settled.
 ///
-/// Its neighbours in the catalogue, which is where a small error shows, plus
-/// one opponent from each other tier, which is where a large one does.
+/// **Its whole tier**, plus one opponent from each other tier — the first is
+/// where an ordering error shows and the second is where a scale error does.
+///
+/// This used to be the two neighbours rather than the tier, which made it
+/// about four pairs cheaper and is exactly the sample that hid the Casual
+/// cycle: an opponent's neighbours can both be opponents it beats (D313). A
+/// re-measure is slower now and answers a question it previously could not.
 List<(BotConfig, BotConfig)> _pairsFor(String id) {
   final index = opponentCatalogue.indexWhere((b) => b.id == id);
   if (index < 0) return const [];
@@ -125,6 +162,13 @@ List<(BotConfig, BotConfig)> _pairsFor(String id) {
   final others = <BotConfig>{
     if (index > 0) opponentCatalogue[index - 1],
     if (index + 1 < opponentCatalogue.length) opponentCatalogue[index + 1],
+    // **Its whole tier, not just its neighbours.** `--only` used to play the
+    // two adjacent opponents and one bot per other tier, which is exactly the
+    // sample that hid the Casual cycle: Willow's two neighbours are the two
+    // opponents it beats, so it measured 159 points above its anchor while
+    // losing to the two members of its own tier it never met (D313).
+    for (final other in opponentCatalogue)
+      if (other.tier == subject.tier && other.id != subject.id) other,
     for (final tier in BotTier.values)
       if (tier != subject.tier) _middleOf(tier),
   };

@@ -334,11 +334,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbVireo =>
-      'Valt aan vanuit de hoeken en bouwt liever dan dat het blokkeert.';
+      'Gaat eerst voor de hoeken en daarna voor het midden.';
 
   @override
   String get blurbFinch =>
-      'Voorzichtig. Legt jouw dreigingen stil voordat het aan zijn eigen begint.';
+      'Neemt het midden vóór de hoeken en speelt een net spel.';
 
   @override
   String get blurbKestrel => 'Degelijk in de basis en geeft zelden iets weg.';

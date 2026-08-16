@@ -334,11 +334,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbVireo =>
-      'Attacks from the corners, and would rather build than block.';
+      'Goes for the corners first, and the middle after that.';
 
   @override
   String get blurbFinch =>
-      'Cautious. Shuts your threats down before it starts its own.';
+      'Takes the middle before the corners, and plays a tidy game.';
 
   @override
   String get blurbKestrel =>

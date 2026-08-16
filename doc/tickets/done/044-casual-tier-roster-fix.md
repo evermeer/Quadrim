@@ -88,3 +88,58 @@ has lost days to exactly that (D178).
 **Do not fix this by editing `BotConfig.rating`.** It is the one edit that
 makes the symptom disappear from the screen while making the app's central
 claim — that these ratings are measured rather than asserted — false.
+
+---
+
+## Closure
+
+Committed on `main`. `bash tool/check.sh`: **ALL CHECKS PASSED**.
+
+Measured with the fixed instrument, 60 games a pair, budgets at 10%:
+
+| | published | measured | before |
+|---|---|---|---|
+| bramble | 1000 | 946 | — |
+| willow | 1100 | **1137** | 1259, flagged outside tolerance |
+| vireo | 1200 | **1236** | 1215 |
+| finch | 1250 | **1261** | 1176 |
+| kestrel | 1300 | 1275 | 1263 |
+
+Measured strength ascends and every rung is inside tolerance. Criterion 1 met.
+
+**Almost nothing about this ticket's plan survived contact with measurement.**
+
+The plan was to move configurations between rungs so that the stronger one sits
+higher (D309). Before doing that I measured the third pair — Willow against
+Finch, which no tool had ever played — and found **+207 the other way**. The
+tier is not mis-ordered, it is **intransitive**: Willow beats Vireo, Vireo beats
+Finch, Finch beats Willow. There is no assignment of three configurations to
+three rungs that makes a cycle ascend.
+
+**The instrument was half the defect.** `calibrate.dart` played adjacent pairs
+and cross-tier braces, so within a tier the non-adjacent pairs were never
+played — and a cycle needs a triangle to show up in. Willow's only two
+opponents were the two it beats, which is the whole reason it measured 159
+points above its anchor. It now plays every within-tier pair: 47 pairs instead
+of 29, 15¼ minutes instead of 13½ (D313).
+
+**Removing `aggression` was the owner's call and it was not the cause.** It
+shrank the cycle by about 40% and did not close it. What remains is driven by
+*which* good squares an opponent prefers — corners-first beats centres-first
+beats centres-only beats corners-first — which is the very axis D210 chose to
+order the tier by (D314, D315).
+
+**And D210's central claim does not survive a direct test.** It holds that
+preferring more of the sixteen seven-line cells is the tier's strongest lever.
+Taking Vireo from sixteen preferred cells to eight made it measurably
+*stronger* — its win over Finch grew from +38 to +70. That change was reverted
+because it made this rung worse, but the finding stands and is recorded.
+
+**What is fixed:** the aggregate ladder, which is what a published rating
+claims. **What is not:** three head-to-head matchups still run against the
+prices, and the calibration report now names them instead of hiding them. No
+lever available to this tier closes that; it needs a monotone one — search
+depth, or a finer blunder scale — and that is not 1.0's work.
+
+**No price and no payout changed.** Two lines were deleted from `bot.dart` and
+no roster index moved, so D309's predicted migration never arose.

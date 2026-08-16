@@ -1075,6 +1075,58 @@ And it is the **second** thing this app stores that game history cannot reconstr
 
 **Absent means unmetered, never expired.** A document written by 0.1 or 0.2 has no such field, and so does a damaged one. Both stamp at the next launch, which gives an existing player their month starting at the update — the rule §4.2 already states for players who predate the meter, arriving as the natural reading of a missing field rather than as a migration. The failure direction is deliberate: a missing record must let the player play, not wall them out of a game they cannot explain.
 
+## D313 — The calibrator could not see a cycle, because a chain has no triangle
+
+**Question:** Three decision entries — D210, D211, D268 — described the Casual tier's ordering from measurement, and all three missed that the tier is **intransitive**. How did the instrument not show it?
+
+**Decision:** Because it never played the pairs that would have shown it. `calibrate.dart` played every *adjacent* pair plus ten cross-tier braces; `--only` played an opponent's two neighbours plus one bot per other tier. Within a tier, every non-adjacent pairing was unplayed — and a cycle needs three mutual results to appear. A chain has no triangle in it.
+
+What that produced, measured before this ticket changed anything:
+
+| pair | result |
+|---|---|
+| willow → vireo | willow **+45** |
+| vireo → finch | vireo **+70** |
+| willow → finch | willow **−207** — never played by any tool |
+
+Willow's two neighbours are bramble and vireo, and it beats both, so it measured **1259 against a published 1100** — flagged as a defect, and the defect it named was the wrong one. It was not 159 points too strong; it was being asked only the two questions it could answer.
+
+`calibrate.dart` now plays **every pair inside a tier**, and `--only` measures against a subject's whole tier rather than its neighbours. The full run goes from 29 pairs to 47, and from 13½ minutes to 15¼.
+
+**Cost:** A longer run, and two problems in the Novice tier that were previously invisible are now on the report — Pebble measures 508 points below its anchor from 3 pairs and Clover 220 above from 4. Neither is new; both were always true and never asked about. That is what a better instrument does, and it is not a reason to keep the worse one.
+
+## D314 — Aggression leaves the Casual tier
+
+**Question:** D211 left two ways out of the Casual tier's ordering problem: space the rungs by something other than `aggression`, or make `aggression` a strength axis rather than a personality one. Which ships?
+
+**Decision:** The first. No opponent in the Casual tier sets `aggression` any more — Vireo's 0.67 and Finch's 0.30 are gone, and a test asserts that every member of the tier is at the 0.5 default.
+
+The second route was rejected on the measurement rather than on taste. `aggression` above 0.5 skips a share of denials and below 0.5 surrenders the initiative, so which setting wins depends on which setting it is facing. Ordering rungs by an axis like that aligns the *average* while leaving the tier intransitive: Finch would still lose to an opponent priced below it, and the price would still be a claim the board does not honour.
+
+**What it cost, and it is what the option promised.** Two personalities are gone. "Attacks from the corners, and would rather build than block" and "Cautious. Shuts your threats down before it starts its own" were the two most recognisable descriptions in the tier, and they were true of how those bots played. The blurbs are rewritten in both languages to describe what is left, which is a preference for squares — a duller thing to read and an accurate one. D211 defended those personalities explicitly as "the thing players actually experience"; this reverses that, because a description that is vivid and false is worse than one that is plain and true.
+
+**What it bought:** measured with the fixed instrument, the tier now runs 946, 1137, 1236, 1261, 1275 against published 1000, 1100, 1200, 1250, 1300. Every rung inside tolerance, and in the right order for the first time.
+
+## D315 — Aggression was not what made the tier cyclic
+
+**Question:** Removing `aggression` was supposed to remove the cycle. Did it?
+
+**Decision:** No, and recording that matters more than the fix does.
+
+Head-to-head after removing it: Willow still beat Vireo (+26 where it had been +45), Vireo still beat Finch (+38 where it had been +70), and Finch still beat Willow by **212**. The cycle shrank by roughly 40% and did not close. What remains is driven by **which of the two eight-cell groups an opponent prefers** — the axis D210 chose to order the tier by:
+
+- corners-first beats centres-first
+- centres-first beats centres-only
+- centres-only beats corners-first
+
+Rock-paper-scissors, in the one lever the tier was built on.
+
+**And D210's central claim does not survive a direct test.** It says preferring more of the sixteen seven-line cells is worth more than anything else in the tier. Dropping Vireo's `centreBias` — taking it from sixteen preferred cells to eight — made it measurably **stronger**: its win over Finch grew from +38 to +70 and its win over Kestrel from +17 to +31. That change was reverted, because it made the rung it sits on worse, but the result stands: **more preferred squares is not monotonically stronger.** Ranking centres above the remaining cells apparently costs more than the extra eight good cells pay.
+
+**So why is the ladder now ordered?** Because aggregate rating and head-to-head are different questions. A published rating claims how hard an opponent is *in general*, and against a broad enough sample the tier now ascends. Three specific matchups inside it still run the other way, and the calibration report names them as inversions — correctly, and they are no longer hidden.
+
+**Cost, and it is the honest limit of this ticket:** a player who happens to play like Willow will find Finch harder than its price suggests, and a player who plays like Vireo will find Kestrel easier. Nothing in the available levers fixes that. Closing it needs a lever that is monotone rather than stylistic — search depth, or a finer blunder scale — and both are larger changes than a roster fix, and neither is 1.0's.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

@@ -641,13 +641,13 @@ abstract class AppLocalizations {
   /// No description provided for @blurbVireo.
   ///
   /// In en, this message translates to:
-  /// **'Attacks from the corners, and would rather build than block.'**
+  /// **'Goes for the corners first, and the middle after that.'**
   String get blurbVireo;
 
   /// No description provided for @blurbFinch.
   ///
   /// In en, this message translates to:
-  /// **'Cautious. Shuts your threats down before it starts its own.'**
+  /// **'Takes the middle before the corners, and plays a tidy game.'**
   String get blurbFinch;
 
   /// No description provided for @blurbKestrel.

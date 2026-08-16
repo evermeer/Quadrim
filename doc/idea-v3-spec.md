@@ -740,7 +740,7 @@ Every item is a business, account or measurement decision. **None is functional,
 | App name availability | Against both stores and trademark registers. Not yet done |
 | The reference device | The twenty-second ceiling is a device number and the node-to-seconds conversion must be confirmed on real hardware. Gates F14 |
 | The progression numbers | The shape is settled; the values are derived from a stated target rather than measured. First thing to instrument. Gates R13 |
-| ~~Two Casual-tier rating inversions~~ | **Closed.** It was owned by a 1.0 roster revision that no longer exists, so it is fixed before 1.0 instead — the three entries reorder so price and measured strength agree. The timing is the argument: the index sets what everything costs and pays, and nothing has been sold yet, so today it is an edit and after 1.0 it is a migration. Gates R21 (D305) |
+| ~~Two Casual-tier rating inversions~~ | **Closed by ticket 044**, and not by the mechanism D305 predicted. `aggression` left the Casual tier (D314) and `calibrate.dart` began playing every within-tier pair instead of only adjacent ones (D313) — the second mattered more, because the tier is **intransitive** and a chain of adjacent measurements cannot see a cycle. Measured now: 946, 1137, 1236, 1261, 1275 against published 1000, 1100, 1200, 1250, 1300, every rung inside tolerance and in order. The cycle itself remains and is caused by the square-preference axis rather than by aggression (D315). Closed R21 |
 | The remaining OI items | OI-06 through OI-27 in the v1 spec §12.4 are unchanged and still gate their stated releases |
 
 ### 13.3 Deviations from the requested process

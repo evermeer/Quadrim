@@ -289,6 +289,21 @@ const BotConfig bramble = BotConfig(
 // ranks corners above centres above everything else plays identically at
 // (0.55, 0.35) and at (0.8, 0.6) — measured, byte for byte, when a first
 // attempt at this tried to weaken Vireo by lowering both.
+//
+// **No opponent in this tier sets `aggression`, and that is load-bearing**
+// (D314, ticket 044). It used to: Vireo built at 0.67 and Finch blocked at
+// 0.30, which read well and made the tier **intransitive** rather than
+// ordered. Measured over 200 games each: Willow beat Vireo by 45, Vireo beat
+// Finch by 70, and Finch beat Willow by 207. A cycle, not a ladder — because
+// `aggression` above 0.5 skips a share of denials (`_denialSkipChance`) and
+// below 0.5 surrenders the initiative, so which setting wins depends on which
+// setting it is playing, exactly like rock-paper-scissors.
+//
+// D211 named the two ways out: space the rungs by something other than
+// aggression, or make aggression a strength axis rather than a personality
+// one. The second keeps the cycle and merely aligns its average, so this tier
+// takes the first. What remains is a clean order: good squares, then blunder
+// rate. Adding aggression to a Casual opponent re-opens the cycle.
 
 /// All four rules and a strong pull to the middle of the cube.
 const BotConfig willow = BotConfig(
@@ -300,11 +315,12 @@ const BotConfig willow = BotConfig(
   centreBias: 0.6,
 );
 
-/// Corner-hungry and aggressive: builds before it denies, and lets a third of
-/// the opponent's double threats through.
+/// Corner-hungry: all sixteen good squares, and it ranks the corners first.
 ///
-/// It sees the centre too, and ranks it below the corners — the extra eight
-/// good cells are what pay for a third of its denials going missing.
+/// **Its `aggression: 0.67` is gone** (D314). Dropping `centreBias` as well was
+/// tried and reverted: eight corner cells measured *stronger* than sixteen
+/// corners-first, which is the reverse of what the block comment above predicts
+/// and made this rung's inversion larger rather than smaller (D315).
 const BotConfig vireo = BotConfig(
   id: 'vireo',
   tier: BotTier.casual,
@@ -313,10 +329,12 @@ const BotConfig vireo = BotConfig(
   blunderRate: 0.11,
   centreBias: 0.5,
   cornerBias: 0.7,
-  aggression: 0.67,
 );
 
-/// Defensive: denies before it builds, and takes good squares while it does.
+/// The same sixteen squares as Vireo, ranked centre first, and a point less
+/// blunder.
+///
+/// **Its `aggression: 0.30` is gone** (D314), for the same reason as Vireo's.
 const BotConfig finch = BotConfig(
   id: 'finch',
   tier: BotTier.casual,
@@ -325,7 +343,6 @@ const BotConfig finch = BotConfig(
   blunderRate: 0.10,
   centreBias: 0.7,
   cornerBias: 0.5,
-  aggression: 0.30,
 );
 
 /// The tier's ceiling: all four rules cleanly applied, the full sixteen good
