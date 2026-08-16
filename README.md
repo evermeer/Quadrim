@@ -375,3 +375,10 @@ Version 4.0
 Remaining platforms
 We don't need a roster revision as was stated earlier for the 1.0 version.
 ```
+
+**Prompt**
+```
+Create the remaining tickets that are needed for the 1.0 version.
+Make sure that the tickets for iOS are described well enough so that they can be picked up on another machine.
+Ask clarifying questions and don't finalize the spec until any ambiguities are resolved.
+```

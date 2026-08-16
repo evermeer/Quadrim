@@ -995,6 +995,44 @@ So the choice is not "fix it at 1.0 or fix it at 4.0". It is "fix it before anyb
 
 **Cost:** The single strongest privacy guarantee this project has — a platform-level refusal rather than a promise — is now true on one of its two platforms. Nothing in the code changes; what changes is what can be claimed.
 
+## D307 — `in_app_purchase`, and what declining RevenueCat costs
+
+**Question:** 1.0 sells two products with no backend. RevenueCat would give server-side receipt validation, cross-platform entitlement and a closed reinstall leak, without us running a server. Why not take it?
+
+**Decision:** Flutter's `in_app_purchase` plugin — one Dart API over StoreKit and Play Billing, no third party, entitlement read on the device exactly as D303 describes.
+
+**RevenueCat was genuinely tempting and was rejected on one point.** It assigns every installation an app user id and receives the purchase stream. An anonymous, per-installation, persistent identifier is a device identifier by any reading that matters, and §5.2 forbids one **in any release** — not "except when a vendor generates it for us". Around that sits the rest: a processor to name in two privacy declarations, a network dependency in the release whose selling point is that it has none, and an outage in someone else's service becoming a player unable to prove they paid.
+
+The honest accounting is that declining it **leaves D303's reinstall leak open until 2.0**. A paid service would have closed it now. What it would have cost is the clearest privacy claim this project has, one release before an account system closes the same hole for free.
+
+**Cost:** Revenue leaks for one release to anyone who works out that reinstalling resets the meter. The unlock purchase itself is safe — the store re-issues it — so what leaks is subscription pressure, not the ability to charge.
+
+## D308 — The meter goes in `quadrim_progression`, not a fourth package
+
+**Question:** The meter is pure arithmetic over game history with an injected clock, which is the shape the pure packages exist for. New package or existing one?
+
+**Decision:** `meter.dart` inside `quadrim_progression`, beside `points.dart`, `quests.dart`, `streaks.dart` and `unlocks.dart`.
+
+`streaks.dart` is the precedent and it is exact: a fold over completed games plus an injected day boundary, no clock read inside the package (P19). The meter is the same computation with a different predicate. A fourth package would earn its own purity scan, pubspec, CI entry and import graph for about a hundred lines.
+
+**The package invariant is unaffected**, and it is worth checking rather than asserting: D261/D270 require that no function in `quadrim_progression` accepts the player's rating or rung. A meter needs neither — it counts games, and which opponent they were against does not change the count.
+
+**Cost:** The package's name is now slightly wrong. It holds progression *and* one thing that is really commerce, and a reader looking for the meter will not guess where it lives. That is cheaper than a package.
+
+## D309 — The Casual fix moves the configurations, not the entries
+
+**Question:** D305 says the inversion is fixed by reordering three roster entries. Reordering changes the roster index, and the index sets every unlock price and every win payout. Is that the right mechanism?
+
+**Decision:** No — **move the configurations between the rungs and leave the entries where they are.** Willow, Vireo and Finch keep indices 5, 6 and 7 and keep their ratings of 1100, 1200 and 1250; what moves is which personality sits on which rung, so that the stronger-measuring configuration ends up on the higher-priced one.
+
+This refines D305 rather than contradicting it — same defect, same release, better mechanism — and it is better on three counts:
+
+- **No price and no payout changes at all**, because no entry changes index (§7.3). D305 assumed a price migration and reasoned that it had to happen before the first sale. It turns out there is no migration; what was actually urgent is the *displayed difficulty claim*, which is a weaker form of the same argument and still points at 1.0.
+- **No avatar moves.** Ticket 038's twenty portraits are keyed on the opponent id.
+- **The ratings stay anchors.** Nothing here edits a `BotConfig.rating` to meet a measurement, which is the one edit that would make the app's central claim false (D144).
+
+**Cost:** The personality copy has to move with the configuration rather than staying with the name, so two of the three opponents' descriptions change in both languages. Text that no longer describes the bot it names is worse than the inversion it fixed — and it is the kind of thing that passes every test and is caught only by reading it.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
