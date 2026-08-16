@@ -4318,3 +4318,218 @@ confirm the palette and cannot confirm the rendering; `flutter analyze` and 322
 green tests said nothing about any of these, because a widget test asserts that
 text exists, not that it can be seen. Screenshots of the running app are part of
 reviewing a design ticket, not a nicety after it.
+
+---
+
+# Ticket 045 — The meter
+
+> Reviewed 2026-08-16 against `main` (working tree, uncommitted).
+> Scope: `packages/quadrim_progression/lib/src/meter.dart` (new), its export,
+> `packages/quadrim_progression/test/meter_test.dart` (new),
+> `app/lib/data/meter_fold.dart` (new), `app/test/meter_fold_test.dart` (new),
+> and the changes to `app/lib/data/documents.dart` and
+> `app/lib/data/local_game_repository.dart`.
+> `bash tool/check.sh`: **ALL CHECKS PASSED** before the review.
+
+| Severity | Count |
+|---|---|
+| major | 2 |
+| minor | 2 |
+| nit | 1 |
+
+Both majors are in the eight lines added to `LocalGameRepository.open`, not in
+the meter arithmetic. The arithmetic is the part that had tests written against
+it; the repository change is the part that looked too small to need any.
+
+## [MAJOR] The first-launch write can stop the app from starting — `bug`
+
+**File:** `app/lib/data/local_game_repository.dart:76`
+
+```dart
+if (settings.freeMonthStartedAt == null) {
+  settings = settings.copyWith(freeMonthStartedAt: clock());
+  await store.writeSettings(settings.toJson());
+}
+```
+
+**Problem:** `open()` performed no writes before this ticket, and `main.dart:35`
+calls it with no `try`/`catch`. `FileDocumentStore.writeSettings` is
+`_writeAtomically`, which throws on a full disk, a permission failure or a
+read-only volume — so a condition that used to degrade into "settings do not
+save" now degrades into "the app does not launch".
+
+**Fix:** Attempt the write, keep the stamp in memory whatever happens. A failed
+stamp costs the player nothing — the next launch re-stamps, which restarts the
+free month in the player's favour, the direction §4.2's failure rule already
+points.
+
+```dart
+try {
+  await store.writeSettings(settings.toJson());
+} on Exception {
+  // Not fatal. The month is stamped in memory for this session and the next
+  // launch tries again; a disk that cannot be written is not a reason to
+  // refuse to start.
+}
+```
+
+## [MAJOR] The stamp overwrites a settings document written by a newer build — `bug`
+
+**File:** `app/lib/data/local_game_repository.dart:59`
+
+```dart
+var settings =
+    SettingsDocument.fromJson(await store.readSettings() ?? {}) ??
+        const SettingsDocument();
+```
+
+**Problem:** `SettingsDocument.fromJson` returns null for **two** different
+situations — an absent document, and one whose `schemaVersion` is greater than
+this build understands — and this code cannot tell them apart, so it treats
+both as "fresh install: stamp and write". Spec §8.7 says a document from a
+newer build is *skipped by the reader*, and skipping has until now meant the
+file survived on disk until the player deliberately changed a setting. It is
+now overwritten with defaults at the next launch, taking the player's locale,
+theme and tutorial state with it.
+
+Reachable by installing an older build over a newer one: a TestFlight
+downgrade, or a branch switch during development.
+
+**Fix:** Read once, and stamp only when the document was absent or readable —
+never when it was rejected for being too new.
+
+```dart
+final storedSettings = await store.readSettings();
+var settings = SettingsDocument.fromJson(storedSettings ?? {});
+final rejectedAsNewer = storedSettings != null && settings == null;
+settings ??= const SettingsDocument();
+if (settings.freeMonthStartedAt == null && !rejectedAsNewer) { … }
+```
+
+## [MINOR] `weekOrdinal` puts two different weeks together before 1970 — `bug`
+
+**File:** `packages/quadrim_progression/lib/src/meter.dart:139`
+
+```dart
+int weekOrdinal(Day day) =>
+    (day.ordinal + (DateTime.thursday - kWeekStartsOn) % 7) ~/ 7;
+```
+
+**Problem:** `~/` truncates toward zero rather than flooring, so the arithmetic
+is wrong for negative ordinals. Verified by running it:
+
+```
+1969-12-28 weekday=7 (Sun) ordinal=-4 week=0
+1969-12-29 weekday=1 (Mon) ordinal=-3 week=0   <- should start a new week
+1970-01-01 weekday=4 (Thu) ordinal= 0 week=0
+```
+
+Sunday the 28th closes one week and Monday the 29th opens the next; both land
+in week 0, so a week straddling the epoch is counted as two weeks' allowance.
+Only reachable with a device clock set before 1970 — but it is a date function
+that is wrong for some dates, and the same one-line fix removes the question.
+
+**Fix:** Floor rather than truncate.
+
+```dart
+int weekOrdinal(Day day) {
+  final shifted = day.ordinal + (DateTime.thursday - kWeekStartsOn) % 7;
+  return shifted >= 0 ? shifted ~/ 7 : ((shifted + 1) ~/ 7) - 1;
+}
+```
+
+*(`Day.ordinal` in `streaks.dart:39` has the same truncation and is out of this
+diff's scope. Worth its own look — it would mean streak runs joining across the
+epoch — but nothing in this ticket made it worse.)*
+
+## [MINOR] A test that fails in the first three minutes of every day — `test-coverage`
+
+**File:** `app/test/meter_fold_test.dart:66`
+
+```dart
+final now = DateTime.now();
+final games = [
+  for (var i = 0; i < 3; i++)
+    game(mode: GameMode.vsComputer,
+        createdAt: now.toUtc().subtract(Duration(minutes: i + 1))),
+];
+```
+
+**Problem:** Run between 00:00 and 00:03 local, one or more of the three games
+falls on the previous calendar day, `startedToday` is under three and the
+`MeterLimit.daily` assertion fails. Every other test in both files injects its
+times; this one reaches for the wall clock in a suite whose entire subject is
+day boundaries.
+
+**Fix:** Inject `now`, as the sibling tests do.
+
+```dart
+final now = DateTime(2026, 8, 12, 15);
+… createdAt: now.subtract(Duration(minutes: i + 1)).toUtc()
+```
+
+## [NIT] Dead clause in `FreeMonth.covers`, and the test for it proves nothing — `simplification`
+
+**File:** `packages/quadrim_progression/lib/src/meter.dart:97`
+
+```dart
+bool covers(DateTime now) => now.isBefore(endsAt) || now.isBefore(startedAt);
+```
+
+**Problem:** `endsAt` is always after `startedAt`, so `now.isBefore(startedAt)`
+is only evaluated when `now >= endsAt`, at which point it is necessarily false.
+The clause can never change the result. The test at `meter_test.dart:171`
+("a clock that moved backwards gives the month rather than taking it") passes
+through the *first* clause and would pass with the second deleted, so it does
+not test what it says it tests — the comment above the method describes
+behaviour that is real but is produced by different code than it claims.
+
+**Fix:** Delete the clause and keep the comment, which is still true:
+`now.isBefore(endsAt)` already gives a backwards clock the month.
+
+---
+
+## Not findings, checked and cleared
+
+- **Purity.** No clock or random source is read in `meter.dart`; `now` and
+  `freeMonth` are parameters throughout, and `check.sh`'s scan passes. The
+  local-time `DateTime(...)` constructors in `endsAt` use the ambient zone to
+  build an instant from components, which is what "one calendar month later at
+  the same wall-clock time" means and is not a clock read.
+- **Free-month calendar arithmetic.** `DateTime(year, month + 1, 0).day` is
+  correct for all twelve months including the December roll, and clamps 31
+  January to 28 or 29 February. Tested at `meter_test.dart:154`.
+- **Month, year and leap boundaries in the week arithmetic.** Correct for all
+  post-epoch dates, tested at `meter_test.dart:105` and `:112`.
+- **A missing or damaged free-month record cannot wall a player out.** Null
+  means unmetered in both the package (`meter.dart:170`) and the fold
+  (`meter_fold.dart:44`), and there is a test for it.
+- **Started, not completed.** `startedGamesFrom` filters on `GameMode` alone
+  and reads `createdAt`, so an abandoned or in-progress game counts (F17).
+
+## Resolution
+
+All five fixed in the same ticket, before the commit.
+
+| # | Finding | Outcome |
+|---|---|---|
+| 1 | First-launch write can stop the app starting | Fixed — the write is attempted and its failure swallowed; the stamp stands in memory |
+| 2 | Stamp overwrites a newer settings document | Fixed — `rejectedAsNewer` distinguishes "absent" from "written by a newer build", and only the first is stamped |
+| 3 | `weekOrdinal` wrong before 1970 | Fixed — floors instead of truncating |
+| 4 | Test flaky in the first three minutes of a day | Fixed — `now` injected, like every sibling test |
+| 5 | Dead clause in `covers`, and a test that proved nothing | Fixed — clause deleted; the comment was right about the behaviour and wrong about which line produced it |
+
+Two regression tests were added for the majors, because neither had one and
+neither would have been caught by the suite as it stood:
+`meter_fold_test.dart` — *"a document from a newer build is left alone, not
+stamped"* and *"a store that cannot be written still opens"*.
+
+`bash tool/check.sh`: **ALL CHECKS PASSED**, 334 app tests, 113 progression
+tests.
+
+**What this review is worth noting for.** The meter arithmetic — the part that
+looked hard, got a decision entry and 18 tests — had one real defect, and it was
+unreachable. The eight lines added to `LocalGameRepository.open` — the part that
+looked like plumbing — had two, one of which crashes the app on a full disk and
+one of which destroys a downgraded player's settings. The tests were written
+where the thinking was, not where the risk was.

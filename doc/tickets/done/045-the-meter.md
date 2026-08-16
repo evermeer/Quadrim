@@ -99,3 +99,37 @@ returning player a second free month.
 refuses. Splitting it this way means the counting can be wrong in a test rather
 than in front of a player, and it means this ticket ships without a single
 user-facing string.
+
+---
+
+## Closure
+
+Committed on `main`. `bash tool/check.sh`: **ALL CHECKS PASSED**, 334 app tests
+(was 322), 113 progression tests.
+
+`meter.dart` sits beside `streaks.dart` and shares its `Day`. The free month is
+a `freeMonthStartedAt` field on `SettingsDocument`, stamped by
+`LocalGameRepository.open` at first launch (D312). `meter_fold.dart` maps stored
+games onto it, the way `points_fold.dart` maps them onto the progression fold.
+
+**Three decisions, and one of them is that this ticket's own signature was
+wrong.** It specified `Iterable<CompletedGame>` two lines below the rule that a
+game counts when it is *started* — a type that does not exist, reached for
+because the other four folds in this package all read completed games. Starts
+and completions are opposites here and the meter is the one that reads starts
+(D310). The week starts Monday in every locale, because the paywall has to name
+a day the player can act on (D311). The free month lives in settings, which
+makes it the second thing this app stores that game history cannot reconstruct
+(D312).
+
+**The review found two majors, and neither was in the arithmetic.** The meter
+itself — the part that looked hard and got 18 tests — had one real defect, and
+it needed a device clock set before 1970 to reach. The eight lines added to
+`LocalGameRepository.open` — the part that looked like plumbing and got none —
+had two: an unguarded write that turned a full disk into an app that will not
+launch, and a stamp that overwrote a settings document written by a newer build,
+which spec §8.7 says is skipped by the reader and had until then survived on
+disk. Both fixed with a regression test each.
+
+The lesson is not "test more". It is that the tests were written where the
+thinking had been, and the risk was in the eight lines nobody thought about.

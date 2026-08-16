@@ -308,10 +308,29 @@ class SettingsDocument {
     this.theme = 'system',
     this.tutorialCompleted = false,
     this.tutorialOffered = false,
+    this.freeMonthStartedAt,
     this.schemaVersion = kSchemaVersion,
   });
 
   final int schemaVersion;
+
+  /// When this installation first launched, which is when the unmetered first
+  /// month began (§4.2, ticket 045).
+  ///
+  /// **Not a preference, and this document is otherwise entirely preferences.**
+  /// It is here rather than in a document of its own because it is one
+  /// timestamp, and settings are already stored, already versioned, already
+  /// inside the backup allowlist and already fall back to defaults when
+  /// unreadable — all four of which a new document would have to be given
+  /// (D312).
+  ///
+  /// It is also the **second** thing this app stores that game history cannot
+  /// reconstruct, after the unlock records. A player who installs and does not
+  /// play still has a month running, so there is no game to derive it from.
+  ///
+  /// Null until first launch stamps it. Null means *unmetered*, never expired:
+  /// a missing record must fail towards letting the player play.
+  final DateTime? freeMonthStartedAt;
 
   /// `en`, `nl` or `system`.
   final String locale;
@@ -333,12 +352,17 @@ class SettingsDocument {
     String? theme,
     bool? tutorialCompleted,
     bool? tutorialOffered,
+    DateTime? freeMonthStartedAt,
   }) =>
       SettingsDocument(
         locale: locale ?? this.locale,
         theme: theme ?? this.theme,
         tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
         tutorialOffered: tutorialOffered ?? this.tutorialOffered,
+        // Never cleared through here. The free month is consumed once and
+        // never begins again (§4.1), so a `copyWith` that could null it is a
+        // way to hand someone a second one by passing the wrong argument.
+        freeMonthStartedAt: freeMonthStartedAt ?? this.freeMonthStartedAt,
       );
 
   Map<String, Object?> toJson() => {
@@ -347,6 +371,7 @@ class SettingsDocument {
         'theme': theme,
         'tutorialCompleted': tutorialCompleted,
         'tutorialOffered': tutorialOffered,
+        'freeMonthStartedAt': freeMonthStartedAt?.toUtc().toIso8601String(),
       };
 
   /// Null when unreadable — see [GameDocument.fromJson]. The caller falls back
@@ -364,6 +389,15 @@ class SettingsDocument {
       // safe direction: the cost is one dismissable dialog, where defaulting
       // true would silently deny it to everyone who upgrades.
       tutorialOffered: json['tutorialOffered'] as bool? ?? false,
+      // Also absent in documents written before this field existed — every
+      // document written by 0.1 and 0.2. Null there means the repository
+      // stamps it at the next launch, so an existing player's free month
+      // starts when they update rather than retroactively at whenever they
+      // first installed. That is the rule §4.2 already states for players who
+      // predate the meter, arriving here as the natural reading of a missing
+      // field rather than as a migration.
+      freeMonthStartedAt:
+          DateTime.tryParse(json['freeMonthStartedAt'] as String? ?? ''),
     );
   }
 }

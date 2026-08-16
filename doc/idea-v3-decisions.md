@@ -1033,6 +1033,48 @@ This refines D305 rather than contradicting it — same defect, same release, be
 
 **Cost:** The personality copy has to move with the configuration rather than staying with the name, so two of the three opponents' descriptions change in both languages. Text that no longer describes the bot it names is worse than the inversion it fixed — and it is the kind of thing that passes every test and is caught only by reading it.
 
+## D310 — The meter reads starts, and the ticket that specified it said otherwise
+
+**Question:** Ticket 045's own signature was `meterState({required Iterable<CompletedGame> games, …})`. Two lines below it, the same ticket says a game counts when it is **started**, not when it finishes. Which is right?
+
+**Decision:** Starts. The signature was wrong and is now `Iterable<StartedGame>`.
+
+`CompletedGame` does not exist — the type the ticket was reaching for is `ScoredGame`, which every other fold in `quadrim_progression` takes. That is exactly how the mistake happened: points, quests and streaks all read completed games because they reward *results*, so a fourth fold in the same package looked like a fifth of the same shape. It is not. **A meter that counted results would be defeated by starting a game and quitting**, which §4.2 says in as many words and which F17 tests.
+
+The fold therefore reads `GameDocument.createdAt` over games in any status, where the other folds read `completedAt` over completed ones. `meter_fold.dart` says so at the top, because a reader who has seen the other two will assume this one matches them.
+
+**`StartedGame` is a named type over a bare `DateTime` for the same reason.** A function taking `Iterable<DateTime>` accepts a list of `completedAt` values silently, and the entire correctness of the file is that it does not get those.
+
+**Cost:** A fourth input type in a package that already has `ScoredGame`, carrying one field. Worth it: the alternative is a type that makes the one mistake this file exists to avoid invisible at the call site.
+
+## D311 — The week starts on Monday, in every locale
+
+**Question:** "Nine per week" needs a week. Calendar week or rolling seven days, and if calendar, starting which day?
+
+**Decision:** A calendar week, starting **Monday**, fixed, everywhere.
+
+**Calendar rather than rolling** because the paywall has to say when the limit lifts (D221). "Your games come back on Monday" is a sentence a player can act on; "in three days, when Tuesday's games age out of the window" is not, and a limit nobody can predict reads as the app being broken rather than as a rule.
+
+**Monday rather than the locale's own week start** because reading the locale would put an ambient input into a pure package, and because two players in different countries would then hit the same limit on different days for a reason neither could see. `kWeekStartsOn` is a constant, so a future locale-aware caller changes one line rather than a design.
+
+**Cost:** In locales that draw calendars Sunday-first — the United States among them — the app's week disagrees with the wall calendar. A player there whose Sunday is "the start of the week" finds their allowance refreshing a day late. That is a genuine wrongness and it is chosen over the alternative, which is a limit whose reset day depends on device settings.
+
+## D312 — The free month lives in the settings document
+
+**Question:** The free month's start is not derivable from game history — a player who installs and never plays still has a month running. Where is the one timestamp stored?
+
+**Decision:** A `freeMonthStartedAt` field on `SettingsDocument`.
+
+A document of its own would need a store path, reader, writer, repository method, unreadable-document fallback and its own tests. Settings already has all six, is already inside the backup allowlist under `files/quadrim/`, and is already versioned. That is the whole argument, and it is a laziness argument.
+
+**Two things it costs, and both are real.**
+
+It makes a document that is otherwise entirely *preferences* hold one *record*. A reader looking for the meter's state will not think to look in settings, which is why the field carries a comment saying what it is rather than only what it holds.
+
+And it is the **second** thing this app stores that game history cannot reconstruct. D12 — "nothing but the unlock records is stored" — is now "nothing but the unlock records and one timestamp". The invariant it protected still holds where it matters: balances, streaks, quest progress and statistics remain derived, and the test that reconstructs each of them from game history alone is untouched. But the sentence is no longer literally true, and a spec sentence that has quietly stopped being true is worse than one that was amended.
+
+**Absent means unmetered, never expired.** A document written by 0.1 or 0.2 has no such field, and so does a damaged one. Both stamp at the next launch, which gives an existing player their month starting at the update — the rule §4.2 already states for players who predate the meter, arriving as the natural reading of a missing field rather than as a migration. The failure direction is deliberate: a missing record must let the player play, not wall them out of a game they cannot explain.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

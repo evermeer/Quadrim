@@ -57,14 +57,51 @@ class LocalGameRepository
       final doc = UnlockDocument.fromJson(json);
       if (doc != null) unlocks[doc.opponentId] = doc;
     }
-    final settings = SettingsDocument.fromJson(await store.readSettings() ?? {});
+    final clock = now ?? () => DateTime.now().toUtc();
+    final storedSettings = await store.readSettings();
+    var settings = SettingsDocument.fromJson(storedSettings ?? {});
+
+    // `fromJson` returns null for two different situations and only one of them
+    // is a fresh install: a document written by a **newer** build is rejected
+    // the same way an absent one is. Spec §8.7 says such a document is skipped
+    // by the reader, and skipped has always meant it survives on disk — so it
+    // must not be stamped, because stamping writes defaults over it and takes
+    // the player's locale, theme and tutorial state with it.
+    final rejectedAsNewer = storedSettings != null && settings == null;
+    settings ??= const SettingsDocument();
+
+    // **First launch stamps the free month** (§4.2, ticket 045). At launch
+    // rather than at first game, because that is what the spec says the clock
+    // starts on — a player who installs, looks around and comes back in six
+    // weeks has had their month.
+    //
+    // Writing here means a fresh install performs one settings write before
+    // anything is on screen. That is the cost of the rule; the alternative,
+    // stamping it lazily when the meter is first consulted, makes the month
+    // start at the first *metered* action and quietly gives it away to anyone
+    // who only ever plays pass-and-play.
+    if (settings.freeMonthStartedAt == null && !rejectedAsNewer) {
+      settings = settings.copyWith(freeMonthStartedAt: clock());
+      try {
+        await store.writeSettings(settings.toJson());
+      } on Exception {
+        // Not fatal, and this is the only write `open` performs. A full disk
+        // or a read-only volume used to degrade into "settings do not save";
+        // letting it throw here would degrade it into "the app does not
+        // start", because `main.dart` does not catch this. The stamp stands
+        // for this session and the next launch tries again — which restarts
+        // the month in the player's favour, the direction §4.2 already errs
+        // in when a record is missing.
+      }
+    }
+
     return LocalGameRepository._(
       store,
-      now ?? () => DateTime.now().toUtc(),
+      clock,
       newId ?? _randomId,
       games,
       unlocks,
-      settings ?? const SettingsDocument(),
+      settings,
     );
   }
 

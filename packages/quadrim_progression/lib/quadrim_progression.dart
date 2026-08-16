@@ -1,5 +1,11 @@
-/// Quadrim progression: points, unlock costs, and — from tickets 033 and 034 —
-/// quests and streaks.
+/// Quadrim progression: points, unlock costs, quests and streaks — and, from
+/// ticket 045, the meter.
+///
+/// The meter is commerce rather than progression and the name of this package
+/// is now slightly wrong. It lives here because it is a fold over games with an
+/// injected day boundary, which is precisely what `streaks.dart` already is; a
+/// fourth package would earn its own purity scan, pubspec and CI entry for a
+/// hundred lines of arithmetic (D308).
 ///
 /// Pure Dart. No Flutter, no Firebase, no `dart:io`, **no ambient clock and no
 /// ambient random source**; `tool/check.sh` enforces all of it. The clock
@@ -21,6 +27,7 @@
 /// hundred instant Pebble games in a day pay four Titan wins (D261, D270).
 library;
 
+export 'src/meter.dart';
 export 'src/points.dart';
 export 'src/quests.dart';
 export 'src/streaks.dart';
