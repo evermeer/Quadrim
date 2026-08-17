@@ -72,28 +72,53 @@ class YourPath extends StatefulWidget {
 const int _kVisibleTiles = 3;
 const double _kGap = 8;
 
+/// The margin between the screen edge and the panel, which every other section
+/// gets from `home_screen.dart`'s SliverPadding and this one applies itself.
+///
+/// This section is laid out at the full width of the screen, because the two
+/// arrows hang off the outside of its panel and **a widget cannot be pressed
+/// outside its parent's box** — `RenderBox.hitTest` checks that first, so a
+/// child positioned beyond the edge is painted and not touchable (D319).
+const double _kScreenMargin = 16;
+
 /// Everything between the screen edge and the scrolling row, per side. It has
 /// to match what actually surrounds this widget, because the tile width is
-/// derived from the screen width rather than measured: `home_screen.dart`'s
-/// SliverPadding (16), the parchment card's border (1.5) and the
-/// `ParchmentSection` padding this widget asks for (8).
-const double _kSectionInset = 16 + 1.5 + 8;
+/// derived from the screen width rather than measured: the margin above, the
+/// parchment card's border (1.5) and the `ParchmentSection` padding this widget
+/// asks for (8).
+const double _kSectionInset = _kScreenMargin + 1.5 + 8;
 
 /// The tile card's own horizontal padding, subtracted to get the avatar's
 /// width. Passed down rather than measured, because a `LayoutBuilder` inside
 /// the row would break the intrinsic-height pass that sizes it.
 const double _kCardPadding = 6;
 
-/// The tile card's vertical padding, which is where the avatar starts. Only
-/// used to put the arrows on the same line as the faces.
-const double _kCardTopPadding = 8;
-
 /// How big the two carved arrows are drawn, and how big the thing you press
-/// is. The picture is small enough that the outer tiles are still recognisable
-/// underneath it; the target around it is the 48dp minimum, which is the number
-/// that matters and is not the same number (spec §8.13).
-const double _kArrowSize = 34;
+/// is. The target is the 48dp minimum, which is the number that matters and is
+/// not the same number (spec §8.13).
+const double _kArrowSize = 40;
 const double _kArrowTap = 48;
+
+/// How see-through an arrow is. They sit on top of a face, and a solid disc
+/// over one is a hole in the ladder rather than a control on it.
+const double _kArrowOpacity = 0.75;
+
+/// How far each arrow hangs off the panel, as a fraction of its own width.
+/// Straddling the border is what makes it read as a handle on the edge of the
+/// panel rather than a button dropped inside it.
+const double _kArrowOverhang = 0.30;
+
+/// Where an arrow's target starts, measured from the **screen** edge, since
+/// that is what this section is laid out against.
+///
+/// It comes out at exactly zero for the sizes above, and that is what decides
+/// them: the picture is as large as it can be with 30% of it outside the panel
+/// and a full 48dp target still on the screen. Making the arrow smaller pushes
+/// the target off the left edge, where the outer part of it stops being
+/// pressable for the same reason the overhang would have (D319).
+const double _kArrowOutset = _kScreenMargin -
+    _kArrowOverhang * _kArrowSize -
+    (_kArrowTap - _kArrowSize) / 2;
 
 class _YourPathState extends State<YourPath> {
   ScrollController? _controller;
@@ -179,35 +204,43 @@ class _YourPathState extends State<YourPath> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final next = nextUnlockIndex(widget.unlocked);
-    // The carved sign carries the heading, written on it by the app rather
-    // than painted into it, so it reads "Jouw pad" in Dutch (D297). It hangs
-    // off the card's top-left corner, which is what makes it read as a sign
-    // nailed to the panel rather than a picture inside it.
-    return ParchmentSection(
-      heading: l10n.yourPath,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-      child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // The width comes from the screen rather than from a LayoutBuilder: a
+    // LayoutBuilder cannot report intrinsic dimensions, and the row below is
+    // sized by the intrinsic height of its tallest tile.
+    final width = MediaQuery.sizeOf(context).width - _kSectionInset * 2;
+    final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
+    _step = tile + _kGap;
+    _maxOffset = math.max(0, _step * opponentCatalogue.length - width);
+    _settle();
+    // A rotation changes the width and therefore both of these, and no scroll
+    // happens to report it — so they are refreshed here as well as by the
+    // listener.
+    if (_controller!.hasClients) {
+      _atStart = _controller!.offset <= 0.5;
+      _atEnd = _controller!.offset >= _maxOffset - 0.5;
+    }
+
+    // The row scrolls, and on a phone that is only discoverable by trying it:
+    // three tiles fill the width exactly, so there is no half-visible fourth to
+    // hint at the other seventeen. The two carved arrows say so, and stepping
+    // one tile is also the only way to move the row precisely — a drag lands
+    // wherever the snap rounds it to (D318).
+    //
+    // They are siblings of the panel rather than children of it, because they
+    // hang off its border and nothing outside a box can be pressed (D319).
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Builder(
-          builder: (context) {
-            // The width comes from the screen rather than from a LayoutBuilder:
-            // a LayoutBuilder cannot report intrinsic dimensions, and the row
-            // below is sized by the intrinsic height of its tallest tile.
-            final width =
-                MediaQuery.sizeOf(context).width - _kSectionInset * 2;
-            final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
-            _step = tile + _kGap;
-            _maxOffset =
-                math.max(0, _step * opponentCatalogue.length - width);
-            _settle();
-            // A rotation changes the width and therefore both of these, and no
-            // scroll happens to report it — so they are refreshed here as well
-            // as by the listener.
-            if (_controller!.hasClients) {
-              _atStart = _controller!.offset <= 0.5;
-              _atEnd = _controller!.offset >= _maxOffset - 0.5;
-            }
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _kScreenMargin),
+          // The carved sign carries the heading, written on it by the app
+          // rather than painted into it, so it reads "Jouw pad" in Dutch
+          // (D297). It hangs off the card's top-left corner, which is what
+          // makes it read as a sign nailed to the panel rather than a picture
+          // inside it.
+          child: ParchmentSection(
+            heading: l10n.yourPath,
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
             // Sized by the tallest tile rather than by a number. Two guesses at
             // a fixed height were both wrong — 18 pixels short at the largest
             // font scale, then 28 — because the avatar is sized by the tile and
@@ -217,15 +250,7 @@ class _YourPathState extends State<YourPath> {
             // Eager rather than lazy, and that is affordable here: the roster is
             // exactly twenty and cannot grow without a code change, so this is a
             // bounded list, unlike the finished-games list beneath it.
-            // The row scrolls, and on a phone that is only discoverable by
-            // trying it: three tiles fill the width exactly, so there is no
-            // half-visible fourth to hint at the other seventeen. The two
-            // carved arrows say so, and stepping one tile is also the only way
-            // to move the row precisely — a drag lands wherever the snap
-            // rounds it to (D318).
-            return Stack(
-              children: [
-              SingleChildScrollView(
+            child: SingleChildScrollView(
               controller: _controller,
               scrollDirection: Axis.horizontal,
               // Lands on a tile boundary, so the row always shows three whole
@@ -262,35 +287,34 @@ class _YourPathState extends State<YourPath> {
                 ),
               ),
             ),
-              // On the same line as the faces rather than the middle of the
-              // row, because the tile grows downward with the font scale and
-              // the avatar does not.
-              for (final (asset, label, direction, hidden) in [
-                (Art.arrowLeft, l10n.pathScrollLeft, -1, _atStart),
-                (Art.arrowRight, l10n.pathScrollRight, 1, _atEnd),
-              ])
-                Positioned(
-                  left: direction < 0 ? 0 : null,
-                  right: direction < 0 ? null : 0,
-                  top: _kCardTopPadding +
-                      (tile - _kCardPadding * 2 - _kArrowTap) / 2,
-                  child: _ScrollArrow(
-                    asset: asset,
-                    label: label,
-                    // Faded rather than removed at the ends: a control that
-                    // vanishes takes its own explanation with it, and the row
-                    // would then have nothing saying it scrolls at all once a
-                    // player reached the far end of the roster.
-                    hidden: hidden,
-                    onPressed: () => _step1(direction),
-                  ),
-                ),
-              ],
-            );
-          },
+          ),
         ),
+        // Halfway down the panel and straddling its border, so neither arrow
+        // sits over the middle of a face and both read as handles on the edge
+        // of the panel.
+        for (final (asset, label, direction, hidden) in [
+          (Art.arrowLeft, l10n.pathScrollLeft, -1, _atStart),
+          (Art.arrowRight, l10n.pathScrollRight, 1, _atEnd),
+        ])
+          Positioned(
+            left: direction < 0 ? _kArrowOutset : null,
+            right: direction < 0 ? null : _kArrowOutset,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: _ScrollArrow(
+                asset: asset,
+                label: label,
+                // Faded rather than removed at the ends: a control that
+                // vanishes takes its own explanation with it, and the row would
+                // then have nothing saying it scrolls at all once a player
+                // reached the far end of the roster.
+                hidden: hidden,
+                onPressed: () => _step1(direction),
+              ),
+            ),
+          ),
       ],
-      ),
     );
   }
 }
@@ -320,7 +344,7 @@ class _ScrollArrow extends StatelessWidget {
     return IgnorePointer(
       ignoring: hidden,
       child: AnimatedOpacity(
-        opacity: hidden ? 0 : 1,
+        opacity: hidden ? 0 : _kArrowOpacity,
         duration: const Duration(milliseconds: 150),
         child: Semantics(
           button: true,

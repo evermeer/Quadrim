@@ -1171,6 +1171,20 @@ Stepping one tile rather than a page, and from the nearest tile boundary rather 
 
 **Cost:** Two 6.5KB assets, and 48dp of each outer tile covered by a tap target. The artwork was delivered on a painted transparency checkerboard like the signs, but with the checker showing **through** the glass button face, so removing it needed something the signs did not: the pattern is two flat greys, so on a small neighbourhood the difference between its two phases is the whole of it and everything else the picture does is common to both. `_dechecker` in `tools/artgen` subtracts half that difference from one phase and adds it to the other, which leaves the stone texture, the highlight and the drop shadow untouched. Its grid is not on integer pixels — 34.5 across, 34.3 down, fitted to the tile boundaries in the top row and left column — so a modulus of 34 would drift a whole cell over the width of the file.
 
+## D319 — An arrow that hangs off the panel needs the panel not to bound it
+
+**Question:** The arrows of D318 are asked to sit half in and half out of the panel — 30% of each disc outside its border — and to be translucent and vertically centred. The first of those is not a styling change. Why?
+
+**Decision:** `Your path` is now the one section laid out at the **full width of the screen**, applying its own 16dp margin, with the arrows as siblings of the panel rather than children of it.
+
+`RenderBox.hitTest` checks `size.contains(position)` before it asks any child, so **a widget positioned outside its parent's box is painted and never pressed.** `Stack(clipBehavior: Clip.none)` changes only the painting. Left inside the panel, the arrows drew correctly across the border and then failed to respond: the tap landed on the tile behind them, because their centres were a few pixels outside the scrolling row that contained them. This is not a rounding problem that a bigger target fixes — every pixel outside the parent is dead, so the whole overhang is.
+
+So the box that contains the arrows has to be the one that extends past the panel, which is the screen. `home_screen.dart` splits its first `SliverPadding` and gives this section a `SliverToBoxAdapter` at the full width; `YourPath` carries the 16 itself. Everything downstream is unchanged — `_kSectionInset` still adds up to the same 25.5, because the margin moved rather than changed.
+
+**The arrow's size is decided by this, not chosen.** With 30% of it outside the panel and a full 48dp target around it, the target's outer edge lands exactly on the screen edge at 40dp. Smaller, and the target hangs off the *screen*, where its outer part stops being pressable for precisely the same reason the overhang would have been.
+
+**Cost:** One section of the home screen no longer shares the list padding with its neighbours, so a future change to that 16 has to be made in two places. The constant is named on both sides and this entry is the third. Two tests moved with it: one measured "off the right-hand edge" against `YourPath`'s own rect, which is now wider than the row it was standing in for.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

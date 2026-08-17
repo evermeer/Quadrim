@@ -187,7 +187,11 @@ void main() {
           lessThan(tester.getRect(find.text('Clover')).left));
       // Willow, the next unlock, is built but off screen until the player
       // scrolls — the row holds all twenty, so it exists without being visible.
-      final viewport = tester.getRect(find.byType(YourPath));
+      // The scrolling row, not the whole section: `YourPath` is laid out at the
+      // full width of the screen so its arrows can hang off the panel, and its
+      // rect therefore runs past the row on both sides (D319).
+      final viewport = tester.getRect(find.descendant(
+          of: find.byType(YourPath), matching: find.byType(Scrollable)));
       expect(tester.getRect(find.text('Willow')).left,
           greaterThan(viewport.right),
           reason: 'off the right-hand edge until scrolled to');
@@ -331,7 +335,8 @@ void main() {
           isTrue);
       // The right one is still live, because there are seventeen tiles that
       // way.
-      expect(tester.widget<AnimatedOpacity>(arrows.last).opacity, 1);
+      expect(tester.widget<AnimatedOpacity>(arrows.last).opacity, greaterThan(0),
+          reason: 'translucent, but not faded out');
     });
 
     testWidgets('cancelling the confirmation buys nothing', (tester) async {

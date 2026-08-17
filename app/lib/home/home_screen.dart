@@ -425,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CustomScrollView(
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, kSectionGap),
                     sliver: SliverList.list(
                       children: [
                         RatingCard(
@@ -433,22 +433,27 @@ class _HomeScreenState extends State<HomeScreen> {
                             balance: _balance,
                             streak: _streak,
                             series: _series),
-                        const SizedBox(height: kSectionGap),
-                        YourPath(
-                          summary: _summary,
-                          balance: _balance,
-                          unlocked: _unlockedIds,
-                          onUnlock: _unlocking ? null : _unlock,
-                          onOpen: _openOpponent,
-                        ),
-                        // Not before the first finished game. "Closest to
-                        // completion" ranks fifty-three quests that are all at
-                        // zero, so the four it picks are arbitrary — and they
-                        // would push the empty state off the first screen,
-                        // which is the one moment it exists for.
                       ],
                     ),
                   ),
+                  // The one section laid out at the full width of the screen:
+                  // its scroll arrows hang off the outside of its panel, and a
+                  // widget positioned beyond its parent's box is painted but
+                  // never hit-tested (D319). It applies the 16 itself.
+                  SliverToBoxAdapter(
+                    child: YourPath(
+                      summary: _summary,
+                      balance: _balance,
+                      unlocked: _unlockedIds,
+                      onUnlock: _unlocking ? null : _unlock,
+                      onOpen: _openOpponent,
+                    ),
+                  ),
+                  // The quests panel is not built before the first finished
+                  // game. "Closest to completion" ranks fifty-three quests that
+                  // are all at zero, so the four it picks are arbitrary — and
+                  // they would push the empty state off the first screen, which
+                  // is the one moment it exists for.
                   // Directly under Your Path, and above the quests: a game
                   // waiting to be finished is the most actionable thing on the
                   // screen, and it used to sit below two panels about what has
