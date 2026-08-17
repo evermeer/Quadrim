@@ -382,3 +382,19 @@ Create the remaining tickets that are needed for the 1.0 version.
 Make sure that the tickets for iOS are described well enough so that they can be picked up on another machine.
 Ask clarifying questions and don't finalize the spec until any ambiguities are resolved.
 ```
+
+Ask to impelment ticket 044 and later again for 045
+
+**Prompt**
+```
+Continue implementing the game and implement ticket 044 in the ./doc/tickets folder.
+The goal is to have the tickets implemented so that there is a complete testable version..
+Ask clarifying questions if anything is unclear and add the decissions to the file doc/idea-v3-decisions.md
+After the ticket run the skill code-review-expert 
+Commit the code to the main branch after each ticket is completed and reviewed.
+Then open the new app in the simulator.
+```
+
+2 small bug fixes for point count and quest calculation.
+
+
