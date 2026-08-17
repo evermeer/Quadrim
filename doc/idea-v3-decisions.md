@@ -1235,6 +1235,66 @@ Two stock defaults were doing it. On Android 12 and up the platform draws the sp
 
 **Cost:** `values/styles.xml` and `values-night/styles.xml` are now the same file twice. Deleting the night one would be tidier and wrong — the platform still needs a night answer, and the stock one it would fall back to is not this one. Below API 31 there is no icon on the splash at all, only the black field; that is what a window-background splash is, and it is not worth a bitmap layer to change.
 
+## D324 — The minimum iOS is 13.0, and nobody chose it
+
+**Question:** §12 has no minimum-iOS decision in it. `flutter create` has now made one by default. What is it, and does it stand?
+
+**Decision:** `IPHONEOS_DEPLOYMENT_TARGET = 13.0`, in all three build configurations, and it stands for 1.0 unchanged. Ticket 041 was explicit that this number is to be *recorded* rather than tuned, and the reason is that the ticket had no evidence to tune it with: the argument for raising it is an API this app does not reach, and the argument for lowering it is a device Flutter 3.44.9 will not build for.
+
+**What it costs is nothing measurable and one thing worth naming.** iOS 13 is 2019, so the floor excludes no phone anybody is still playing on. But the number is now load-bearing in a way a default is not: `MinimumOSVersion` in the shipped `Info.plist` is `13.0`, and App Store Connect will show it as the app's requirement from the first upload. Raising it later drops devices that had the app; that is a product decision and it now has a starting point instead of an accident.
+
+## D325 — There is no Podfile, because iOS builds through Swift Package Manager
+
+**Question:** Ticket 041 says "`ios/Podfile.lock` **is** committed, like `pubspec.lock`". There is no `ios/Podfile` and no `ios/Podfile.lock`. Is something missing?
+
+**Decision:** Nothing is missing. Flutter 3.44.9 ships `enable-swift-package-manager` on by default — it is in `flutter doctor -v`'s feature-flag line — and the app's only plugin with an iOS side, `path_provider_foundation`, has a `Package.swift`. So the plugin is resolved by SPM and no Podfile is ever generated. The simulator build succeeds with `ios/` containing only `Flutter`, `Runner`, `Runner.xcodeproj`, `Runner.xcworkspace` and `RunnerTests`.
+
+**The ticket's instruction is not wrong, it is from before the flag flipped**, and it is left in the ticket text rather than edited, because the ticket is the record of what was believed at the time.
+
+**CocoaPods is still installed and still matters**, which is the confusing part. `flutter doctor` will not report the Xcode toolchain green without it, and the moment a dependency without SPM support is added, a Podfile appears and the ticket's instruction becomes live again. Treat "commit `Podfile.lock`" as dormant, not deleted.
+
+**Cost:** the lockfile guarantee is weaker than the ticket assumed. `pubspec.lock` pins the Dart side and is committed; the SPM side is resolved from `Package.swift` at build time with no committed resolution file in `ios/`. Two machines can therefore build against different `path_provider_foundation` point releases without the repository noticing. That is acceptable for one plugin and would not be for ten.
+
+## D326 — CocoaPods runs under bundler on this Mac, and that is a machine condition
+
+**Question:** `gem install cocoapods` fails on this Mac. Ticket 041 says to use Homebrew, whose installer needs a password no agent has. What actually happened?
+
+**Decision:** CocoaPods 1.17.0 is installed into `~/.cocoapods-bundle` by bundler, and `~/.local/bin/pod` is a three-line shim that sets `BUNDLE_GEMFILE` and `exec`s `bundle exec pod`. `flutter doctor` finds it on `PATH` and reports it exactly as it would a Homebrew install.
+
+**The failure mode is why this is written down.** macOS 26 ships Ruby 2.6. Every modern CocoaPods dependency has moved past it, and `gem install` surfaces them one at a time — `ffi` wants ≥ 3.0, then `securerandom` wants ≥ 3.1, then `drb` wants ≥ 2.7, then `connection_pool` wants ≥ 3.2 — so pinning each one in turn looks like progress and never terminates. Bundler resolves the whole graph against the Ruby requirement at once and finishes in a single command. Anyone who reaches for `gem install cocoapods` here will spend an hour learning this.
+
+**This is a machine condition, like `JAVA_TOOL_OPTIONS` on the Windows box (CLAUDE.md).** Nothing in the repository caused it, nothing in the repository fixes it, and no path to it is committed. Homebrew remains the recommended route for anyone who can type a password; this is the route for anyone who cannot.
+
+**Cost:** one more undocumented-if-not-for-this-entry thing between a fresh Mac and a build, and a `pod` that is a shim rather than a binary — so `which pod` answers a shell script and `pod --version` pays bundler's startup on every call.
+
+## D327 — What `flutter create --platforms=ios` touched outside `ios/`, and what was put back
+
+**Question:** Ticket 041 says the command "adds `app/ios/` and touches nothing else." It wrote 47 files. What were the others, and which of them should survive?
+
+**Decision:** Three things landed outside `ios/` and two were reverted.
+
+- **`app/test/widget_test.dart`** — the template's counter smoke test, which imports a `MyApp` this project does not have and fails on sight. **Deleted.** It is not a test this project lost; it is a test this project never had.
+- **`app/.metadata`** — rewritten twice over. `channel` became `[user-branch]`, which is an artefact of cloning Flutter at a tag rather than a fact about the project, and would tell the Windows machine the repository is on a user branch. And the `migration.platforms` list had `android` **replaced** by `ios` rather than joined by it, which would have left `flutter migrate` blind to the Android half. **Both put back:** `stable`, and both platforms listed.
+- **`app/.idea/` and `app/quadrim.iml`** — IDE scaffolding, already covered by `.gitignore` and therefore never staged. Left where they fell.
+
+**The lesson is that the ticket's "touches nothing else" is a statement of intent, not of fact**, and the only way to hold the command to it is `git status` immediately afterwards, before anything else is run. Two of these three would have been invisible in a diff read at the end of the ticket.
+
+**Cost:** `.metadata` now says something `flutter create` did not write, so the next `flutter create` or `flutter migrate` on this project will try to rewrite it the same way, and the same check is needed again.
+
+## D328 — `CFBundleLocalizations` is declared, and it is not what makes the app Dutch
+
+**Question:** Ticket 041 says: "Without this iOS reports only English to the system, and a Dutch device runs the app in English no matter what `flutter gen-l10n` produced." Is that true?
+
+**Decision:** The key is declared — `[en, nl]` — and the stated reason for it is wrong. It was disproved by removing it, rebuilding, and installing on a wiped `nl-NL` simulator: the app came up entirely in Dutch anyway.
+
+**Why the ticket's reasoning fails is specific to Flutter.** iOS does filter a *native* app's language list by the bundle's declared localisations — `Bundle.preferredLocalizations` is the intersection of the device's ordered languages and what the app says it has. The Flutter engine does not read that. It reads the system-wide `NSLocale.preferredLanguages`, hands the raw list to Dart, and `MaterialApp.supportedLocales` resolves against it. So the bundle declaration is bypassed entirely on the path that chooses the app's language.
+
+**The key stays, for the two things it does do.** It is what puts Quadrim in the per-app language picker in iOS Settings, so a player with a Dutch phone can choose to run this one app in English. And App Store Connect reads it when deciding which languages the listing claims. Both are real and neither is the in-app language.
+
+**What actually guarantees Dutch is unchanged and lives on the Dart side**: `flutter gen-l10n`, the `supportedLocales` list, and the existing test that every string exists in Dutch. That guarantee was already enforced and already tested; iOS adds nothing to it and could not have taken it away.
+
+**Cost:** none in the product, and one correction in the record — a criterion that had been ticked with the right observation and the wrong explanation. The general form is worth keeping: a platform declaration that *looks* load-bearing is not, and the way to tell is to delete it and rebuild, which took four minutes.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

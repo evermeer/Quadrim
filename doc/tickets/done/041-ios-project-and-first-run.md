@@ -134,3 +134,72 @@ commit. `ios/Podfile.lock` **is** committed, like `pubspec.lock`.
 platform folder and a green run. Every temptation you meet — an icon that is
 Flutter's default, a launch screen that is white, a purchase that does not
 exist — is a later ticket in this same folder.
+
+## Closure
+
+`app/ios/` exists and the app runs. `bash tool/check.sh`: **ALL CHECKS PASSED**,
+339 app tests, 121 engine tests, unchanged by this ticket — nothing in it
+touches Dart.
+
+**The Mac, as required by AC 1 and 9.** Flutter 3.44.9 / Dart 3.12.2, cloned to
+`~/flutter` at the tag rather than installed by Homebrew, because Homebrew ships
+whatever is current. `flutter doctor`:
+
+```
+[!] Flutter (Channel [user-branch], 3.44.9, on macOS 26.6.1 25G76 darwin-arm64, locale nl-NL)
+[✗] Android toolchain - develop for Android devices
+[✓] Xcode - develop for iOS and macOS (Xcode 26.6)
+[✗] Chrome - develop for the web
+[✓] Connected device (3 available)
+[✓] Network resources
+```
+
+Android red is the expected split — that half of the build lives on the Windows
+machine. The Flutter warning is the tag clone, not a fault. Chrome is not
+installed and this app has no web target.
+
+**The deployment target is iOS 13.0** in all three build configurations, taken
+as Flutter's default and left there (D324). `MinimumOSVersion` in the built
+`Info.plist` reads `13.0`.
+
+**The bundle identifier is `nl.evict.quadrim`** in all three Runner
+configurations, matching Android's `applicationId`. Verified in the built
+binary, not only in `project.pbxproj` — `CFBundleIdentifier` extracts as
+`nl.evict.quadrim` from `Runner.app/Info.plist`. This is D213's permanent value
+and it is right.
+
+**Info.plist**: display name `Quadrim`; `UISupportedInterfaceOrientations` and
+its `~ipad` variant both reduced to portrait alone; `CFBundleLocalizations`
+`[en, nl]`; `CFBundleDevelopmentRegion` `en`. All four verified by extracting
+them from the compiled `Runner.app/Info.plist` rather than by reading the
+source. The `~ipad` key goes beyond the ticket's wording: `TARGETED_DEVICE_FAMILY`
+is `1,2`, so leaving it at four orientations would have let an iPad rotate an
+app that §8.1 says is portrait-only.
+
+**Three decisions the ticket did not anticipate.** There is no Podfile at all —
+Flutter 3.44.9 resolves `path_provider_foundation` through Swift Package
+Manager, so the ticket's "commit `Podfile.lock`" is dormant rather than wrong
+(D325). CocoaPods had to be installed under bundler, because the system Ruby is
+2.6 and `gem install cocoapods` fails one dependency at a time without ever
+terminating (D326). And `flutter create` touched three things outside `ios/`,
+two of which had to be put back — including an `.metadata` that silently
+*replaced* the Android platform entry with the iOS one (D327).
+
+### Not verified, and not claimed
+
+Four criteria need hardware or an interaction this run could not perform. They
+are listed here rather than ticked.
+
+| AC | Status |
+|----|--------|
+| 4 — launches on the simulator | **Met.** Built, installed and launched on iPhone 17 Pro / iOS 26.5; screenshot taken of the running app. |
+| 4 — launches on a physical iPhone | **Pending.** A device is visible to `flutter doctor` but the run needs an Apple ID in Xcode. |
+| 5 — a full game played to a win on the device | **Pending**, with the same cause. Also unreachable on the simulator this run: the tap-injection path needs `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer`, which has never been run on this Mac (`/var/db/xcode_select_link` does not exist), and needs a password. |
+| 6 — portrait-locked and does not rotate | **Met at the declaration**, which is where the lock lives: portrait alone in the built `Info.plist`, both keys. Not observed by rotating a device. |
+| 7 — a Dutch device runs the app in Dutch | **Met.** The Mac's locale is `nl-NL`, the simulator inherits it, and the app came up in Dutch — "Voor het eerst hier?", "Tegen de computer", "Nieuwe partij". Not, however, *because* of `CFBundleLocalizations`, which the review disproved by experiment (D328). |
+
+The fonts and the artwork are right on the first thing iOS drew: Cinzel small
+caps in the headings, EB Garamond in the body, the forest photograph behind a
+cream panel, and the four layer diagrams with their stones. That was the risk in
+this ticket — 64 cells drawn by a text and image stack that had never drawn them
+— and it is not a risk any more.
