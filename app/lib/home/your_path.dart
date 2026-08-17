@@ -32,12 +32,23 @@ class YourPath extends StatefulWidget {
   const YourPath({
     super.key,
     required this.summary,
+    required this.balance,
     required this.unlocked,
     required this.onUnlock,
     required this.onOpen,
   });
 
   final HomeSummary summary;
+
+  /// Earned minus spent, clamped at zero — **not** [HomeSummary.points], which
+  /// is the earned total and keeps rising as unlocks are bought (spec §8.8).
+  ///
+  /// This section read `summary.points` until it was reported from a device:
+  /// a player with 256 earned, 192 of it already spent on Willow and Vireo, and
+  /// 64 left was shown "256 of 256" toward a 256-point unlock — a full bar and
+  /// a button that did nothing. Every other surface took the balance; this one
+  /// was never handed it (D316).
+  final int balance;
 
   /// Catalogue ids the player has bought. The free five are not in here and do
   /// not need to be — [isUnlocked] knows the rating rule.
@@ -170,7 +181,7 @@ class _YourPathState extends State<YourPath> {
                             locked: !isUnlocked(
                                 opponentCatalogue[index].id, widget.unlocked),
                             isNext: index == next,
-                            points: widget.summary.points,
+                            balance: widget.balance,
                             price: unlockCost(index),
                             onUnlock: widget.onUnlock,
                             avatarSize: tile - _kCardPadding * 2,
@@ -281,7 +292,7 @@ class _PathTile extends StatelessWidget {
     required this.record,
     required this.locked,
     required this.isNext,
-    required this.points,
+    required this.balance,
     required this.price,
     required this.onUnlock,
     required this.avatarSize,
@@ -292,7 +303,9 @@ class _PathTile extends StatelessWidget {
   final OpponentRecord? record;
   final bool locked;
   final bool isNext;
-  final int points;
+
+  /// The spendable balance, not the earned total (D316).
+  final int balance;
   final int price;
   final Future<void> Function(BotConfig bot, int price)? onUnlock;
 
@@ -318,7 +331,7 @@ class _PathTile extends StatelessWidget {
     // What the tile says about itself, spoken. Locked tiles lead with the
     // price, because that is the fact the section exists to deliver.
     final state = locked
-        ? l10n.lockedWithPrice(price, points)
+        ? l10n.lockedWithPrice(price, balance)
         : played == 0
             ? l10n.neverPlayed
             : '${l10n.opponentRecord(record!.wins, record!.losses, record!.draws, played)}. '
@@ -354,7 +367,7 @@ class _PathTile extends StatelessWidget {
                 if (locked)
                   _LockedFooter(
                     price: price,
-                    points: points,
+                    balance: balance,
                     isNext: isNext,
                     onUnlock:
                         onUnlock == null ? null : () => onUnlock!(bot, price),
@@ -422,13 +435,15 @@ class _PlayedFooter extends StatelessWidget {
 class _LockedFooter extends StatelessWidget {
   const _LockedFooter({
     required this.price,
-    required this.points,
+    required this.balance,
     required this.isNext,
     required this.onUnlock,
   });
 
   final int price;
-  final int points;
+
+  /// The spendable balance, not the earned total (D316).
+  final int balance;
   final bool isNext;
   final VoidCallback? onUnlock;
 
@@ -436,7 +451,7 @@ class _LockedFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final affordable = points >= price;
+    final affordable = balance >= price;
     return Column(
       children: [
         Row(
@@ -460,14 +475,14 @@ class _LockedFooter extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
-              value: price == 0 ? 1 : (points / price).clamp(0.0, 1.0),
+              value: price == 0 ? 1 : (balance / price).clamp(0.0, 1.0),
               minHeight: 4,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
               color: theme.colorScheme.primary,
             ),
           ),
           const SizedBox(height: 2),
-          Text(l10n.unlockProgress(points, price),
+          Text(l10n.unlockProgress(balance, price),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall),

@@ -415,6 +415,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: kSectionGap),
                         YourPath(
                           summary: _summary,
+                          balance: _balance,
                           unlocked: _unlockedIds,
                           onUnlock: _unlocking ? null : _unlock,
                           onOpen: _openOpponent,

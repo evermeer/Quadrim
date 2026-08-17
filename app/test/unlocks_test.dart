@@ -243,6 +243,36 @@ void main() {
       expect(find.text('128 points'), findsOneWidget, reason: "Vireo's price");
     });
 
+    testWidgets('progress is the balance, not the earned total', (tester) async {
+      // Reported from a device against the shipped build: Your Path showed
+      // "256 of 256" toward Finch to a player holding 64 points, with a full
+      // bar and a button that did nothing. It read `summary.points` — the
+      // *earned* total, which keeps rising as unlocks are bought — where every
+      // other surface took the balance (D316).
+      //
+      // Every earlier test here spends nothing, so earned and balance are the
+      // same number and the defect is invisible. This one spends.
+      _phone(tester);
+      final repo = await _repository();
+      await _win(repo, 'bramble', 16); // 16 x 16 = 256 earned
+      await repo.purchase('willow', pricePaid: 64);
+      await repo.purchase('vireo', pricePaid: 128); // 192 spent, 64 left
+      await tester.pumpWidget(QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, random: Random(1)));
+      await tester.pumpAndSettle();
+
+      await scrollTo(tester, 'Finch');
+      expect(find.text('64 of 256'), findsOneWidget,
+          reason: 'the spendable balance');
+      expect(find.text('256 of 256'), findsNothing,
+          reason: 'the earned total, which is what the bug displayed');
+
+      final button = tester.widget<ButtonStyleButton>(
+          find.widgetWithText(FilledButton, 'Unlock'));
+      expect(button.onPressed, isNull,
+          reason: '64 does not buy a 256-point unlock');
+    });
+
     testWidgets('cancelling the confirmation buys nothing', (tester) async {
       _phone(tester);
       final repo = await _repository();

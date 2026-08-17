@@ -1127,6 +1127,22 @@ Rock-paper-scissors, in the one lever the tier was built on.
 
 **Cost, and it is the honest limit of this ticket:** a player who happens to play like Willow will find Finch harder than its price suggests, and a player who plays like Vireo will find Kestrel easier. Nothing in the available levers fixes that. Closing it needs a lever that is monotone rather than stylistic — search depth, or a finer blunder scale — and both are larger changes than a roster fix, and neither is 1.0's.
 
+## D316 — Your Path showed the earned total where it meant the balance
+
+**Question:** Reported from a device: a player holding 64 points saw "256 of 256" on Your Path's Finch tile, with a full progress bar and an Unlock button that did nothing. The opponent detail page, one tap away, showed "64 of 256". Why did two surfaces disagree?
+
+**Decision:** Because they were reading two different numbers, and only one of them was the right one. `HomeSummary.points` is the **earned** total — a fold over every game ever won — and it keeps rising as unlocks are bought. The spendable balance is that minus the prices actually paid, clamped at zero. The player had earned 256, spent 192 on Willow and Vireo, and had 64 left.
+
+`OpponentScreen`, `OpponentDetail` and `RatingCard` were all handed `_balance`. **`YourPath` was never handed it at all** — it took `summary` and read `summary.points` off it. It now takes `balance` as its own required parameter, and the field on both tile widgets is *named* `balance` rather than `points`, so the call site says which number it is.
+
+**Two things made this survive to a device.**
+
+`RatingCard` already carried the warning — *"Earned minus spent, clamped at zero — not `HomeSummary.points`, which is the earned total"* — written when this hazard was first met. A comment on one widget does not protect the widget next to it.
+
+And every Your Path test spent nothing. With no unlocks bought, earned and balance are the same number and the defect cannot appear; the suite had a test asserting "0 of 64" and another asserting "64 of 64", both of which pass either way. The regression test buys two opponents first, which is the cheapest possible way to make the two numbers differ.
+
+**Cost:** One more required parameter on a widget that already takes five. That is the right trade against a shared `summary` object holding a field most of its readers must not use — the field is correct and the name `points` is what invites the mistake.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
