@@ -1221,6 +1221,20 @@ A rematch is also untouched. It alternates the seat deterministically rather tha
 
 **Cost:** A player cannot have two games running against one opponent. Nothing in the product wanted that, but it was previously possible and is now not — asking for a new game against someone you are already playing takes you back to that board, which is a surprise exactly once.
 
+## D323 — The splash is black, and shows the mark without its disc
+
+**Question:** The launch screen is a white field with the logo on a black square in the middle of it. Why, and what fixes it?
+
+**Decision:** Black splash background, and the launcher icon's **foreground layer alone** as the splash icon.
+
+Two stock defaults were doing it. On Android 12 and up the platform draws the splash itself and ignores `windowBackground` entirely: unset, its colour is `?android:colorBackground` — white under `Theme.Light.NoTitleBar`, which is what the Flutter template ships — and its icon is the whole adaptive launcher icon, green disc and all. The mark is gold drawn on black, which is how it was delivered and what lets `artgen` recover its alpha from the luminance (D290), so a dark square on white is exactly what that composition looks like when the field around it is not black.
+
+`LaunchTheme` is now `Theme.Black.NoTitleBar` in both modes, with `windowSplashScreenBackground` black and `windowSplashScreenAnimatedIcon` pointing at `ic_launcher_foreground` — the gold mark on transparency, without the green disc the launcher icon wears. `NormalTheme` is black too, so the hand-off from the splash to the first frame is not a white flash.
+
+**The two API-31 attributes are declared in the unqualified `values/`, not in a `values-v31/`.** They did not exist before API 31 and are ignored there, and a version-qualified folder would have to be duplicated for night mode: night sorts ahead of version when resources are matched, so an existing `values-night/styles.xml` would beat `values-v31/styles.xml` on a dark-mode phone and the splash would be white again on exactly the devices that asked for dark.
+
+**Cost:** `values/styles.xml` and `values-night/styles.xml` are now the same file twice. Deleting the night one would be tidier and wrong — the platform still needs a night answer, and the stock one it would fall back to is not this one. Below API 31 there is no icon on the splash at all, only the black field; that is what a window-background splash is, and it is not worth a bitmap layer to change.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

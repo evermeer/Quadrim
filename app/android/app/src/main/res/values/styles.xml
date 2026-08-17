@@ -1,18 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
-    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <!-- Show a splash screen on the activity. Automatically removed when
-             the Flutter engine draws its first frame -->
+    <!-- Theme applied to the Android Window while the process is starting.
+
+         Black in both light and dark mode, which is why this file and
+         `values-night/styles.xml` now say the same thing. The mark is gold
+         drawn on black — that is how it was delivered, and `artgen` recovers
+         its alpha from the black rather than being given a cut-out — so on the
+         stock white splash it appeared as a dark disc with a logo on it. On
+         black there is no disc, only the mark (D323). -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <!-- Android 11 and below: the whole splash is this drawable, and there
+             is no icon on it. -->
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- Android 12 and up: the platform draws an icon on a colour of its
+             own choosing and ignores `windowBackground` entirely. Unset, that
+             colour is `?android:colorBackground` and the icon is the whole
+             adaptive launcher icon — white, and the icon's own green disc.
+             Both are named here instead. The attributes did not exist before
+             API 31 and are ignored there, which is why they need no
+             `values-v31` of their own — one that qualified on the version
+             would also have to be duplicated for night mode, because night
+             sorts ahead of version when resources are matched. -->
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <!-- The foreground layer alone: the same gold mark the launcher icon
+             carries, without the green disc behind it. -->
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
     <!-- Theme applied to the Android Window as soon as the process has started.
          This theme determines the color of the Android Window while your
          Flutter UI initializes, as well as behind your Flutter UI while its
          running.
 
-         This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+         Black as well, so the hand-off from the splash to the first frame is
+         not a white flash. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>

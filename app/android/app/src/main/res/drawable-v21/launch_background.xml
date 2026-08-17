@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- As `drawable/launch_background.xml`, by way of the theme: `LaunchTheme` is
+     `Theme.Black.NoTitleBar` in both light and dark mode, so this resolves to
+     black without naming it twice (D323). -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="?android:colorBackground" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
 </layer-list>
