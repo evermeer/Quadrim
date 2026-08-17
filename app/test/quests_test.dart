@@ -38,7 +38,13 @@ class _Clock {
 }
 
 Future<LocalGameRepository> _repository({_Clock? clock}) async {
-  final ticking = clock ?? _Clock(DateTime(2026, 1, 1, 12));
+  // The **same day** as [_today], six hours earlier, so the default fixture is
+  // a player who has played today. It used to be 2026-01-01 against a `_today`
+  // in August, and nothing noticed: a volume quest's progress was the best day
+  // ever, so games seven months old still read as progress. They do not now
+  // (D317), and a fixture whose games predate its own "today" by seven months
+  // was never describing a real player.
+  final ticking = clock ?? _Clock(_today.subtract(const Duration(hours: 6)));
   final repo = await LocalGameRepository.open(
     MemoryDocumentStore(),
     now: ticking.tick,
@@ -164,8 +170,59 @@ void main() {
       // first rung, which outranks forty per-opponent quests still at zero.
       // That is the ticket's rule working, not a quirk: percentage complete,
       // ties to the smaller remainder.
-      expect(find.text('1 of 5'), findsOneWidget);
       expect(find.text('5 games in one day'), findsOneWidget);
+      // Scoped to that tile: the five-day streak rung reads "1 of 5" as well,
+      // because a player who has played today is one day into a streak. A bare
+      // finder matches both, which is what a coherent fixture now produces.
+      expect(
+          find.descendant(
+              of: find.ancestor(
+                  of: find.text('5 games in one day'),
+                  matching: find.byType(QuestTile)),
+              matching: find.text('1 of 5')),
+          findsOneWidget);
+    });
+
+    testWidgets('a new day resets the volume rungs when the app resumes',
+        (tester) async {
+      // Reported from a device: "it's now a new day and the quests panel still
+      // shows 16 of 20". Two things had to be wrong for that. The fold treated
+      // progress as the best day ever (fixed in the package), and it only ran
+      // when a game finished — so an app resumed the next morning kept
+      // yesterday's answers whatever the package said (D317).
+      _phone(tester);
+      final repo = await _repository();
+      await _play(repo, botId: pebble.id);
+      await _play(repo, botId: twig.id);
+
+      var now = _today;
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: HomeScreen(
+          repository: repo,
+          settings: repo,
+          unlocks: repo,
+          random: Random(1),
+          now: () => now,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('2 of 5'), findsOneWidget, reason: 'two games today');
+
+      // Midnight passes with the app in the background, and nothing else
+      // happens — no game is played, so the completed-games stream is silent.
+      now = _today.add(const Duration(days: 1));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 of 5'), findsNothing,
+          reason: "yesterday's two games are not today's progress");
+      // And it leaves the section altogether rather than showing "0 of 5": at
+      // zero it is outranked by the per-opponent quests, which need one thing
+      // rather than five. That is the ranking rule doing exactly what it says.
+      expect(find.text('5 games in one day'), findsNothing);
     });
 
     testWidgets('does not offer a quest already achieved', (tester) async {
@@ -223,7 +280,13 @@ void main() {
 
       expect(find.text('Opdrachten'), findsOneWidget);
       expect(find.text('5 partijen op één dag'), findsOneWidget);
-      expect(find.text('1 van 5'), findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.ancestor(
+                  of: find.text('5 partijen op één dag'),
+                  matching: find.byType(QuestTile)),
+              matching: find.text('1 van 5')),
+          findsOneWidget);
     });
   });
 

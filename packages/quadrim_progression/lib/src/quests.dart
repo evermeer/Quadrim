@@ -190,12 +190,22 @@ List<QuestStatus> questStatuses(
   final runs = streakRuns(ordered);
   final live = currentStreak(ordered, today: today);
 
+  // Games finished **today**, which is what an unachieved "in one day" quest
+  // has left to show. Counted here rather than inside `_volume` so the five
+  // rungs share one pass (D317).
+  final todayKey = _dayKey(today);
+  var playedToday = 0;
+  for (final game in ordered) {
+    final at = game.completedAt;
+    if (at != null && _dayKey(at) == todayKey) playedToday++;
+  }
+
   return [
     for (final quest in questCatalogue)
       switch (quest.family) {
         QuestFamily.firstWin => _milestone(quest, beaten),
         QuestFamily.firstWinSecond => _milestone(quest, beatenSecond),
-        QuestFamily.gamesInDay => _volume(quest, days),
+        QuestFamily.gamesInDay => _volume(quest, days, playedToday),
         QuestFamily.consecutiveDays => _streak(quest, runs, live),
       },
   ];
@@ -216,13 +226,16 @@ QuestStatus _milestone(Quest quest, Map<int, DateTime?> done) {
 
 /// The volume family, awarded on the **earliest** day that reached the rung.
 ///
-/// Progress is the best day ever rather than today's, because a quest fires
-/// exactly once and a rung already cleared cannot un-clear itself when the
-/// next day starts quietly.
-QuestStatus _volume(Quest quest, List<List<ScoredGame>> days) {
-  var best = 0;
+/// **Achievement is permanent; progress is today's.** Those are two different
+/// questions and an earlier version answered both with the best day ever, which
+/// meant a player who managed sixteen games yesterday and none today was shown
+/// "16 of 20" — four away from a rung that is in fact twenty away, because
+/// yesterday's games cannot count toward a target that says *in one day*
+/// (D317). A cleared rung still cannot un-clear itself: that case returns
+/// above, from the scan over every day, before [playedToday] is looked at.
+QuestStatus _volume(
+    Quest quest, List<List<ScoredGame>> days, int playedToday) {
   for (final day in days) {
-    if (day.length > best) best = day.length;
     if (day.length >= quest.target) {
       // The games that earned it: the ones up to and including the Nth of that
       // day. A day of a hundred games does not price the five-game rung.
@@ -240,7 +253,8 @@ QuestStatus _volume(Quest quest, List<List<ScoredGame>> days) {
       );
     }
   }
-  return QuestStatus(quest: quest, current: best, achieved: false, award: 0);
+  return QuestStatus(
+      quest: quest, current: playedToday, achieved: false, award: 0);
 }
 
 /// The streak family, priced exactly as the volume family is.
@@ -278,15 +292,18 @@ QuestStatus _streak(Quest quest, List<StreakRun> runs, int live) {
 ///
 /// A game with no completion time belongs to no day. It still counts toward
 /// the two per-opponent families, which ask what was beaten rather than when.
+/// Which local calendar day an instant falls in, as a sortable integer.
+///
+/// Local, and the app is what converts it. The package may not read a clock and
+/// it may not guess a zone either.
+int _dayKey(DateTime at) => at.year * 10000 + at.month * 100 + at.day;
+
 List<List<ScoredGame>> _byDay(List<ScoredGame> ordered) {
   final byDay = <int, List<ScoredGame>>{};
   for (final game in ordered) {
     final at = game.completedAt;
     if (at == null) continue;
-    // Local, and the app is what converts it. The package may not read a clock
-    // and it may not guess a zone either.
-    final key = at.year * 10000 + at.month * 100 + at.day;
-    byDay.putIfAbsent(key, () => []).add(game);
+    byDay.putIfAbsent(_dayKey(at), () => []).add(game);
   }
   final keys = byDay.keys.toList()..sort();
   return [for (final key in keys) byDay[key]!];

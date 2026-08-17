@@ -226,12 +226,34 @@ void main() {
 
     test('does not add days together', () {
       final games = [
-        ..._day(DateTime(2026, 5, 5), 4),
-        ..._day(DateTime(2026, 5, 6), 4),
+        ..._day(_today.subtract(const Duration(days: 1)), 4),
+        ..._day(_today, 4),
       ];
       final status = _status(games, 'games_in_day:5');
       expect(status.achieved, isFalse);
-      expect(status.current, 4, reason: 'the best day, not the total');
+      expect(status.current, 4, reason: "today's four, not eight");
+    });
+
+    test('a new day resets an unachieved rung to zero', () {
+      // Reported from a device: sixteen games yesterday and none today still
+      // read "16 of 20", which says four more games would do it when in fact
+      // twenty would. Progress toward a target that says *in one day* cannot
+      // be carried across the day boundary (D317).
+      final games = _day(_today.subtract(const Duration(days: 1)), 16);
+      final status = _status(games, 'games_in_day:20');
+      expect(status.achieved, isFalse);
+      expect(status.current, 0);
+      expect(status.remaining, 20, reason: 'the whole rung, not four of it');
+    });
+
+    test('today counts even when a better day came before it', () {
+      // The mirror of the above: progress is today's, not the best ever, and
+      // that cuts both ways.
+      final games = [
+        ..._day(_today.subtract(const Duration(days: 3)), 9),
+        ..._day(_today, 2),
+      ];
+      expect(_status(games, 'games_in_day:10').current, 2);
     });
 
     test('a day already cleared stays cleared when a quiet day follows', () {
@@ -272,7 +294,9 @@ void main() {
 
   group('the four closest', () {
     test('rank by percentage complete', () {
-      final games = _day(DateTime(2026, 6, 1), 9);
+      // Today's nine, because a volume rung's progress is today's (D317) and
+      // nine games two months ago would rank it at zero.
+      final games = _day(_today, 9);
       final closest = closestQuests(questStatuses(games, today: _today));
       expect(closest, hasLength(4));
       // Nine games in a day is 90% of the ten-game rung and 45% of the

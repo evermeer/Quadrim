@@ -1143,6 +1143,20 @@ And every Your Path test spent nothing. With no unlocks bought, earned and balan
 
 **Cost:** One more required parameter on a widget that already takes five. That is the right trade against a shared `summary` object holding a field most of its readers must not use — the field is correct and the name `points` is what invites the mistake.
 
+## D317 — A volume quest's progress is today's, and the screen has to notice midnight
+
+**Question:** Reported from a device: "it's a new day and the quests panel still shows 16 of 20 games in one day." Sixteen games were played yesterday and none today. What is wrong?
+
+**Decision:** Two things were, and either alone would have produced the same screen.
+
+**The fold answered the wrong question.** `_volume` returned the **best day ever** as progress, defended by a comment saying a cleared rung must not un-clear itself when the next day starts quietly. That defence is about *achievement*, which is permanent and returns from an earlier branch. Progress is a different question, and for a target that says *in one day* the honest answer is today's count: a player shown "16 of 20" reads it as four more games, when in fact it is twenty. Progress is now `playedToday`, counted once per fold and shared by all five rungs.
+
+**And the screen only recalculated when a game finished.** Everything day-shaped on the main screen — the streak and every volume rung — is folded against a `today` read at fold time, and the only trigger was the completed-games stream. Leave the app open overnight, or reopen it from the background the next morning, and it kept yesterday's answers until something else changed. `HomeScreen` now re-folds on `AppLifecycleState.resumed` as well, which is one `AppLifecycleListener` and a method extracted from the stream callback.
+
+**Cost:** A volume rung at zero drops out of the four-closest section entirely, because it is outranked by the per-opponent quests that need one thing rather than five. So a player who cleared nothing yesterday opens the app to a quests panel with no daily rung in it at all, where before there was one showing a number. That is correct — an unreachable-today claim is worse than an absent one — and it is a visible change.
+
+**What this says about the tests, again.** Three app tests broke, and each was passing for the wrong reason. The fixture played its games on 2026-01-01 while its own `today` was 2026-08-14, seven months later — incoherent, and invisible while progress was the best day ever. The two that then double-matched "1 of 5" did so because a coherent fixture gives the player a one-day streak as well, which the old one never had. **A fixture whose clock disagrees with itself cannot catch a bug about which day it is**, and this one had disagreed since ticket 033.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

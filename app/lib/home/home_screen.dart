@@ -95,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<GameDocument>>? _active;
   StreamSubscription<List<GameDocument>>? _completed;
   StreamSubscription<List<UnlockDocument>>? _unlocks;
+  AppLifecycleListener? _lifecycle;
 
   List<GameDocument> _activeGames = const [];
   List<GameDocument> _completedGames = const [];
@@ -136,6 +137,25 @@ class _HomeScreenState extends State<HomeScreen> {
       ? _completedGames
       : _completedGames.sublist(0, _recentLimit);
 
+  /// Everything the main screen derives from the finished games.
+  ///
+  /// Called with a new list when one lands, and with the list it already has
+  /// when the app resumes — the second is what keeps the day-shaped answers
+  /// honest, since `today` is read here rather than stored.
+  ///
+  /// Must run inside `setState`; it assigns fields and notifies nothing.
+  void _refold(List<GameDocument> games) {
+    _completedGames = games;
+    _summary = HomeSummary.from(games);
+    _deltas = fold.ratingDeltas(games);
+    _series = fold.computerRatingSeries(games);
+    final today = (widget.now ?? DateTime.now)();
+    final quests = points_fold.questsFrom(games, today);
+    _quests = closestQuests(quests);
+    _completedQuests = recentlyAchieved(quests);
+    _streak = points_fold.streakFrom(games, today);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -145,19 +165,19 @@ class _HomeScreenState extends State<HomeScreen> {
     // Watched rather than loaded once: the criteria ask both for a single
     // list folded four ways and for the screen to update when a game finishes,
     // and a stream gives one list per change rather than four sweeps (D158).
-    _completed = widget.repository.watchCompletedGames().listen((games) {
-      setState(() {
-        _completedGames = games;
-        _summary = HomeSummary.from(games);
-        _deltas = fold.ratingDeltas(games);
-        _series = fold.computerRatingSeries(games);
-        final today = (widget.now ?? DateTime.now)();
-        final quests = points_fold.questsFrom(games, today);
-        _quests = closestQuests(quests);
-        _completedQuests = recentlyAchieved(quests);
-        _streak = points_fold.streakFrom(games, today);
-      });
-    });
+    _completed = widget.repository
+        .watchCompletedGames()
+        .listen((games) => setState(() => _refold(games)));
+    // **And again when the app comes back, because the day may have changed.**
+    // Everything day-shaped here — the streak, and the progress on every "in
+    // one day" quest — is folded against a `today` read at fold time, and the
+    // fold above only runs when a game finishes. A player who leaves the app
+    // open overnight, or reopens it from the background the next morning,
+    // would otherwise be shown yesterday's answers until they finished a game
+    // (D317).
+    _lifecycle = AppLifecycleListener(
+      onResume: () => setState(() => _refold(_completedGames)),
+    );
     // After the first frame, not during it: showing a dialog needs a Navigator
     // above this widget, and there is none until the tree is built.
     _unlocks = widget.unlocks
@@ -194,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _active?.cancel();
     _completed?.cancel();
     _unlocks?.cancel();
+    _lifecycle?.dispose();
     super.dispose();
   }
 
