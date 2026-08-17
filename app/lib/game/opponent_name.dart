@@ -42,6 +42,19 @@ String botName(AppLocalizations l10n, String opponent) => switch (opponent) {
       _ => opponent,
     };
 
+/// The display name for somewhere a third of a phone's width wide.
+///
+/// Only `Your path` uses it, and only one of the twenty needs it: at three
+/// tiles across, "Quadrim Prime" ellipsises to "Quadrim P…", which reads as a
+/// rendering fault rather than as an abbreviation. Everywhere with room — the
+/// opponent's page, the game screen, the history — says the whole name, so this
+/// deliberately does not fall back to a general shortening rule. A second name
+/// that needs one gets a second arm, chosen by a person.
+String botShortName(AppLocalizations l10n, String opponent) =>
+    opponent == 'bot:quadrim_prime'
+        ? l10n.botQuadrimPrimeShort
+        : botName(l10n, opponent);
+
 /// The one-line description of how an opponent plays (ticket 029).
 ///
 /// Blurbs describe what a player meets at the board rather than how the

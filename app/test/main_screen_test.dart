@@ -473,11 +473,15 @@ void main() {
       _phone(tester, textScale: 2, size: const Size(1080, 1920));
       final repo = await _repository();
       await _play(repo, botId: 'bramble');
-      await repo.createGame(
+      // Two moves, not none: an untouched board is not listed in progress
+      // (D321), and this fixture exists to put the section on the screen.
+      final waiting = await repo.createGame(
         mode: GameMode.vsComputer,
         opponent: botOpponent('pebble'),
         opponentRating: 600,
       );
+      await repo.appendMove(waiting.id, 0);
+      await repo.appendMove(waiting.id, 21);
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

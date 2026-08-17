@@ -310,4 +310,43 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
+  testWidgets('a new game against an opponent already open resumes it',
+      (tester) async {
+    // Who moves first is drawn once, when the game is created. If backing out
+    // and asking again drew a second time, a player who wanted the first move
+    // could keep asking until they got it — and the first move is worth real
+    // rating in a game this small (D322).
+    _phone(tester);
+    final repo = await _repository();
+    final open = await repo.createGame(
+      mode: GameMode.vsComputer,
+      opponent: botOpponent(pebble.id),
+      opponentRating: pebble.rating,
+      // Seat 1 opens, so the player did not get the first move — the draw
+      // this rule exists to stop anyone re-rolling.
+      startingSeat: 1,
+    );
+    await repo.appendMove(open.id, 0);
+    await tester.pumpWidget(QuadrimApp(
+        repository: repo, settings: repo, unlocks: repo, random: Random(1)));
+    await tester.pumpAndSettle();
+    // And there is nothing on the screen to go back to: one move is the
+    // computer's opening, not a game in progress (D321).
+    expect(find.text('In progress'), findsNothing);
+
+    await tester.tap(plaqueLabelled('New game'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Play the computer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pebble'));
+    await tester.pump();
+    await tester.pump(kBotMoveDelay + const Duration(milliseconds: 50));
+
+    final games = await repo.watchActiveGames().first;
+    expect(games, hasLength(1), reason: 'the game already open, not a second');
+    expect(games.single.id, open.id);
+    expect(games.single.startingSeat, 1, reason: 'the draw is not repeated');
+    expect(games.single.moves, [0], reason: 'and it is where it was left');
+  });
+
 }

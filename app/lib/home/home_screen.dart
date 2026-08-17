@@ -99,6 +99,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<GameDocument> _activeGames = const [];
   List<GameDocument> _completedGames = const [];
+
+  /// How many moves an unfinished game needs before it is worth listing.
+  ///
+  /// Zero moves is a board the player has not touched; one is the opening the
+  /// computer played before they saw it. Neither is a game in progress in any
+  /// sense the player would recognise, and listing them filled the panel with
+  /// rows nobody had played (D321).
+  static const int _kListedFrom = 2;
+
+  /// The unfinished games the player is shown. [_activeGames] keeps all of
+  /// them, because [_start] has to find the one it must resume.
+  List<GameDocument> get _startedGames =>
+      _activeGames.where((game) => game.moves.length >= _kListedFrom).toList();
   HomeSummary _summary = HomeSummary.empty;
   List<UnlockDocument> _unlockList = const [];
 
@@ -311,10 +324,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Creates a game and opens it. The one place a game is started, so the
   /// challenge button on a finished row cannot drift from the new-game flow.
+  ///
+  /// **Against the computer there is only ever one unfinished game per
+  /// opponent**, and asking for a new one resumes it. Who moves first is drawn
+  /// once, when the game is created; without this, leaving a game where the
+  /// computer opened and starting another draws again, so a player who wanted
+  /// the first move could keep asking until they got it — and the first move is
+  /// worth real rating in a game this small (D322).
   Future<void> _start(GameMode mode, BotConfig? bot) async {
+    final opponent = bot == null ? kGuestOpponent : botOpponent(bot.id);
+    if (mode == GameMode.vsComputer) {
+      for (final game in _activeGames) {
+        if (game.mode == mode && game.opponent == opponent) {
+          await _openGame(game.id);
+          return;
+        }
+      }
+    }
     final game = await widget.repository.createGame(
       mode: mode,
-      opponent: bot == null ? kGuestOpponent : botOpponent(bot.id),
+      opponent: opponent,
       opponentRating: bot?.rating,
       startingSeat: (widget.random ?? Random()).nextInt(2),
     );
@@ -458,10 +487,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   // waiting to be finished is the most actionable thing on the
                   // screen, and it used to sit below two panels about what has
                   // already happened.
-                  if (_activeGames.isNotEmpty)
+                  if (_startedGames.isNotEmpty)
                     ...gameSectionSlivers(
                       heading: l10n.inProgress,
-                      games: _activeGames,
+                      games: _startedGames,
                       tile: (game) =>
                           ActiveGameTile(game: game, onTap: () => _openGame(game.id)),
                     ),
@@ -482,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // On a card, not loose on the background. It is the
                         // only text on this screen that would otherwise sit
                         // directly on a photograph of leaves.
-                        if (_activeGames.isEmpty && _completedGames.isEmpty)
+                        if (_startedGames.isEmpty && _completedGames.isEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 16),
                             child: Card(

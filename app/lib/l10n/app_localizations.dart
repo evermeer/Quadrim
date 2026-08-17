@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Quadrim Prime'**
   String get botQuadrimPrime;
 
+  /// Quadrim Prime abbreviated, for the one place a name gets a third of a phone's width: the Your Path tile, where the full name is ellipsised to 'Quadrim P…'. Everywhere with room says the whole name.
+  ///
+  /// In en, this message translates to:
+  /// **'Q. Prime'**
+  String get botQuadrimPrimeShort;
+
   /// Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app.
   ///
   /// In en, this message translates to:

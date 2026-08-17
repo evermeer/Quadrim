@@ -129,9 +129,12 @@ void main() {
       // Left, to the weakest.
       await _scrollTo(tester, 'Pebble');
       expect(find.text('Pebble'), findsOneWidget);
-      // And right, all the way to the top of the ladder.
-      await _scrollTo(tester, 'Quadrim Prime');
-      expect(find.text('Quadrim Prime'), findsOneWidget);
+      // And right, all the way to the top of the ladder. The tile writes the
+      // strongest opponent short — "Quadrim Prime" ellipsises to nonsense at a
+      // third of a phone's width — while still announcing the whole name
+      // (D320).
+      await _scrollTo(tester, 'Q. Prime');
+      expect(tileFor('Q. Prime'), findsOneWidget);
     });
 
     testWidgets('does not snap back when the screen rebuilds for another '
@@ -141,12 +144,12 @@ void main() {
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
 
-      await _scrollTo(tester, 'Quadrim Prime');
+      await _scrollTo(tester, 'Q. Prime');
       // A finished game rebuilds the whole screen — the rating card, the
       // quests, the lists. The row must not undo what the player scrolled to.
       await _play(repo);
       await tester.pumpAndSettle();
-      expect(find.text('Quadrim Prime'), findsOneWidget,
+      expect(tileFor('Q. Prime'), findsOneWidget,
           reason: 'the row kept its position through an unrelated rebuild');
     });
   });

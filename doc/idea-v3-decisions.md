@@ -1185,6 +1185,42 @@ So the box that contains the arrows has to be the one that extends past the pane
 
 **Cost:** One section of the home screen no longer shares the list padding with its neighbours, so a future change to that 16 has to be made in two places. The constant is named on both sides and this entry is the third. Two tests moved with it: one measured "off the right-hand edge" against `YourPath`'s own rect, which is now wider than the row it was standing in for.
 
+## D320 — One name is written short, and only where the width is a third of a phone
+
+**Question:** The `Your path` tile shows "Quadrim P…". Shorten it, or shorten every name?
+
+**Decision:** One arm, for one opponent: `botShortName` returns "Q. Prime" for `bot:quadrim_prime` and the full name for everything else. It is used by the tile alone. The opponent's page, the game screen, the history and every announcement say "Quadrim Prime".
+
+Deliberately not a general rule. A width-aware shortening — first word, or initials past N characters — would have to be right for twenty names in two languages, and it is only wrong for one of them today. When a second name needs shortening it gets a second arm, chosen by a person who has looked at it.
+
+**And the tile speaks the long name while writing the short one.** A screen reader has no width, so the abbreviation buys nothing there and costs the listener the name. `_PathTile` therefore builds two strings: `name` for the semantics label, `written` for the `Text`.
+
+**Cost:** A locale that transliterated the roster would have to remember to supply the short form as well, and nothing checks that it did. Both arb files carry the key today.
+
+## D321 — A game with fewer than two moves is not in progress
+
+**Question:** "In progress" listed games nobody had played. What counts as a game in progress?
+
+**Decision:** Two moves. Nought is a board the player has not touched, and one is the opening the computer played before they saw it — neither is something a player would recognise as a game they were in the middle of, and both accumulate every time someone opens the opponent list and backs out.
+
+The filter is in the screen, not the repository: `_activeGames` still holds every unfinished game, because [D322](#d322--one-unfinished-game-per-opponent-and-a-new-one-resumes-it) needs to find the one it must resume. `_startedGames` is what the panel draws and what decides whether the empty state appears.
+
+**Cost:** Six fixtures had to start playing. Every one of them created a game and asserted its row, which had been enough since ticket 005; they now append two moves first. That is the honest cost of a rule about what a game is — the old fixtures were asserting on something the product no longer calls a game.
+
+## D322 — One unfinished game per opponent, and a new one resumes it
+
+**Question:** D321 hides the games with nothing in them. They still exist. What happens when the player asks for a new game against the same opponent?
+
+**Decision:** It opens the one already there. Against the computer there is at most one unfinished game per opponent, and `_start` looks for it before it creates anything.
+
+**The reason is the draw, not the tidiness.** Who moves first is decided once, by `random.nextInt(2)`, when the game is created. Without this rule a player who did not like the answer could leave and ask again, and again, until they got the first move — and in a 4×4×4 game the first move is worth real rating, which is what makes it worth farming. Hiding the abandoned games (D321) would have made that *easier*, not harder: the evidence of the reroll disappears from the screen.
+
+Pass and play is exempt: both seats are the same person, so there is nothing to gain, and two games on the go is a reasonable thing to want.
+
+A rematch is also untouched. It alternates the seat deterministically rather than drawing one, which is the fairness mechanism for a series and cannot be farmed by repetition.
+
+**Cost:** A player cannot have two games running against one opponent. Nothing in the product wanted that, but it was previously possible and is now not — asking for a new game against someone you are already playing takes you back to that board, which is a surprise exactly once.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

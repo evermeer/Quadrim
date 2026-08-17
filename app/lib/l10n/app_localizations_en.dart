@@ -257,6 +257,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botQuadrimPrime => 'Quadrim Prime';
 
   @override
+  String get botQuadrimPrimeShort => 'Q. Prime';
+
+  @override
   String get strategyCredit =>
       'Perfect play from Oren Patashnik\'s Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.';
 

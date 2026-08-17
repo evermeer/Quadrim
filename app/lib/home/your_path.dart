@@ -101,7 +101,7 @@ const double _kArrowTap = 48;
 
 /// How see-through an arrow is. They sit on top of a face, and a solid disc
 /// over one is a hole in the ladder rather than a control on it.
-const double _kArrowOpacity = 0.75;
+const double _kArrowOpacity = 0.5;
 
 /// How far each arrow hangs off the panel, as a fraction of its own width.
 /// Straddling the border is what makes it read as a handle on the edge of the
@@ -499,7 +499,10 @@ class _PathTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    // Spoken in full and written short: the tile is a third of the screen and
+    // a screen reader has no width at all (D320).
     final name = botName(l10n, botOpponent(bot.id));
+    final written = botShortName(l10n, botOpponent(bot.id));
     final played = record?.played ?? 0;
     final starCount = record == null
         ? 0
@@ -534,7 +537,7 @@ class _PathTile extends StatelessWidget {
                 // and the ladder reads as a progression of faces.
                 OpponentArt(id: bot.id, size: avatarSize, locked: locked),
                 const SizedBox(height: 6),
-                Text(name,
+                Text(written,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelLarge),

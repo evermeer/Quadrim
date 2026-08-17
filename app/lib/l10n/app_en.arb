@@ -236,6 +236,10 @@
   "botTitan": "Titan",
   "botOracle": "Oracle",
   "botQuadrimPrime": "Quadrim Prime",
+  "botQuadrimPrimeShort": "Q. Prime",
+  "@botQuadrimPrimeShort": {
+    "description": "Quadrim Prime abbreviated, for the one place a name gets a third of a phone's width: the Your Path tile, where the full name is ellipsised to 'Quadrim P…'. Everywhere with room says the whole name."
+  },
   "strategyCredit": "Perfect play from Oren Patashnik's Qubic strategy dictionary (1980), in the form Ken Thompson gave it in 1978. Used with permission, moves unchanged.",
   "@strategyCredit": {
     "description": "Attribution required by the terms of the strategy dictionary. Must remain visible in the shipped app."

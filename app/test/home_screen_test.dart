@@ -98,6 +98,25 @@ Future<void> _finish(
   }
 }
 
+/// An unfinished game with enough moves to be listed.
+///
+/// The main screen hides a game nobody has played into yet — nought moves is a
+/// board the player has not touched and one is the opening the computer played
+/// before they saw it (D321) — so a fixture that only creates a game has no row
+/// on the screen to assert about.
+Future<GameDocument> _started(
+  LocalGameRepository repo, {
+  required GameMode mode,
+  required String opponent,
+  int? opponentRating,
+}) async {
+  final game = await repo.createGame(
+      mode: mode, opponent: opponent, opponentRating: opponentRating);
+  await repo.appendMove(game.id, 0);
+  await repo.appendMove(game.id, 21);
+  return game;
+}
+
 /// Light (seat 0) completes {0,1,2,3}; dark's cells form no line.
 const _lightWinsMoves = [0, 21, 1, 22, 2, 26, 3];
 
@@ -178,7 +197,8 @@ void main() {
     // caller of it.
     _phone(tester);
     final repo = await _repository();
-    await repo.createGame(
+    await _started(
+      repo,
       mode: GameMode.vsComputer,
       opponent: botOpponent(sable.id),
       opponentRating: sable.rating,
@@ -193,7 +213,7 @@ void main() {
       (tester) async {
     _phone(tester);
     final repo = await _repository();
-    await repo.createGame(
+    await _started(repo,
         mode: GameMode.passAndPlay, opponent: kGuestOpponent);
     await _pumpHome(tester, repo);
 
@@ -310,7 +330,8 @@ void main() {
     expect(find.text('No finished games against the computer yet.'),
         findsOneWidget);
 
-    final game = await repo.createGame(
+    final game = await _started(
+      repo,
       mode: GameMode.vsComputer,
       opponent: botOpponent(pebble.id),
       opponentRating: pebble.rating,
@@ -319,8 +340,6 @@ void main() {
     expect(find.text('In progress'), findsOneWidget);
     expect(find.text('3 moves played'), findsNothing);
 
-    await repo.appendMove(game.id, 0);
-    await repo.appendMove(game.id, 21);
     await repo.appendMove(game.id, 1);
     await tester.pumpAndSettle();
     expect(find.text('3 moves played'), findsOneWidget);
@@ -335,21 +354,45 @@ void main() {
     expect(find.text('Won'), findsOneWidget);
   });
 
-  testWidgets('tapping a game in progress resumes it', (tester) async {
+  testWidgets('a game nobody has played into is not listed', (tester) async {
+    // Nought moves is a board the player has not touched; one is the opening
+    // the computer played before they saw it. Listing either filled the panel
+    // with rows nobody had played, and a player who backed out of the opponent
+    // list twice had two of them (D321).
     _phone(tester);
     final repo = await _repository();
     final game = await repo.createGame(
-      mode: GameMode.passAndPlay,
-      opponent: kGuestOpponent,
+      mode: GameMode.vsComputer,
+      opponent: botOpponent(pebble.id),
+      opponentRating: pebble.rating,
     );
+    await _pumpHome(tester, repo);
+    expect(find.text('In progress'), findsNothing, reason: 'nothing played');
+
     await repo.appendMove(game.id, 0);
+    await tester.pumpAndSettle();
+    expect(find.text('In progress'), findsNothing,
+        reason: "the opponent's opening is not the player's game");
+
+    // The second move is the player's, and now there is something to return to.
+    await repo.appendMove(game.id, 21);
+    await tester.pumpAndSettle();
+    expect(find.text('In progress'), findsOneWidget);
+    expect(find.text('2 moves played'), findsOneWidget);
+  });
+
+  testWidgets('tapping a game in progress resumes it', (tester) async {
+    _phone(tester);
+    final repo = await _repository();
+    await _started(repo,
+        mode: GameMode.passAndPlay, opponent: kGuestOpponent);
     await _pumpHome(tester, repo);
 
-    await tester.tap(find.text('1 move played'));
+    await tester.tap(find.text('2 moves played'));
     await tester.pumpAndSettle();
 
-    // The board is showing, with the move already played still on it.
-    expect(find.text('Dark to move'), findsOneWidget);
+    // The board is showing, with the moves already played still on it.
+    expect(find.text('Light to move'), findsOneWidget);
   });
 
   testWidgets('tapping a finished game opens it', (tester) async {
