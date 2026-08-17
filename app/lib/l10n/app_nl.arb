@@ -181,6 +181,8 @@
   "settingsShowTutorial": "Uitleg opnieuw bekijken",
   "settingsAbout": "Over",
   "yourPath": "Jouw pad",
+  "pathScrollLeft": "Toon zwakkere tegenstanders",
+  "pathScrollRight": "Toon sterkere tegenstanders",
   "locked": "Op slot",
   "unlockCost": "{cost} punten",
   "unlockProgress": "{have} van {cost}",

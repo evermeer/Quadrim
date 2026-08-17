@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_progression/quadrim_progression.dart';
@@ -82,8 +84,28 @@ const double _kSectionInset = 16 + 1.5 + 8;
 /// the row would break the intrinsic-height pass that sizes it.
 const double _kCardPadding = 6;
 
+/// The tile card's vertical padding, which is where the avatar starts. Only
+/// used to put the arrows on the same line as the faces.
+const double _kCardTopPadding = 8;
+
+/// How big the two carved arrows are drawn, and how big the thing you press
+/// is. The picture is small enough that the outer tiles are still recognisable
+/// underneath it; the target around it is the 48dp minimum, which is the number
+/// that matters and is not the same number (spec §8.13).
+const double _kArrowSize = 34;
+const double _kArrowTap = 48;
+
 class _YourPathState extends State<YourPath> {
   ScrollController? _controller;
+
+  /// The furthest the row can be scrolled, and whether it is at either end.
+  ///
+  /// Kept as booleans rather than read off the controller during build: an
+  /// arrow that dimmed on every scrolled pixel would rebuild twenty tiles a
+  /// frame, and only the two ends change anything on screen.
+  double _maxOffset = 0;
+  bool _atStart = false;
+  bool _atEnd = false;
 
   /// The index the row was last rested on, so a rating change moves it and a
   /// rebuild for any other reason does not. Without this the row would snap
@@ -92,21 +114,50 @@ class _YourPathState extends State<YourPath> {
   int _restedOn = -1;
   double _step = 0;
 
-  double _offsetFor(int index, double width) {
+  double _offsetFor(int index) {
     // The resting tile is the middle of three, so the row starts one tile
     // before it.
-    final maxOffset = _step * opponentCatalogue.length - width;
-    final wanted = (index - 1) * _step;
-    return wanted.clamp(0, maxOffset < 0 ? 0 : maxOffset).toDouble();
+    return ((index - 1) * _step).clamp(0, _maxOffset).toDouble();
   }
 
-  void _settle(double width) {
+  /// Notices when the row reaches or leaves an end, and nothing else.
+  void _onScroll() {
+    final offset = _controller!.offset;
+    // A tolerance rather than equality: the snap spring settles within a
+    // fraction of a pixel of the boundary, not on it.
+    final start = offset <= 0.5;
+    final end = offset >= _maxOffset - 0.5;
+    if (start != _atStart || end != _atEnd) {
+      setState(() {
+        _atStart = start;
+        _atEnd = end;
+      });
+    }
+  }
+
+  /// Steps the row one tile. [direction] is -1 for the left arrow.
+  ///
+  /// From the nearest boundary rather than from wherever the row happens to
+  /// be, so a tap after a half-finished drag lands on a tile like every other
+  /// tap does.
+  void _step1(int direction) {
+    final from = (_controller!.offset / _step).round();
+    _controller!.animateTo(
+        ((from + direction) * _step).clamp(0.0, _maxOffset),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut);
+  }
+
+  void _settle() {
     final resting = restingIndex(widget.summary.computerRating);
     if (_controller != null && resting == _restedOn) return;
     _restedOn = resting;
-    final offset = _offsetFor(resting, width);
+    final offset = _offsetFor(resting);
+    _atStart = offset <= 0.5;
+    _atEnd = offset >= _maxOffset - 0.5;
     if (_controller == null) {
-      _controller = ScrollController(initialScrollOffset: offset);
+      _controller = ScrollController(initialScrollOffset: offset)
+        ..addListener(_onScroll);
       return;
     }
     // A rating change moves the row, after the frame that reported it.
@@ -147,7 +198,16 @@ class _YourPathState extends State<YourPath> {
                 MediaQuery.sizeOf(context).width - _kSectionInset * 2;
             final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
             _step = tile + _kGap;
-            _settle(width);
+            _maxOffset =
+                math.max(0, _step * opponentCatalogue.length - width);
+            _settle();
+            // A rotation changes the width and therefore both of these, and no
+            // scroll happens to report it — so they are refreshed here as well
+            // as by the listener.
+            if (_controller!.hasClients) {
+              _atStart = _controller!.offset <= 0.5;
+              _atEnd = _controller!.offset >= _maxOffset - 0.5;
+            }
             // Sized by the tallest tile rather than by a number. Two guesses at
             // a fixed height were both wrong — 18 pixels short at the largest
             // font scale, then 28 — because the avatar is sized by the tile and
@@ -157,7 +217,15 @@ class _YourPathState extends State<YourPath> {
             // Eager rather than lazy, and that is affordable here: the roster is
             // exactly twenty and cannot grow without a code change, so this is a
             // bounded list, unlike the finished-games list beneath it.
-            return SingleChildScrollView(
+            // The row scrolls, and on a phone that is only discoverable by
+            // trying it: three tiles fill the width exactly, so there is no
+            // half-visible fourth to hint at the other seventeen. The two
+            // carved arrows say so, and stepping one tile is also the only way
+            // to move the row precisely — a drag lands wherever the snap
+            // rounds it to (D318).
+            return Stack(
+              children: [
+              SingleChildScrollView(
               controller: _controller,
               scrollDirection: Axis.horizontal,
               // Lands on a tile boundary, so the row always shows three whole
@@ -193,10 +261,95 @@ class _YourPathState extends State<YourPath> {
                   ],
                 ),
               ),
+            ),
+              // On the same line as the faces rather than the middle of the
+              // row, because the tile grows downward with the font scale and
+              // the avatar does not.
+              for (final (asset, label, direction, hidden) in [
+                (Art.arrowLeft, l10n.pathScrollLeft, -1, _atStart),
+                (Art.arrowRight, l10n.pathScrollRight, 1, _atEnd),
+              ])
+                Positioned(
+                  left: direction < 0 ? 0 : null,
+                  right: direction < 0 ? null : 0,
+                  top: _kCardTopPadding +
+                      (tile - _kCardPadding * 2 - _kArrowTap) / 2,
+                  child: _ScrollArrow(
+                    asset: asset,
+                    label: label,
+                    // Faded rather than removed at the ends: a control that
+                    // vanishes takes its own explanation with it, and the row
+                    // would then have nothing saying it scrolls at all once a
+                    // player reached the far end of the roster.
+                    hidden: hidden,
+                    onPressed: () => _step1(direction),
+                  ),
+                ),
+              ],
             );
           },
         ),
       ],
+      ),
+    );
+  }
+}
+
+/// One of the two carved buttons that step the row a tile.
+///
+/// A picture rather than an `Icon`, so it belongs to the same wood-and-stone
+/// set as the signs and the panels. Decorative in itself — everything it means
+/// is in the [label] the button announces.
+class _ScrollArrow extends StatelessWidget {
+  const _ScrollArrow({
+    required this.asset,
+    required this.label,
+    required this.hidden,
+    required this.onPressed,
+  });
+
+  final String asset;
+  final String label;
+
+  /// At the end it can no longer reach. Still laid out, so nothing moves.
+  final bool hidden;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: hidden,
+      child: AnimatedOpacity(
+        opacity: hidden ? 0 : 1,
+        duration: const Duration(milliseconds: 150),
+        child: Semantics(
+          button: true,
+          enabled: !hidden,
+          label: label,
+          excludeSemantics: true,
+          child: Material(
+            type: MaterialType.transparency,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onPressed,
+              customBorder: const CircleBorder(),
+              child: SizedBox(
+                width: _kArrowTap,
+                height: _kArrowTap,
+                child: Center(
+                  child: Image.asset(
+                    asset,
+                    // Both dimensions, before the bytes arrive (D295).
+                    width: _kArrowSize,
+                    height: _kArrowSize,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

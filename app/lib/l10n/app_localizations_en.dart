@@ -631,6 +631,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourPath => 'Your path';
 
   @override
+  String get pathScrollLeft => 'Show weaker opponents';
+
+  @override
+  String get pathScrollRight => 'Show stronger opponents';
+
+  @override
   String get locked => 'Locked';
 
   @override

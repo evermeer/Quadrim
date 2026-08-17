@@ -25,6 +25,11 @@ abstract final class Art {
   static const bannerShort = 'assets/art/banner_short.webp';
   static const bannerLong = 'assets/art/banner_long.webp';
 
+  /// The two carved buttons that step the `Your path` row one tile. Cut to
+  /// their disc and drawn in a square box, like every other picture (D295).
+  static const arrowLeft = 'assets/art/arrow_left.webp';
+  static const arrowRight = 'assets/art/arrow_right.webp';
+
   /// One opponent's portrait, by catalogue id. The files are cut to a circle by
   /// `tools/artgen`, so nothing here has to clip.
   static String opponent(String id) => 'assets/art/opponents/$id.webp';

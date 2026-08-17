@@ -254,6 +254,91 @@ def signs() -> None:
         _save(im.resize((width, height), Image.LANCZOS), f"{name}.webp", 88)
 
 
+def _dechecker(rgb: np.ndarray) -> np.ndarray:
+    """Flattens the painted transparency checkerboard out of a picture.
+
+    The signs were delivered on a checkerboard too, but there it only had to be
+    *removed* — it was all outside the artwork. Here it also shows **through**
+    the button's glass face, so cutting the disc out leaves a checkered stone,
+    which is exactly what a broken image looks like.
+
+    The pattern is two flat greys, so on any small neighbourhood the difference
+    between its two phases is the whole of it and everything else the picture is
+    doing is common to both. Subtracting half that difference from one phase and
+    adding it to the other therefore removes the pattern and keeps the stone
+    texture, the highlight and the drop shadow. The window is two cells wide, so
+    the estimate is local enough to follow the face getting darker toward the
+    rim, where the checker's contrast changes with it.
+
+    The grid is not on integer pixels — 34.5 across and 34.3 down, fitted to the
+    44 tile boundaries in the top row and the 29 in the left column, drifting
+    less than a pixel over the whole width. Floor division of a float carries
+    that drift; a modulus of 34 would be a cell out by the far edge.
+    """
+    from scipy import ndimage
+
+    height, width = rgb.shape[:2]
+    columns = np.floor((np.arange(width) - 31.476) / 34.519).astype(int)
+    rows = np.floor((np.arange(height) - 33.628) / 34.347).astype(int)
+    phase = ((columns[None, :] + rows[:, None]) % 2).astype(np.float32)
+
+    grey = rgb.mean(axis=2)[:30]
+    light, dark = grey[phase[:30] == 1].mean(), grey[phase[:30] == 0].mean()
+    assert light - dark > 4, f"checker phase is not aligned ({dark:.1f}/{light:.1f})"
+
+    window = 69
+    weight = np.maximum(ndimage.uniform_filter(phase, window), 1e-6)
+    inverse = np.maximum(ndimage.uniform_filter(1 - phase, window), 1e-6)
+    flat = np.empty_like(rgb, dtype=np.float32)
+    for channel in range(3):
+        plane = rgb[..., channel].astype(np.float32)
+        difference = (
+            ndimage.uniform_filter(plane * phase, window) / weight
+            - ndimage.uniform_filter(plane * (1 - phase), window) / inverse
+        )
+        flat[..., channel] = plane - (phase - 0.5) * difference
+    return np.clip(flat, 0, 255)
+
+
+def arrows() -> None:
+    """The two scroll buttons on `Your path`, cut off the board they were on.
+
+    Delivered as one 1536x1024 picture of two discs on a *painted* transparency
+    checkerboard, with a soft drop shadow under each. Both the checker and the
+    shadow are neutral grey and both touch the border; the button is wood and
+    stone and is not. So the rule is neutral-and-connected-to-the-edge, which
+    takes the shadow with the checker and stops at the rim — the flood fill
+    leaves exactly pi/4 of each bounding box standing, which is a disc.
+
+    Padded to a square rather than cropped tight: the two discs differ by a
+    pixel in each dimension, and the app draws them in one square box (D295).
+    """
+    from scipy import ndimage
+
+    print("arrows")
+    rgb = _dechecker(np.array(_load("scroll-arrows").convert("RGB")).astype(int))
+    neutral = (rgb.max(axis=2) - rgb.min(axis=2)) < 8
+    labels, _ = ndimage.label(neutral)
+    edge = set(labels[0, :]) | set(labels[-1, :]) | set(labels[:, 0]) | set(labels[:, -1])
+    edge.discard(0)
+    background = np.isin(labels, list(edge))
+    alpha = Image.fromarray(np.where(background, 0, 255).astype(np.uint8))
+    alpha = alpha.filter(ImageFilter.GaussianBlur(1.0))
+    a = np.clip((np.array(alpha).astype(np.float32) - 40) * (255 / 170), 0, 255)
+    whole = Image.fromarray(
+        np.dstack([rgb.astype(np.uint8), a.astype(np.uint8)]), "RGBA"
+    )
+
+    half = whole.width // 2
+    for index, name in ((0, "arrow_left"), (1, "arrow_right")):
+        disc = whole.crop((index * half, 0, (index + 1) * half, whole.height))
+        disc = disc.crop(disc.getbbox())
+        side = max(disc.width, disc.height)
+        square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+        square.paste(disc, ((side - disc.width) // 2, (side - disc.height) // 2))
+        _save(square.resize((128, 128), Image.LANCZOS), f"{name}.webp", 88)
+
+
 def launcher_icon(mark: Image.Image) -> None:
     """Adaptive foreground plus a legacy square, from the same mark."""
     print("launcher icon")
@@ -347,6 +432,7 @@ def main() -> int:
     mark = logo()
     background()
     signs()
+    arrows()
     launcher_icon(mark)
     fonts()
     total = sum(f.stat().st_size for f in ART.rglob("*")) + sum(

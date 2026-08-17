@@ -632,6 +632,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get yourPath => 'Jouw pad';
 
   @override
+  String get pathScrollLeft => 'Toon zwakkere tegenstanders';
+
+  @override
+  String get pathScrollRight => 'Toon sterkere tegenstanders';
+
+  @override
   String get locked => 'Op slot';
 
   @override

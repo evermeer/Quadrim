@@ -1157,6 +1157,20 @@ And every Your Path test spent nothing. With no unlocks bought, earned and balan
 
 **What this says about the tests, again.** Three app tests broke, and each was passing for the wrong reason. The fixture played its games on 2026-01-01 while its own `today` was 2026-08-14, seven months later — incoherent, and invisible while progress was the best day ever. The two that then double-matched "1 of 5" did so because a coherent fixture gives the player a one-day streak as well, which the old one never had. **A fixture whose clock disagrees with itself cannot catch a bug about which day it is**, and this one had disagreed since ticket 033.
 
+## D318 — Your Path says it scrolls, with two buttons that step it
+
+**Question:** Reported from a device: the roster row is scrollable and nothing on it says so. Can it be made obvious?
+
+**Decision:** A carved arrow at each edge of the panel, each stepping the row exactly one tile.
+
+The row shows three tiles and is exactly three tiles wide, which is what hides it: on a list that overflows by a little there is a half-visible fourth item promising more, and here the fit is exact, so a player who never guesses to swipe sees five opponents out of twenty — the free ones and whatever the rating rests on. D287 replaced the fixed window with this scrolling row precisely so the price ladder would be one swipe away instead of invisible, and a swipe nobody makes is the same as no swipe.
+
+Stepping one tile rather than a page, and from the nearest tile boundary rather than from wherever the row currently sits: a drag lands where `_SnapToTile` rounds it to, and a tap after a half-finished drag has to behave like every other tap. The two are then the only precise way to move the row — a drag is a gesture, a press is an instruction.
+
+**They fade at the ends rather than disappearing**, and are made non-interactive at the same time. Removing them would take their explanation with it, so a player at the strong end of the roster would have nothing left saying the row moves at all; and an invisible control that still swallowed a press would eat a tap meant for the tile it sits on.
+
+**Cost:** Two 6.5KB assets, and 48dp of each outer tile covered by a tap target. The artwork was delivered on a painted transparency checkerboard like the signs, but with the checker showing **through** the glass button face, so removing it needed something the signs did not: the pattern is two flat greys, so on a small neighbourhood the difference between its two phases is the whole of it and everything else the picture does is common to both. `_dechecker` in `tools/artgen` subtracts half that difference from one phase and adds it to the other, which leaves the stone texture, the highlight and the drop shadow untouched. Its grid is not on integer pixels — 34.5 across, 34.3 down, fitted to the tile boundaries in the top row and left column — so a modulus of 34 would drift a whole cell over the width of the file.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

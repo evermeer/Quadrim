@@ -1136,6 +1136,18 @@ abstract class AppLocalizations {
   /// **'Your path'**
   String get yourPath;
 
+  /// The carved arrow button at the left edge of Your path. It scrolls the roster one tile toward the weaker end, so it says where it goes rather than which way it points.
+  ///
+  /// In en, this message translates to:
+  /// **'Show weaker opponents'**
+  String get pathScrollLeft;
+
+  /// The carved arrow button at the right edge of Your path.
+  ///
+  /// In en, this message translates to:
+  /// **'Show stronger opponents'**
+  String get pathScrollRight;
+
   /// No description provided for @locked.
   ///
   /// In en, this message translates to:

@@ -46,6 +46,8 @@ void main() {
       Art.bannerShort,
       Art.bannerLong,
       Art.tutorial,
+      Art.arrowLeft,
+      Art.arrowRight,
     ]) {
       final bytes = await load(asset);
       expect(bytes.lengthInBytes, greaterThan(1024), reason: asset);
@@ -89,6 +91,8 @@ void main() {
       Art.bannerShort,
       Art.bannerLong,
       Art.tutorial,
+      Art.arrowLeft,
+      Art.arrowRight,
       'assets/fonts/Cinzel-Regular.ttf',
       'assets/fonts/Cinzel-Bold.ttf',
       'assets/fonts/EBGaramond-Regular.ttf',

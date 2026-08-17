@@ -496,6 +496,14 @@
   "@yourPath": {
     "description": "Heading of the three-tile section showing the next opponent to unlock."
   },
+  "pathScrollLeft": "Show weaker opponents",
+  "@pathScrollLeft": {
+    "description": "The carved arrow button at the left edge of Your path. It scrolls the roster one tile toward the weaker end, so it says where it goes rather than which way it points."
+  },
+  "pathScrollRight": "Show stronger opponents",
+  "@pathScrollRight": {
+    "description": "The carved arrow button at the right edge of Your path."
+  },
   "locked": "Locked",
   "unlockCost": "{cost} points",
   "@unlockCost": {

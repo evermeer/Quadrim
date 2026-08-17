@@ -273,6 +273,67 @@ void main() {
           reason: '64 does not buy a 256-point unlock');
     });
 
+    testWidgets('the arrows step the row one tile and fade at the ends',
+        (tester) async {
+      // The row fits exactly three tiles, so nothing on screen says there are
+      // seventeen more. The arrows are what says it, and one tap is one tile
+      // (D318).
+      _phone(tester);
+      final repo = await _repository();
+      await tester.pumpWidget(QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, random: Random(1)));
+      await tester.pumpAndSettle();
+
+      final left = find.bySemanticsLabel('Show weaker opponents');
+      final right = find.bySemanticsLabel('Show stronger opponents');
+      // The pitch, measured off two adjacent cards rather than recomputed from
+      // the tile arithmetic — a test that repeated that sum would pass whatever
+      // the sum came out as. Off the *cards*, not the names on them: a name is
+      // centred in its tile, so two names are a tile apart plus half the
+      // difference in how long they are.
+      // `.first` is the tile's own card; the section's parchment panel is a
+      // Card too and is the other ancestor.
+      Rect card(String name) => tester.getRect(
+          find.ancestor(of: find.text(name), matching: find.byType(Card)).first);
+      final pitch = card('Clover').left - card('Mote').left;
+      final before = tester.getRect(find.text('Clover')).left;
+
+      await tester.tap(right);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Clover')).left,
+          closeTo(before - pitch, 0.5));
+
+      await tester.tap(left);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('Clover')).left, closeTo(before, 0.5));
+
+      // Two more lefts reach Pebble, the weakest, and there the left arrow has
+      // nowhere to go.
+      await tester.tap(left);
+      await tester.pumpAndSettle();
+      await tester.tap(left);
+      await tester.pumpAndSettle();
+      expect(card('Pebble').left, closeTo(card('Twig').left - pitch, 0.5),
+          reason: 'the weakest opponent, at the left edge');
+
+      // Faded out, and not merely invisible: an arrow that still took the tap
+      // would swallow a press meant for the tile it is sitting on.
+      final arrows = find.descendant(
+          of: find.byType(YourPath), matching: find.byType(AnimatedOpacity));
+      expect(tester.widget<AnimatedOpacity>(arrows.first).opacity, 0);
+      expect(
+          tester
+              .widget<IgnorePointer>(find
+                  .ancestor(
+                      of: arrows.first, matching: find.byType(IgnorePointer))
+                  .first)
+              .ignoring,
+          isTrue);
+      // The right one is still live, because there are seventeen tiles that
+      // way.
+      expect(tester.widget<AnimatedOpacity>(arrows.last).opacity, 1);
+    });
+
     testWidgets('cancelling the confirmation buys nothing', (tester) async {
       _phone(tester);
       final repo = await _repository();
