@@ -27,3 +27,4 @@ app/untranslated.json
 # Shareable build artefacts. Never committed: a 47 MB binary per build would
 # dwarf the repository, and it is reproducible from a tag.
 dist/
+__pycache__/
