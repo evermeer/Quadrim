@@ -346,7 +346,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbPebble =>
-      'Drops pieces wherever they fall. Has never noticed a threat.';
+      'Plays more or less at random, and spots about one win in three.';
 
   @override
   String get blurbTwig =>
@@ -370,11 +370,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbVireo =>
-      'Goes for the corners first, and the middle after that.';
+      'Takes the middle of the cube, then the corners. Occasionally careless.';
 
   @override
   String get blurbFinch =>
-      'Takes the middle before the corners, and plays a tidy game.';
+      'Wants every good square in the cube, and still drops one now and then.';
 
   @override
   String get blurbKestrel =>
@@ -423,18 +423,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Has learned to set a trap. Has not learned to spot yours.';
 
   @override
-  String get blurbJuniper => 'Knows all the basics, and heads for the corners.';
+  String get blurbJuniper =>
+      'Knows all the basics and works the middle, but keeps losing the thread.';
 
   @override
   String get blurbBracken => 'Knows all the basics, and heads for the middle.';
 
   @override
   String get blurbRowan =>
-      'Wants every good square, corners first, and still drops one now and then.';
+      'Takes the middle before the corners, and plays a tidy game.';
 
   @override
   String get blurbAspen =>
-      'Takes the middle of the cube, then the corners. Occasionally careless.';
+      'Keeps every good square in view and seldom wastes a turn.';
 
   @override
   String get blurbOsprey =>

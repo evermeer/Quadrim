@@ -77,13 +77,17 @@ Measurement tools (not shipped; `tool/` is outside the purity scan, so these may
 
 ```bash
 cd packages/quadrim_engine && dart run tool/duel.dart onyx onyx+d9 120
-cd packages/quadrim_engine && dart run tool/calibrate.dart --games 30
+cd packages/quadrim_engine && dart run tool/calibrate.dart --games 100
 cd packages/quadrim_engine && dart run tool/calibrate.dart --only oracle
 ```
 
 `duel.dart` is the instrument for one pairing. Every claim that one opponent is stronger than another should come from a run of it, not from an argument about the code. Names take `+dN` (defence depth), `+tN` (own forcing depth), `+bN` (forcing budget, thousands).
 
-`calibrate.dart` is the instrument for the whole ladder: 30 adjacent pairs, every non-adjacent within-tier pair, and 10 cross-tier braces — 95 pairs since the roster was recut to thirty-one (D333), budgets at 10%. Budget the better part of an hour, not the six minutes D208 recorded for twenty opponents. It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
+`calibrate.dart` is the instrument for the whole ladder: **every opponent against the five rungs above it — 140 pairs at 50 games, budgets at 10%** (D339). Budget half an hour. It replaced a chain of adjacent pairs plus a few cross-tier braces, which measured each tier well and the joins between them through a single pair, and so let two adjacent opponents that draw with each other be reported 259 points apart. It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the same window, five above and five below.
+
+**An opponent's measured rating is the *median* of its per-pair estimates, not the mean** (D341). Each estimate is a partner's published rating plus a measured gap, so it carries that partner's anchor error in full; the mean let one wrong anchor move every rung within five of it, which is how a run once reported Sorrel above three opponents that beat it two-to-one. When a number still looks wrong, read the head-to-head scores and the inversion list — both are computed without the anchors — before believing the estimate column.
+
+**A 10% budget does not blur a Master-tier result — it can invert it.** Measured both ways: Quartz reads +83 against Titan at 10% and **−115** at full budget; Flint reads +95 and **−241**. The tier's strength lives in a handful of expensive positions a game (median move 0 ms, mean ~900 ms, worst ~12 s), and those are exactly what the reduction truncates. **Any 10% result involving a node-budgeted opponent is evidence of nothing** — settle them with `duel.dart`, which never scales, before changing a configuration (D338, D342).
 
 ## Layout
 
@@ -147,7 +151,7 @@ The standing instruction for this repo:
 
 ## Known open items
 
-- **Two Casual-tier inversions are accepted for 0.1 and owned by the 1.0 roster revision** (D210, D211). Willow plays ~33 points above Vireo and Vireo ~50 above Finch. The cause is measured: `aggression` is worth about 78 points and the roster pins its direction — Vireo "would rather build than block" (the stronger setting) is rated below Finch "shuts your threats down first" (the weaker one). No configuration change closes it, so the fix is a roster change, not a tuning pass. Do not "fix" this by editing a bot config; check it with `calibrate.dart --only vireo`.
+- **Do not space a tier by which squares an opponent prefers** (D315, D336). Corners-first and centre-first beat each other in a ring, so alternating them up the ladder builds a cycle rather than an order — twice now. D314 removed `aggression` from the Casual tier for the same reason; D336 removed corner ranking from everything between Bramble and Marlin. What orders that stretch is how many of the sixteen seven-line cells it prefers, then `lineBias`, then the blunder rate, all monotone by construction. An inversion among those three is a real defect; check it with `calibrate.dart --only <id>`.
 - Calibration puts Oracle at 2323 against a published 2300 — the earlier ~2100 estimate does not survive a measured run. Quadrim Prime measures 2176 from a single readable pair, and it is the opponent the reduced budget hits hardest, so that number is a floor rather than a verdict; re-run `--only quadrim_prime --budget 1` before believing it.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
 - **`check.sh` fails if the release manifest declares `INTERNET`** (D212). That is how "computer play makes no network call" is enforced — by the permission, not by reading the code. 0.3a's Firebase work will trip it; narrow the check to computer play then rather than deleting it.

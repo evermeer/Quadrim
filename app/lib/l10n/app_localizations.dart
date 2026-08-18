@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// One-line personality blurb shown in the opponent list. Describes what a player will observe at the board, not how the opponent is implemented.
   ///
   /// In en, this message translates to:
-  /// **'Drops pieces wherever they fall. Has never noticed a threat.'**
+  /// **'Plays more or less at random, and spots about one win in three.'**
   String get blurbPebble;
 
   /// No description provided for @blurbTwig.
@@ -713,13 +713,13 @@ abstract class AppLocalizations {
   /// No description provided for @blurbVireo.
   ///
   /// In en, this message translates to:
-  /// **'Goes for the corners first, and the middle after that.'**
+  /// **'Takes the middle of the cube, then the corners. Occasionally careless.'**
   String get blurbVireo;
 
   /// No description provided for @blurbFinch.
   ///
   /// In en, this message translates to:
-  /// **'Takes the middle before the corners, and plays a tidy game.'**
+  /// **'Wants every good square in the cube, and still drops one now and then.'**
   String get blurbFinch;
 
   /// No description provided for @blurbKestrel.
@@ -797,7 +797,7 @@ abstract class AppLocalizations {
   /// No description provided for @blurbJuniper.
   ///
   /// In en, this message translates to:
-  /// **'Knows all the basics, and heads for the corners.'**
+  /// **'Knows all the basics and works the middle, but keeps losing the thread.'**
   String get blurbJuniper;
 
   /// No description provided for @blurbBracken.
@@ -809,13 +809,13 @@ abstract class AppLocalizations {
   /// No description provided for @blurbRowan.
   ///
   /// In en, this message translates to:
-  /// **'Wants every good square, corners first, and still drops one now and then.'**
+  /// **'Takes the middle before the corners, and plays a tidy game.'**
   String get blurbRowan;
 
   /// No description provided for @blurbAspen.
   ///
   /// In en, this message translates to:
-  /// **'Takes the middle of the cube, then the corners. Occasionally careless.'**
+  /// **'Keeps every good square in view and seldom wastes a turn.'**
   String get blurbAspen;
 
   /// No description provided for @blurbOsprey.

@@ -351,9 +351,13 @@ void main() {
       expect(lyra.searchDepth, 3);
       expect(onyx.searchDepth, 3);
       expect(corvus.searchDepth, 4);
-      expect(sable.threatSearchDepth, 0);
-      expect([ember, lyra, onyx, corvus].map((b) => b.threatSearchDepth),
-          orderedEquals([3, 4, 6, 9]),
+      // Sable's two is not a strength choice: without it Sable spends neither
+      // the node budget nor the forcing one, and `calibrate.dart` discards
+      // every pair across that boundary — which made Sable the one opponent on
+      // the roster with no measured rating at all (D337).
+      expect(sable.threatSearchDepth, 2);
+      expect([sable, ember, lyra, onyx, corvus].map((b) => b.threatSearchDepth),
+          orderedEquals([2, 3, 4, 6, 9]),
           reason: 'the forcing search deepens with every rung');
       // Opposing temperaments, expressed in one number each.
       expect(sable.aggression, greaterThan(0.5));

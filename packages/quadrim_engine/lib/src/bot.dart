@@ -232,8 +232,25 @@ const Set<StrategicRule> _allRules = {
 // measured strength disagrees with them (D144).
 // ---------------------------------------------------------------------------
 
-/// Purely random legal moves. Never notices a threat.
-const BotConfig pebble = BotConfig(id: 'pebble', tier: BotTier.novice, rating: 600);
+/// Random legal moves, except that it sometimes takes a win it is handed.
+///
+/// **It was purely random until D341, and purely random is not 600.** Measured
+/// against the roster it played some 400 points below its anchor and lost 1-49
+/// to Twig, whose only advantage is `winNow` — so on this board that one rule
+/// is worth nearly seven hundred points, and no gap of a hundred can be built
+/// across it by leaving one side without it. Pebble therefore has the rule too
+/// and misses most of what it offers.
+///
+/// The blunder rate is what the rung is tuned with, and it is the only lever
+/// here: with no rules at all there is nothing for a blunder to discard, which
+/// is why the previous configuration could not be moved at any price.
+const BotConfig pebble = BotConfig(
+  id: 'pebble',
+  tier: BotTier.novice,
+  rating: 600,
+  rules: {StrategicRule.winNow},
+  blunderRate: 0.71,
+);
 
 /// Random, but takes an immediate win when one is available.
 const BotConfig twig = BotConfig(
@@ -280,6 +297,13 @@ const BotConfig clover = BotConfig(
 /// Clover plus `makeDoubleThreat`, and still no idea what to do about yours.
 /// Building one before you can see one is the honest last lesson of the Novice
 /// tier: the rule that beats you here is the rule you have not learned yet.
+///
+/// **Its calibration estimate is not its strength** (D340). It measured 1062,
+/// above the three rungs directly above it — and head to head it loses to all
+/// three, 16-34 to Juniper, 15-35 to Bracken and 17-33 to Willow. The estimate
+/// is inflated because Sorrel is within five rungs of Pebble and Bramble is
+/// not: Pebble plays some 400 points below its published 600, so every pair
+/// against it hands the other side a large credit measured from a wrong anchor.
 const BotConfig sorrel = BotConfig(
   id: 'sorrel',
   tier: BotTier.novice,
@@ -313,6 +337,17 @@ const BotConfig bramble = BotConfig(
 // Aspen all sixteen. Spec 8.4 gives the whole tier a centre preference, so this
 // is the tier conforming to it rather than departing from it.
 //
+// **Every rung from here to Marlin ranks the same way — centre, then corner,
+// then the rest — and that is the second lesson of the same defect** (D336).
+// Ranking corners first was used as a *strength* step at three rungs, and it is
+// not one: it is a style axis, and putting a style axis in a ladder produces a
+// cycle rather than an order. Measured over the whole roster, every centre-first
+// opponent from Bracken to Marlin came out in its published order, and all six
+// of the tier's inversions involved one of the three corners-first rungs. So the
+// order now rests on how many cells an opponent prefers, on `lineBias`, and on
+// the blunder rate — all three monotone by construction — and preferring corners
+// survives nowhere in the catalogue.
+//
 // Only the *order* of the bias weights reaches the board. With no lineBias
 // there is nothing to compare their magnitudes against, so an opponent that
 // ranks corners above centres above everything else plays identically at
@@ -328,23 +363,28 @@ const BotConfig bramble = BotConfig(
 // setting wins depends on which setting it is playing, exactly like
 // rock-paper-scissors. Adding aggression to a Casual opponent re-opens it.
 
-/// Eight good squares, ranked corners first.
+/// Eight good squares — the middle of the cube — and the loosest grip on them.
+///
+/// Ranked corners first until D336, which is what made it beat the two rungs
+/// above it. Juniper, Bracken and Willow are now the same opponent at three
+/// blunder rates, which is a thinner distinction than the roster had before and
+/// an honest one: it is the distinction that measures.
 const BotConfig juniper = BotConfig(
   id: 'juniper',
   tier: BotTier.casual,
   rating: 1020,
   rules: _allRules,
-  blunderRate: 0.145,
-  cornerBias: 0.6,
+  blunderRate: 0.14,
+  centreBias: 0.6,
 );
 
-/// The same eight, ranked the other way: the middle of the cube.
+/// The same eight, held a little more firmly.
 const BotConfig bracken = BotConfig(
   id: 'bracken',
   tier: BotTier.casual,
   rating: 1060,
   rules: _allRules,
-  blunderRate: 0.14,
+  blunderRate: 0.13,
   centreBias: 0.6,
 );
 
@@ -354,34 +394,57 @@ const BotConfig willow = BotConfig(
   tier: BotTier.casual,
   rating: 1100,
   rules: _allRules,
-  blunderRate: 0.13,
+  blunderRate: 0.12,
   centreBias: 0.6,
 );
 
-/// The first of the tier to want all sixteen, and it ranks the corners first.
+// Rowan, Aspen, Vireo and Finch are **one configuration at four blunder rates**
+// — all sixteen good squares, centre first — and the rates run 0.10, 0.105,
+// 0.11, 0.115 *up* the ladder rather than down. That is not a slip (D340).
+//
+// Measured over fifty games a pair, the one that blunders most beat the one
+// that blunders least, and all six head-to-heads inside the group agreed:
+// 30-19, 28-21, 27-23, 29-20, 27-22, 28-21. Six for six is about 1.6% by
+// chance. So across this range the blunder rate is worth nothing at best and
+// carries the wrong sign at worst, and ordering these rungs by measurement
+// means ordering them by *increasing* blunder rate. The catalogue's usual rule
+// — a higher rung blunders less — is suspended here and only here, and
+// `strategic_bot_test.dart` allows the exception rather than dropping the rule.
+//
+// **None of these four is distinguishable from the others in play**, which is
+// spec 6.4's requirement and this stretch does not meet it. Blunder rates 1.5
+// percentage points apart are invisible at the board. That is D336's unpaid
+// bill: removing the corner ranking removed the only thing separating them, and
+// what should replace it is `lineBias`, which is monotone and measured at
+// 60-120 points per 0.05 step.
+
+/// The first of the tier to want all sixteen good squares, and the steadiest of
+/// the four rungs that share its configuration.
 ///
 /// This is the configuration Vireo held at 1200 before the roster was recut:
-/// the rung kept the strength and handed it a new name (D333). Dropping
-/// `centreBias` from a corners-first opponent was tried once and reverted —
-/// eight corner cells measured *stronger* than sixteen corners-first, which is
-/// the reverse of what the block comment above predicts (D315).
+/// the rung kept the strength and handed it a new name (D333). It ranked the
+/// corners first until D336. Dropping `centreBias` from a corners-first
+/// opponent was tried once and reverted — eight corner cells measured
+/// *stronger* than sixteen corners-first (D315), which is the finding D336
+/// generalises: corner ranking is a style axis and does not belong in a ladder
+/// at all.
 const BotConfig rowan = BotConfig(
   id: 'rowan',
   tier: BotTier.casual,
   rating: 1140,
   rules: _allRules,
-  blunderRate: 0.125,
-  centreBias: 0.5,
-  cornerBias: 0.7,
+  blunderRate: 0.10,
+  centreBias: 0.7,
+  cornerBias: 0.5,
 );
 
-/// The same sixteen squares as Rowan, ranked centre first.
+/// The same sixteen squares as Rowan, and half a point looser on them.
 const BotConfig aspen = BotConfig(
   id: 'aspen',
   tier: BotTier.casual,
   rating: 1180,
   rules: _allRules,
-  blunderRate: 0.12,
+  blunderRate: 0.105,
   centreBias: 0.7,
   cornerBias: 0.5,
 );
@@ -391,24 +454,30 @@ const BotConfig aspen = BotConfig(
 // opponent is already working — which is the lever that separates it from
 // Casual rather than another point of accuracy.
 
-/// Corner-hungry, and no longer giving much away.
+/// The tier's first rung: the same sixteen again, looser still.
+///
+/// Corner-hungry until D336, when it was the single worst offender the first
+/// whole-roster run found — 107 points above its anchor, beating three rungs
+/// above it. Centre-first it measured 1219 against a published 1220, which is
+/// the closest any opponent on the ladder came to its own anchor.
 const BotConfig vireo = BotConfig(
   id: 'vireo',
   tier: BotTier.club,
   rating: 1220,
   rules: _allRules,
   blunderRate: 0.11,
-  centreBias: 0.5,
-  cornerBias: 0.7,
+  centreBias: 0.7,
+  cornerBias: 0.5,
 );
 
-/// The same sixteen, centre first, and a point less blunder.
+/// The same sixteen, and the loosest grip of the four — which is why it holds
+/// the highest of their rungs rather than the lowest (D340).
 const BotConfig finch = BotConfig(
   id: 'finch',
   tier: BotTier.club,
   rating: 1260,
   rules: _allRules,
-  blunderRate: 0.10,
+  blunderRate: 0.115,
   centreBias: 0.7,
   cornerBias: 0.5,
 );
@@ -491,12 +560,25 @@ const BotConfig lynx = BotConfig(
   lineBias: 0.25,
 );
 
-/// Two plies, weighted towards its own structure.
+/// Two plies, weighted towards its own structure, and a short look for its own
+/// forced wins.
+///
+/// **The forcing search is here so that Sable can be measured at all** (D337).
+/// `calibrate.dart` discards any pair whose two sides spend different budgets,
+/// because the reduced budget a calibration run uses would then hit one side
+/// and not the other. Sable took this configuration from Ember in the recut
+/// (D333), and Ember had spent neither the node budget nor the forcing one — so
+/// every one of Sable's five pairs was discarded and it was the only opponent
+/// on the roster with no measured rating whatsoever. Two moves of threat-space
+/// search is the smallest thing that puts it back on the same footing as Lynx
+/// below it and Ember above it; it is also, on its own terms, the right rung
+/// for it.
 const BotConfig sable = BotConfig(
   id: 'sable',
   tier: BotTier.expert,
   rating: 1500,
   searchDepth: 2,
+  threatSearchDepth: 2,
   rules: _allRules,
   blunderRate: 0.05,
   centreBias: 1,
@@ -660,6 +742,16 @@ const BotConfig quartz = BotConfig(
 /// player reaches by out-searching rather than by out-lasting a proof, which is
 /// what makes it the right place for the roster's new top-of-search rung
 /// (D333).
+///
+/// **"More of everything" was not enough, and that is the point** (D338). On
+/// those terms Titan already beat Quartz on every lever except one, and lost to
+/// it 10-17 — and to Flint, two rungs below, 11-19. The levers it led on are the
+/// saturated ones: depth stops separating opponents past three plies (D154,
+/// D156) and a forcing search past eleven moves finds the same wins as one past
+/// twenty (D176), so a bigger budget spent on either buys nothing measurable.
+/// The one lever it did *not* lead on is the one D169 measured at ~300 Elo, and
+/// Quartz matched it there at 9. Two more moves of defence is what actually puts
+/// this rung above the one below it.
 const BotConfig titan = BotConfig(
   id: 'titan',
   tier: BotTier.master,
@@ -667,7 +759,7 @@ const BotConfig titan = BotConfig(
   nodeBudget: 3000000,
   maxSearchDepth: 11,
   threatSearchDepth: 17,
-  defenceSearchDepth: 9,
+  defenceSearchDepth: 11,
   forcingBudget: 1500000,
   exactEmpties: 11,
   rules: _allRules,

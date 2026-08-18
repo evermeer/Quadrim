@@ -334,30 +334,30 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
-| 0 | Pebble | 600 | Random legal moves. Never notices a threat. |
+| 0 | Pebble | 600 | Random legal moves, plus `winNow` behind a 71% blunder rate — it takes about a third of the wins it is handed (D341). |
 | 1 | Twig | 700 | Random, but takes an immediate win. No blunder rate — its weakness is knowing one rule. |
 | 2 | Mote | 800 | Wins and blocks, 40% blunder rate. |
 | 3 | Hazel | 850 | The same two rules, 30% blunder rate. |
 | 4 | Clover | 900 | Wins and blocks, 20% blunder rate, drawn to corners. |
 | 5 | Sorrel | 940 | The first that builds a double threat, 18%, drawn to corners. Still cannot see yours. |
 
-**Casual** — all four rules; what separates them is how many good squares they prefer. Bramble is free; the rest are earned. **No opponent in this tier sets aggression** (D314).
+**Casual** — all four rules; what separates them is how many good squares they prefer. Bramble is free; the rest are earned. **No opponent in this tier sets aggression** (D314), **and none of them ranks the corners first** (D336).
 
 | # | Name | Rating | Prefers | Blunder |
 |---|---|---|---|---|
 | 6 | Bramble | 980 | none of the sixteen | 0.15 |
-| 7 | Juniper | 1020 | the 8 corners | 0.145 |
-| 8 | Bracken | 1060 | the 8 centres | 0.14 |
-| 9 | Willow | 1100 | the 8 centres | 0.13 |
-| 10 | Rowan | 1140 | all 16, corners first | 0.125 |
-| 11 | Aspen | 1180 | all 16, centres first | 0.12 |
+| 7 | Juniper | 1020 | the 8 centres | 0.14 |
+| 8 | Bracken | 1060 | the 8 centres | 0.13 |
+| 9 | Willow | 1100 | the 8 centres | 0.12 |
+| 10 | Rowan | 1140 | all 16, centres first | 0.10 |
+| 11 | Aspen | 1180 | all 16, centres first | 0.105 |
 
 **Club** — sixteen good squares throughout, and at its top the building term, which is the lever that separates it from Casual rather than another point of accuracy.
 
 | # | Name | Rating | Prefers | Blunder |
 |---|---|---|---|---|
-| 12 | Vireo | 1220 | all 16, corners first | 0.11 |
-| 13 | Finch | 1260 | all 16, centres first | 0.10 |
+| 12 | Vireo | 1220 | all 16, centres first | 0.11 |
+| 13 | Finch | 1260 | all 16, centres first | 0.115 |
 | 14 | Kestrel | 1300 | all 16, centres first | 0.08 |
 | 15 | Osprey | 1340 | 16 plus the building term | 0.075 |
 | 16 | Heron | 1380 | 16, classes further apart, more building | 0.07 |
@@ -368,7 +368,7 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 | # | Name | Rating | Configuration |
 |---|---|---|---|
 | 18 | Lynx | 1460 | No ordinary search; two moves of forcing search, 5.5% |
-| 19 | Sable | 1500 | 2-ply, aggressive weighting, 5% |
+| 19 | Sable | 1500 | 2-ply plus a 2-move forcing search, aggressive weighting, 5% |
 | 20 | Ember | 1540 | 3-ply plus a 3-move forcing search, defensive weighting, 4% |
 | 21 | Lyra | 1580 | 3-ply, 4-move forcing search, even-handed, 3.5% |
 | 22 | Onyx | 1640 | 3-ply, 6-move forcing search, 3% |
@@ -382,11 +382,17 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 | 25 | Cairn | 1900 | 900k nodes, deeper threat search, first with a **defensive** forcing search, 1% |
 | 26 | Flint | 2000 | 1.8M nodes, deeper defence, 0.5% |
 | 27 | Quartz | 2100 | 2.5M nodes, exact solving below 10 empty cells, unstarved defence, no deliberate blunders |
-| 28 | Titan | 2200 | 3M nodes, 11 empty cells solved exactly, the strongest opponent that plays no book |
+| 28 | Titan | 2200 | 3M nodes, 11 empty cells solved exactly, the deepest **defensive** forcing search of any opponent, the strongest that plays no book |
 | 29 | Oracle | 2300 | Plays the book from move one. Unbeatable when it opens; the searching machinery of the rungs below from the second seat |
 | 30 | Quadrim Prime | 2400 | The same book, and the largest configuration in the catalogue from the second seat |
 
-**Every rating above is an anchor, and eleven of them have not been measured yet.** The new rungs and the reshuffled ones are a principled first ladder rather than a calibrated one; `calibrate.dart` is what settles them, and when it disagrees the configuration changes and the rating does not (D144).
+**Every rating above is an anchor, and the whole roster has now been measured once** (August 2026). That run reported nine ordering inversions and four anchors outside tolerance, and it is what D336, D337 and D338 are: corner ranking left the Casual and Club tiers, Sable gained the forcing search that makes it measurable at all, and Titan gained the one lever it did not already lead Quartz on. The harness changed with them (D339). **The blunder rates above are not yet settled** — they were re-spread by hand after the structural fixes and await the next run. When measurement disagrees the configuration changes and the rating does not (D144).
+
+**The Novice tier is about twice as steep as it is published, and that is the next thing to fix.** Pebble to Sorrel is 340 points on paper and 676 on the board; Hazel and Clover measure −424 and −552 from Pebble against a published −250 and −300. Pebble's *adjacent* gap is exact since D341 — 97 measured against 100 published, over a thousand games — so the excess belongs to Mote, Hazel, Clover and Sorrel being too strong for the span they are given. It became visible only once Pebble stopped being 400 points wrong and drowning it.
+
+**Rungs 10 to 13 carry a rising blunder rate, and that is measured rather than mistaken** (D340). Those four are one configuration at four rates, and the one that blunders most beat the one that blunders least across all six head-to-heads inside the group. It also means **they are not distinguishable in play**, which §6.4 requires of every opponent and this stretch does not deliver — the honest consequence of D336 removing the only other thing that separated them.
+
+**The Master tier is ordered, and the calibration report was wrong about it.** Run at full budget, Titan beats Quartz by 115 against a published 100, beats Flint by 241 against 200, and Flint beats Cairn by 147 against 100 — three correct orderings where the 10% run reported two inversions. **A reduced budget does not blur these opponents, it inverts them** (D342): a Master move costs 0 ms at the median and ~900 ms at the mean, so the reduction leaves the cheap moves alone and removes exactly the deep search that separates one rung from the next. Their *spacing* is still unmeasured — three pairings is not a tier — and settling it is an overnight `--budget 1` run over Lynx upward.
 ### 6.5 What actually makes an opponent strong
 
 Measured, in descending order of effect. This is the part of the document a rebuilder should read twice.
@@ -1077,6 +1083,10 @@ It was owned by a 1.0 roster revision that no longer exists, so it was **fixed i
 Measured now: 946, 1137, 1236, 1261, 1275 against published 1000, 1100, 1200, 1250, 1300. Every rung inside tolerance and in the right order.
 
 **What is not fixed, and cannot be with the levers this tier has.** The cycle itself survives — Finch still beats Willow by 212 while Vireo beats Finch — because it is caused by *which good squares an opponent prefers*, which is a style axis and not a strength one. D210's claim that preferring more of the sixteen seven-line cells is the tier's strongest lever also does not survive a direct test: taking Vireo from sixteen preferred cells to eight made it stronger (D315). A rebuilder should space this tier by something monotone — search depth, or a finer blunder scale — and should not expect a preference for squares to produce a ladder.
+
+**That advice was then ignored by the next change to the roster, which is the most useful thing in this section.** The recut (D333) added four rungs to this stretch and spaced them by alternating corner-first and centre-first — the exact axis the paragraph above names as a style — and the first whole-roster calibration reported six inversions here. **D336 acted on the paragraph rather than restating it:** nothing from Bramble to Marlin ranks the corners above the centre any more, and `strategic_bot_test.dart` asserts it so that the third attempt cannot happen quietly. What the tier is ordered by now is how many of the sixteen cells an opponent prefers, then the building term, then the blunder rate — three levers that are monotone by construction.
+
+The cost is the one the paragraph above predicted: this stretch has less personality than it had. Juniper, Bracken and Willow are one configuration at three blunder rates. Putting character back is a real piece of design work, and it has to find a *monotone* axis to hang it on.
 
 **Things earlier editions listed as open that are now closed:** push on desktop and web (§10 — a stated platform limitation, not a problem to solve); the size and obtainability of the strategy book (§6.6 — 54,745 bytes, published, permissively granted); anchor calibration (§6.7 — a built harness); auto-match cold start (§8.9 — a computer opponent after a short wait); the per-game Firebase cost, negligible in steady state now that the migration burst that dominated it no longer exists; the business model (§4.1); and the large-screen layout, which is cancelled rather than deferred (§8.1).
 

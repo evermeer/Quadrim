@@ -1400,6 +1400,127 @@ Sorrel is the one new opponent that adds a *rule* rather than a number: it is th
 **Cost:** Roughly thirty test fixtures moved again, one release after D333 moved them. Several app fixtures had to change *which opponent they farm* as well as how often, because the free set now stops at Sorrel and Bramble is the first purchase — a fixture that earned points by beating Bramble and then bought Bramble was nonsense the old free set had been hiding.
 
 
+## D336 — Ranking corners first is a style, and a style cannot be a rung
+
+**Question:** The first whole-roster calibration after the recut reported nine ordering inversions. Six were in the Casual and Club tiers, which [D314](#d314) and ticket 044 had already been through once. What was left in there that still produces a cycle?
+
+**Decision:** **Nothing from Bramble to Marlin ranks the corners above the centre any more.** Juniper, Rowan and Vireo did; they now rank centre, then corner, then the rest, like the eight opponents around them.
+
+The measurement is unusually clean for this kind of question. Sort every centre-first opponent in the stretch by its measured rating and the published order comes back exactly — Bracken 1093, Willow 1109, Aspen 1176, Finch 1198, Kestrel 1261, Osprey 1291, Heron 1361, Marlin 1465, eight rungs in a row with not one out of place. Every inversion in the tier involved one of the three corner-first rungs. Vireo was the worst of them: 107 points above its anchor, beating Finch, Kestrel *and* Osprey from below while carrying a worse blunder rate than any of the three.
+
+**This is [D315](#d315) generalised rather than a new finding.** D315 had already measured that eight corner cells beat sixteen corners-first — a result it recorded as surprising and left alone. It stops being surprising once the axis is named: which good squares an opponent prefers is a *style*, and two styles beat each other in a ring, so alternating them up a ladder builds a cycle no matter how the blunder rates are set. §14 of idea-v3.md said as much after ticket 044 and told a rebuilder to space this tier by something monotone. The recut then added four new rungs and spaced them by alternating corner and centre, which is precisely what it had been warned off. That is the actual mistake here, and it is worth recording as one.
+
+**What orders the stretch now:** how many of the sixteen seven-line cells an opponent prefers (none, eight, sixteen), then `lineBias`, then the blunder rate. All three are monotone by construction, so an inversion among them means a defect rather than a rock-paper-scissors triangle.
+
+**Cost, and it is the reason this was not done at ticket 044:** three opponents lose the only thing that distinguished them from a neighbour. Juniper, Bracken and Willow are now the same configuration at three blunder rates, and so are Rowan and Aspen. The roster reads thinner, and their blurbs had to stop promising a corner habit that no longer exists — `blurbJuniper`, `blurbRowan` and `blurbVireo` in both locales. A thin distinction that measures is worth more than a vivid one that inverts, but the trade is real, and a future roster should find a *monotone* axis to put the personality back on rather than reinstating this one.
+
+The blunder rates in the stretch were spread more evenly at the same time, because five of the rungs sat 0.005 apart — below what fifty games can resolve. That part is a guess awaiting the next run, not a measurement.
+
+## D337 — Sable was not weak, it was invisible
+
+**Question:** Sable has a published rating of 1500 and did not appear in the calibration report at all. Not out of tolerance, not inverted — absent. Is the tool wrong or the catalogue?
+
+**Decision:** Neither, and that is the interesting part. `calibrate.dart` discards any pair whose two sides spend different budgets, because a calibration run scales the node and forcing budgets to a tenth and that scaling hits a node-limited opponent hard, a ply-limited one a little, and a rules-only one not at all ([D208](#d208)). Sable took its configuration from Ember in the recut ([D333](#d333)), and that configuration spends *neither* budget — two plies of plain search and nothing else. Every opponent within reach of it spends the forcing budget. So all five of its pairs were discarded and Sable became the one opponent on a thirty-one rung ladder with no measured rating of any kind.
+
+**Sable gains `threatSearchDepth: 2`.** It is the smallest change that puts it on the same footing as Lynx below it and Ember above it, and it is defensible on its own terms rather than only as a fix: Lynx looks two forcing moves ahead and nothing else, Sable now does that *and* searches two plies, and Ember does both one move deeper. It measures from five pairs afterwards.
+
+**What this says about the tool is the part worth keeping.** The exclusion rule is right — a pair measured across that boundary tells you about the budget scale rather than about the opponents. But an opponent excluded from *every* pair vanishes silently, and a silent hole in a report whose whole purpose is to find holes is the worst failure mode it has. The report should say so out loud. It does not yet; that is left open rather than fixed here, because the roster no longer has such an opponent and a check with nothing to catch is hard to trust.
+
+## D338 — More of everything is not more
+
+**Question:** Titan is published at 2200 and configured with a larger node budget, a deeper search, a longer forcing search and one more cell of exact solve than Quartz at 2100. It lost to Quartz 10-17, and to Flint at 2000 by 11-19. Every lever already pointed the right way. What is left?
+
+**Decision:** **Titan's `defenceSearchDepth` goes from 9 to 11**, which is the only lever it did not already lead on — Quartz matched it at 9.
+
+The levers it did lead on are the ones this project has already measured as saturated, and the decision log says so in three separate places. Depth stops separating opponents past three plies ([D154](#d154), [D156](#d156)). A forcing search past eleven moves finds the same wins as one past twenty ([D176](#d176)). And a node budget buys depth, which is the saturated lever, so a bigger budget spent on it buys nothing either. Meanwhile [D169](#d169) measured the *defensive* forcing search at roughly 300 Elo, the largest single strength lever in the project. Titan had been built by adding to the three that do not work and matching on the one that does.
+
+**Confirmed at full budget, and the confirmation is stronger than the fix.** Fifty games a pair with no budget reduction at all: Titan beats Quartz by 115 against a published 100, beats Flint by 241 against a published 200, and Flint beats Cairn by 147 against a published 100. All three rungs are correctly ordered and two of the three sit within sampling noise of their published gaps. The defence lever was the right diagnosis.
+
+**The top of the ladder is compressed and this does not uncompress it.** Cairn, Flint, Quartz and Titan measured 2044, 2117, 2128 and 2109 against published ratings spanning 1900 to 2200 — three hundred points of ladder inside eighty points of measurement. Two rungs of defence will separate Titan from Quartz; they will not separate Cairn from Flint. Part of the compression is the instrument rather than the catalogue, because a tenth of a three-million-node budget is three hundred thousand nodes and the Master tier is the tier the reduction hits hardest. Believing any Master-tier number needs `--budget 1`, which nobody has run since the recut. **That is the honest state of the top four rungs: ordered on paper, unresolved on the board.**
+
+## D339 — A window instead of a chain
+
+**Question:** The calibration harness played adjacent pairs, every pair inside a tier, and one brace between the middle of each tier — 95 pairs at 30 games. Sorrel measured 1127 and Bramble 868, 259 points apart, while the two of them measured *level* head to head at 14-16. Both numbers cannot be right. What sampling produces that?
+
+**Decision:** **Every opponent now plays the five rungs above it — 140 pairs — at 50 games each.**
+
+The old scheme measured each tier thoroughly and the *joins between them* through a single pair. Sorrel is the top of the Novice tier and Bramble the bottom of Casual, so Sorrel's rating was estimated entirely from beating Pebble, Twig, Mote, Hazel and Clover, and Bramble's entirely from losing to Juniper, Bracken, Willow, Rowan and Aspen. Each estimate is honest against the opponents it saw. Nothing tied the two halves together except that one adjacent pair, so the two scales drifted apart and the report presented the drift as a 259-point strength difference between opponents that draw with each other.
+
+A fixed reach deletes the concept of a tier from the sampling. Every rung is tied to the five above it whether or not they share a band, so the scale is pinned continuously from Pebble to Quadrim Prime and no join is thinner than any other point on the ladder. `--only` uses the same window centred on its subject — five above and five below, up to ten pairs — which is the same rule and cannot reproduce [D313](#d313)'s failure of sampling an opponent from a set that happens to exclude the ones that beat it.
+
+**Fifty games rather than thirty** because thirty leaves about 64 points of noise on rungs that are forty apart, so one pair could not distinguish a correct rung from an inverted one; several of the nine inversions in the motivating run sat within a game or two of even. Fifty brings it to about 50. The run is affordable because the 95-pair run took twenty minutes, not the hour `CLAUDE.md` had budgeted for it.
+
+**What is given up is the long brace.** Nothing plays anything more than five rungs away any more, so Hazel against Quartz is gone. Those pairs were swept almost without exception and produced a bound rather than a value, so the loss is small — but they were the only check on the ladder's *absolute* span rather than on its ordering, and if that span is ever in question the brace has to come back.
+
+
+## D340 — Rungs dealt out by measurement, and the column that is not a ranking
+
+**Question:** After D336–D339 the ladder still reported eight inversions, all of them transitive. A transitive inversion is not a cycle — it is a set of configurations in the wrong order, and the roster has an established move for that: a configuration belongs to a rung rather than to a name ([D333](#d333)). Should the configurations be dealt out in measured order?
+
+**Decision:** **One group moved. Two candidate groups were examined and rejected, and the reasons are the useful part of this entry.**
+
+**What moved: rungs 1140, 1180, 1220 and 1260.** Those four hold one configuration at four blunder rates, and the rates now read 0.10, 0.105, 0.11, 0.115 *up* the ladder rather than down. Measured over fifty games a pair, the one that blunders most beat the one that blunders least, and all six head-to-heads inside the group agreed: 30-19, 28-21, 27-23, 29-20, 27-22, 28-21. Six for six is about 1.6% by chance. Across this range the blunder rate is worth nothing at best and carries the wrong sign at worst.
+
+These four are also safe to judge, which the rest of this entry turns on: every opponent from Pebble to Marlin has no node budget and no forcing search, so the tenth-scale budget a calibration run uses scales *nothing* about them. Their duels ran at full strength.
+
+**What was rejected, first case: the Master tier.** Cairn, Flint, Quartz and Titan measured 2052, 2114, 2138 and 2101, which would deal Titan's configuration down to rung 2000 and Quartz's up to 2200. Declined. The Master tier is separated entirely by node budget, a run cuts that budget to a tenth, and Titan's configuration is the one carrying `exactEmpties: 11` — an exact endgame solve that at 300,000 nodes may consume the budget Flint, which has no exact solve, spends on searching. **The measurement that would justify the move is the one the budget reduction is least able to make.** [D338](#d338) already said no Master-tier number should be believed without `--budget 1`; dealing rungs out on those numbers would be using the report against its own warning.
+
+**That refusal was then vindicated, and by the largest margin available.** Run at full budget, both Master pairings reverse: Quartz went from +83 to **−115** against Titan, and Flint from +95 to **−241**. Dealing those rungs out by the reduced-budget numbers would have moved Titan's configuration down to 2000 and Quartz's up to 2200 — permanently, and in exactly the wrong order. **A reduced budget does not blur a Master-tier result, it can invert it**, which is a stronger claim than [D338](#d338) was able to make and the reason this entry exists.
+
+**What was rejected, second case — and this one was rejected only after being implemented and reverted.** The measured column put Bramble at 959 and Sorrel at 1062, so the three configurations at rungs 900/940/980 were rotated to put all four rules at the bottom. That was wrong, and the head-to-heads say so plainly: Sorrel's configuration loses 16-34 to Juniper, 15-35 to Bracken and 17-33 to Willow, every one of them a rung it supposedly outranked. Meanwhile Clover loses to Sorrel 12-38 and to Bramble 18-32, and Sorrel and Bramble draw 25-25. **The published order down there was already right, and the tool never reported an inversion among the three.**
+
+**Why the column lied, because it will lie again the same way.** Each opponent's estimate is the mean over its pairs of the *other side's published rating* plus the measured gap. Pebble plays some 400 points below its published 600. Sorrel is within five rungs of Pebble and Bramble is not — so Sorrel banks a swept 49-1 win credited from an anchor that is wrong by 400 points, and Bramble banks nothing of the kind. The estimate is not a strength ranking; it is a strength ranking plus the error in every anchor within reach. **Near a broken anchor, only the head-to-head scores mean anything**, and the inversion list — which is computed from head-to-heads and not from the estimates — is the part of the report to trust.
+
+That makes fixing Pebble a precondition for reading the bottom of the ladder at all, not a cosmetic tidy-up. It is the largest single source of error in the report and it contaminates the ten rungs above it.
+
+**One rule was bent.** Blunder rate is no longer strictly non-increasing up the roster; `strategic_bot_test.dart` allows 0.01 of slack, which is what the four reversed rungs need and little enough to still catch an opponent handed a wildly wrong rate.
+
+**Cost.** Four blurbs moved with their configurations, in both locales, and they now read oddly against the ladder: the 1180 rung "seldom wastes a turn" while the 1260 rung "still drops one now and then". Both sentences are true of the configurations that now sit there. The real problem underneath is that **those four opponents are not distinguishable in play at all**, which spec §6.4 requires and this stretch does not deliver — D336's unpaid bill, since removing the corner ranking removed the only other thing separating them. `lineBias` is the lever that should replace it: monotone, and measured at 60–120 points per 0.05 step.
+
+**And this fixes ordering, not spacing.** Where two configurations are genuinely five points apart and the roster claims forty, the sign of the measured gap is a coin flip and the inversion will return at random on some future run. Dealing rungs out absorbs a residual misplacement; it is not a substitute for a lever that produces forty-point steps.
+
+## D341 — Pebble takes some of its wins, and the report stops trusting its anchors
+
+**Question:** Pebble measured 400 points below its published 600 and, because every estimate in the report is another opponent's published rating plus a measured gap, that error was banked by every rung within five of it — which is how [D340](#d340) came to rotate three configurations that were already in the right order. Fix the report, fix the opponent, or both?
+
+**Decision:** Both, and neither is a workaround for the other.
+
+**Pebble gains `winNow` with a blunder rate of 0.71.** It was purely random, and purely random is not 600: it lost 1-49 to Twig, whose only advantage is that one rule. **So on this board `winNow` is worth nearly seven hundred points**, and no gap of a hundred can be built across it by giving the rule to one side and not the other. Pebble now has the rule and misses most of what it offers. Measured over a thousand games it sits 97 points below Twig against a published 100 — the closest fit on the ladder, and it took a sweep of blunder rates to find, because the relationship is steeply non-linear: 0.30 gives −10, 0.65 gives −78, 0.72 gives −117.
+
+**The blunder rate is the only lever Pebble has, and it did not have it before.** With no rules there is nothing for a blunder to discard, so the old configuration played identically at every setting — which is why this rung could not be moved at any price and had to change what it *knows* before it could change how well it plays.
+
+**What this costs is the personality.** Pebble was "drops pieces wherever they fall, has never noticed a threat", and it now notices roughly one threat in three. That is a real loss — the absolute-beginner rung is less absolute than it was — and it is not optional, because the alternative is a published rating that overstates the opponent by 400 points. A player's rating is earned against these anchors, so beating a 200-strength opponent labelled 600 credits them for something they did not do. `blurbPebble` changes in both locales.
+
+**And `calibrate.dart` now reports the median of an opponent's per-pair estimates rather than the mean.** Each estimate carries its partner's anchor error in full, so a single wrong anchor moves the mean of ten pairs by a tenth of its error — enough, at 400 points, to report Sorrel above three rungs that beat it 34-16, 35-15 and 33-17 on the board. A median cannot be moved far by one outlying pair. **The report exists to find anchors that are wrong, so it must not assume they are right**, and the mean quietly did.
+
+**What is left, and it is not Pebble's to fix.** Pebble still measures 174 below its anchor, because the bottom of the ladder is roughly twice as steep as it is published: Pebble to Sorrel is 340 points on paper and 676 on the board, and the same is true of Hazel and Clover at −424 and −552 against −250 and −300. Pebble's *adjacent* gap is now exact; the rungs above it are too strong for the rest of the span. That is a Novice-tier spacing problem and it belongs to those four configurations, not to this one — and it is newly visible only because the opponent that was drowning it has stopped.
+
+## D342 — A reduced budget inverts the top of the ladder, and what a full-budget run actually costs
+
+**Question:** [D208](#d208) scales every node and forcing budget to a tenth so that a whole-ladder calibration takes minutes instead of hours, on the argument that the ordering question survives the reduction because every opponent is reduced by the same factor. Does it?
+
+**Decision:** **Not at the top of the ladder. Record the reduction as unsafe for any node-budgeted opponent, and settle those pairings with `duel.dart`, which never scales.**
+
+Measured both ways, fifty games a pair:
+
+| pairing | published | at 10% | at full budget |
+|---|---|---|---|
+| Quartz → Titan | −100 | **+83** | **−115** |
+| Flint → Titan | −200 | **+95** | **−241** |
+| Cairn → Flint | −100 | −23 | −147 |
+
+Two of the three **change sign**. That is a different failure from the one D208 anticipated: it assumed the reduction costs precision, and the reduction costs *direction*.
+
+**Why, and it is visible in the timings.** A Master-tier move has a median cost of **0 ms** and a mean of about 900 ms, with a worst case near 12 seconds. Almost every move is decided instantly by the book, by a rule, or by a forced win already in view; the tier's entire separation lives in a handful of genuinely hard positions a game. Cutting the budget to a tenth does not weaken these opponents evenly — it leaves the cheap moves untouched and removes precisely the deep search that distinguishes one rung from the next. The opponent that suffers most is the one whose budget was doing the most work, which is the strongest one, which is why the result inverts rather than merely narrowing.
+
+D208's argument holds where it was made: below Lynx nothing spends a node or forcing budget at all, so the reduction is a no-op and those fourteen rungs are measured exactly. It is the extrapolation upward that fails.
+
+**What a full-budget run costs, having now measured it rather than guessed.** The three pairings above took roughly 25, 15 and 9 minutes of compute for 50 games each — the spread is wide because Cairn and Flint are three times cheaper per move than Titan. A `--budget 1` pass over Lynx upward is about 65 pairs, of which some 35 involve the Master tier; at those rates it is an **overnight job of eight to ten hours**, not the four to six first estimated and not the several days feared when the first pairing ran long. A full-budget run of the *whole* roster would be the same figure plus nothing useful, since the rungs below Lynx cannot change.
+
+**What this does not fix.** Cairn to Titan is 300 published points and the full-budget gaps across it total 388, so the ordering is right and the spacing is loose rather than compressed — the reverse of what the 10% run appeared to show. Whether the four rungs are *evenly* spaced is a question only the overnight run can answer, and nothing should be tuned on the strength of three pairings.
+
+**And one number to check on hardware.** Titan's worst move here was 11.8 seconds against [D164](#d164)'s twenty-second ceiling. That ceiling is a phone number and this is a desktop measurement, so the headroom is unverified rather than comfortable.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

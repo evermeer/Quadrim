@@ -20,9 +20,41 @@ import 'dart:math';
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_rating/quadrim_rating.dart';
 
-/// Games per pair. Thirty leaves roughly 70 rating points of sampling noise
+/// Games per pair. Fifty leaves roughly 50 rating points of sampling noise
 /// around an even result, which is why [kTolerance] sits where it does.
-const int kDefaultGames = 30;
+///
+/// Raised from thirty in D339, together with [kReach]. Thirty left ~64 points of
+/// noise on a ladder whose rungs are forty apart, so a single pair could not
+/// tell a correct rung from an inverted one; the run that motivated the change
+/// reported nine inversions and several of them were within a game or two of
+/// even. Fifty games is a third less noise for two thirds more time, and the
+/// time was affordable because the whole run was twenty minutes rather than the
+/// hour it was budgeted at.
+const int kDefaultGames = 50;
+
+/// How far up the roster each opponent is measured against.
+///
+/// Every opponent plays the [kReach] rungs above it, which on a roster of
+/// thirty-one is 140 pairs: 30 adjacent, then 29, 28, 27 and 26 at reaches two
+/// to five.
+///
+/// **A window rather than a chain plus a few braces** (D339). The scheme this
+/// replaces played adjacent pairs, every pair inside a tier, and one brace
+/// between tier middles — which measured each tier well and the *joins between
+/// them* through a single pair. The bottom two tiers touched at exactly one
+/// pairing, so Sorrel's rating and Bramble's were estimated against disjoint
+/// opponent sets and came out 259 points apart while the two of them measured
+/// level head to head. A fixed reach removes the idea of a tier from the
+/// sampling entirely: every rung is tied to the five above it whether or not
+/// they share a band, so the scale is pinned continuously from Pebble to
+/// Quadrim Prime.
+///
+/// What it gives up is the long brace. Nothing now plays anything more than
+/// five rungs away, so the run no longer reports Hazel against Quartz. Those
+/// pairs were swept almost without exception and yielded a bound rather than a
+/// value, so little is lost — but if the ladder ever needs its *absolute* span
+/// checked rather than its ordering, that check is gone and has to come back.
+const int kReach = 5;
 
 /// What the node and forcing budgets are multiplied by while calibrating.
 ///
@@ -50,9 +82,8 @@ void main(List<String> args) {
     return;
   }
 
-  final pairs = options.only == null
-      ? [..._adjacentPairs(), ..._withinTierPairs(), ..._crossTierPairs()]
-      : _pairsFor(options.only!);
+  final pairs =
+      options.only == null ? _ladderPairs() : _pairsFor(options.only!);
   if (pairs.isEmpty) {
     print('no such opponent: ${options.only}');
     return;
@@ -88,97 +119,39 @@ void main(List<String> args) {
 /// Nineteen pairs rather than a round-robin's 190. Adjacent pairs are what
 /// establish the ordering and the size of each gap, and they are also the
 /// cheapest — the expensive configurations meet only their own neighbours.
-List<(BotConfig, BotConfig)> _adjacentPairs() => [
-      for (var i = 0; i + 1 < opponentCatalogue.length; i++)
-        (opponentCatalogue[i], opponentCatalogue[i + 1]),
+/// Every opponent against the [kReach] rungs above it.
+///
+/// Ordered by reach rather than by opponent, so the run prints all thirty
+/// adjacent pairs before any pair at reach two. That ordering is deliberate:
+/// the adjacent pairs are the ones an inversion is read from, and a run that is
+/// interrupted half way has still measured every one of them.
+List<(BotConfig, BotConfig)> _ladderPairs() => [
+      for (var reach = 1; reach <= kReach; reach++)
+        for (var i = 0; i + reach < opponentCatalogue.length; i++)
+          (opponentCatalogue[i], opponentCatalogue[i + reach]),
     ];
 
-/// Every pair **inside** a tier, not only the adjacent ones.
+/// One opponent against the [kReach] rungs above it and the [kReach] below.
 ///
-/// Added by ticket 044, and the reason is a defect this tool could not see.
-/// Adjacent pairs plus cross-tier braces left every non-adjacent within-tier
-/// pairing unplayed — and the Casual tier turned out to be **intransitive**:
-/// Willow beat Vireo, Vireo beat Finch, and Finch beat Willow by 207 points.
-/// A cycle cannot be detected from a chain, because a chain has no triangle in
-/// it. Three decision entries described that tier's ordering from adjacent
-/// measurements alone and none of them could have found this (D313).
-///
-/// A tier of five costs ten pairs where the chain paid four, so the whole run
-/// grows by roughly twenty pairs. That is minutes, against a defect that
-/// survived three releases.
-List<(BotConfig, BotConfig)> _withinTierPairs() {
-  final pairs = <(BotConfig, BotConfig)>[];
-  for (final tier in BotTier.values) {
-    final members = opponentCatalogue.where((b) => b.tier == tier).toList();
-    for (var i = 0; i < members.length; i++) {
-      for (var j = i + 1; j < members.length; j++) {
-        // Adjacent pairs are already played by _adjacentPairs; playing them
-        // twice would weight them double in the fit.
-        final adjacent = opponentCatalogue.indexOf(members[j]) -
-                opponentCatalogue.indexOf(members[i]) ==
-            1;
-        if (!adjacent) pairs.add((members[i], members[j]));
-      }
-    }
-  }
-  return pairs;
-}
-
-/// One pair per tier combination, to tie the chain down at longer range.
-///
-/// A chain of adjacent measurements can drift: thirty small errors in the
-/// same direction accumulate into one large one, and nothing in the chain
-/// itself would show it. These ten pairs are the cross-braces.
-List<(BotConfig, BotConfig)> _crossTierPairs() {
-  final representatives = [
-    for (final tier in BotTier.values) _middleOf(tier),
-  ];
-  return [
-    for (var i = 0; i < representatives.length; i++)
-      for (var j = i + 1; j < representatives.length; j++)
-        (representatives[i], representatives[j]),
-  ];
-}
-
-/// The tier's middle opponent — the one that best stands for it.
-BotConfig _middleOf(BotTier tier) {
-  final members = opponentCatalogue.where((b) => b.tier == tier).toList();
-  return members[members.length ~/ 2];
-}
-
-/// The spread one opponent is measured against when the rest are settled.
-///
-/// **Its whole tier**, plus one opponent from each other tier — the first is
-/// where an ordering error shows and the second is where a scale error does.
-///
-/// This used to be the two neighbours rather than the tier, which made it
-/// about four pairs cheaper and is exactly the sample that hid the Casual
-/// cycle: an opponent's neighbours can both be opponents it beats (D313). A
-/// re-measure is slower now and answers a question it previously could not.
+/// The same window the full run uses, centred on the subject: up to ten pairs,
+/// and exactly the pairs the full run would have measured it from. `--only`
+/// used to sample by tier, and that is the sample that hid the Casual cycle —
+/// Willow's two neighbours were the two opponents it beats, so it measured 159
+/// points above its anchor while losing to the two members of its own tier it
+/// never met (D313). A symmetric window cannot produce that, because it never
+/// leaves out a nearer opponent to include a further one.
 List<(BotConfig, BotConfig)> _pairsFor(String id) {
   final index = opponentCatalogue.indexWhere((b) => b.id == id);
   if (index < 0) return const [];
   final subject = opponentCatalogue[index];
-  final others = <BotConfig>{
-    if (index > 0) opponentCatalogue[index - 1],
-    if (index + 1 < opponentCatalogue.length) opponentCatalogue[index + 1],
-    // **Its whole tier, not just its neighbours.** `--only` used to play the
-    // two adjacent opponents and one bot per other tier, which is exactly the
-    // sample that hid the Casual cycle: Willow's two neighbours are the two
-    // opponents it beats, so it measured 159 points above its anchor while
-    // losing to the two members of its own tier it never met (D313).
-    for (final other in opponentCatalogue)
-      if (other.tier == subject.tier && other.id != subject.id) other,
-    for (final tier in BotTier.values)
-      if (tier != subject.tier) _middleOf(tier),
-  };
-  return [for (final other in others) (subject, other)];
+  return [
+    for (var reach = 1; reach <= kReach; reach++) ...[
+      if (index - reach >= 0) (opponentCatalogue[index - reach], subject),
+      if (index + reach < opponentCatalogue.length)
+        (subject, opponentCatalogue[index + reach]),
+    ],
+  ];
 }
-
-// ---------------------------------------------------------------------------
-// Playing a pair
-// ---------------------------------------------------------------------------
-
 _PairResult _duel(BotConfig a, BotConfig b, _Options options) {
   final left = _scaled(a, options.budgetScale);
   final right = _scaled(b, options.budgetScale);
@@ -388,8 +361,21 @@ void _reportMeasured(List<_PairResult> results, _Options options) {
     if (options.only != null && bot.id != options.only) continue;
     final mine = estimates[bot.id];
     if (mine == null || mine.isEmpty) continue;
-    final measured =
-        (mine.map((e) => e.value).reduce((x, y) => x + y) / mine.length).round();
+    // **The median, not the mean** (D341). Every estimate in `mine` is another
+    // opponent's *published* rating plus a measured gap, so it inherits that
+    // opponent's anchor error in full. One badly wrong anchor therefore poisons
+    // every rung within [kReach] of it: Pebble plays some 400 points below its
+    // published 600, and the mean duly reported Sorrel above three rungs that
+    // beat it 34-16, 35-15 and 33-17 on the board. A median over ten pairs
+    // cannot be moved far by one of them, which is the property wanted — the
+    // report exists to find anchors that are wrong, so it must not assume they
+    // are right.
+    final values = mine.map((e) => e.value).toList()..sort();
+    final middle = values.length ~/ 2;
+    final measured = (values.length.isOdd
+            ? values[middle]
+            : (values[middle - 1] + values[middle]) / 2)
+        .round();
     final error = measured - bot.rating;
     final bounds = mine.map((e) => e.bound).toSet();
     final marker = bounds.contains(_Bound.atLeast) &&

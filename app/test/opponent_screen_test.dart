@@ -161,7 +161,9 @@ void main() {
     await _pumpTall(tester, playerRating: 620);
     expect(find.text('Pebble'), findsOneWidget);
     expect(find.text('600'), findsOneWidget);
-    expect(find.textContaining('Has never noticed a threat'), findsOneWidget);
+    // Pebble's blurb changed with its configuration in D341: it is no longer
+    // purely random, so it no longer claims never to notice a threat.
+    expect(find.textContaining('spots about one win in three'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(OpponentScreen),

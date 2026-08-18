@@ -347,7 +347,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbPebble =>
-      'Legt stenen neer waar ze maar vallen. Heeft nog nooit een dreiging opgemerkt.';
+      'Speelt min of meer willekeurig en ziet ongeveer één op de drie winstkansen.';
 
   @override
   String get blurbTwig =>
@@ -370,11 +370,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbVireo =>
-      'Gaat eerst voor de hoeken en daarna voor het midden.';
+      'Neemt het midden van de kubus, daarna de hoeken. Af en toe slordig.';
 
   @override
   String get blurbFinch =>
-      'Neemt het midden vóór de hoeken en speelt een net spel.';
+      'Wil elk goed veld in de kubus, en laat er nog wel eens een liggen.';
 
   @override
   String get blurbKestrel => 'Degelijk in de basis en geeft zelden iets weg.';
@@ -423,18 +423,19 @@ class AppLocalizationsNl extends AppLocalizations {
       'Heeft geleerd een val te zetten. Nog niet om die van jou te zien.';
 
   @override
-  String get blurbJuniper => 'Kent alle basisregels en gaat voor de hoeken.';
+  String get blurbJuniper =>
+      'Kent alle basisregels en speelt in het midden, maar verliest steeds de draad.';
 
   @override
   String get blurbBracken => 'Kent alle basisregels en gaat voor het midden.';
 
   @override
   String get blurbRowan =>
-      'Wil elk goed veld, eerst de hoeken, en laat er nog wel eens een liggen.';
+      'Neemt het midden vóór de hoeken en speelt een net spel.';
 
   @override
   String get blurbAspen =>
-      'Neemt het midden van de kubus, daarna de hoeken. Af en toe slordig.';
+      'Houdt elk goed veld in de gaten en verspilt zelden een beurt.';
 
   @override
   String get blurbOsprey =>

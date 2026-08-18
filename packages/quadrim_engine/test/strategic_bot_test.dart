@@ -56,17 +56,49 @@ void main() {
       expect(bramble.centreBias, 0, reason: 'no positional sense');
       expect(bramble.cornerBias, 0);
       expect(willow.centreBias, greaterThan(0.5), reason: 'strong centre');
-      expect(vireo.cornerBias, greaterThan(0.5));
+      expect(vireo.centreBias, greaterThan(vireo.cornerBias),
+          reason: 'centre before corner since D336');
       expect(kestrel.blunderRate, 0.08);
       // Among opponents that both win and block, blunder rate falls as rating
       // rises. Twig is excluded deliberately: it never blunders, and its
       // weakness is that it only knows one rule.
       expect(twig.blunderRate, 0);
+      //
+      // **Non-increasing to within 0.01, not strictly non-increasing** (D340).
+      // The roster is ordered by measured strength, and blunder rate is not
+      // monotone in measured strength: four rungs of the Club tier are one
+      // configuration whose blunder rate rises with the rating because that is
+      // the direction they measured in. The tolerance is what keeps the rule
+      // useful — it still catches an opponent handed a wildly wrong rate, and
+      // it no longer forbids the catalogue from following its own instrument.
       final rated =
           opponentCatalogue.where((b) => b.rules.length >= 2).toList();
       for (var i = 1; i < rated.length; i++) {
-        expect(rated[i].blunderRate, lessThanOrEqualTo(rated[i - 1].blunderRate),
-            reason: '${rated[i].id} blunders more than ${rated[i - 1].id}');
+        expect(rated[i].blunderRate,
+            lessThanOrEqualTo(rated[i - 1].blunderRate + 0.01),
+            reason: '${rated[i].id} blunders far more than ${rated[i - 1].id}');
+      }
+    });
+
+    test('nothing from Bramble to Marlin ranks corners above the centre', () {
+      // Juniper, Rowan and Vireo did until D336, and all six of the Casual and
+      // Club inversions the first whole-roster run reported involved one of
+      // those three. Which good squares an opponent prefers is a *style*, and
+      // two styles beat each other in a ring — so alternating them up a ladder
+      // builds a cycle rather than an order, no matter how the blunder rates
+      // are set. Exactly the failure `aggression` produced one tier over
+      // (D314), and this is the assertion that stops it coming back the same
+      // way: one plausible-sounding personality at a time.
+      final stretch = opponentCatalogue
+          .skipWhile((b) => b.id != 'bramble')
+          .takeWhile((b) => b.id != 'lynx')
+          .toList();
+      expect(stretch.map((b) => b.id), contains('marlin'),
+          reason: 'the stretch must still end at Marlin');
+      expect(stretch, hasLength(12));
+      for (final bot in stretch) {
+        expect(bot.cornerBias, lessThanOrEqualTo(bot.centreBias),
+            reason: '${bot.id} prefers corners to the centre');
       }
     });
 
@@ -101,12 +133,19 @@ void main() {
       }
     });
 
-    test('Pebble, which has no rules, does not systematically find it', () {
+    test('Pebble, which throws most of them away, does not systematically '
+        'find it', () {
       final state = GameState.fromMoves([0, 21, 1, 22, 2, 26]);
       final taken = [
         for (var s = 0; s < 60; s++) chooseMove(state, pebble, Random(s)).index,
       ].where((c) => c == 3).length;
-      expect(taken, lessThan(10), reason: 'random play would find it ~1 in 58');
+      // Pebble has `winNow` since D341 and discards it 71% of the time, so it
+      // sits between pure chance (~1 in 58) and every rule-follower above it
+      // (more than 30 of 60). Both bounds carry weight: the lower one is what
+      // makes this rung a 600 rather than a 200, the upper one is what still
+      // separates it from Twig by the published hundred.
+      expect(taken, greaterThan(5), reason: 'it does hold the rule');
+      expect(taken, lessThan(30), reason: 'and throws most of it away');
     });
   });
 

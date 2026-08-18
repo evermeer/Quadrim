@@ -20,14 +20,19 @@ void main() {
       expect(ratings, orderedEquals(ratings.toList()..sort()));
     });
 
-    test('Pebble is the weakest entry and plays no rules', () {
+    test('Pebble is the weakest entry, and takes about a third of its wins', () {
       expect(opponentCatalogue.first.id, 'pebble');
       expect(pebble.rating, 600);
-      expect(pebble.rules, isEmpty);
+      // One rule, discarded most of the time, since D341. Purely random
+      // measured 400 points below this anchor and lost 1-49 to Twig, whose
+      // only advantage is this rule — and with no rules at all there is
+      // nothing for a blunder rate to discard, so the rung had to learn
+      // something before it could be tuned at all.
+      expect(pebble.rules, {StrategicRule.winNow});
+      expect(pebble.blunderRate, 0.71);
       expect(pebble.searchDepth, 0);
       expect(pebble.centreBias, 0);
       expect(pebble.cornerBias, 0);
-      expect(pebble.blunderRate, 0);
     });
 
     test('botById returns null for an unknown id', () {
