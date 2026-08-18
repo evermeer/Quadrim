@@ -144,7 +144,7 @@ class RatingCard extends StatelessWidget {
                     // Flexible, because the balance is now ten digits at the
                     // top of the ladder and was six. The doubling is per rung,
                     // so eleven new rungs multiplied it by two thousand
-                    // (D325) — and at a 2x font scale a balance the width of
+                    // (D333) — and at a 2x font scale a balance the width of
                     // this panel overflowed the row by 43 pixels rather than
                     // shrinking. The number is the fact here, so it shrinks to
                     // fit rather than ellipsising away its own leading digits.

@@ -181,8 +181,8 @@ All the arithmetic of §7 of idea-v3.md. Same purity rules as the other two pack
 
 | Export | Contract |
 |---|---|
-| `winValue(int rosterIndex)` | The `i`th rung of the Fibonacci ladder 1, 2, 3, 5, 8 … Draws and losses are worth nothing (D327) |
-| `unlockCost(int rosterIndex)` | Twice `winValue(i)`, where the win ladder is Fibonacci — about 3¼ wins against opponent `i−1` (D327) |
+| `winValue(int rosterIndex)` | The `i`th rung of the Fibonacci ladder 1, 2, 3, 5, 8 … Draws and losses are worth nothing (D335) |
+| `unlockCost(int rosterIndex)` | Twice `winValue(i)`, where the win ladder is Fibonacci — about 3¼ wins against opponent `i−1` (D335) |
 | `isFree(BotConfig)` | Rating ≤ 1000. **A rule, not a count** — nothing anywhere hard-codes "five" |
 | `nextUnlock(Set<String> owned)` | The lowest-indexed locked opponent, or null. Only this one may ever be bought |
 | `pointsEarned(Iterable<CompletedGame>)` | A fold over the games **and nothing else**. No unlock record is consulted |
@@ -302,7 +302,7 @@ Code-side constants, not persisted. Defined once in §6.4 of idea-v3.md and not 
 
 **Names were permuted at D257 and configurations were not.** Ten opponents changed name so the avatars read as a progression; no rating, configuration, tier or roster index moved. The v1 spec's names for the same slots are historical and are preserved there.
 
-**The roster was recut from twenty to thirty-one at D325**, and there both did move — but they moved *together*, and in the same direction as D257's rule rather than against it: a configuration belongs to a rung, so where a name changed rungs it took on whatever strength that rung already had. Eleven rungs were interpolated between the existing ones so that the stretch a beginner and an average player are on steps every forty rating points instead of every hundred.
+**The roster was recut from twenty to thirty-one at D333**, and there both did move — but they moved *together*, and in the same direction as D257's rule rather than against it: a configuration belongs to a rung, so where a name changed rungs it took on whatever strength that rung already had. Eleven rungs were interpolated between the existing ones so that the stretch a beginner and an average player are on steps every forty rating points instead of every hundred.
 
 **Tier is stored on each catalogue entry, not derived from its rating** (D179) — otherwise a recalibration silently reclassifies an opponent.
 
@@ -571,7 +571,7 @@ New section, new prefix.
 | P1 | A win against roster index *i* | points are folded | it pays exactly the *i*th rung of the win ladder |
 | P2 | A draw or a loss against any opponent | points are folded | it pays nothing |
 | P3 | Opponent *i* | its unlock price is read | it is twice what a win against *i* pays, and the price sequence is 2, 4, 6, 10, 16, 26 … each the sum of the two before it |
-| P4 | The catalogue | the free set is computed | it is exactly the first six — the Novice tier — by count (D327, reversing D228) |
+| P4 | The catalogue | the free set is computed | it is exactly the first six — the Novice tier — by count (D335, reversing D228) |
 | P5 | Any locked opponent that is not the lowest-indexed locked one | it is offered for purchase | the purchase is refused |
 | P6 | A player with unlocks | the balance is read | it is points earned minus the sum of prices actually paid, **clamped at zero** |
 | P7 | An unlock bought at the old price | the cost table is re-tuned | the unlock stands and the balance is unchanged, because the price paid is stored with it |

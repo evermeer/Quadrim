@@ -332,7 +332,7 @@ void main() {
   group('the searching opponents', () {
     // They moved from Club to Expert when the roster was recut, and their
     // configurations moved down a name with them: strength belongs to the rung
-    // rather than to who is standing on it (D325). What used to be Ember's two
+    // rather than to who is standing on it (D333). What used to be Ember's two
     // plies is Sable's, what used to be Basalt's three is Ember's, and what
     // used to be Sable's four is Corvus's. Onyx alone kept both.
     test('they exist with the configurations calibration settled on', () {
@@ -393,7 +393,7 @@ void main() {
       // Lynx and Lyra are deliberately absent. They are the two rungs the
       // recut interpolated, nothing has measured them yet, and asserting a
       // margin nobody has seen is how a test comes to encode a guess
-      // (D144, D325). `calibrate.dart --only lynx` is what settles them.
+      // (D144, D333). `calibrate.dart --only lynx` is what settles them.
       final random = Random(31);
       // Sample sizes follow the measured margins: Sable over Marlin and
       // Ember over Sable are around 58% and need games to show, while Onyx

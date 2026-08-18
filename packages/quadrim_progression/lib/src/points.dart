@@ -12,7 +12,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 /// The payout ladder: 1, 2, 3, 5, 8, 13, 21 … each rung the sum of the two
 /// below it.
 ///
-/// **Fibonacci rather than powers of two** (D327). Doubling put the top of a
+/// **Fibonacci rather than powers of two** (D335). Doubling put the top of a
 /// thirty-one rung ladder at 2,147,483,648 points and the whole roster at four
 /// billion, which is a number no interface can make mean anything. Growing by
 /// the golden ratio instead puts the top at 4,356,618 and the roster at
@@ -43,7 +43,7 @@ List<int> _ladder(int rungs) {
 /// a factor of two and now costs 1.618. Over thirty rungs that is still four
 /// million games, so the property holds; over one or two rungs the pressure to
 /// play the strongest opponent you can beat is milder than it was, which is a
-/// deliberate softening rather than an oversight (D327).
+/// deliberate softening rather than an oversight (D335).
 int winValue(int rosterIndex) {
   _checkIndex(rosterIndex);
   return _payouts[rosterIndex];
@@ -54,7 +54,7 @@ int winValue(int rosterIndex) {
 ///
 /// **The same relationship the doubling ladder had** — it too priced a rung at
 /// twice its own win — so the shape of the economy is unchanged and only its
-/// steepness moved (D327). What did change is the promise: an unlock used to be
+/// steepness moved (D335). What did change is the promise: an unlock used to be
 /// *exactly* four wins against the rung below, and is now about 3¼, settling on
 /// twice the golden ratio. Exactness went with the powers of two, and it is not
 /// missed: a player counts games, and three or four is the same sentence.
@@ -68,10 +68,10 @@ int unlockCost(int rosterIndex) {
 /// **A count, and this reverses D228**, which made the free set a rating
 /// threshold precisely so that nothing would have to be kept in step with a
 /// number written in words. The threshold did what it promised: recutting the
-/// roster (D325) moved the free set from five opponents to seven without anyone
+/// roster (D333) moved the free set from five opponents to seven without anyone
 /// choosing that. Being handed seven of thirty-one before earning anything is
 /// too many, and the honest fix is to say how many rather than to tune a
-/// rating until it happens to mean six (D327).
+/// rating until it happens to mean six (D335).
 ///
 /// Six is the Novice tier exactly, which is what makes it a number worth
 /// naming: what is free is *the tier a new player starts in*, and Bramble at
@@ -103,7 +103,7 @@ int? rosterIndexOf(String botId) {
 /// over three at each — where the doubling ladder charged four at each and
 /// totalled four billion. The per-rung number is what a player experiences and
 /// it barely moved; the total is display, and it became a number that fits on
-/// a phone (D327).
+/// a phone (D335).
 int get fullRosterCost => [
   for (var i = 0; i < opponentCatalogue.length; i++)
     if (!isFree(opponentCatalogue[i])) unlockCost(i),

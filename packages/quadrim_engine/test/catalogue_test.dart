@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 /// disagrees with the catalogue when either one moves. Deriving the expectation
 /// from `opponentCatalogue` would make it agree with itself forever (D179).
 ///
-/// Thirty-one since the roster was recut (D325): six rungs in each of the first
+/// Thirty-one since the roster was recut (D333): six rungs in each of the first
 /// four tiers and seven in the last, so that the climb a beginner is actually
 /// on has a step every forty points instead of every hundred.
 const Map<String, BotTier> _tiers = {

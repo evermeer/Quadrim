@@ -328,9 +328,9 @@ Applied when no strategic rule decides, and as the tie-break within a rule.
 
 Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` column is the roster index, which §7 uses to price both wins and unlocks; it is an ordinal, not a rating, and the two must not be conflated.
 
-**Recut from twenty in August 2026 (D325).** The rungs a beginner and an average player are actually on were a hundred points apart and are now forty, which is roughly one honest evening of improvement rather than one week. Eleven opponents were added and several names moved, and **a configuration belongs to a rung rather than to a name**: where a name moved, the strength stayed with the rating and the name inherited whatever the new rung already measured. That is the same rule the avatar order followed in D257, applied to the other half of the pair.
+**Recut from twenty in August 2026 (D333).** The rungs a beginner and an average player are actually on were a hundred points apart and are now forty, which is roughly one honest evening of improvement rather than one week. Eleven opponents were added and several names moved, and **a configuration belongs to a rung rather than to a name**: where a name moved, the strength stayed with the rating and the name inherited whatever the new rung already measured. That is the same rule the avatar order followed in D257, applied to the other half of the pair.
 
-**Novice** — all six free from first launch, and the only six that are (D327).
+**Novice** — all six free from first launch, and the only six that are (D335).
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
@@ -509,7 +509,7 @@ Keeping these separate is what lets the rating stay honest. A rating you could s
 | Oracle | 29 | 1,346,269 |
 | Quadrim Prime | 30 | 2,178,309 |
 
-**Fibonacci rather than powers of two (D327).** Doubling over thirty-one rungs put the top of the ladder at 1,073,741,824 points for a single win and the whole roster at four billion — numbers no interface can make mean anything, and which grew that way not by design but because the roster was recut from twenty rungs to thirty-one and the exponent did not care. Growing by the golden ratio instead keeps every property §7.3 relies on and puts the top win at 2,178,309.
+**Fibonacci rather than powers of two (D335).** Doubling over thirty-one rungs put the top of the ladder at 1,073,741,824 points for a single win and the whole roster at four billion — numbers no interface can make mean anything, and which grew that way not by design but because the roster was recut from twenty rungs to thirty-one and the exponent did not care. Growing by the golden ratio instead keeps every property §7.3 relies on and puts the top win at 2,178,309.
 
 Wins only, because it keeps the arithmetic in §7.3 clean: "about three wins buys the next opponent" is a promise the interface can make, and it stops being one the moment draws pay a fraction.
 

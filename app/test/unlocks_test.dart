@@ -114,7 +114,7 @@ void main() {
     test('only the next opponent in roster order may be bought', () async {
       final repo = await _repository();
       // Bramble is index 6 and the first locked one, because the free set
-      // is the first six (D327). Juniper is 7.
+      // is the first six (D335). Juniper is 7.
       expect(() => repo.purchase('juniper', pricePaid: 68),
           throwsA(isA<ArgumentError>()));
       await repo.purchase('bramble', pricePaid: 42);
@@ -154,7 +154,7 @@ void main() {
     test('the balance survives a re-tune of the cost table', () async {
       final repo = await _repository();
       // Sorrel is free and pays 13, so four wins is 52 — enough for
-      // Bramble at 42, which is the first thing anybody buys (D327).
+      // Bramble at 42, which is the first thing anybody buys (D335).
       await _win(repo, 'sorrel', 4); // 4 * 13 = 52
       await repo.purchase('bramble', pricePaid: 42);
       final unlocks = await repo.loadUnlocks();
@@ -178,7 +178,7 @@ void main() {
       expect(find.byType(YourPath), findsOneWidget);
       // This was the D262 test, inverted. A player seeded at 800 now rests on
       // Hazel — the lowest-rated opponent rated *strictly above* 800, since the
-      // recut put one at 850 (D325) — with Mote one tile left and Clover one
+      // recut put one at 850 (D333) — with Mote one tile left and Clover one
       // right. D262 refused this because a fixed window would have hidden the
       // price ladder; the row scrolls now, so the ladder is one swipe right
       // instead of invisible (D287).
@@ -307,7 +307,7 @@ void main() {
       Rect card(String name) => tester.getRect(
           find.ancestor(of: find.text(name), matching: find.byType(Card)).first);
       // Mote and Hazel, which are adjacent: Clover is two tiles from Mote
-      // since the recut put Hazel between them (D325).
+      // since the recut put Hazel between them (D333).
       final pitch = card('Hazel').left - card('Mote').left;
       final before = tester.getRect(find.text('Hazel')).left;
 
@@ -391,7 +391,7 @@ void main() {
       // must not look the same.
       // Six: the free set, all unlocked and none played. The row builds
       // every tile, so this counts the roster rather than what is on screen
-      // (D327).
+      // (D335).
       expect(find.text('Not played yet'), findsNWidgets(6));
       expect(find.byIcon(Icons.star_border), findsNothing);
     });
@@ -422,7 +422,7 @@ void main() {
       _phone(tester);
       final repo = await _repository();
       // Buy the whole ladder up to Oracle, then earn its price. Oracle is
-      // index 29, and the free set is the first six (D325, D327).
+      // index 29, and the free set is the first six (D333, D335).
       for (var i = 6; i < 29; i++) {
         await repo.purchase(opponentCatalogue[i].id, pricePaid: 0);
       }

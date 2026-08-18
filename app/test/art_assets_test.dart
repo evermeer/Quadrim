@@ -29,7 +29,7 @@ void main() {
   test('the source art is named after the catalogue ids', () async {
     // `peble.png` and `quarts.png` were delivered misspelt and `artgen.py`
     // carried a filename-to-id mapping to paper over it. The files are named
-    // after the ids now and the mapping is gone (D324), so what is left to
+    // after the ids now and the mapping is gone (D332), so what is left to
     // assert is the property the mapping used to buy: every id resolves.
     for (final id in ['pebble', 'quartz', 'osprey']) {
       expect(botById(id), isNotNull, reason: id);

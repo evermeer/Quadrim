@@ -307,7 +307,7 @@ void main() {
     // Iterative deepening under a node budget, which is what the top of the
     // ladder is made of. They were the Expert tier and are now the bottom of
     // Master, one name lower each: the configurations moved with the rungs
-    // rather than with the names (D325).
+    // rather than with the names (D333).
     test('they exist, with budgets in nodes and rising strength', () {
       expect([basalt.id, cairn.id, flint.id, quartz.id, titan.id],
           ['basalt', 'cairn', 'flint', 'quartz', 'titan']);

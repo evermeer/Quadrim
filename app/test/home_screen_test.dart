@@ -207,7 +207,7 @@ void main() {
 
     expect(find.text('In progress'), findsOneWidget);
     expect(_inGameRows(find.text('1500')), findsOneWidget,
-        reason: "Sable's rating since the recut (D325)");
+        reason: "Sable's rating since the recut (D333)");
   });
 
   testWidgets('pass and play has no opponent, so it has no pill',

@@ -34,7 +34,7 @@ void main() {
 
   group('what may be bought next', () {
     test('is the first opponent past the free set, on a fresh install', () {
-      // Six free, so index 6 (D327). It was seven while the free set was a
+      // Six free, so index 6 (D335). It was seven while the free set was a
       // rating threshold rather than a count.
       final next = nextUnlockIndex(const {});
       expect(next, kFreeCount);
@@ -110,7 +110,7 @@ void main() {
 
     test('on a fresh install shows Sorrel, Bramble and Juniper', () {
       // The first locked rung is index 6: the free set is the first six
-      // opponents, which is the Novice tier exactly (D327).
+      // opponents, which is the Novice tier exactly (D335).
       expect([for (final i in pathWindow(kFreeCount)) _idAt(i)],
           ['sorrel', 'bramble', 'juniper']);
     });

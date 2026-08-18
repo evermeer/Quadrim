@@ -373,7 +373,7 @@ void main() {
       await tester.pumpWidget(_game(repo, game.id));
       await tester.pumpAndSettle();
 
-      // Bramble is roster index 6, so a win pays 21 (D327's ladder).
+      // Bramble is roster index 6, so a win pays 21 (D335's ladder).
       expect(find.text('+21 points'), findsOneWidget);
     });
 

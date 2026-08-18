@@ -80,7 +80,7 @@ void main() {
     test('is the lowest-rated opponent rated strictly above the player', () {
       // Mote is rated exactly 800 and a player seeded at 800 rests on Hazel:
       // an even match is not "next" (D287). Hazel is 850, which the recut put
-      // between Mote and Clover (D325).
+      // between Mote and Clover (D333).
       expect(kSeedRating, 800);
       expect(opponentCatalogue[restingIndex(800)].id, 'hazel');
       expect(opponentCatalogue[restingIndex(799)].id, 'mote');
@@ -175,7 +175,7 @@ void main() {
       expect(find.byType(OpponentDetail), findsOneWidget);
       expect(find.text('900 · Novice'), findsOneWidget);
       expect(find.text('1–1–0 in 2 games'), findsOneWidget);
-      // Clover is roster index 4, so a win pays eight (D327's ladder).
+      // Clover is roster index 4, so a win pays eight (D335's ladder).
       expect(find.text('A win pays 8 points'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsOneWidget);
     });
@@ -223,7 +223,7 @@ void main() {
       _phone(tester);
       final repo = await _repository();
       // Fourteen Mote wins at three points each is Bramble's price to the
-      // point — the Fibonacci ladder has no exact four-win rung (D327).
+      // point — the Fibonacci ladder has no exact four-win rung (D335).
       for (var i = 0; i < 14; i++) {
         await _play(repo, botId: 'mote');
       }

@@ -140,7 +140,7 @@ void main() {
   group('the second-player family', () {
     test('needs a win from the second seat, which the first-win family does '
         'not', () {
-      // Index 6 is Bramble since the roster was recut; it was Vireo (D325).
+      // Index 6 is Bramble since the roster was recut; it was Vireo (D333).
       // The quest ids are built from the catalogue, so the name has to follow
       // the index rather than the other way round.
       final first = [_game(6, second: false)];
@@ -185,7 +185,7 @@ void main() {
       // twenty games at roughly a Kestrel win on the strength of one of them.
       // The arithmetic is less lurid under the Fibonacci ladder than under the
       // doubling one, where the same set came to 6,554; the mistake is
-      // identical and a hundred times smaller (D327).
+      // identical and a hundred times smaller (D335).
       final day = DateTime(2026, 5, 2);
       final games = [
         ..._day(day, 19),

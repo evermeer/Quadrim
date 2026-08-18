@@ -83,7 +83,7 @@ cd packages/quadrim_engine && dart run tool/calibrate.dart --only oracle
 
 `duel.dart` is the instrument for one pairing. Every claim that one opponent is stronger than another should come from a run of it, not from an argument about the code. Names take `+dN` (defence depth), `+tN` (own forcing depth), `+bN` (forcing budget, thousands).
 
-`calibrate.dart` is the instrument for the whole ladder: 30 adjacent pairs, every non-adjacent within-tier pair, and 10 cross-tier braces — 95 pairs since the roster was recut to thirty-one (D325), budgets at 10%. Budget the better part of an hour, not the six minutes D208 recorded for twenty opponents. It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
+`calibrate.dart` is the instrument for the whole ladder: 30 adjacent pairs, every non-adjacent within-tier pair, and 10 cross-tier braces — 95 pairs since the roster was recut to thirty-one (D333), budgets at 10%. Budget the better part of an hour, not the six minutes D208 recorded for twenty opponents. It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
 
 ## Layout
 

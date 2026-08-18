@@ -395,6 +395,6 @@ Commit the code to the main branch after each ticket is completed and reviewed.
 Then open the new app in the simulator.
 ```
 
-2 small bug fixes for point count and quest calculation.
+2 small bug fixes for point count and quest calculation. Also made some minor UI tweaks
 
 

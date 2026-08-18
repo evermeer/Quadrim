@@ -53,7 +53,7 @@ void main() {
   test('a win pays its rung of the ladder for the opponent it was against',
       () {
     // The ladder itself is proven in the package; what this proves is that the
-    // fold maps a stored opponent onto the right rung (D327).
+    // fold maps a stored opponent onto the right rung (D335).
     for (var i = 0; i < opponentCatalogue.length; i++) {
       final game = _game(id: 'g$i', opponent: botOpponent(_idAt(i)));
       expect(pointsFrom([game]), winValue(i), reason: _idAt(i));
@@ -112,7 +112,7 @@ void main() {
 
   test('four wins against Bramble more than buys Juniper', () {
     // Bramble is index 6 and Juniper 7. The Fibonacci ladder pays about
-    // 3.24 wins per rung rather than exactly four (D327), so four wins
+    // 3.24 wins per rung rather than exactly four (D335), so four wins
     // clears the next price with a little left over.
     final games = [
       for (var i = 0; i < 4; i++)

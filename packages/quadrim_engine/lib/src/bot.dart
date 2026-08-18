@@ -256,7 +256,7 @@ const BotConfig mote = BotConfig(
 ///
 /// Fills what used to be a hundred rating points of nothing between Mote and
 /// Clover, which is the stretch a player is on during their first evening
-/// (D326).
+/// (D334).
 const BotConfig hazel = BotConfig(
   id: 'hazel',
   tier: BotTier.novice,
@@ -361,7 +361,7 @@ const BotConfig willow = BotConfig(
 /// The first of the tier to want all sixteen, and it ranks the corners first.
 ///
 /// This is the configuration Vireo held at 1200 before the roster was recut:
-/// the rung kept the strength and handed it a new name (D325). Dropping
+/// the rung kept the strength and handed it a new name (D333). Dropping
 /// `centreBias` from a corners-first opponent was tried once and reverted —
 /// eight corner cells measured *stronger* than sixteen corners-first, which is
 /// the reverse of what the block comment above predicts (D315).
@@ -659,7 +659,7 @@ const BotConfig quartz = BotConfig(
 /// forcing search, one more empty cell of exact solve. It is the last rung a
 /// player reaches by out-searching rather than by out-lasting a proof, which is
 /// what makes it the right place for the roster's new top-of-search rung
-/// (D325).
+/// (D333).
 const BotConfig titan = BotConfig(
   id: 'titan',
   tier: BotTier.master,
