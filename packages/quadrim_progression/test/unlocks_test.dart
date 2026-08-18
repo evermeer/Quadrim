@@ -22,26 +22,27 @@ void main() {
       final atOldPrice = balance(earned: 100, pricesPaid: const [40]);
       expect(atOldPrice, 60);
       // The table saying 64 today changes nothing about what was paid.
-      expect(unlockCost(5), 64);
+      expect(unlockCost(5), 26);
       expect(atOldPrice, 60);
     });
 
     test('clamps at zero rather than going negative', () {
       expect(balance(earned: 10, pricesPaid: const [64]), 0);
-      expect(balance(earned: 0, pricesPaid: const [1048576]), 0);
+      expect(balance(earned: 0, pricesPaid: const [4356618]), 0);
     });
   });
 
   group('what may be bought next', () {
-    test('is the first opponent above the free ceiling, on a fresh install',
-        () {
+    test('is the first opponent past the free set, on a fresh install', () {
+      // Six free, so index 6 (D327). It was seven while the free set was a
+      // rating threshold rather than a count.
       final next = nextUnlockIndex(const {});
-      expect(next, 7);
-      expect(opponentCatalogue[next!].id, 'juniper');
+      expect(next, kFreeCount);
+      expect(opponentCatalogue[next!].id, 'bramble');
     });
 
     test('advances by exactly one as each is bought', () {
-      for (var i = 7; i < opponentCatalogue.length; i++) {
+      for (var i = kFreeCount; i < opponentCatalogue.length; i++) {
         expect(nextUnlockIndex(_unlockedUpTo(i - 1)), i, reason: 'after $i');
       }
     });
@@ -66,19 +67,19 @@ void main() {
 
     test('a record for an opponent this build does not know is ignored', () {
       expect(isUnlocked('deleted_bot', const {'deleted_bot'}), isTrue);
-      expect(nextUnlockIndex(const {'deleted_bot'}), 7);
+      expect(nextUnlockIndex(const {'deleted_bot'}), kFreeCount);
     });
 
     test('a hand-edited gap resolves to the lowest locked index rather than '
         'jamming the ladder', () {
       // No code path produces this; a hand-edited document could.
-      expect(nextUnlockIndex({_idAt(9), _idAt(12)}), 7);
+      expect(nextUnlockIndex({_idAt(9), _idAt(12)}), kFreeCount);
     });
   });
 
   group('the Your Path window', () {
     test('is always three tiles wide, at every position', () {
-      for (var next = 7; next < opponentCatalogue.length; next++) {
+      for (var next = kFreeCount; next < opponentCatalogue.length; next++) {
         expect(pathWindow(next).length, 3, reason: 'next=$next');
       }
       expect(pathWindow(null).length, 3);
@@ -107,12 +108,11 @@ void main() {
       expect(pathWindow(null), [last - 2, last - 1, last]);
     });
 
-    test('on a fresh install shows Bramble, Juniper and Bracken', () {
-      // The first locked rung is index 7 since the recut, not 5 (D325): the
-      // free set is defined by the 1000 ceiling and the recut put two more
-      // opponents under it.
-      expect([for (final i in pathWindow(7)) _idAt(i)],
-          ['bramble', 'juniper', 'bracken']);
+    test('on a fresh install shows Sorrel, Bramble and Juniper', () {
+      // The first locked rung is index 6: the free set is the first six
+      // opponents, which is the Novice tier exactly (D327).
+      expect([for (final i in pathWindow(kFreeCount)) _idAt(i)],
+          ['sorrel', 'bramble', 'juniper']);
     });
 
     test('is never centred on the rating ladder — a player seeded at 800 sees '

@@ -50,10 +50,13 @@ void main() {
     expect(pointsFrom(const []), 0);
   });
 
-  test('a win pays 2^i for the opponent it was against', () {
+  test('a win pays its rung of the ladder for the opponent it was against',
+      () {
+    // The ladder itself is proven in the package; what this proves is that the
+    // fold maps a stored opponent onto the right rung (D327).
     for (var i = 0; i < opponentCatalogue.length; i++) {
       final game = _game(id: 'g$i', opponent: botOpponent(_idAt(i)));
-      expect(pointsFrom([game]), 1 << i, reason: _idAt(i));
+      expect(pointsFrom([game]), winValue(i), reason: _idAt(i));
     }
   });
 
@@ -107,14 +110,16 @@ void main() {
     expect(pointsFrom([active]), 0);
   });
 
-  test('four wins against Bramble is exactly what Juniper costs', () {
-    // Bramble is index 6 since the recut and Juniper 7 (D325). The claim is
-    // the invariant, not the pair: four wins at any rung buys the next one.
+  test('four wins against Bramble more than buys Juniper', () {
+    // Bramble is index 6 and Juniper 7. The Fibonacci ladder pays about
+    // 3.24 wins per rung rather than exactly four (D327), so four wins
+    // clears the next price with a little left over.
     final games = [
       for (var i = 0; i < 4; i++)
         _game(id: 'w$i', opponent: botOpponent('bramble'), minute: i),
     ];
-    expect(pointsFrom(games), unlockCost(7));
+    expect(pointsFrom(games), 4 * winValue(6));
+    expect(pointsFrom(games), greaterThanOrEqualTo(unlockCost(7)));
   });
 
   test('folding the same games twice gives the same answer, in any order', () {

@@ -34,7 +34,7 @@ Quadrim is a two-player game played inside a 4×4×4 cube of 64 cells. Players a
 
 The game is known publicly as Qubic, or 3D tic-tac-toe. It is a solved game: with perfect play the first player wins. This fact shapes several decisions below and is not treated as a defect.
 
-A player can play another human — asynchronously over days, or in real time — or any of thirty-one computer opponents, each with a name, an avatar, a play style, and a fixed rating. Seven of those opponents are available from the first launch; the other twenty-four are earned (§7).
+A player can play another human — asynchronously over days, or in real time — or any of thirty-one computer opponents, each with a name, an avatar, a play style, and a fixed rating. Six of those opponents — the whole Novice tier — are available from the first launch; the other twenty-five are earned (§7).
 
 **On the name.** Qubic was a Parker Brothers trade name. This product is called Quadrim; the older name is used descriptively and never as branding.
 
@@ -330,7 +330,7 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 
 **Recut from twenty in August 2026 (D325).** The rungs a beginner and an average player are actually on were a hundred points apart and are now forty, which is roughly one honest evening of improvement rather than one week. Eleven opponents were added and several names moved, and **a configuration belongs to a rung rather than to a name**: where a name moved, the strength stayed with the rating and the name inherited whatever the new rung already measured. That is the same rule the avatar order followed in D257, applied to the other half of the pair.
 
-**Novice** — all six free from first launch, along with Bramble.
+**Novice** — all six free from first launch, and the only six that are (D327).
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
@@ -473,64 +473,89 @@ Keeping these separate is what lets the rating stay honest. A rating you could s
 
 ### 7.2 What a win is worth
 
-**A win against roster index *i* pays 2ⁱ points.** Draws and losses pay nothing.
+**A win against roster index *i* pays the *i*th rung of a Fibonacci ladder: 1, 2, 3, 5, 8, 13, 21 …** Each rung is the sum of the two below it. Draws and losses pay nothing.
 
 | Opponent | # | A win pays |
 |---|---|---|
 | Pebble | 0 | 1 |
 | Twig | 1 | 2 |
-| Mote | 2 | 4 |
-| Clover | 3 | 8 |
-| Bramble | 4 | 16 |
-| Willow | 5 | 32 |
-| Vireo | 6 | 64 |
-| Finch | 7 | 128 |
-| Kestrel | 8 | 256 |
-| Marlin | 9 | 512 |
-| Ember | 10 | 1,024 |
-| Basalt | 11 | 2,048 |
-| Onyx | 12 | 4,096 |
-| Sable | 13 | 8,192 |
-| Corvus | 14 | 16,384 |
-| Lyra | 15 | 32,768 |
-| Quartz | 16 | 65,536 |
-| Titan | 17 | 131,072 |
-| Oracle | 18 | 262,144 |
-| Quadrim Prime | 19 | 524,288 |
+| Mote | 2 | 3 |
+| Hazel | 3 | 5 |
+| Clover | 4 | 8 |
+| Sorrel | 5 | 13 |
+| Bramble | 6 | 21 |
+| Juniper | 7 | 34 |
+| Bracken | 8 | 55 |
+| Willow | 9 | 89 |
+| Rowan | 10 | 144 |
+| Aspen | 11 | 233 |
+| Vireo | 12 | 377 |
+| Finch | 13 | 610 |
+| Kestrel | 14 | 987 |
+| Osprey | 15 | 1,597 |
+| Heron | 16 | 2,584 |
+| Marlin | 17 | 4,181 |
+| Lynx | 18 | 6,765 |
+| Sable | 19 | 10,946 |
+| Ember | 20 | 17,711 |
+| Lyra | 21 | 28,657 |
+| Onyx | 22 | 46,368 |
+| Corvus | 23 | 75,025 |
+| Basalt | 24 | 121,393 |
+| Cairn | 25 | 196,418 |
+| Flint | 26 | 317,811 |
+| Quartz | 27 | 514,229 |
+| Titan | 28 | 832,040 |
+| Oracle | 29 | 1,346,269 |
+| Quadrim Prime | 30 | 2,178,309 |
 
-Wins only, because it keeps the arithmetic in §7.3 exact rather than approximate: "four wins buys the next opponent" is a promise the interface can make, and it stops being one the moment draws pay a fraction.
+**Fibonacci rather than powers of two (D327).** Doubling over thirty-one rungs put the top of the ladder at 1,073,741,824 points for a single win and the whole roster at four billion — numbers no interface can make mean anything, and which grew that way not by design but because the roster was recut from twenty rungs to thirty-one and the exponent did not care. Growing by the golden ratio instead keeps every property §7.3 relies on and puts the top win at 2,178,309.
+
+Wins only, because it keeps the arithmetic in §7.3 clean: "about three wins buys the next opponent" is a promise the interface can make, and it stops being one the moment draws pay a fraction.
 
 ### 7.3 The unlock ladder
 
-The five opponents rated 1000 and below are available from first launch. The other fifteen are bought with points, **strictly in roster order** — only the next locked opponent can ever be purchased.
+The first six opponents — the whole Novice tier — are available from first launch. The other twenty-five are bought with points, **strictly in roster order**: only the next locked opponent can ever be purchased.
 
-**Unlocking opponent *i* costs 2ⁱ⁺¹ points, which is exactly four wins against opponent *i−1*.**
+**Unlocking opponent *i* costs twice what a win against *i* pays: 2, 4, 6, 10, 16, 26 …** — each price the sum of the two before it. That is the same relationship the doubling ladder had, since 2ⁱ⁺¹ is twice 2ⁱ; only the steepness changed.
 
-| Unlock | Costs | = four wins against |
+| Unlock | Costs | = wins against the rung below |
 |---|---|---|
-| Willow | 64 | Bramble |
-| Vireo | 128 | Willow |
-| Finch | 256 | Vireo |
-| Kestrel | 512 | Finch |
-| Marlin | 1,024 | Kestrel |
-| Ember | 2,048 | Marlin |
-| Basalt | 4,096 | Ember |
-| Onyx | 8,192 | Basalt |
-| Sable | 16,384 | Onyx |
-| Corvus | 32,768 | Sable |
-| Lyra | 65,536 | Corvus |
-| Quartz | 131,072 | Lyra |
-| Titan | 262,144 | Quartz |
-| Oracle | 524,288 | Titan |
-| Quadrim Prime | 1,048,576 | Oracle |
+| Bramble | 42 | 3.23 |
+| Juniper | 68 | 3.24 |
+| Bracken | 110 | 3.24 |
+| Willow | 178 | 3.24 |
+| Rowan | 288 | 3.24 |
+| Aspen | 466 | 3.24 |
+| Vireo | 754 | 3.24 |
+| Finch | 1,220 | 3.24 |
+| Kestrel | 1,974 | 3.24 |
+| Osprey | 3,194 | 3.24 |
+| Heron | 5,168 | 3.24 |
+| Marlin | 8,362 | 3.24 |
+| Lynx | 13,530 | 3.24 |
+| Sable | 21,892 | 3.24 |
+| Ember | 35,422 | 3.24 |
+| Lyra | 57,314 | 3.24 |
+| Onyx | 92,736 | 3.24 |
+| Corvus | 150,050 | 3.24 |
+| Basalt | 242,786 | 3.24 |
+| Cairn | 392,836 | 3.24 |
+| Flint | 635,622 | 3.24 |
+| Quartz | 1,028,458 | 3.24 |
+| Titan | 1,664,080 | 3.24 |
+| Oracle | 2,692,538 | 3.24 |
+| Quadrim Prime | 4,356,618 | 3.24 |
 
-**The whole roster costs 2,097,088 points, which is exactly 60 wins.** That is the number to reason about; the point totals are display.
+**The whole roster costs 11,405,706 points, about eighty wins.** That is the number to reason about; the point totals are display. Under the doubling ladder the same sum was 4,294,967,040.
+
+**The promise is no longer exact, and that is the price of readability.** Four wins bought the next rung to the point under powers of two. Under this ladder it is 2φ ≈ 3.24 wins, which every rung above the second sits within a hundredth of — so "three or four games" is true of the whole ladder, which is the only form of the promise a player can actually use.
 
 Four properties fall out of this shape rather than being ruled in, and they are the reason to prefer it over a hand-tuned table:
 
-**Grinding downward is self-defeating, so no anti-farming rule is needed.** Every rung down halves the payout. Unlocking Quadrim Prime by beating Pebble takes 1,048,576 games. The obvious exploit — spend an afternoon farming the weakest opponent — prices itself out without a single line of code to stop it, and without punishing a player who genuinely enjoys easy games.
+**Grinding downward is self-defeating, so no anti-farming rule is needed.** Every rung down divides the payout by the golden ratio. Unlocking Quadrim Prime by beating Pebble takes 4,356,618 games. The obvious exploit — spend an afternoon farming the weakest opponent — prices itself out without a single line of code to stop it, and without punishing a player who genuinely enjoys easy games.
 
-**The two ladders advance together without being coupled.** From a seed of 800, four wins against Bramble is roughly +90 rating, and the roster's rungs are about 100 points apart. A player who is earning the next unlock is also, independently, becoming strong enough to want it.
+**The two ladders advance together without being coupled.** From a seed of 800, four wins against an opponent just above you is roughly +90 rating, and the roster's rungs are now about 40 points apart. A player who is earning the next unlock is also, independently, becoming strong enough to want it.
 
 **A rung is a session.** Four wins takes eight to twelve games while an opponent is still unfamiliar, which is one sitting. Fifteen rungs at the free tier's three games a day is around fifty days — after a first month in which the early rungs go past unmetered and almost unnoticed.
 
@@ -551,16 +576,16 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 
 **Every quest is priced by the opponents it was earned against, never by how high the player has climbed.** That is one rule for all four families, and it is the rule §7.2 already applies to a plain win: points measure the strength of what you played, not who you are.
 
-- **A per-opponent quest pays one win against that opponent** — 2ⁱ for opponent *i*, fixed by the roster and worth the same whenever it is claimed.
+- **A per-opponent quest pays one win against that opponent** — the *i*th rung of the win ladder, fixed by the roster and worth the same whenever it is claimed.
 - **A volume or streak quest pays its multiple of a win against the average of the games that earned it**, where the average is taken over the **roster index** and rounded to the nearest opponent. Twenty games averaging index 14 pay as one win against Kestrel; twenty games against Pebble pay as one win against Pebble.
 
 **Average the index, not the payout.** Because payouts double, an arithmetic mean of them is dominated by the single strongest game in the set: nineteen Pebble games and one Titan game average 6,555 points, which prices twenty games at roughly a Corvus win on the strength of one of them. Averaging the index and then exponentiating — the geometric mean — gives 2 points for the same set, which is what nineteen trivial games and one real one are actually worth. Round the mean index to the nearest opponent so the result is nameable: the interface can say *your twenty games averaged Kestrel*, which is a sentence, where a fractional exponent is not.
 
 **Two ways of pricing quests by the player instead of the opposition were tried and both fail, in opposite directions.**
 
-*Pricing at the player's current rung lets the cheap quests be banked.* The ladder never requires playing the weakest opponents — the cheapest route to Willow's 64 points is four Bramble wins, not sixty-four Pebble wins, which is exactly the self-pricing property §7.3 relies on. So a player has no reason to touch Pebble, Twig, Mote or Clover at all, and their eight per-opponent quests would sit unclaimed and appreciating. Cashed in at rung 15 those eight games pay 262,144 points — the entire Titan unlock. At rung 19 they pay 4,194,304 against a roster costing 2,097,088 in total: twice the whole ladder, for eight games against opponents that move at random. The optimal play would be to avoid a fifth of the roster on purpose.
+*Pricing at the player's current rung lets the cheap quests be banked.* The ladder never requires playing the weakest opponents — the cheapest route to Bramble's 42 points is four Sorrel wins, not forty-two Pebble wins, which is exactly the self-pricing property §7.3 relies on. So a player has no reason to touch Pebble, Twig, Mote or Clover at all, and their eight per-opponent quests would sit unclaimed and appreciating. Cashed in near the top those eight games would pay several million against a roster costing 11,405,706 in total — a large fraction of the whole ladder, for eight games against opponents that move at random. The optimal play would be to avoid a fifth of the roster on purpose.
 
-*And it makes the volume family a pure grind.* A hundred games in a day pays four wins-worth; priced at the player's rung, a hundred instant Pebble games at rung 17 pay 524,288 points — four Titan wins for an afternoon of tapping. Priced by the opposition it pays four. This is the failure the rest of §7 was carefully built to avoid: §7.3's whole argument is that every rung down halves the payout, so grinding downward prices itself out. A quest that pays by the player's height reintroduced the exploit that §7.3 spent its entire shape defending against, in the one place nobody was looking.
+*And it makes the volume family a pure grind.* A hundred games in a day pays four wins-worth; priced at the player's rung, a hundred instant Pebble games at a high rung pay four wins at that rung — an afternoon of tapping for the price of real games. Priced by the opposition it pays four. This is the failure the rest of §7 was carefully built to avoid: §7.3's whole argument is that every rung down divides the payout, so grinding downward prices itself out. A quest that pays by the player's height reintroduced the exploit that §7.3 spent its entire shape defending against, in the one place nobody was looking.
 
 | Games in one day | 5 | 10 | 20 | 50 | 100 |
 |---|---|---|---|---|---|
@@ -570,7 +595,7 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 |---|---|---|---|---|---|---|---|---|
 | Pays, in wins-worth | 1 | 2 | 4 | 8 | 12 | 16 | 24 | 32 |
 
-Four wins is one unlock, so a 30-day streak of real games, or a 100-game day against opponents near the player's own level, is worth roughly one free opponent. The same streak kept alive with one Pebble game a day is worth four points, and that is the intended answer rather than a shortcoming: showing up is what the streak measures, but *what you showed up to* is what the points measure. A per-opponent quest pays 2ⁱ — one win against the opponent it names — so the forty of them are worth about two extra wins against each opponent the player actually works through.
+Four wins is one unlock, so a 30-day streak of real games, or a 100-game day against opponents near the player's own level, is worth roughly one free opponent. The same streak kept alive with one Pebble game a day is worth four points, and that is the intended answer rather than a shortcoming: showing up is what the streak measures, but *what you showed up to* is what the points measure. A per-opponent quest pays one win against the opponent it names, so the sixty-two of them are worth about two extra wins against each opponent the player actually works through.
 
 **From 1.0, the volume ladder is subscriber-only by arithmetic, not by a rule.** Five games in a day exceeds the free cap of three, so no free player can complete even the first rung. This is deliberate and must be *stated* rather than left to be discovered: the quest tiles show the requirement, and a free player sees why it is out of reach and what would change it. A permanently unreachable goal presented without explanation reads as a bug.
 
@@ -593,7 +618,7 @@ Two consequences to handle honestly rather than hide:
 
 §3 says everything derives from the move list. **This is the one place that stops being true**, and it is worth being explicit about why rather than letting a rebuilder discover an undocumented table.
 
-Points *earned* is still a fold over stored games — sum 2ⁱ over wins, plus the quest awards, all of which are themselves derivable from the games and the calendar. Points *spent* is a decision, and a decision is not in the move list. So one new record exists:
+Points *earned* is still a fold over stored games — sum the win ladder over wins, plus the quest awards, all of which are themselves derivable from the games and the calendar. Points *spent* is a decision, and a decision is not in the move list. So one new record exists:
 
 ```
 unlock: { opponentId, unlockedAt, pricePaid, source }
@@ -1006,7 +1031,7 @@ Four places must agree: the application id, the build namespace, the source pack
 4. All thirty-one opponents exist, are distinguishable in play, and are calibrated by a self-play harness that reports measured against published strength.
 5. The top opponent's advertised strength matches what it delivers, and the interface never claims perfection it cannot deliver from both seats.
 6. Both ratings update correctly and independently — provisional K, draws, forfeits, the floor. The computer rating is derived from stored games, never stored, and never leaves the device; the human rating is never written by a client.
-7. **Points, unlocks, quests and streaks are correct**: a win pays 2ⁱ, an unlock costs 2ⁱ⁺¹ and is available only in roster order, the balance is earned minus prices actually paid, and every quest fires exactly once. **No quest reward anywhere depends on the player's own rung** — a per-opponent quest pays that opponent's index, and a volume or streak quest pays the rounded mean index of the games that earned it. A hundred games against Pebble in one day pay four points, and deferring a first win against a weak opponent earns nothing extra.
+7. **Points, unlocks, quests and streaks are correct**: a win pays its rung of the Fibonacci ladder, an unlock costs twice that rung and is available only in roster order, the balance is earned minus prices actually paid, and every quest fires exactly once. **No quest reward anywhere depends on the player's own rung** — a per-opponent quest pays that opponent's index, and a volume or streak quest pays the rounded mean index of the games that earned it. A hundred games against Pebble in one day pay four points, and deferring a first win against a weak opponent earns nothing extra.
 8. **An unlock survives a re-tune of either table.** The cost table, because the price paid is stored with it; the quest table, because the balance clamps at zero and no unlock is ever revoked.
 9. **A missed day resets a streak and a played day does not**, across a month boundary, a year boundary and a time-zone change.
 10. **Nothing but the unlock records is stored.** Balances, streaks, quest progress and statistics are all derived, and a test proves each one reconstructs from game history alone.

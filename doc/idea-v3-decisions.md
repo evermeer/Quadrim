@@ -1275,6 +1275,22 @@ The top of the ladder was deliberately left coarse: Basalt to Quadrim Prime stil
 
 Sorrel is the one new opponent that adds a *rule* rather than a number: it is the first in the catalogue that builds a double threat and still cannot see one coming. That is the honest last lesson of the Novice tier, and it makes 940 a different opponent rather than a slightly better Clover.
 
+## D327 — Fibonacci prices, and a free set that is a count again
+
+**Question:** D325 recut the roster to thirty-one rungs and left the doubling ladder alone, so the top unlock became 2,147,483,648 points and the roster four billion. The invariant a player feels — four wins buys the next rung — was untouched, and the numbers on screen were still unreadable. And the free set had grown from five to seven because the rating threshold said so, not because anyone chose it.
+
+**Decision:** Two changes, both to `points.dart`.
+
+**The win ladder is Fibonacci: 1, 2, 3, 5, 8, 13, 21 …** and an unlock costs twice its own rung — 2, 4, 6, 10, 16, 26 … each price the sum of the two before it. **This is the same relationship the doubling ladder had**, since 2ⁱ⁺¹ is twice 2ⁱ; the shape of the economy is unchanged and only its steepness moved. The top win falls from 1,073,741,824 to 2,178,309, the top unlock from 2,147,483,648 to 4,356,618, and the whole roster from 4,294,967,040 to 11,405,706.
+
+**The free set is the first six, by count.** This reverses [D228](#d228), which made it a rating threshold *precisely* so nothing would have to be kept in step with a number written in words — and the threshold did exactly what it promised: recutting the roster moved the free set to seven without anyone deciding it. That is the argument for a threshold working correctly and producing the wrong answer. Six is the Novice tier exactly, which is what makes it a number worth naming: what is free is the tier a new player starts in, and Bramble at 980 is the first thing anybody buys.
+
+**What was given up, and it is a real promise:** the unlock was *exactly* four wins against the rung below. It is now 2φ ≈ 3.24, which every rung above the second sits within a hundredth of. Exactness went with the powers of two. It is not much missed — a player counts games, and "three or four" is one sentence — but the interface can no longer say a precise number, and §7.2's old claim that wins-only pricing keeps the arithmetic *exact* is now a claim that it keeps it *clean*.
+
+**And the anti-farming property is weaker.** §7.3's whole argument is that grinding a weak opponent prices itself out with no rule to enforce it. Under doubling, a rung down cost a factor of two; under Fibonacci it costs 1.618. Over the thirty rungs from Pebble to Quadrim Prime that is still 4,356,618 games rather than 2,147,483,648 — the same answer for every purpose a person has. Over one or two rungs the pressure to play the strongest opponent you can beat is genuinely milder. That is a softening rather than an oversight, and it is the direction the whole change is going: the request was to make unlocking easier.
+
+**Cost:** Roughly thirty test fixtures moved again, one release after D325 moved them. Several app fixtures had to change *which opponent they farm* as well as how often, because the free set now stops at Sorrel and Bramble is the first purchase — a fixture that earned points by beating Bramble and then bought Bramble was nonsense the old free set had been hiding.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

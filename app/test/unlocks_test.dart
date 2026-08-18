@@ -67,13 +67,13 @@ void main() {
   group('the record', () {
     test('round-trips through JSON', () {
       final unlock = UnlockDocument(
-        opponentId: 'juniper',
+        opponentId: 'bramble',
         unlockedAt: DateTime.utc(2026, 8, 14, 9, 12, 31),
-        pricePaid: 256,
+        pricePaid: 42,
       );
       final back = UnlockDocument.fromJson(unlock.toJson())!;
-      expect(back.opponentId, 'juniper');
-      expect(back.pricePaid, 256);
+      expect(back.opponentId, 'bramble');
+      expect(back.pricePaid, 42);
       expect(back.source, UnlockSource.points);
       expect(back.unlockedAt, unlock.unlockedAt);
     });
@@ -93,9 +93,9 @@ void main() {
       expect(
           UnlockDocument.fromJson({
             'schemaVersion': 1,
-            'opponentId': 'juniper',
+            'opponentId': 'bramble',
             'unlockedAt': 'not a date',
-            'pricePaid': 256,
+            'pricePaid': 42,
           }),
           isNull);
     });
@@ -104,22 +104,23 @@ void main() {
   group('the repository', () {
     test('records what was paid, not what the table says', () async {
       final repo = await _repository();
-      // Deliberately not unlockCost(7): the stored price is what was actually
+      // Deliberately not unlockCost(6): the stored price is what was actually
       // charged, so a later re-tune cannot rewrite it (spec §8.8).
-      final unlock = await repo.purchase('juniper', pricePaid: 40);
+      final unlock = await repo.purchase('bramble', pricePaid: 40);
       expect(unlock.pricePaid, 40);
       expect((await repo.loadUnlocks()).single.pricePaid, 40);
     });
 
     test('only the next opponent in roster order may be bought', () async {
       final repo = await _repository();
-      // Juniper is index 7 and the first locked one. Bracken is 8 (D325).
-      expect(() => repo.purchase('bracken', pricePaid: 512),
+      // Bramble is index 6 and the first locked one, because the free set
+      // is the first six (D327). Juniper is 7.
+      expect(() => repo.purchase('juniper', pricePaid: 68),
           throwsA(isA<ArgumentError>()));
-      await repo.purchase('juniper', pricePaid: 256);
-      await repo.purchase('bracken', pricePaid: 512);
+      await repo.purchase('bramble', pricePaid: 42);
+      await repo.purchase('juniper', pricePaid: 68);
       expect((await repo.loadUnlocks()).map((u) => u.opponentId),
-          ['juniper', 'bracken']);
+          ['bramble', 'juniper']);
     });
 
     test('a free opponent cannot be bought at all', () async {
@@ -130,8 +131,8 @@ void main() {
 
     test('buying the same opponent twice is refused', () async {
       final repo = await _repository();
-      await repo.purchase('juniper', pricePaid: 256);
-      expect(() => repo.purchase('juniper', pricePaid: 256),
+      await repo.purchase('bramble', pricePaid: 42);
+      expect(() => repo.purchase('bramble', pricePaid: 42),
           throwsA(isA<StateError>()));
       expect(await repo.loadUnlocks(), hasLength(1));
     });
@@ -142,24 +143,26 @@ void main() {
       // unlock is the one thing here a player cannot regenerate by playing.
       final store = MemoryDocumentStore();
       final first = await _repository(store);
-      await first.purchase('juniper', pricePaid: 256);
+      await first.purchase('bramble', pricePaid: 42);
 
       final reopened = await _repository(store);
       final unlocks = await reopened.loadUnlocks();
-      expect(unlocks.single.opponentId, 'juniper');
-      expect(unlocks.single.pricePaid, 256);
+      expect(unlocks.single.opponentId, 'bramble');
+      expect(unlocks.single.pricePaid, 42);
     });
 
     test('the balance survives a re-tune of the cost table', () async {
       final repo = await _repository();
-      await _win(repo, 'bramble', 4); // 4 * 64 = 256
-      await repo.purchase('juniper', pricePaid: 256);
+      // Sorrel is free and pays 13, so four wins is 52 — enough for
+      // Bramble at 42, which is the first thing anybody buys (D327).
+      await _win(repo, 'sorrel', 4); // 4 * 13 = 52
+      await repo.purchase('bramble', pricePaid: 42);
       final unlocks = await repo.loadUnlocks();
       final prices = [for (final u in unlocks) u.pricePaid];
 
-      expect(balance(earned: 256, pricesPaid: prices), 0);
-      // If the table later said 96, the player is not retroactively 32 in debt.
-      expect(balance(earned: 256, pricesPaid: prices), isNonNegative);
+      expect(balance(earned: 52, pricesPaid: prices), 10);
+      // If the table later said 60, the player is not retroactively in debt.
+      expect(balance(earned: 52, pricesPaid: prices), isNonNegative);
     });
   });
 
@@ -186,7 +189,7 @@ void main() {
       // even match is not "next".
       expect(tester.getRect(find.text('Mote')).left,
           lessThan(tester.getRect(find.text('Hazel')).left));
-      // Juniper, the next unlock, is built but off screen until the player
+      // Bramble, the next unlock, is built but off screen until the player
       // scrolls — the row holds all thirty-one, so it exists without being
       // visible.
       // The scrolling row, not the whole section: `YourPath` is laid out at the
@@ -194,11 +197,11 @@ void main() {
       // rect therefore runs past the row on both sides (D319).
       final viewport = tester.getRect(find.descendant(
           of: find.byType(YourPath), matching: find.byType(Scrollable)));
-      expect(tester.getRect(find.text('Juniper')).left,
+      expect(tester.getRect(find.text('Bramble')).left,
           greaterThan(viewport.right),
           reason: 'off the right-hand edge until scrolled to');
-      await scrollTo(tester, 'Juniper');
-      expect(tester.getRect(find.text('Juniper')).left,
+      await scrollTo(tester, 'Bramble');
+      expect(tester.getRect(find.text('Bramble')).left,
           lessThan(viewport.right));
     });
 
@@ -210,10 +213,10 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Juniper');
-      expect(find.text('256 points'), findsOneWidget,
-          reason: "Juniper's price");
-      expect(find.text('0 of 256'), findsOneWidget);
+      await scrollTo(tester, 'Bramble');
+      expect(find.text('42 points'), findsOneWidget,
+          reason: "Bramble's price");
+      expect(find.text('0 of 42'), findsOneWidget);
       // The unlock button exists but cannot be pressed on nothing.
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
@@ -224,19 +227,19 @@ void main() {
         'advances the window', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 4);
+      await _win(repo, 'mote', 14); // 14 * 3 = 42, Bramble's price exactly
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Juniper');
-      expect(find.text('256 of 256'), findsOneWidget);
+      await scrollTo(tester, 'Bramble');
+      expect(find.text('42 of 42'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
 
       // The confirmation says what it costs and what is left.
-      expect(find.text('Unlock Juniper?'), findsOneWidget);
-      expect(find.text('This costs 256 points and leaves you 0.'),
+      expect(find.text('Unlock Bramble?'), findsOneWidget);
+      expect(find.text('This costs 42 points and leaves you 0.'),
           findsOneWidget);
       // Scoped to the dialog: the tile behind it still carries an Unlock
       // button of its own, so a bare finder matches two.
@@ -245,10 +248,10 @@ void main() {
           matching: find.widgetWithText(FilledButton, 'Unlock')));
       await tester.pumpAndSettle();
 
-      expect((await repo.loadUnlocks()).single.opponentId, 'juniper');
-      // The window slid: Juniper is now owned and Bracken is next.
-      expect(find.text('512 points'), findsOneWidget,
-          reason: "Bracken's price");
+      expect((await repo.loadUnlocks()).single.opponentId, 'bramble');
+      // The window slid: Bramble is now owned and Juniper is next.
+      expect(find.text('68 points'), findsOneWidget,
+          reason: "Juniper's price");
     });
 
     testWidgets('progress is the balance, not the earned total', (tester) async {
@@ -262,23 +265,23 @@ void main() {
       // same number and the defect is invisible. This one spends.
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 16); // 16 x 64 = 1024 earned
-      await repo.purchase('juniper', pricePaid: 256);
-      await repo.purchase('bracken', pricePaid: 512); // 768 spent, 256 left
+      await _win(repo, 'mote', 40); // 40 x 3 = 120 earned
+      await repo.purchase('bramble', pricePaid: 42);
+      await repo.purchase('juniper', pricePaid: 68); // 110 spent, 10 left
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Willow');
-      expect(find.text('256 of 1,024'), findsOneWidget,
+      await scrollTo(tester, 'Bracken');
+      expect(find.text('10 of 110'), findsOneWidget,
           reason: 'the spendable balance');
-      expect(find.text('1,024 of 1,024'), findsNothing,
+      expect(find.text('120 of 110'), findsNothing,
           reason: 'the earned total, which is what the bug displayed');
 
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
       expect(button.onPressed, isNull,
-          reason: '256 does not buy a 1,024-point unlock');
+          reason: '10 does not buy a 110-point unlock');
     });
 
     testWidgets('the arrows step the row one tile and fade at the ends',
@@ -348,12 +351,12 @@ void main() {
     testWidgets('cancelling the confirmation buys nothing', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 4);
+      await _win(repo, 'sorrel', 4); // 52, past Bramble's 42
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Juniper');
+      await scrollTo(tester, 'Bramble');
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
@@ -366,14 +369,14 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 5); // 320 earned
-      await repo.purchase('juniper', pricePaid: 256);
+      await _win(repo, 'mote', 20); // 20 x 3 = 60 earned
+      await repo.purchase('bramble', pricePaid: 42);
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      expect(find.text('64'), findsOneWidget,
-          reason: '320 earned, 256 spent');
+      expect(find.text('18'), findsOneWidget,
+          reason: '60 earned, 42 spent');
     });
 
     testWidgets('an opponent never faced shows no star row', (tester) async {
@@ -386,10 +389,10 @@ void main() {
       // The three resting tiles are all unlocked and unplayed: each says so
       // rather than drawing three empty stars, because unearned and failed
       // must not look the same.
-      // Seven: the free set, all unlocked and none played. The row builds
-      // every tile, so this counts the roster rather than what is on screen —
-      // and the recut put two more opponents under the 1000 ceiling (D325).
-      expect(find.text('Not played yet'), findsNWidgets(7));
+      // Six: the free set, all unlocked and none played. The row builds
+      // every tile, so this counts the roster rather than what is on screen
+      // (D327).
+      expect(find.text('Not played yet'), findsNWidgets(6));
       expect(find.byIcon(Icons.star_border), findsNothing);
     });
 
@@ -403,10 +406,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Grey alone is not a fact a screen reader can read, so the tile says it.
-      await scrollTo(tester, 'Juniper');
+      await scrollTo(tester, 'Bramble');
       expect(
         find.bySemanticsLabel(
-            RegExp(r'Juniper, rated 1020\. Locked\. 256 points, you have 0\.')),
+            RegExp(r'Bramble, rated 980\. Locked\. 42 points, you have 0\.')),
         findsOneWidget,
       );
       handle.dispose();
@@ -419,11 +422,11 @@ void main() {
       _phone(tester);
       final repo = await _repository();
       // Buy the whole ladder up to Oracle, then earn its price. Oracle is
-      // index 29 since the recut, and the free set reaches index 6 (D325).
-      for (var i = 7; i < 29; i++) {
+      // index 29, and the free set is the first six (D325, D327).
+      for (var i = 6; i < 29; i++) {
         await repo.purchase(opponentCatalogue[i].id, pricePaid: 0);
       }
-      await _win(repo, 'titan', 4); // 4 * 2^28 = Oracle's price
+      await _win(repo, 'titan', 4); // 4 * 832,040 clears Oracle's price
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();

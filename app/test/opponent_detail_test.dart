@@ -175,8 +175,8 @@ void main() {
       expect(find.byType(OpponentDetail), findsOneWidget);
       expect(find.text('900 · Novice'), findsOneWidget);
       expect(find.text('1–1–0 in 2 games'), findsOneWidget);
-      // Clover is roster index 4 since the recut, so a win pays sixteen.
-      expect(find.text('A win pays 16 points'), findsOneWidget);
+      // Clover is roster index 4, so a win pays eight (D327's ladder).
+      expect(find.text('A win pays 8 points'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsOneWidget);
     });
 
@@ -208,10 +208,10 @@ void main() {
         'unlock button', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await open(tester, repo, 'Juniper');
+      await open(tester, repo, 'Bramble');
 
-      expect(find.text('256 points'), findsOneWidget);
-      expect(find.text('0 of 256'), findsOneWidget);
+      expect(find.text('42 points'), findsOneWidget);
+      expect(find.text('0 of 42'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsNothing);
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
@@ -222,15 +222,17 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      for (var i = 0; i < 4; i++) {
-        await _play(repo, botId: 'bramble');
+      // Fourteen Mote wins at three points each is Bramble's price to the
+      // point — the Fibonacci ladder has no exact four-win rung (D327).
+      for (var i = 0; i < 14; i++) {
+        await _play(repo, botId: 'mote');
       }
-      await open(tester, repo, 'Juniper');
+      await open(tester, repo, 'Bramble');
 
-      expect(find.text('256 of 256'), findsOneWidget);
+      expect(find.text('42 of 42'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock Juniper?'), findsOneWidget);
+      expect(find.text('Unlock Bramble?'), findsOneWidget);
     });
 
     testWidgets('the two Master opponents say so on the page itself, not only '

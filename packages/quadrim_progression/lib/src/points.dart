@@ -9,36 +9,83 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 /// whose measured strength runs the opposite way to their published ratings.
 /// Prices follow the ordinal, so they stay monotonic whatever measurement says.
 
-/// A win against roster index `i` pays `2^i`.
+/// The payout ladder: 1, 2, 3, 5, 8, 13, 21 … each rung the sum of the two
+/// below it.
 ///
-/// Doubling is what makes grinding downward self-pricing: every rung down
-/// halves the payout, so unlocking Quadrim Prime by beating Pebble would take
-/// 2,147,483,648 games. That is why no anti-farming rule exists anywhere in this
-/// package — the exponent does the work (idea-v3.md §7.3).
+/// **Fibonacci rather than powers of two** (D327). Doubling put the top of a
+/// thirty-one rung ladder at 2,147,483,648 points and the whole roster at four
+/// billion, which is a number no interface can make mean anything. Growing by
+/// the golden ratio instead puts the top at 4,356,618 and the roster at
+/// 11,405,706 — still large, and *readable* large.
+///
+/// Built once rather than computed per call, because it is read inside folds
+/// over the whole history.
+final List<int> _payouts = List.unmodifiable(_ladder(opponentCatalogue.length));
+
+List<int> _ladder(int rungs) {
+  if (rungs <= 0) return const [];
+  final values = <int>[1, 2];
+  while (values.length < rungs) {
+    values.add(values[values.length - 1] + values[values.length - 2]);
+  }
+  return values.sublist(0, rungs);
+}
+
+/// A win against roster index `i` pays the `i`th rung of the payout ladder.
+///
+/// The ladder is what makes grinding downward self-pricing: every rung down
+/// divides the payout by the golden ratio, so unlocking Quadrim Prime by
+/// beating Pebble would take 4,356,618 games. That is why no anti-farming rule
+/// exists anywhere in this package — the sequence does the work
+/// (idea-v3.md §7.3).
+///
+/// It does the work less *steeply* than doubling did: a rung down used to cost
+/// a factor of two and now costs 1.618. Over thirty rungs that is still four
+/// million games, so the property holds; over one or two rungs the pressure to
+/// play the strongest opponent you can beat is milder than it was, which is a
+/// deliberate softening rather than an oversight (D327).
 int winValue(int rosterIndex) {
   _checkIndex(rosterIndex);
-  return 1 << rosterIndex;
+  return _payouts[rosterIndex];
 }
 
-/// Unlocking roster index `i` costs `2^(i+1)` — exactly four wins against
-/// opponent `i - 1`.
+/// Unlocking roster index `i` costs twice what a win against `i` pays: 2, 4, 6,
+/// 10, 16, 26 … each price the sum of the two before it.
 ///
-/// That equality is the promise the interface makes, and it is exact rather
-/// than approximate only because draws and losses pay nothing (§7.2).
+/// **The same relationship the doubling ladder had** — it too priced a rung at
+/// twice its own win — so the shape of the economy is unchanged and only its
+/// steepness moved (D327). What did change is the promise: an unlock used to be
+/// *exactly* four wins against the rung below, and is now about 3¼, settling on
+/// twice the golden ratio. Exactness went with the powers of two, and it is not
+/// missed: a player counts games, and three or four is the same sentence.
 int unlockCost(int rosterIndex) {
   _checkIndex(rosterIndex);
-  return 1 << (rosterIndex + 1);
+  return 2 * _payouts[rosterIndex];
 }
 
-/// Opponents at or below this rating are available from first launch.
+/// How many opponents are playable without being earned.
 ///
-/// The free set is defined by **this threshold, not by a count**. If a future
-/// roster revision changes the ratings the free set changes with it, and
-/// nothing anywhere has to be kept in step with the word "five" (D228).
-const int kFreeRatingCeiling = 1000;
+/// **A count, and this reverses D228**, which made the free set a rating
+/// threshold precisely so that nothing would have to be kept in step with a
+/// number written in words. The threshold did what it promised: recutting the
+/// roster (D325) moved the free set from five opponents to seven without anyone
+/// choosing that. Being handed seven of thirty-one before earning anything is
+/// too many, and the honest fix is to say how many rather than to tune a
+/// rating until it happens to mean six (D327).
+///
+/// Six is the Novice tier exactly, which is what makes it a number worth
+/// naming: what is free is *the tier a new player starts in*, and Bramble at
+/// 980 is the first thing they buy.
+const int kFreeCount = 6;
 
 /// Whether [bot] is playable without being earned.
-bool isFree(BotConfig bot) => bot.rating <= kFreeRatingCeiling;
+///
+/// An opponent this build has never heard of is not free — the same answer
+/// [rosterIndexOf] gives it everywhere else, and the safe one.
+bool isFree(BotConfig bot) {
+  final index = rosterIndexOf(bot.id);
+  return index != null && index < kFreeCount;
+}
 
 /// The roster index of [botId], or null if this build has no such opponent.
 ///
@@ -50,14 +97,13 @@ int? rosterIndexOf(String botId) {
   return i < 0 ? null : i;
 }
 
-/// What every locked opponent costs together: 4,294,967,040 points, which is
-/// exactly ninety-six wins.
+/// What every locked opponent costs together: 11,405,706 points.
 ///
-/// Ninety-six is the number to reason about; the point totals are display —
-/// four wins at each of the twenty-four locked rungs. Both numbers grew with
-/// the roster (D325): the doubling is per rung, so eleven new rungs multiply
-/// the top of the ladder by two thousand and leave the *experience* of it
-/// unchanged, because what a player feels is the four wins, not the total.
+/// Roughly eighty wins spread across the twenty-five locked rungs — a little
+/// over three at each — where the doubling ladder charged four at each and
+/// totalled four billion. The per-rung number is what a player experiences and
+/// it barely moved; the total is display, and it became a number that fits on
+/// a phone (D327).
 int get fullRosterCost => [
   for (var i = 0; i < opponentCatalogue.length; i++)
     if (!isFree(opponentCatalogue[i])) unlockCost(i),

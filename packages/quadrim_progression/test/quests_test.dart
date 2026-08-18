@@ -110,7 +110,7 @@ void main() {
               '${opponentCatalogue[i].id}',
             ).award,
         ].fold(0, (a, b) => a + b);
-        expect(banked, 15, reason: 'the four cheapest, worth 1+2+4+8');
+        expect(banked, 11, reason: 'the four cheapest, worth 1+2+3+5');
         expect(banked, lessThan(fullRosterCost));
       },
     );
@@ -179,10 +179,13 @@ void main() {
     });
 
     test('averages the roster index and not the payouts', () {
-      // Nineteen Pebble games and one Titan game. The mean index is 0.85,
-      // which rounds to Twig, so the set is worth 2 points. Averaging the
-      // payouts would have given (19 * 1 + 131072) / 20 = 6,554.55 — pricing
-      // twenty games at roughly a Corvus win on the strength of one of them.
+      // Nineteen Pebble games and one game at index 17. The mean index is
+      // 0.85, which rounds to Twig, so the set is worth 2 points. Averaging
+      // the payouts would have given (19 * 1 + 4181) / 20 = 210 — pricing
+      // twenty games at roughly a Kestrel win on the strength of one of them.
+      // The arithmetic is less lurid under the Fibonacci ladder than under the
+      // doubling one, where the same set came to 6,554; the mistake is
+      // identical and a hundred times smaller (D327).
       final day = DateTime(2026, 5, 2);
       final games = [
         ..._day(day, 19),
@@ -193,7 +196,7 @@ void main() {
       final meanPayout = (19 * winValue(0) + winValue(17)) ~/ 20;
       expect(
         meanPayout,
-        6554,
+        210,
         reason: 'recorded so the rejected arithmetic stays visible',
       );
     });

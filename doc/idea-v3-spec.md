@@ -181,13 +181,13 @@ All the arithmetic of §7 of idea-v3.md. Same purity rules as the other two pack
 
 | Export | Contract |
 |---|---|
-| `winValue(int rosterIndex)` | `2^i`. Draws and losses are worth nothing |
-| `unlockCost(int rosterIndex)` | `2^(i+1)`, which is exactly four wins against opponent `i−1` |
+| `winValue(int rosterIndex)` | The `i`th rung of the Fibonacci ladder 1, 2, 3, 5, 8 … Draws and losses are worth nothing (D327) |
+| `unlockCost(int rosterIndex)` | Twice `winValue(i)`, where the win ladder is Fibonacci — about 3¼ wins against opponent `i−1` (D327) |
 | `isFree(BotConfig)` | Rating ≤ 1000. **A rule, not a count** — nothing anywhere hard-codes "five" |
 | `nextUnlock(Set<String> owned)` | The lowest-indexed locked opponent, or null. Only this one may ever be bought |
 | `pointsEarned(Iterable<CompletedGame>)` | A fold over the games **and nothing else**. No unlock record is consulted |
 | `balance(games, unlocks)` | `pointsEarned(games) − Σ unlock.pricePaid`, **clamped at zero** |
-| `questAward(Quest, Iterable<CompletedGame>)` | Per-opponent: `2^i` of the opponent named. Volume and streak: the multiple × `2^round(mean roster index of the qualifying games)` |
+| `questAward(Quest, Iterable<CompletedGame>)` | Per-opponent: `winValue(i)` of the opponent named. Volume and streak: the multiple × `winValue(round(mean roster index of the qualifying games))` |
 | `streak(games, DateTime dayBoundary)` | Consecutive local days with at least one **finished** game against the computer. **The day boundary is passed in, never read** |
 | `stars(OpponentRecord)` | None / ★ / ★★ / ★★★ over decisive games only |
 
@@ -568,15 +568,15 @@ New section, new prefix.
 
 | # | Given | When | Then |
 |---|---|---|---|
-| P1 | A win against roster index *i* | points are folded | it pays exactly 2ⁱ |
+| P1 | A win against roster index *i* | points are folded | it pays exactly the *i*th rung of the win ladder |
 | P2 | A draw or a loss against any opponent | points are folded | it pays nothing |
-| P3 | Opponent *i* | its unlock price is read | it is 2ⁱ⁺¹, which is exactly four wins against opponent *i−1* |
-| P4 | The catalogue | the free set is computed | it is exactly those rated 1000 and below, by rule — no constant anywhere encodes "five" |
+| P3 | Opponent *i* | its unlock price is read | it is twice what a win against *i* pays, and the price sequence is 2, 4, 6, 10, 16, 26 … each the sum of the two before it |
+| P4 | The catalogue | the free set is computed | it is exactly the first six — the Novice tier — by count (D327, reversing D228) |
 | P5 | Any locked opponent that is not the lowest-indexed locked one | it is offered for purchase | the purchase is refused |
 | P6 | A player with unlocks | the balance is read | it is points earned minus the sum of prices actually paid, **clamped at zero** |
 | P7 | An unlock bought at the old price | the cost table is re-tuned | the unlock stands and the balance is unchanged, because the price paid is stored with it |
 | P8 | An unlock bought with points | the quest table is re-tuned downward | the unlock is **not revoked**, and the balance clamps at zero rather than going negative |
-| P9 | A per-opponent quest against opponent *i* | it is claimed at any point in the player's career | it pays 2ⁱ — the same amount whenever it is claimed |
+| P9 | A per-opponent quest against opponent *i* | it is claimed at any point in the player's career | it pays `winValue(i)` — the same amount whenever it is claimed |
 | P10 | A volume or streak quest | it is awarded | it pays its multiple × 2^round(mean roster index of the qualifying games) |
 | P11 | A hundred games against Pebble in one day, by a player who has unlocked Titan | the volume quest is awarded | it pays **four points**, not four Titan wins |
 | P12 | Nineteen Pebble games and one Titan game | the average is taken | it is taken over the **roster index**, not the payouts, so the set is worth 2 points and not 6,555 |
@@ -589,7 +589,7 @@ New section, new prefix.
 | P19 | The streak evaluator | it is called | the day boundary is a parameter; no clock is read inside the package |
 | P20 | A pass-and-play game or the tutorial's practice game | it completes | it pays no points and counts toward no quest |
 | P21 | Oracle or Quadrim Prime | its unlock is confirmed | the confirmation repeats **"unbeatable when it moves first"**, not merely the store listing |
-| P22 | The whole roster | its total cost is summed | it is 2,097,088 points, which is exactly sixty wins |
+| P22 | The whole roster | its total cost is summed | it is 11,405,706 points, about eighty wins across twenty-five locked rungs |
 
 ### 11.7 Release gates for 0.1
 
