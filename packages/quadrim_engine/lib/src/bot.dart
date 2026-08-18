@@ -42,7 +42,7 @@ enum StrategicRule {
 /// trustworthy — which is exactly what ticket 011 asks for (D179).
 enum BotTier { novice, casual, club, expert, master }
 
-/// One opponent. Everything that distinguishes the twenty is in here.
+/// One opponent. Everything that distinguishes the thirty-one is in here.
 final class BotConfig {
   const BotConfig({
     required this.id,
@@ -252,6 +252,19 @@ const BotConfig mote = BotConfig(
   blunderRate: 0.40,
 );
 
+/// Mote, paying attention rather more often.
+///
+/// Fills what used to be a hundred rating points of nothing between Mote and
+/// Clover, which is the stretch a player is on during their first evening
+/// (D326).
+const BotConfig hazel = BotConfig(
+  id: 'hazel',
+  tier: BotTier.novice,
+  rating: 850,
+  rules: {StrategicRule.winNow, StrategicRule.blockNow},
+  blunderRate: 0.30,
+);
+
 /// Wins and blocks, blunders a fifth of the time, drawn to corners.
 const BotConfig clover = BotConfig(
   id: 'clover',
@@ -262,11 +275,29 @@ const BotConfig clover = BotConfig(
   cornerBias: 0.6,
 );
 
+/// The first opponent that sets a trap.
+///
+/// Clover plus `makeDoubleThreat`, and still no idea what to do about yours.
+/// Building one before you can see one is the honest last lesson of the Novice
+/// tier: the rule that beats you here is the rule you have not learned yet.
+const BotConfig sorrel = BotConfig(
+  id: 'sorrel',
+  tier: BotTier.novice,
+  rating: 940,
+  rules: {
+    StrategicRule.winNow,
+    StrategicRule.blockNow,
+    StrategicRule.makeDoubleThreat,
+  },
+  blunderRate: 0.18,
+  cornerBias: 0.6,
+);
+
 /// All four rules, no positional sense at all.
 const BotConfig bramble = BotConfig(
   id: 'bramble',
   tier: BotTier.casual,
-  rating: 1000,
+  rating: 980,
   rules: _allRules,
   blunderRate: 0.15,
 );
@@ -276,34 +307,46 @@ const BotConfig bramble = BotConfig(
 //
 // The eight corners and the eight cells of the inner 2x2x2 each lie on seven
 // of the 76 lines; every other cell lies on four. Preferring one of those two
-// groups is worth far more than the percentage point of blunder rate that
-// separates neighbours here — and the blunder rates *cannot* spread, because
-// they must fall as rating rises and the tier is bracketed by Bramble at 0.15
-// and Kestrel at 0.08. So the ladder is: Bramble prefers none of the sixteen,
-// Willow and Vireo prefer eight each, and Finch and Kestrel prefer all
-// sixteen. Spec 8.4 gives the whole tier a centre preference, so this is the
-// tier conforming to it rather than departing from it.
+// groups is worth far more than the fraction of a percentage point of blunder
+// rate that separates neighbours here. So the ladder is: Bramble prefers none
+// of the sixteen, Juniper, Bracken and Willow prefer eight each, and Rowan and
+// Aspen all sixteen. Spec 8.4 gives the whole tier a centre preference, so this
+// is the tier conforming to it rather than departing from it.
 //
 // Only the *order* of the bias weights reaches the board. With no lineBias
 // there is nothing to compare their magnitudes against, so an opponent that
 // ranks corners above centres above everything else plays identically at
 // (0.55, 0.35) and at (0.8, 0.6) — measured, byte for byte, when a first
-// attempt at this tried to weaken Vireo by lowering both.
+// attempt at this tried to weaken a rung by lowering both.
 //
 // **No opponent in this tier sets `aggression`, and that is load-bearing**
-// (D314, ticket 044). It used to: Vireo built at 0.67 and Finch blocked at
-// 0.30, which read well and made the tier **intransitive** rather than
-// ordered. Measured over 200 games each: Willow beat Vireo by 45, Vireo beat
-// Finch by 70, and Finch beat Willow by 207. A cycle, not a ladder — because
-// `aggression` above 0.5 skips a share of denials (`_denialSkipChance`) and
-// below 0.5 surrenders the initiative, so which setting wins depends on which
-// setting it is playing, exactly like rock-paper-scissors.
-//
-// D211 named the two ways out: space the rungs by something other than
-// aggression, or make aggression a strength axis rather than a personality
-// one. The second keeps the cycle and merely aligns its average, so this tier
-// takes the first. What remains is a clean order: good squares, then blunder
-// rate. Adding aggression to a Casual opponent re-opens the cycle.
+// (D314, ticket 044). It used to: two rungs built and blocked at 0.67 and 0.30,
+// which read well and made the tier **intransitive** rather than ordered.
+// Measured over 200 games each, three of them formed a cycle rather than a
+// ladder — because `aggression` above 0.5 skips a share of denials
+// (`_denialSkipChance`) and below 0.5 surrenders the initiative, so which
+// setting wins depends on which setting it is playing, exactly like
+// rock-paper-scissors. Adding aggression to a Casual opponent re-opens it.
+
+/// Eight good squares, ranked corners first.
+const BotConfig juniper = BotConfig(
+  id: 'juniper',
+  tier: BotTier.casual,
+  rating: 1020,
+  rules: _allRules,
+  blunderRate: 0.145,
+  cornerBias: 0.6,
+);
+
+/// The same eight, ranked the other way: the middle of the cube.
+const BotConfig bracken = BotConfig(
+  id: 'bracken',
+  tier: BotTier.casual,
+  rating: 1060,
+  rules: _allRules,
+  blunderRate: 0.14,
+  centreBias: 0.6,
+);
 
 /// All four rules and a strong pull to the middle of the cube.
 const BotConfig willow = BotConfig(
@@ -315,44 +358,66 @@ const BotConfig willow = BotConfig(
   centreBias: 0.6,
 );
 
-/// Corner-hungry: all sixteen good squares, and it ranks the corners first.
+/// The first of the tier to want all sixteen, and it ranks the corners first.
 ///
-/// **Its `aggression: 0.67` is gone** (D314). Dropping `centreBias` as well was
-/// tried and reverted: eight corner cells measured *stronger* than sixteen
-/// corners-first, which is the reverse of what the block comment above predicts
-/// and made this rung's inversion larger rather than smaller (D315).
+/// This is the configuration Vireo held at 1200 before the roster was recut:
+/// the rung kept the strength and handed it a new name (D325). Dropping
+/// `centreBias` from a corners-first opponent was tried once and reverted —
+/// eight corner cells measured *stronger* than sixteen corners-first, which is
+/// the reverse of what the block comment above predicts (D315).
+const BotConfig rowan = BotConfig(
+  id: 'rowan',
+  tier: BotTier.casual,
+  rating: 1140,
+  rules: _allRules,
+  blunderRate: 0.125,
+  centreBias: 0.5,
+  cornerBias: 0.7,
+);
+
+/// The same sixteen squares as Rowan, ranked centre first.
+const BotConfig aspen = BotConfig(
+  id: 'aspen',
+  tier: BotTier.casual,
+  rating: 1180,
+  rules: _allRules,
+  blunderRate: 0.12,
+  centreBias: 0.7,
+  cornerBias: 0.5,
+);
+
+// The Club tier. Sixteen good squares throughout, a tightening blunder rate,
+// and at its top the building term — the cell lying on the most lines this
+// opponent is already working — which is the lever that separates it from
+// Casual rather than another point of accuracy.
+
+/// Corner-hungry, and no longer giving much away.
 const BotConfig vireo = BotConfig(
   id: 'vireo',
-  tier: BotTier.casual,
-  rating: 1200,
+  tier: BotTier.club,
+  rating: 1220,
   rules: _allRules,
   blunderRate: 0.11,
   centreBias: 0.5,
   cornerBias: 0.7,
 );
 
-/// The same sixteen squares as Vireo, ranked centre first, and a point less
-/// blunder.
-///
-/// **Its `aggression: 0.30` is gone** (D314), for the same reason as Vireo's.
+/// The same sixteen, centre first, and a point less blunder.
 const BotConfig finch = BotConfig(
   id: 'finch',
-  tier: BotTier.casual,
-  rating: 1250,
+  tier: BotTier.club,
+  rating: 1260,
   rules: _allRules,
   blunderRate: 0.10,
   centreBias: 0.7,
   cornerBias: 0.5,
 );
 
-/// The tier's ceiling: all four rules cleanly applied, the full sixteen good
-/// squares, and nothing given away.
-///
-/// What Marlin adds on top is the building term — the cell on the most lines
-/// it is already working — which is a lever this one does not have at all.
+/// All four rules cleanly applied, the full sixteen good squares, and nothing
+/// given away.
 const BotConfig kestrel = BotConfig(
   id: 'kestrel',
-  tier: BotTier.casual,
+  tier: BotTier.club,
   rating: 1300,
   rules: _allRules,
   blunderRate: 0.08,
@@ -360,17 +425,43 @@ const BotConfig kestrel = BotConfig(
   cornerBias: 0.6,
 );
 
-/// The first opponent with a plan: all four rules plus the full positional
-/// ladder — centre, then corner, then the cell on the most lines it is
-/// already building — and only a 6% blunder rate (idea-v3 §6.4).
+/// The first opponent with a plan: the positional ladder gains its third rung,
+/// the cell on the most lines it is already building.
 ///
-/// The weights realise the ladder as an order: any centre cell (1.00 … 1.25)
-/// outscores any corner (0.50 … 0.75), which outscores any other cell
-/// (0.00 … 0.25), and the building term decides within each class.
+/// The weights realise the ladder as an order — any centre cell outscores any
+/// corner, which outscores any other cell, and the building term decides within
+/// each class. That is why `lineBias` stays below the *gap* between the class
+/// weights rather than merely below the weights themselves (D149).
+const BotConfig osprey = BotConfig(
+  id: 'osprey',
+  tier: BotTier.club,
+  rating: 1340,
+  rules: _allRules,
+  blunderRate: 0.075,
+  centreBias: 0.9,
+  cornerBias: 0.6,
+  lineBias: 0.15,
+);
+
+/// Osprey with the classes further apart and more weight on what it is
+/// building.
+const BotConfig heron = BotConfig(
+  id: 'heron',
+  tier: BotTier.club,
+  rating: 1380,
+  rules: _allRules,
+  blunderRate: 0.07,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.2,
+);
+
+/// The tier's ceiling: the full positional ladder and a 6% blunder rate
+/// (idea-v3 §6.4).
 const BotConfig marlin = BotConfig(
   id: 'marlin',
   tier: BotTier.club,
-  rating: 1400,
+  rating: 1420,
   rules: _allRules,
   blunderRate: 0.06,
   centreBias: 1,
@@ -378,14 +469,32 @@ const BotConfig marlin = BotConfig(
   lineBias: 0.25,
 );
 
-// The Club tier's searching opponents. All four are Marlin's rules and
+// The Expert tier's searching opponents. All six are Marlin's rules and
 // positional ladder plus a look ahead; what separates them is how far they
 // look, at what, and with which temperament.
 
+/// The first opponent that looks ahead at all, and it looks only for its own
+/// forced wins.
+///
+/// Two forcing moves is not far. It is still the first rung where a threat you
+/// leave open is punished on purpose rather than by luck, which is a different
+/// experience from anything below it and costs almost nothing to compute.
+const BotConfig lynx = BotConfig(
+  id: 'lynx',
+  tier: BotTier.expert,
+  rating: 1460,
+  threatSearchDepth: 2,
+  rules: _allRules,
+  blunderRate: 0.055,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
 /// Two plies, weighted towards its own structure.
-const BotConfig ember = BotConfig(
-  id: 'ember',
-  tier: BotTier.club,
+const BotConfig sable = BotConfig(
+  id: 'sable',
+  tier: BotTier.expert,
   rating: 1500,
   searchDepth: 2,
   rules: _allRules,
@@ -399,14 +508,14 @@ const BotConfig ember = BotConfig(
 /// Three plies and a short look for forced wins, weighted towards what the
 /// opponent is building.
 ///
-/// Deeper than Ember, and looking two forcing moves ahead, because
+/// Deeper than Sable, and looking three forcing moves ahead, because
 /// temperament alone does not separate them: measured over 400 games at equal
-/// depth the two are level, and defensive weighting turns out to be worth
-/// nothing at all in a game of 76 competing lines (D154).
-const BotConfig basalt = BotConfig(
-  id: 'basalt',
-  tier: BotTier.club,
-  rating: 1550,
+/// depth two such opponents are level, and defensive weighting turns out to be
+/// worth nothing at all in a game of 76 competing lines (D154).
+const BotConfig ember = BotConfig(
+  id: 'ember',
+  tier: BotTier.expert,
+  rating: 1540,
   searchDepth: 3,
   threatSearchDepth: 3,
   rules: _allRules,
@@ -417,16 +526,30 @@ const BotConfig basalt = BotConfig(
   aggression: 0.4,
 );
 
-/// Three plies and a five-move forcing search, even-handed. The first
-/// opponent that will beat a competent human more often than not.
+/// The same three plies, even-handed, and a forcing search a move longer.
+const BotConfig lyra = BotConfig(
+  id: 'lyra',
+  tier: BotTier.expert,
+  rating: 1580,
+  searchDepth: 3,
+  threatSearchDepth: 4,
+  rules: _allRules,
+  blunderRate: 0.035,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+/// Three plies and a six-move forcing search. The first opponent that will
+/// beat a competent human more often than not.
 ///
-/// Its edge over Basalt is entirely the forcing search. Depth is the weakest
-/// of the three levers this engine has, and past three plies it does not
-/// separate opponents at all (D154, D156).
+/// Its edge over Lyra is entirely the forcing search. Depth is the weakest of
+/// the three levers this engine has, and past three plies it does not separate
+/// opponents at all (D154, D156).
 const BotConfig onyx = BotConfig(
   id: 'onyx',
-  tier: BotTier.club,
-  rating: 1650,
+  tier: BotTier.expert,
+  rating: 1640,
   searchDepth: 3,
   threatSearchDepth: 6,
   rules: _allRules,
@@ -436,11 +559,11 @@ const BotConfig onyx = BotConfig(
   lineBias: 0.25,
 );
 
-/// Four plies plus threat-space search, so it also sees forced wins far
-/// beyond that horizon.
-const BotConfig sable = BotConfig(
-  id: 'sable',
-  tier: BotTier.club,
+/// Four plies plus threat-space search, so it also sees forced wins far beyond
+/// that horizon.
+const BotConfig corvus = BotConfig(
+  id: 'corvus',
+  tier: BotTier.expert,
   rating: 1700,
   searchDepth: 4,
   threatSearchDepth: 9,
@@ -452,15 +575,16 @@ const BotConfig sable = BotConfig(
 );
 
 // ---------------------------------------------------------------------------
-// The Expert tier. The first opponents whose budget is expressed in nodes
-// rather than plies, because how deep a budget reaches depends on the
-// position and iterative deepening takes whatever it can finish.
+// The Master tier. The first opponents whose budget is expressed in nodes
+// rather than plies, because how deep a budget reaches depends on the position
+// and iterative deepening takes whatever it can finish — and, at its top, the
+// two that stop estimating and start knowing.
 // ---------------------------------------------------------------------------
 
 /// Iterative deepening under a transposition table.
-const BotConfig corvus = BotConfig(
-  id: 'corvus',
-  tier: BotTier.expert,
+const BotConfig basalt = BotConfig(
+  id: 'basalt',
+  tier: BotTier.master,
   rating: 1800,
   nodeBudget: 500000,
   maxSearchDepth: 8,
@@ -472,11 +596,11 @@ const BotConfig corvus = BotConfig(
   lineBias: 0.25,
 );
 
-/// Corvus with a longer look, and the first opponent that checks what its own
+/// Basalt with a longer look, and the first opponent that checks what its own
 /// move hands over (D169).
-const BotConfig lyra = BotConfig(
-  id: 'lyra',
-  tier: BotTier.expert,
+const BotConfig cairn = BotConfig(
+  id: 'cairn',
+  tier: BotTier.master,
   rating: 1900,
   nodeBudget: 900000,
   maxSearchDepth: 8,
@@ -490,10 +614,10 @@ const BotConfig lyra = BotConfig(
 );
 
 /// A budget large enough to reach the middle of the ticket's depth range, and
-/// two more moves of defence than Lyra.
-const BotConfig quartz = BotConfig(
-  id: 'quartz',
-  tier: BotTier.expert,
+/// two more moves of defence than Cairn.
+const BotConfig flint = BotConfig(
+  id: 'flint',
+  tier: BotTier.master,
   rating: 2000,
   nodeBudget: 1800000,
   maxSearchDepth: 10,
@@ -506,16 +630,16 @@ const BotConfig quartz = BotConfig(
   lineBias: 0.25,
 );
 
-/// Quartz plus exact endgame solving, defence as deep as it repays, and no
+/// Flint plus exact endgame solving, defence as deep as it repays, and no
 /// deliberate blunders at all.
 ///
 /// Once ten cells remain it stops estimating: the result it returns is proved,
 /// not judged, and no heuristic overrides it. The forcing budget is five times
 /// the default because it is shared out among the candidates being checked,
 /// and an unstarved defence measured 36-24 against a starved one (D170).
-const BotConfig titan = BotConfig(
-  id: 'titan',
-  tier: BotTier.expert,
+const BotConfig quartz = BotConfig(
+  id: 'quartz',
+  tier: BotTier.master,
   rating: 2100,
   nodeBudget: 2500000,
   maxSearchDepth: 10,
@@ -529,19 +653,40 @@ const BotConfig titan = BotConfig(
   lineBias: 0.25,
 );
 
-// ---------------------------------------------------------------------------
-// The Master tier. The first opponents that stop estimating and start knowing:
-// they play Patashnik's proof from the opening, and search only once it runs
-// out. Unbeatable when they open, merely very strong when they do not (D172).
-// ---------------------------------------------------------------------------
+/// The strongest opponent that plays no book at all.
+///
+/// Everything Quartz has and more of it: a bigger budget, two more moves of
+/// forcing search, one more empty cell of exact solve. It is the last rung a
+/// player reaches by out-searching rather than by out-lasting a proof, which is
+/// what makes it the right place for the roster's new top-of-search rung
+/// (D325).
+const BotConfig titan = BotConfig(
+  id: 'titan',
+  tier: BotTier.master,
+  rating: 2200,
+  nodeBudget: 3000000,
+  maxSearchDepth: 11,
+  threatSearchDepth: 17,
+  defenceSearchDepth: 9,
+  forcingBudget: 1500000,
+  exactEmpties: 11,
+  rules: _allRules,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
+// The two that play Patashnik's proof from the opening and search only once it
+// runs out. Unbeatable when they open, merely very strong when they do not
+// (D172).
 
 /// Unbeatable when it opens; ordinary-strong when it does not.
 ///
 /// Oracle and Quadrim Prime play the identical book, so in the games they open
 /// they are the same opponent and neither can be beaten. Everything that
 /// separates them lives in the **second seat**, where there is no proof to play
-/// and both fall back on searching (D173) — Oracle with the Expert tier's
-/// machinery, Prime with the largest configuration in the catalogue.
+/// and both fall back on searching (D173) — Oracle with the searching machinery
+/// of the rungs below, Prime with the largest configuration in the catalogue.
 ///
 /// This is the honest place to put the difference, and it was arrived at by
 /// eliminating the alternatives rather than by design. A blunder rate was tried
@@ -595,19 +740,30 @@ const List<BotConfig> opponentCatalogue = [
   pebble,
   twig,
   mote,
+  hazel,
   clover,
+  sorrel,
   bramble,
+  juniper,
+  bracken,
   willow,
+  rowan,
+  aspen,
   vireo,
   finch,
   kestrel,
+  osprey,
+  heron,
   marlin,
-  ember,
-  basalt,
-  onyx,
+  lynx,
   sable,
-  corvus,
+  ember,
   lyra,
+  onyx,
+  corvus,
+  basalt,
+  cairn,
+  flint,
   quartz,
   titan,
   oracle,

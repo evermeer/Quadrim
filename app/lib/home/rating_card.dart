@@ -141,11 +141,25 @@ class RatingCard extends StatelessWidget {
                     // Gold, not `colorScheme.primary`: primary is the deep
                     // bronze that reads on parchment, and on this panel it is
                     // very nearly the background.
-                    Text(points,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: QuadrimPalette.gold,
-                          fontWeight: FontWeight.w600,
-                        )),
+                    // Flexible, because the balance is now ten digits at the
+                    // top of the ladder and was six. The doubling is per rung,
+                    // so eleven new rungs multiplied it by two thousand
+                    // (D325) — and at a 2x font scale a balance the width of
+                    // this panel overflowed the row by 43 pixels rather than
+                    // shrinking. The number is the fact here, so it shrinks to
+                    // fit rather than ellipsising away its own leading digits.
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(points,
+                            maxLines: 1,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: QuadrimPalette.gold,
+                              fontWeight: FontWeight.w600,
+                            )),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),

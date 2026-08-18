@@ -19,19 +19,19 @@ void main() {
   Future<ByteData> load(String key) => rootBundle.load(key);
 
   test('every opponent in the catalogue has a portrait', () async {
-    expect(opponentCatalogue, hasLength(20));
+    expect(opponentCatalogue, hasLength(31));
     for (final bot in opponentCatalogue) {
       final bytes = await load(Art.opponent(bot.id));
       expect(bytes.lengthInBytes, greaterThan(1024), reason: bot.id);
     }
   });
 
-  test('two of the twenty are spelled differently in the source art', () async {
-    // `peble.png` and `quarts.png` were delivered misspelt and the catalogue is
-    // what is right. The mapping lives in `tools/artgen/artgen.py`; this is the
-    // assertion that would fail if it were ever dropped, which is the failure a
-    // file-drop convention cannot otherwise catch.
-    for (final id in ['pebble', 'quartz']) {
+  test('the source art is named after the catalogue ids', () async {
+    // `peble.png` and `quarts.png` were delivered misspelt and `artgen.py`
+    // carried a filename-to-id mapping to paper over it. The files are named
+    // after the ids now and the mapping is gone (D324), so what is left to
+    // assert is the property the mapping used to buy: every id resolves.
+    for (final id in ['pebble', 'quartz', 'osprey']) {
       expect(botById(id), isNotNull, reason: id);
       await expectLater(load(Art.opponent(id)), completes);
     }
@@ -75,7 +75,7 @@ void main() {
   });
 
   test('the whole shipped art budget stays under three megabytes', () async {
-    // A ceiling, not a measurement: twenty portraits at a larger size, or the
+    // A ceiling, not a measurement: thirty-one portraits at a larger size, or the
     // background left at source resolution, would each push this past ten. The
     // number is here so that raising it is a decision somebody makes on
     // purpose rather than a diff nobody looks at.

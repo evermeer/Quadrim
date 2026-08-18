@@ -329,29 +329,39 @@ void main() {
     });
   });
 
-  group('the Club tier', () {
-    test('the four exist with the configurations calibration settled on', () {
-      expect([ember.id, basalt.id, onyx.id, sable.id],
-          ['ember', 'basalt', 'onyx', 'sable']);
-      expect([ember.rating, basalt.rating, onyx.rating, sable.rating],
-          [1500, 1550, 1650, 1700]);
-      expect([ember.blunderRate, basalt.blunderRate, onyx.blunderRate,
-        sable.blunderRate], [0.05, 0.04, 0.03, 0.02]);
+  group('the searching opponents', () {
+    // They moved from Club to Expert when the roster was recut, and their
+    // configurations moved down a name with them: strength belongs to the rung
+    // rather than to who is standing on it (D325). What used to be Ember's two
+    // plies is Sable's, what used to be Basalt's three is Ember's, and what
+    // used to be Sable's four is Corvus's. Onyx alone kept both.
+    test('they exist with the configurations calibration settled on', () {
+      expect([sable.id, ember.id, lyra.id, onyx.id, corvus.id],
+          ['sable', 'ember', 'lyra', 'onyx', 'corvus']);
+      expect([sable.rating, ember.rating, lyra.rating, onyx.rating,
+        corvus.rating], [1500, 1540, 1580, 1640, 1700]);
+      expect([sable.blunderRate, ember.blunderRate, lyra.blunderRate,
+        onyx.blunderRate, corvus.blunderRate],
+          [0.05, 0.04, 0.035, 0.03, 0.02]);
       // Depths are what calibration settled on, not what idea-v3 6.4's
       // prose says (D154): forcing depth is the lever that works, and past
       // three plies ordinary depth separates nothing (D156).
-      expect(ember.searchDepth, 2);
-      expect(basalt.searchDepth, 3);
+      expect(sable.searchDepth, 2);
+      expect(ember.searchDepth, 3);
+      expect(lyra.searchDepth, 3);
       expect(onyx.searchDepth, 3);
-      expect(sable.searchDepth, 4);
-      expect(ember.threatSearchDepth, 0);
-      expect([basalt, onyx, sable].map((b) => b.threatSearchDepth),
-          orderedEquals([3, 6, 9]),
+      expect(corvus.searchDepth, 4);
+      expect(sable.threatSearchDepth, 0);
+      expect([ember, lyra, onyx, corvus].map((b) => b.threatSearchDepth),
+          orderedEquals([3, 4, 6, 9]),
           reason: 'the forcing search deepens with every rung');
       // Opposing temperaments, expressed in one number each.
-      expect(ember.aggression, greaterThan(0.5));
-      expect(basalt.aggression, lessThan(0.5));
-      expect(ember.defence, lessThan(basalt.defence));
+      expect(sable.aggression, greaterThan(0.5));
+      expect(ember.aggression, lessThan(0.5));
+      expect(sable.defence, lessThan(ember.defence));
+      // Below them, the rung that looks ahead only for its own forced win.
+      expect(lynx.searchDepth, 0);
+      expect(lynx.threatSearchDepth, 2);
     });
 
     test('a search opponent still answers within the recorded budget', () {
@@ -360,7 +370,7 @@ void main() {
       // of magnitude on purpose: it is a guard against a change that makes
       // the search catastrophically slower, not a device measurement.
       final random = Random(3);
-      for (final bot in [ember, basalt, onyx, sable]) {
+      for (final bot in [lynx, sable, ember, lyra, onyx, corvus]) {
         var state = GameState.initial();
         var worst = 0;
         while (outcome(state) is Ongoing) {
@@ -372,21 +382,28 @@ void main() {
         }
         expect(worst, lessThan(1000), reason: '${bot.id} worst move $worst ms');
       }
-    }, timeout: const Timeout(Duration(minutes: 2)));
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('each beats the one below it over a significant number of games', () {
-      // The ladder these numbers produced is in D154; it is the reason Basalt
-      // searches three plies and Onyx has a threat search at all.
+      // **The chain measured in D154, renamed rather than re-measured.** Every
+      // pair here is a pair that was measured before the recut: Marlin to
+      // Sable is the old Marlin-to-Ember, Sable to Ember the old
+      // Ember-to-Basalt, and so on down the rename in the group comment.
+      //
+      // Lynx and Lyra are deliberately absent. They are the two rungs the
+      // recut interpolated, nothing has measured them yet, and asserting a
+      // margin nobody has seen is how a test comes to encode a guess
+      // (D144, D325). `calibrate.dart --only lynx` is what settles them.
       final random = Random(31);
-      // Sample sizes follow the measured margins: Ember over Marlin and
-      // Basalt over Ember are around 58% and need games to show, while Onyx
-      // and Sable win their rungs by two to four to one.
-      for (final pair in [(ember, marlin), (basalt, ember)]) {
+      // Sample sizes follow the measured margins: Sable over Marlin and
+      // Ember over Sable are around 58% and need games to show, while Onyx
+      // and Corvus win their rungs by two to four to one.
+      for (final pair in [(sable, marlin), (ember, sable)]) {
         final r = _match(pair.$1, pair.$2, 200, random);
         expect(r.wins, greaterThan(r.losses),
             reason: '${pair.$1.id} $r against ${pair.$2.id}');
       }
-      for (final pair in [(onyx, basalt), (sable, onyx)]) {
+      for (final pair in [(onyx, ember), (corvus, onyx)]) {
         final r = _match(pair.$1, pair.$2, 40, random);
         expect(r.wins, greaterThan(r.losses),
             reason: '${pair.$1.id} $r against ${pair.$2.id}');
@@ -399,7 +416,7 @@ void main() {
       // claim is about legality, which does not need thousands of samples to
       // hold. The catalogue-wide sweeps cover the cheap opponents.
       final random = Random(6060);
-      for (final bot in [ember, basalt, onyx, sable]) {
+      for (final bot in [lynx, sable, ember, lyra, onyx, corvus]) {
         for (var i = 0; i < 150; i++) {
           final state = _randomPosition(random);
           final move = chooseMove(state, bot, random);

@@ -13,7 +13,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 ///
 /// Doubling is what makes grinding downward self-pricing: every rung down
 /// halves the payout, so unlocking Quadrim Prime by beating Pebble would take
-/// 1,048,576 games. That is why no anti-farming rule exists anywhere in this
+/// 2,147,483,648 games. That is why no anti-farming rule exists anywhere in this
 /// package — the exponent does the work (idea-v3.md §7.3).
 int winValue(int rosterIndex) {
   _checkIndex(rosterIndex);
@@ -50,10 +50,14 @@ int? rosterIndexOf(String botId) {
   return i < 0 ? null : i;
 }
 
-/// What every locked opponent costs together: 2,097,088 points, which is
-/// exactly sixty wins.
+/// What every locked opponent costs together: 4,294,967,040 points, which is
+/// exactly ninety-six wins.
 ///
-/// Sixty is the number to reason about; the point totals are display.
+/// Ninety-six is the number to reason about; the point totals are display —
+/// four wins at each of the twenty-four locked rungs. Both numbers grew with
+/// the roster (D325): the doubling is per rung, so eleven new rungs multiply
+/// the top of the ladder by two thousand and leave the *experience* of it
+/// unchanged, because what a player feels is the four wins, not the total.
 int get fullRosterCost => [
   for (var i = 0; i < opponentCatalogue.length; i++)
     if (!isFree(opponentCatalogue[i])) unlockCost(i),

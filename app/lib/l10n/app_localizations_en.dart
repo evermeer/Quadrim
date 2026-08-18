@@ -254,6 +254,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botOracle => 'Oracle';
 
   @override
+  String get botHazel => 'Hazel';
+
+  @override
+  String get botSorrel => 'Sorrel';
+
+  @override
+  String get botJuniper => 'Juniper';
+
+  @override
+  String get botBracken => 'Bracken';
+
+  @override
+  String get botRowan => 'Rowan';
+
+  @override
+  String get botAspen => 'Aspen';
+
+  @override
+  String get botOsprey => 'Osprey';
+
+  @override
+  String get botHeron => 'Heron';
+
+  @override
+  String get botLynx => 'Lynx';
+
+  @override
+  String get botCairn => 'Cairn';
+
+  @override
+  String get botFlint => 'Flint';
+
+  @override
   String get botQuadrimPrime => 'Quadrim Prime';
 
   @override
@@ -349,25 +382,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbMarlin =>
-      'Plays for good squares as well as good moves. The first real test.';
+      'The full positional game, and hardly a wasted move. The first real test.';
 
   @override
-  String get blurbEmber => 'Looks a move ahead, and spends it on attack.';
+  String get blurbEmber => 'Looks a move ahead, and spends it on defence.';
 
   @override
-  String get blurbBasalt => 'Looks a move ahead, and spends it on defence.';
+  String get blurbBasalt =>
+      'Calculates hard, and remembers what it has already worked out.';
 
   @override
   String get blurbOnyx =>
       'Reads several moves deep. Punishes a careless answer.';
 
   @override
-  String get blurbSable =>
-      'Hunts for the double threat that cannot be answered.';
+  String get blurbSable => 'Looks a move ahead, and spends it on attack.';
 
   @override
   String get blurbCorvus =>
-      'Calculates hard, and remembers what it has already worked out.';
+      'Hunts for the double threat that cannot be answered.';
 
   @override
   String get blurbLyra =>
@@ -375,11 +408,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbQuartz =>
-      'Thinks further ahead the longer it is given. Hard to surprise.';
+      'Searches deeply and plays the endgame out exactly, never guessing.';
 
   @override
   String get blurbTitan =>
-      'Searches deeply and plays the endgame out exactly, never guessing.';
+      'The deepest calculation on the ladder that plays from no book at all.';
+
+  @override
+  String get blurbHazel =>
+      'Sees wins and blocks a little more often than Mote does.';
+
+  @override
+  String get blurbSorrel =>
+      'Has learned to set a trap. Has not learned to spot yours.';
+
+  @override
+  String get blurbJuniper => 'Knows all the basics, and heads for the corners.';
+
+  @override
+  String get blurbBracken => 'Knows all the basics, and heads for the middle.';
+
+  @override
+  String get blurbRowan =>
+      'Wants every good square, corners first, and still drops one now and then.';
+
+  @override
+  String get blurbAspen =>
+      'Takes the middle of the cube, then the corners. Occasionally careless.';
+
+  @override
+  String get blurbOsprey =>
+      'Plays on the lines it is already building, not only on good squares.';
+
+  @override
+  String get blurbHeron =>
+      'Builds patiently, and waits for you to leave a line open.';
+
+  @override
+  String get blurbLynx =>
+      'Looks ahead only for its own forced win, and it finds them.';
+
+  @override
+  String get blurbCairn =>
+      'Checks what its own move gives away before it plays it.';
+
+  @override
+  String get blurbFlint =>
+      'Thinks further ahead the longer it is given. Hard to surprise.';
 
   @override
   String get blurbOracle =>

@@ -255,6 +255,39 @@ class AppLocalizationsNl extends AppLocalizations {
   String get botOracle => 'Oracle';
 
   @override
+  String get botHazel => 'Hazel';
+
+  @override
+  String get botSorrel => 'Sorrel';
+
+  @override
+  String get botJuniper => 'Juniper';
+
+  @override
+  String get botBracken => 'Bracken';
+
+  @override
+  String get botRowan => 'Rowan';
+
+  @override
+  String get botAspen => 'Aspen';
+
+  @override
+  String get botOsprey => 'Osprey';
+
+  @override
+  String get botHeron => 'Heron';
+
+  @override
+  String get botLynx => 'Lynx';
+
+  @override
+  String get botCairn => 'Cairn';
+
+  @override
+  String get botFlint => 'Flint';
+
+  @override
   String get botQuadrimPrime => 'Quadrim Prime';
 
   @override
@@ -348,15 +381,15 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbMarlin =>
-      'Speelt om goede velden en niet alleen om goede zetten. De eerste echte test.';
+      'Het volledige positiespel, en nauwelijks een verspilde zet. De eerste echte test.';
 
   @override
   String get blurbEmber =>
-      'Kijkt één zet vooruit en gebruikt dat om aan te vallen.';
+      'Kijkt een zet vooruit en gebruikt dat om te verdedigen.';
 
   @override
   String get blurbBasalt =>
-      'Kijkt één zet vooruit en gebruikt dat om te verdedigen.';
+      'Rekent hard en onthoudt wat het al heeft uitgerekend.';
 
   @override
   String get blurbOnyx =>
@@ -364,11 +397,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbSable =>
-      'Jaagt op de dubbele dreiging die niet te beantwoorden is.';
+      'Kijkt een zet vooruit en gebruikt dat om aan te vallen.';
 
   @override
   String get blurbCorvus =>
-      'Rekent hard en onthoudt wat het al heeft uitgerekend.';
+      'Jaagt op de dubbele dreiging die niet te beantwoorden is.';
 
   @override
   String get blurbLyra =>
@@ -376,11 +409,52 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbQuartz =>
-      'Denkt verder vooruit naarmate het meer tijd krijgt. Moeilijk te verrassen.';
+      'Zoekt diep en speelt het eindspel exact uit, zonder ooit te gokken.';
 
   @override
   String get blurbTitan =>
-      'Zoekt diep en speelt het eindspel exact uit, zonder ooit te gokken.';
+      'De diepste berekening op de ladder die uit geen enkel boek speelt.';
+
+  @override
+  String get blurbHazel => 'Ziet winst en blokkades iets vaker dan Mote.';
+
+  @override
+  String get blurbSorrel =>
+      'Heeft geleerd een val te zetten. Nog niet om die van jou te zien.';
+
+  @override
+  String get blurbJuniper => 'Kent alle basisregels en gaat voor de hoeken.';
+
+  @override
+  String get blurbBracken => 'Kent alle basisregels en gaat voor het midden.';
+
+  @override
+  String get blurbRowan =>
+      'Wil elk goed veld, eerst de hoeken, en laat er nog wel eens een liggen.';
+
+  @override
+  String get blurbAspen =>
+      'Neemt het midden van de kubus, daarna de hoeken. Af en toe slordig.';
+
+  @override
+  String get blurbOsprey =>
+      'Speelt op de lijnen die het al opbouwt, niet alleen op goede velden.';
+
+  @override
+  String get blurbHeron =>
+      'Bouwt geduldig op en wacht tot jij een lijn open laat.';
+
+  @override
+  String get blurbLynx =>
+      'Kijkt alleen vooruit naar zijn eigen geforceerde winst, en vindt die.';
+
+  @override
+  String get blurbCairn =>
+      'Controleert wat zijn eigen zet weggeeft voordat het die speelt.';
+
+  @override
+  String get blurbFlint =>
+      'Denkt verder vooruit naarmate het meer tijd krijgt. Moeilijk te verrassen.';
 
   @override
   String get blurbOracle =>

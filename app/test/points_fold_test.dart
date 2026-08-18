@@ -107,12 +107,14 @@ void main() {
     expect(pointsFrom([active]), 0);
   });
 
-  test('four wins against Bramble is exactly what Willow costs', () {
+  test('four wins against Bramble is exactly what Juniper costs', () {
+    // Bramble is index 6 since the recut and Juniper 7 (D325). The claim is
+    // the invariant, not the pair: four wins at any rung buys the next one.
     final games = [
       for (var i = 0; i < 4; i++)
         _game(id: 'w$i', opponent: botOpponent('bramble'), minute: i),
     ];
-    expect(pointsFrom(games), unlockCost(5));
+    expect(pointsFrom(games), unlockCost(7));
   });
 
   test('folding the same games twice gives the same answer, in any order', () {
@@ -139,7 +141,7 @@ void main() {
           minute: 2),
     ];
     final summary = HomeSummary.from(games);
-    expect(summary.points, winValue(4) + winValue(0));
+    expect(summary.points, winValue(6) + winValue(0));
     expect(summary.wins, 2);
     expect(summary.losses, 1);
   });

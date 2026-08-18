@@ -83,7 +83,7 @@ cd packages/quadrim_engine && dart run tool/calibrate.dart --only oracle
 
 `duel.dart` is the instrument for one pairing. Every claim that one opponent is stronger than another should come from a run of it, not from an argument about the code. Names take `+dN` (defence depth), `+tN` (own forcing depth), `+bN` (forcing budget, thousands).
 
-`calibrate.dart` is the instrument for the whole ladder: 19 adjacent pairs plus 10 cross-tier braces, budgets at 10%, about 6 minutes on an idle machine (D208). It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
+`calibrate.dart` is the instrument for the whole ladder: 30 adjacent pairs, every non-adjacent within-tier pair, and 10 cross-tier braces — 95 pairs since the roster was recut to thirty-one (D325), budgets at 10%. Budget the better part of an hour, not the six minutes D208 recorded for twenty opponents. It only ever **reports** — when measurement disagrees with a published rating, the configuration changes and the rating does not (D144). `--only <id>` re-measures one opponent against the settled rest, which is what a tuning pass uses.
 
 ## Layout
 
@@ -107,7 +107,7 @@ doc/idea-v1-decisions.md    D01–D217. Every non-obvious choice, with its cost.
 
 **Everything derives from the move list.** `GameState` holds moves plus win state; `outcome()`, statistics, and the computer rating are folds over what is already stored, never a second copy that can drift (spec §7.2, §9.5).
 
-**Bots are data, not classes** (spec §9.4). One `chooseMove` serves all twenty opponents, parameterised by a `BotConfig` in the catalogue in `bot.dart`. Adding an opponent is a catalogue entry. `BotConfig.rating` is an *anchor* that is fixed — when measurement disagrees, the configuration changes, not the rating (D144).
+**Bots are data, not classes** (spec §9.4). One `chooseMove` serves all thirty-one opponents, parameterised by a `BotConfig` in the catalogue in `bot.dart`. Adding an opponent is a catalogue entry. `BotConfig.rating` is an *anchor* that is fixed — when measurement disagrees, the configuration changes, not the rating (D144).
 
 Move selection order in `chooseMove`: book → forced win → strategic rules → `_safeCandidates` (drop moves that hand the opponent a forced win) → search. The defensive forcing search added at `_safeCandidates` is the largest single strength lever measured in this project, ~300 Elo (D169).
 

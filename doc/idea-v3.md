@@ -34,7 +34,7 @@ Quadrim is a two-player game played inside a 4×4×4 cube of 64 cells. Players a
 
 The game is known publicly as Qubic, or 3D tic-tac-toe. It is a solved game: with perfect play the first player wins. This fact shapes several decisions below and is not treated as a defect.
 
-A player can play another human — asynchronously over days, or in real time — or any of twenty computer opponents, each with a name, an avatar, a play style, and a fixed rating. Five of those opponents are available from the first launch; the other fifteen are earned (§7).
+A player can play another human — asynchronously over days, or in real time — or any of thirty-one computer opponents, each with a name, an avatar, a play style, and a fixed rating. Seven of those opponents are available from the first launch; the other twenty-four are earned (§7).
 
 **On the name.** Qubic was a Parker Brothers trade name. This product is called Quadrim; the older name is used descriptively and never as branding.
 
@@ -148,7 +148,7 @@ Three tiers and one permanent unlock, all through the App Store and Google Play.
 |---|---|---|---|
 | First month after first launch | unlimited computer games | — | — |
 | After that | 3 computer games/day, 9/week | unlimited | unlimited |
-| All twenty opponents, tutorial, history, replay, statistics, computer rating, pass-and-play | yes | yes | yes |
+| All thirty-one opponents, tutorial, history, replay, statistics, computer rating, pass-and-play | yes | yes | yes |
 | Accept an invite link or a direct challenge | yes | yes | yes |
 | Concurrent human games | up to 3 | up to 3 | up to 20 |
 | Human rating, earned normally | yes | yes | yes |
@@ -159,7 +159,7 @@ Three tiers and one permanent unlock, all through the App Store and Google Play.
 
 **Tier 3 contains tier 2.** A tier 3 subscriber has no daily cap.
 
-**Unlock all opponents — $4.99, one time.** Opens all twenty opponents immediately and changes nothing else. A buyer still plays three games a day unless they also subscribe. This is deliberate: it is the least powerful thing in the shop, so a one-time purchase at the same headline price as a year of tier 3 cannot undercut it. What it sells is impatience, not capability.
+**Unlock all opponents — $4.99, one time.** Opens all thirty-one opponents immediately and changes nothing else. A buyer still plays three games a day unless they also subscribe. This is deliberate: it is the least powerful thing in the shop, so a one-time purchase at the same headline price as a year of tier 3 cannot undercut it. What it sells is impatience, not capability.
 
 **Tiers 2 and 3 must be two plans of one product**, in a single iOS subscription group and a single Play subscription with two base plans. That is the only mechanism by which "subscribing to tier 3 cancels tier 2" actually happens — the store performs a plan change and prorates the remainder. An app that tries to sell tier 3 as a separate product while cancelling tier 2 itself produces double-billed users and a refund queue, and neither store offers an API that would let it do so correctly.
 
@@ -200,7 +200,7 @@ What survives of it is narrower and true: **no feature is held back, and there a
 
 **The paywall message must name the limit that actually bit.** "You have used this week's nine games" and "come back tomorrow" are different sentences and only one of them is true on a Thursday. Saying the wrong one teaches the player that the app does not know its own rules.
 
-**The meter arrives at 1.0**, with the store products (§12). Before then there is nothing to sell and therefore nothing to meter. 0.1 and 0.2 were built and tested unmetered, which was correct — a tester rate-limited to three games a day cannot give useful feedback about twenty opponents.
+**The meter arrives at 1.0**, with the store products (§12). Before then there is nothing to sell and therefore nothing to meter. 0.1 and 0.2 were built and tested unmetered, which was correct — a tester rate-limited to three games a day cannot give useful feedback about thirty-one opponents.
 
 **The re-cut moved this forward by three releases and that is worth stating rather than absorbing.** Under the old plan the meter arrived at 0.4, well after real players had used the app unmetered and after a fourteen-day closed test had measured whether the ladder brings people back. It now arrives in the first release the public ever sees. So 1.0 launches with no prior public build to compare against, and if retention disappoints there is nothing in the data that separates the ladder from the cap (D302). The tester cohort that precedes 1.0 is the only chance to see the ladder without the meter on top of it — which is an argument for keeping ticket 024's survey, not for dropping it along with the Play requirement that used to force it.
 
@@ -296,7 +296,7 @@ A bot's personality must be **visible at the board**, not only in its descriptio
 
 **Randomness is injected, never ambient.** The engine may not reach for a global random source. A position and a seed always produce the same move — that is what makes the self-play harness and the tests reproducible, and it is worth enforcing mechanically.
 
-**Locking is not an engine concern.** Whether an opponent is available to a given player is a fact about that player, held outside the catalogue. The engine knows twenty configurations and nothing about who has paid for what; the catalogue has no `locked` field. Otherwise the strength harness — which plays all twenty against each other — needs an entitlement it has no business having.
+**Locking is not an engine concern.** Whether an opponent is available to a given player is a fact about that player, held outside the catalogue. The engine knows thirty-one configurations and nothing about who has paid for what; the catalogue has no `locked` field. Otherwise the strength harness — which plays all thirty-one against each other — needs an entitlement it has no business having.
 
 ### 6.2 Strategic rules, evaluated in order
 
@@ -326,61 +326,67 @@ Applied when no strategic rule decides, and as the tie-break within a rule.
 
 ### 6.4 The roster
 
-Twenty opponents across five tiers. **Ratings are fixed anchors.** The `#` column is the roster index, which §7 uses to price both wins and unlocks; it is an ordinal, not a rating, and the two must not be conflated.
+Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` column is the roster index, which §7 uses to price both wins and unlocks; it is an ordinal, not a rating, and the two must not be conflated.
 
-**Novice** — all four free from first launch.
+**Recut from twenty in August 2026 (D325).** The rungs a beginner and an average player are actually on were a hundred points apart and are now forty, which is roughly one honest evening of improvement rather than one week. Eleven opponents were added and several names moved, and **a configuration belongs to a rung rather than to a name**: where a name moved, the strength stayed with the rating and the name inherited whatever the new rung already measured. That is the same rule the avatar order followed in D257, applied to the other half of the pair.
+
+**Novice** — all six free from first launch, along with Bramble.
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
 | 0 | Pebble | 600 | Random legal moves. Never notices a threat. |
 | 1 | Twig | 700 | Random, but takes an immediate win. No blunder rate — its weakness is knowing one rule. |
 | 2 | Mote | 800 | Wins and blocks, 40% blunder rate. |
-| 3 | Clover | 900 | Wins and blocks, 20% blunder rate, drawn to corners. |
+| 3 | Hazel | 850 | The same two rules, 30% blunder rate. |
+| 4 | Clover | 900 | Wins and blocks, 20% blunder rate, drawn to corners. |
+| 5 | Sorrel | 940 | The first that builds a double threat, 18%, drawn to corners. Still cannot see yours. |
 
-**Casual** — all four rules; what separates them is how many good squares they prefer. Bramble is free; the rest are earned.
+**Casual** — all four rules; what separates them is how many good squares they prefer. Bramble is free; the rest are earned. **No opponent in this tier sets aggression** (D314).
 
-| # | Name | Rating | Prefers | Blunder | Aggression |
-|---|---|---|---|---|---|
-| 4 | Bramble | 1000 | none of the sixteen | 0.15 | 0.5 |
-| 5 | Willow | 1100 | the 8 centres | 0.13 | 0.5 |
-| 6 | Vireo | 1200 | all 16, corners first | 0.11 | 0.67 |
-| 7 | Finch | 1250 | all 16, centres first | 0.10 | 0.30 |
-| 8 | Kestrel | 1300 | all 16, centres first | 0.08 | 0.5 |
+| # | Name | Rating | Prefers | Blunder |
+|---|---|---|---|---|
+| 6 | Bramble | 980 | none of the sixteen | 0.15 |
+| 7 | Juniper | 1020 | the 8 corners | 0.145 |
+| 8 | Bracken | 1060 | the 8 centres | 0.14 |
+| 9 | Willow | 1100 | the 8 centres | 0.13 |
+| 10 | Rowan | 1140 | all 16, corners first | 0.125 |
+| 11 | Aspen | 1180 | all 16, centres first | 0.12 |
 
-**Club** — Marlin's rules and full positional ladder, plus a look ahead.
+**Club** — sixteen good squares throughout, and at its top the building term, which is the lever that separates it from Casual rather than another point of accuracy.
 
-| # | Name | Rating | Configuration |
-|---|---|---|---|
-| 9 | Marlin | 1400 | Full positional ladder including the building term, 6% blunder rate, no search |
-| 10 | Ember | 1500 | 2-ply, aggressive weighting, 5% |
-| 11 | Basalt | 1550 | 2-ply, defensive weighting, 4% |
-| 12 | Onyx | 1650 | 4-ply, 3% |
-| 13 | Sable | 1700 | 4-ply plus threat-space search, 2% |
+| # | Name | Rating | Prefers | Blunder |
+|---|---|---|---|---|
+| 12 | Vireo | 1220 | all 16, corners first | 0.11 |
+| 13 | Finch | 1260 | all 16, centres first | 0.10 |
+| 14 | Kestrel | 1300 | all 16, centres first | 0.08 |
+| 15 | Osprey | 1340 | 16 plus the building term | 0.075 |
+| 16 | Heron | 1380 | 16, classes further apart, more building | 0.07 |
+| 17 | Marlin | 1420 | the full positional ladder | 0.06 |
 
-**Expert** — budgets in nodes rather than plies, because how deep a budget reaches depends on the position.
-
-| # | Name | Rating | Configuration |
-|---|---|---|---|
-| 14 | Corvus | 1800 | 500k nodes, transposition table, 1.5% |
-| 15 | Lyra | 1900 | 900k nodes, deeper threat search, first with a **defensive** forcing search, 1% |
-| 16 | Quartz | 2000 | 1.8M nodes, deeper defence, 0.5% |
-| 17 | Titan | 2100 | 2.5M nodes, exact solving below 10 empty cells, unstarved defence, no deliberate blunders |
-
-**Master** — the first opponents that stop estimating and start knowing.
+**Expert** — the searching opponents. What separates them is how far they look, at what, and with which temperament.
 
 | # | Name | Rating | Configuration |
 |---|---|---|---|
-| 18 | Oracle | 2300 | Plays the book from move one. Unbeatable when it opens; Expert-tier machinery from the second seat |
-| 19 | Quadrim Prime | 2400 | The same book, and the largest configuration in the catalogue from the second seat |
+| 18 | Lynx | 1460 | No ordinary search; two moves of forcing search, 5.5% |
+| 19 | Sable | 1500 | 2-ply, aggressive weighting, 5% |
+| 20 | Ember | 1540 | 3-ply plus a 3-move forcing search, defensive weighting, 4% |
+| 21 | Lyra | 1580 | 3-ply, 4-move forcing search, even-handed, 3.5% |
+| 22 | Onyx | 1640 | 3-ply, 6-move forcing search, 3% |
+| 23 | Corvus | 1700 | 4-ply plus a 9-move forcing search, 2% |
 
-**The free five are exactly those rated 1000 and below.** That is a rule about the roster, not a count: if a future roster revision changes the ratings, the free set changes with it, and nothing anywhere hard-codes "five".
+**Master** — budgets in nodes rather than plies, because how deep a budget reaches depends on the position; and at the top, the two that stop estimating and start knowing.
 
-Every opponent has an avatar and a one-line personality blurb, translated. **Bot names are not translated.** Tier names carry a plain-language description, because "Club" means nothing to someone who has not played rated games.
+| # | Name | Rating | Configuration |
+|---|---|---|---|
+| 24 | Basalt | 1800 | 500k nodes, transposition table, 1.5% |
+| 25 | Cairn | 1900 | 900k nodes, deeper threat search, first with a **defensive** forcing search, 1% |
+| 26 | Flint | 2000 | 1.8M nodes, deeper defence, 0.5% |
+| 27 | Quartz | 2100 | 2.5M nodes, exact solving below 10 empty cells, unstarved defence, no deliberate blunders |
+| 28 | Titan | 2200 | 3M nodes, 11 empty cells solved exactly, the strongest opponent that plays no book |
+| 29 | Oracle | 2300 | Plays the book from move one. Unbeatable when it opens; the searching machinery of the rungs below from the second seat |
+| 30 | Quadrim Prime | 2400 | The same book, and the largest configuration in the catalogue from the second seat |
 
-**Tier is stored on the opponent, not derived from its rating**, even though the five tiers occupy contiguous bands today. A tier is what an opponent *is*; a rating is how strong it measured. Deriving one from the other means a recalibration silently reclassifies an opponent.
-
-**Generate avatars from the opponent's id** rather than shipping twenty image files. A deterministic pattern from the id gives twenty distinguishable faces, costs no download, and cannot go stale when a name changes.
-
+**Every rating above is an anchor, and eleven of them have not been measured yet.** The new rungs and the reshuffled ones are a principled first ladder rather than a calibrated one; `calibrate.dart` is what settles them, and when it disagrees the configuration changes and the rating does not (D144).
 ### 6.5 What actually makes an opponent strong
 
 Measured, in descending order of effect. This is the part of the document a rebuilder should read twice.
@@ -436,7 +442,7 @@ Run calibration at a **reduced node budget** — a tenth — so it finishes in m
 1. **A budget scaled to zero changes what an opponent *is*.** If move selection branches on `nodeBudget > 0`, a budget rounded away does not make an opponent think briefly — it stops it searching at all, while the report still carries its name. Clamp a non-zero budget to a minimum of one.
 2. **A reduced budget is unfair across the ply/nodes boundary.** It trims a ply-limited opponent not at all and takes nine tenths off a node-limited one. Such a pair is not a fair fight and its result is a property of the tool. Detect the mismatch and refuse to call it a defect — one of our three reported "inversions" was entirely this.
 3. **A swept pair has no finite implied difference.** Clamp the score half a game off the end and mark the result as a bound rather than a value, or the average silently understates whichever side did the sweeping.
-4. **Report measured-against-published; never fit a fresh scale.** A least-squares fit over the whole graph answers "what scale best explains these results", which quietly moves all twenty anchors at once and produces a self-consistent ladder that no longer means what the player was told. Anchor each estimate on the *other* side's published rating.
+4. **Report measured-against-published; never fit a fresh scale.** A least-squares fit over the whole graph answers "what scale best explains these results", which quietly moves all thirty-one anchors at once and produces a self-consistent ladder that no longer means what the player was told. Anchor each estimate on the *other* side's published rating.
 
 An inversion is a configuration defect, not noise. Chase every one to a cause.
 
@@ -546,7 +552,7 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 **Every quest is priced by the opponents it was earned against, never by how high the player has climbed.** That is one rule for all four families, and it is the rule §7.2 already applies to a plain win: points measure the strength of what you played, not who you are.
 
 - **A per-opponent quest pays one win against that opponent** — 2ⁱ for opponent *i*, fixed by the roster and worth the same whenever it is claimed.
-- **A volume or streak quest pays its multiple of a win against the average of the games that earned it**, where the average is taken over the **roster index** and rounded to the nearest opponent. Twenty games averaging index 8 pay as one win against Kestrel; twenty games against Pebble pay as one win against Pebble.
+- **A volume or streak quest pays its multiple of a win against the average of the games that earned it**, where the average is taken over the **roster index** and rounded to the nearest opponent. Twenty games averaging index 14 pay as one win against Kestrel; twenty games against Pebble pay as one win against Pebble.
 
 **Average the index, not the payout.** Because payouts double, an arithmetic mean of them is dominated by the single strongest game in the set: nineteen Pebble games and one Titan game average 6,555 points, which prices twenty games at roughly a Corvus win on the strength of one of them. Averaging the index and then exponentiating — the geometric mean — gives 2 points for the same set, which is what nineteen trivial games and one real one are actually worth. Round the mean index to the nearest opponent so the result is nameable: the interface can say *your twenty games averaged Kestrel*, which is a sentence, where a fractional exponent is not.
 
@@ -658,9 +664,9 @@ Top to bottom:
 
 ### 8.4 Your path
 
-Replaces v2's by-opponent breakdown, which listed all twenty weakest-first and answered a question nobody was asking. This one answers "where am I, and who is next".
+Replaces v2's by-opponent breakdown, which listed all thirty-one weakest-first and answered a question nobody was asking. This one answers "where am I, and who is next".
 
-**A horizontally scrollable row of the whole roster, resting on the opponent the player is climbing toward.** Three tiles are visible at a time and the row starts scrolled so that the middle one is the **lowest-rated opponent rated above the player's rating** — Clover at 900 for a player seeded at 800. The player can scroll left through everyone they have beaten and right through everyone they have not, all twenty, in roster order. Each tile stacks vertically:
+**A horizontally scrollable row of the whole roster, resting on the opponent the player is climbing toward.** Three tiles are visible at a time and the row starts scrolled so that the middle one is the **lowest-rated opponent rated above the player's rating** — Hazel at 850 for a player seeded at 800. The player can scroll left through everyone they have beaten and right through everyone they have not, all thirty-one, in roster order. Each tile stacks vertically:
 
 - a full-tile-width avatar
 - the name
@@ -831,7 +837,7 @@ The mockup draws things this release does not have — a "today's journey" panel
 
 **The frame.** A sunlit forest is painted behind a transparent scaffold on every screen and does not scroll — it is a place the app is in, not a thing on a page. On it sit two kinds of card: one dark green panel for the rating, which is the screen's headline number, and parchment for everything else. The main screen is a stack of short cards on the forest; every other screen puts a single sheet of parchment under its whole body, because ink over a photograph of leaves is unreadable at any size.
 
-**Portraits.** Each of the twenty opponents has a painted portrait, drawn in a circle with a gold ring. A locked opponent is drawn as a **silhouette** rather than dimmed: what has not been bought has not been met (D291).
+**Portraits.** Each of the thirty-one opponents has a painted portrait, drawn in a circle with a gold ring. A locked opponent is drawn as a **silhouette** rather than dimmed: what has not been bought has not been met (D291).
 
 **Carved wood.** New Game and Tutorial are wooden signs rather than buttons, pinned below the scroll so the primary action never scrolls away. **Every section heading is a carved sign too** — the words are written on the wood by the app rather than painted into it, so they are localised, and which of two planks a heading gets depends on how long it is rather than on which section it is (D297). Your Path's sign hangs off its card's top-left corner, its top fifth above the card.
 
@@ -887,7 +893,7 @@ Flutter for the client. **Android first; iOS from 1.0** (§12). Firebase for the
 
 The progression maths — point values, unlock costs, quest multiples, star thresholds — belongs in a pure package of its own, `quadrim_progression`, under the same rules. It is arithmetic over stored records, it needs to be exhaustively testable, and it must not acquire a clock. Streak evaluation *does* need a calendar, so **the day boundary is passed in, never read**.
 
-**Not in the engine package, by the engine's own rule.** §6.1 says locking is not an engine concern and the catalogue carries no `locked` field, because the strength harness plays all twenty against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost sits on the other side of that line. It does need the roster index, so it depends on the engine package — the one inter-package dependency in the project, running in the allowed direction.
+**Not in the engine package, by the engine's own rule.** §6.1 says locking is not an engine concern and the catalogue carries no `locked` field, because the strength harness plays all thirty-one against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost sits on the other side of that line. It does need the roster index, so it depends on the engine package — the one inter-package dependency in the project, running in the allowed direction.
 
 **Enforce that mechanically.** Ours is a grep in the build gate over each package's manifest and imports. Purity that is merely intended lasts until the first convenient import.
 
@@ -963,7 +969,7 @@ Four places must agree: the application id, the build namespace, the source pack
 
 | Release | Contains | Platforms | Public |
 |---|---|---|---|
-| **0.1** | The complete offline game: board, all twenty opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
+| **0.1** | The complete offline game: board, all thirty-one opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
 | **0.2** | Real art, polish | Android | no |
 | **1.0** | **iOS, with no new gameplay.** The one-time unlock, the tier-2 subscription and the meter, with entitlement read on the device. The Casual-tier roster fix | **+ iOS** | **first public release** |
 | **2.0** | Accounts and the cloud repository; async online play, free; invite links; push; chat with block, report and name validation; account deletion; privacy policy. Entitlement and the meter move to the server | Android + iOS | yes |
@@ -997,7 +1003,7 @@ Four places must agree: the application id, the build namespace, the source pack
 1. The 76-line table is generated once, and win detection returns the specific completed line. Verified exhaustively.
 2. A game can be played to a win and to a draw in all four modes.
 3. Client and validating function agree on every move of a shared corpus of full games.
-4. All twenty opponents exist, are distinguishable in play, and are calibrated by a self-play harness that reports measured against published strength.
+4. All thirty-one opponents exist, are distinguishable in play, and are calibrated by a self-play harness that reports measured against published strength.
 5. The top opponent's advertised strength matches what it delivers, and the interface never claims perfection it cannot deliver from both seats.
 6. Both ratings update correctly and independently — provisional K, draws, forfeits, the floor. The computer rating is derived from stored games, never stored, and never leaves the device; the human rating is never written by a client.
 7. **Points, unlocks, quests and streaks are correct**: a win pays 2ⁱ, an unlock costs 2ⁱ⁺¹ and is available only in roster order, the balance is earned minus prices actually paid, and every quest fires exactly once. **No quest reward anywhere depends on the player's own rung** — a per-opponent quest pays that opponent's index, and a volume or streak quest pays the rounded mean index of the games that earned it. A hundred games against Pebble in one day pay four points, and deferring a first win against a weak opponent earns nothing extra.

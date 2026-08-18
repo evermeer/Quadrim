@@ -32,12 +32,12 @@ QuestStatus _status(List<ScoredGame> games, String id) =>
 
 void main() {
   group('the catalogue', () {
-    test('is fifty-three quests across four families', () {
-      expect(questCatalogue, hasLength(53));
+    test('is seventy-five quests across four families', () {
+      expect(questCatalogue, hasLength(75));
       int count(QuestFamily f) =>
           questCatalogue.where((q) => q.family == f).length;
-      expect(count(QuestFamily.firstWin), 20);
-      expect(count(QuestFamily.firstWinSecond), 20);
+      expect(count(QuestFamily.firstWin), 31);
+      expect(count(QuestFamily.firstWinSecond), 31);
       expect(count(QuestFamily.gamesInDay), 5);
       expect(count(QuestFamily.consecutiveDays), 8);
     });
@@ -45,7 +45,7 @@ void main() {
     test(
       'every id is distinct, because progress is ranked and diffed by it',
       () {
-        expect(questCatalogue.map((q) => q.id).toSet(), hasLength(53));
+        expect(questCatalogue.map((q) => q.id).toSet(), hasLength(75));
       },
     );
 
@@ -140,13 +140,16 @@ void main() {
   group('the second-player family', () {
     test('needs a win from the second seat, which the first-win family does '
         'not', () {
+      // Index 6 is Bramble since the roster was recut; it was Vireo (D325).
+      // The quest ids are built from the catalogue, so the name has to follow
+      // the index rather than the other way round.
       final first = [_game(6, second: false)];
-      expect(_status(first, 'first_win:vireo').achieved, isTrue);
-      expect(_status(first, 'first_win_second:vireo').achieved, isFalse);
+      expect(_status(first, 'first_win:bramble').achieved, isTrue);
+      expect(_status(first, 'first_win_second:bramble').achieved, isFalse);
 
       final second = [_game(6, second: true)];
-      expect(_status(second, 'first_win_second:vireo').achieved, isTrue);
-      expect(_status(second, 'first_win_second:vireo').award, winValue(6));
+      expect(_status(second, 'first_win_second:bramble').achieved, isTrue);
+      expect(_status(second, 'first_win_second:bramble').award, winValue(6));
     });
 
     test('a loss from the second seat achieves nothing', () {
@@ -374,7 +377,7 @@ void main() {
       // Carried by the types: the only inputs are a quest, a list of games and
       // a day boundary. There is nowhere to pass the player's height even by
       // mistake, which is the point of D261 and D270.
-      expect(questStatuses(const [], today: _today), hasLength(53));
+      expect(questStatuses(const [], today: _today), hasLength(75));
       expect(closestQuests(const []), isEmpty);
       expect(newlyAchieved(const [], const []), isEmpty);
     });

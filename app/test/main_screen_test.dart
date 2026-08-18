@@ -373,8 +373,8 @@ void main() {
       await tester.pumpWidget(_game(repo, game.id));
       await tester.pumpAndSettle();
 
-      // Bramble is roster index 4, so a win pays sixteen.
-      expect(find.text('+16 points'), findsOneWidget);
+      // Bramble is roster index 6 since the recut, so a win pays 64.
+      expect(find.text('+64 points'), findsOneWidget);
     });
 
     testWidgets('a loss pays nothing and says nothing about points',
@@ -408,7 +408,7 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      // Willow costs 64: four Bramble wins at sixteen each.
+      // Juniper costs 256: four Bramble wins at sixty-four each.
       for (var i = 0; i < 3; i++) {
         await _play(repo, botId: 'bramble');
       }
@@ -416,10 +416,10 @@ void main() {
       await tester.pumpWidget(_game(repo, last.id));
       await tester.pumpAndSettle();
 
-      expect(find.text('You can now unlock Willow.'), findsOneWidget);
+      expect(find.text('You can now unlock Juniper.'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock Willow?'), findsOneWidget);
+      expect(find.text('Unlock Juniper?'), findsOneWidget);
     });
 
     testWidgets('does not offer it again on the next win', (tester) async {

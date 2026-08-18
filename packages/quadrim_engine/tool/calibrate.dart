@@ -126,7 +126,7 @@ List<(BotConfig, BotConfig)> _withinTierPairs() {
 
 /// One pair per tier combination, to tie the chain down at longer range.
 ///
-/// A chain of adjacent measurements can drift: nineteen small errors in the
+/// A chain of adjacent measurements can drift: thirty small errors in the
 /// same direction accumulate into one large one, and nothing in the chain
 /// itself would show it. These ten pairs are the cross-braces.
 List<(BotConfig, BotConfig)> _crossTierPairs() {

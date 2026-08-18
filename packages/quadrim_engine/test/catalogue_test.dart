@@ -4,32 +4,47 @@ import 'package:test/test.dart';
 /// The tiers of spec §8.5, written out rather than derived, so that this test
 /// disagrees with the catalogue when either one moves. Deriving the expectation
 /// from `opponentCatalogue` would make it agree with itself forever (D179).
+///
+/// Thirty-one since the roster was recut (D325): six rungs in each of the first
+/// four tiers and seven in the last, so that the climb a beginner is actually
+/// on has a step every forty points instead of every hundred.
 const Map<String, BotTier> _tiers = {
   'pebble': BotTier.novice,
   'twig': BotTier.novice,
   'mote': BotTier.novice,
+  'hazel': BotTier.novice,
   'clover': BotTier.novice,
+  'sorrel': BotTier.novice,
   'bramble': BotTier.casual,
+  'juniper': BotTier.casual,
+  'bracken': BotTier.casual,
   'willow': BotTier.casual,
-  'vireo': BotTier.casual,
-  'finch': BotTier.casual,
-  'kestrel': BotTier.casual,
+  'rowan': BotTier.casual,
+  'aspen': BotTier.casual,
+  'vireo': BotTier.club,
+  'finch': BotTier.club,
+  'kestrel': BotTier.club,
+  'osprey': BotTier.club,
+  'heron': BotTier.club,
   'marlin': BotTier.club,
-  'ember': BotTier.club,
-  'basalt': BotTier.club,
-  'onyx': BotTier.club,
-  'sable': BotTier.club,
-  'corvus': BotTier.expert,
+  'lynx': BotTier.expert,
+  'sable': BotTier.expert,
+  'ember': BotTier.expert,
   'lyra': BotTier.expert,
-  'quartz': BotTier.expert,
-  'titan': BotTier.expert,
+  'onyx': BotTier.expert,
+  'corvus': BotTier.expert,
+  'basalt': BotTier.master,
+  'cairn': BotTier.master,
+  'flint': BotTier.master,
+  'quartz': BotTier.master,
+  'titan': BotTier.master,
   'oracle': BotTier.master,
   'quadrim_prime': BotTier.master,
 };
 
 void main() {
-  test('the catalogue is the twenty opponents of the specification', () {
-    expect(opponentCatalogue.length, 20);
+  test('the catalogue is the thirty-one opponents of the specification', () {
+    expect(opponentCatalogue.length, 31);
     expect(
       opponentCatalogue.map((b) => b.id).toSet(),
       _tiers.keys.toSet(),
@@ -42,17 +57,17 @@ void main() {
     }
   });
 
-  test('the tier counts are 4 / 5 / 5 / 4 / 2', () {
+  test('the tier counts are 6 / 6 / 6 / 6 / 7', () {
     // Named separately from the map above because the specification states the
     // shape of the ladder as well as its membership, and a pair of typos that
     // moved one opponent between tiers would satisfy the per-opponent check
     // if the map were the only source.
     const expected = {
-      BotTier.novice: 4,
-      BotTier.casual: 5,
-      BotTier.club: 5,
-      BotTier.expert: 4,
-      BotTier.master: 2,
+      BotTier.novice: 6,
+      BotTier.casual: 6,
+      BotTier.club: 6,
+      BotTier.expert: 6,
+      BotTier.master: 7,
     };
     for (final tier in BotTier.values) {
       expect(

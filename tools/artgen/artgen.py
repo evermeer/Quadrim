@@ -16,10 +16,10 @@ failure that would actually reach a player (see `art_assets_test.dart`).
 The three things it does that are not just resizing:
 
 * **Avatars are cut to a circle.** The source is a 1254x1254 opaque square with
-  the character inscribed in a disc; thirteen have white corners and seven have
-  black. Masking the disc discards both, so twenty files that were authored two
-  different ways become one uniform set, and the locked silhouette can then be
-  a runtime colour filter over the alpha rather than a second set of files.
+  the character inscribed in a disc; twelve have white corners and nineteen have
+  black. Masking the disc discards both, so thirty-one files that were authored
+  two different ways become one uniform set, and the locked silhouette can then
+  be a runtime colour filter over the alpha rather than a second set of files.
 * **The cube's edges are faded.** It is a full-bleed forest scene and it has to
   sit inside the rating panel without a seam, so alpha falls off over the outer
   third.
@@ -52,31 +52,44 @@ ANDROID_RES = ROOT / "app" / "android" / "app" / "src" / "main" / "res"
 # The mockup's panel green, behind the launcher icon (Design-alt0.png).
 ICON_BACKGROUND = (28, 50, 32)
 
-# Source filename -> bot id. Two of the twenty were delivered misspelt and the
-# id is what the catalogue says, so the mapping lives here rather than in a
-# rename nobody would find later.
-OPPONENTS = {
-    "peble": "pebble",
-    "twig": "twig",
-    "mote": "mote",
-    "clover": "clover",
-    "bramble": "bramble",
-    "willow": "willow",
-    "vireo": "vireo",
-    "finch": "finch",
-    "kestrel": "kestrel",
-    "marlin": "marlin",
-    "ember": "ember",
-    "basalt": "basalt",
-    "onyx": "onyx",
-    "sable": "sable",
-    "corvus": "corvus",
-    "lyra": "lyra",
-    "quarts": "quartz",
-    "titan": "titan",
-    "oracle": "oracle",
-    "quadrim_prime": "quadrim_prime",
-}
+# Every avatar, by catalogue id. The source file is `<id>.png`, which it was
+# not always: `peble.png` and `quarts.png` were delivered misspelt and the
+# script carried a filename-to-id mapping to paper over it. The files are now
+# named after the ids, so the mapping is gone and this is just the roster
+# (D324). `art_assets_test.dart` is what checks that every id has a file.
+OPPONENTS = [
+    "pebble",
+    "twig",
+    "mote",
+    "hazel",
+    "clover",
+    "sorrel",
+    "bramble",
+    "juniper",
+    "bracken",
+    "willow",
+    "rowan",
+    "aspen",
+    "vireo",
+    "finch",
+    "kestrel",
+    "osprey",
+    "heron",
+    "marlin",
+    "lynx",
+    "sable",
+    "ember",
+    "lyra",
+    "onyx",
+    "corvus",
+    "basalt",
+    "cairn",
+    "flint",
+    "quartz",
+    "titan",
+    "oracle",
+    "quadrim_prime",
+]
 
 # Every avatar is drawn at this size. The largest the app draws one is 200dp on
 # the opponent page, so 512 covers a 2.5x phone exactly and a 3x one within a
@@ -129,8 +142,8 @@ def _to_rgba(im: Image.Image, alpha: np.ndarray) -> Image.Image:
 
 def opponents() -> None:
     print("avatars")
-    for source, bot in OPPONENTS.items():
-        im = _load(source)
+    for bot in OPPONENTS:
+        im = _load(bot)
         size = im.width
         # The disc is inscribed and antialiases out to the edge, so the mask
         # holds to 0.985 of the half-width and feathers over the last 1.5%.

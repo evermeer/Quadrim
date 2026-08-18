@@ -512,6 +512,72 @@ abstract class AppLocalizations {
   /// **'Oracle'**
   String get botOracle;
 
+  /// No description provided for @botHazel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hazel'**
+  String get botHazel;
+
+  /// No description provided for @botSorrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorrel'**
+  String get botSorrel;
+
+  /// No description provided for @botJuniper.
+  ///
+  /// In en, this message translates to:
+  /// **'Juniper'**
+  String get botJuniper;
+
+  /// No description provided for @botBracken.
+  ///
+  /// In en, this message translates to:
+  /// **'Bracken'**
+  String get botBracken;
+
+  /// No description provided for @botRowan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rowan'**
+  String get botRowan;
+
+  /// No description provided for @botAspen.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspen'**
+  String get botAspen;
+
+  /// No description provided for @botOsprey.
+  ///
+  /// In en, this message translates to:
+  /// **'Osprey'**
+  String get botOsprey;
+
+  /// No description provided for @botHeron.
+  ///
+  /// In en, this message translates to:
+  /// **'Heron'**
+  String get botHeron;
+
+  /// No description provided for @botLynx.
+  ///
+  /// In en, this message translates to:
+  /// **'Lynx'**
+  String get botLynx;
+
+  /// No description provided for @botCairn.
+  ///
+  /// In en, this message translates to:
+  /// **'Cairn'**
+  String get botCairn;
+
+  /// No description provided for @botFlint.
+  ///
+  /// In en, this message translates to:
+  /// **'Flint'**
+  String get botFlint;
+
   /// No description provided for @botQuadrimPrime.
   ///
   /// In en, this message translates to:
@@ -665,19 +731,19 @@ abstract class AppLocalizations {
   /// No description provided for @blurbMarlin.
   ///
   /// In en, this message translates to:
-  /// **'Plays for good squares as well as good moves. The first real test.'**
+  /// **'The full positional game, and hardly a wasted move. The first real test.'**
   String get blurbMarlin;
 
   /// No description provided for @blurbEmber.
   ///
   /// In en, this message translates to:
-  /// **'Looks a move ahead, and spends it on attack.'**
+  /// **'Looks a move ahead, and spends it on defence.'**
   String get blurbEmber;
 
   /// No description provided for @blurbBasalt.
   ///
   /// In en, this message translates to:
-  /// **'Looks a move ahead, and spends it on defence.'**
+  /// **'Calculates hard, and remembers what it has already worked out.'**
   String get blurbBasalt;
 
   /// No description provided for @blurbOnyx.
@@ -689,13 +755,13 @@ abstract class AppLocalizations {
   /// No description provided for @blurbSable.
   ///
   /// In en, this message translates to:
-  /// **'Hunts for the double threat that cannot be answered.'**
+  /// **'Looks a move ahead, and spends it on attack.'**
   String get blurbSable;
 
   /// No description provided for @blurbCorvus.
   ///
   /// In en, this message translates to:
-  /// **'Calculates hard, and remembers what it has already worked out.'**
+  /// **'Hunts for the double threat that cannot be answered.'**
   String get blurbCorvus;
 
   /// No description provided for @blurbLyra.
@@ -707,14 +773,80 @@ abstract class AppLocalizations {
   /// No description provided for @blurbQuartz.
   ///
   /// In en, this message translates to:
-  /// **'Thinks further ahead the longer it is given. Hard to surprise.'**
+  /// **'Searches deeply and plays the endgame out exactly, never guessing.'**
   String get blurbQuartz;
 
   /// No description provided for @blurbTitan.
   ///
   /// In en, this message translates to:
-  /// **'Searches deeply and plays the endgame out exactly, never guessing.'**
+  /// **'The deepest calculation on the ladder that plays from no book at all.'**
   String get blurbTitan;
+
+  /// No description provided for @blurbHazel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sees wins and blocks a little more often than Mote does.'**
+  String get blurbHazel;
+
+  /// No description provided for @blurbSorrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Has learned to set a trap. Has not learned to spot yours.'**
+  String get blurbSorrel;
+
+  /// No description provided for @blurbJuniper.
+  ///
+  /// In en, this message translates to:
+  /// **'Knows all the basics, and heads for the corners.'**
+  String get blurbJuniper;
+
+  /// No description provided for @blurbBracken.
+  ///
+  /// In en, this message translates to:
+  /// **'Knows all the basics, and heads for the middle.'**
+  String get blurbBracken;
+
+  /// No description provided for @blurbRowan.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants every good square, corners first, and still drops one now and then.'**
+  String get blurbRowan;
+
+  /// No description provided for @blurbAspen.
+  ///
+  /// In en, this message translates to:
+  /// **'Takes the middle of the cube, then the corners. Occasionally careless.'**
+  String get blurbAspen;
+
+  /// No description provided for @blurbOsprey.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays on the lines it is already building, not only on good squares.'**
+  String get blurbOsprey;
+
+  /// No description provided for @blurbHeron.
+  ///
+  /// In en, this message translates to:
+  /// **'Builds patiently, and waits for you to leave a line open.'**
+  String get blurbHeron;
+
+  /// No description provided for @blurbLynx.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks ahead only for its own forced win, and it finds them.'**
+  String get blurbLynx;
+
+  /// No description provided for @blurbCairn.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks what its own move gives away before it plays it.'**
+  String get blurbCairn;
+
+  /// No description provided for @blurbFlint.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinks further ahead the longer it is given. Hard to surprise.'**
+  String get blurbFlint;
 
   /// Oracle and Quadrim Prime both play from a strategy proven for the first player only. The blurb must state that asymmetry rather than claim perfection outright (D181).
   ///

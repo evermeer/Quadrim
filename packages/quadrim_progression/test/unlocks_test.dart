@@ -36,12 +36,12 @@ void main() {
     test('is the first opponent above the free ceiling, on a fresh install',
         () {
       final next = nextUnlockIndex(const {});
-      expect(next, 5);
-      expect(opponentCatalogue[next!].id, 'willow');
+      expect(next, 7);
+      expect(opponentCatalogue[next!].id, 'juniper');
     });
 
     test('advances by exactly one as each is bought', () {
-      for (var i = 5; i < opponentCatalogue.length; i++) {
+      for (var i = 7; i < opponentCatalogue.length; i++) {
         expect(nextUnlockIndex(_unlockedUpTo(i - 1)), i, reason: 'after $i');
       }
     });
@@ -51,7 +51,7 @@ void main() {
           isNull);
     });
 
-    test('the free five need no unlock record to be playable', () {
+    test('the free set needs no unlock record to be playable', () {
       for (final bot in opponentCatalogue.where(isFree)) {
         expect(isUnlocked(bot.id, const {}), isTrue, reason: bot.id);
       }
@@ -66,19 +66,19 @@ void main() {
 
     test('a record for an opponent this build does not know is ignored', () {
       expect(isUnlocked('deleted_bot', const {'deleted_bot'}), isTrue);
-      expect(nextUnlockIndex(const {'deleted_bot'}), 5);
+      expect(nextUnlockIndex(const {'deleted_bot'}), 7);
     });
 
     test('a hand-edited gap resolves to the lowest locked index rather than '
         'jamming the ladder', () {
       // No code path produces this; a hand-edited document could.
-      expect(nextUnlockIndex({_idAt(9), _idAt(12)}), 5);
+      expect(nextUnlockIndex({_idAt(9), _idAt(12)}), 7);
     });
   });
 
   group('the Your Path window', () {
     test('is always three tiles wide, at every position', () {
-      for (var next = 5; next < opponentCatalogue.length; next++) {
+      for (var next = 7; next < opponentCatalogue.length; next++) {
         expect(pathWindow(next).length, 3, reason: 'next=$next');
       }
       expect(pathWindow(null).length, 3);
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('stays inside the catalogue at both ends', () {
-      for (var next = 5; next < opponentCatalogue.length; next++) {
+      for (var next = 7; next < opponentCatalogue.length; next++) {
         for (final i in pathWindow(next)) {
           expect(i, inInclusiveRange(0, opponentCatalogue.length - 1));
         }
@@ -107,9 +107,12 @@ void main() {
       expect(pathWindow(null), [last - 2, last - 1, last]);
     });
 
-    test('on a fresh install shows Bramble, Willow and Vireo', () {
-      expect([for (final i in pathWindow(5)) _idAt(i)],
-          ['bramble', 'willow', 'vireo']);
+    test('on a fresh install shows Bramble, Juniper and Bracken', () {
+      // The first locked rung is index 7 since the recut, not 5 (D325): the
+      // free set is defined by the 1000 ceiling and the recut put two more
+      // opponents under it.
+      expect([for (final i in pathWindow(7)) _idAt(i)],
+          ['bramble', 'juniper', 'bracken']);
     });
 
     test('is never centred on the rating ladder — a player seeded at 800 sees '
@@ -121,7 +124,7 @@ void main() {
     });
 
     test('always contains three distinct, ascending indices', () {
-      for (var next = 5; next < opponentCatalogue.length; next++) {
+      for (var next = 7; next < opponentCatalogue.length; next++) {
         final w = pathWindow(next);
         expect(w[1], w[0] + 1);
         expect(w[2], w[1] + 1);

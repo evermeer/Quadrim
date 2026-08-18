@@ -12,9 +12,9 @@ void main() {
       }
     });
 
-    test('Pebble pays 1 and Quadrim Prime pays 524,288', () {
+    test('Pebble pays 1 and Quadrim Prime pays 1,073,741,824', () {
       expect(winValue(0), 1);
-      expect(winValue(19), 524288);
+      expect(winValue(30), 1073741824);
     });
 
     test('every rung down halves the payout, which is what prices grinding '
@@ -39,17 +39,23 @@ void main() {
     });
 
     test(
-      'the whole roster is 2,097,088 points, which is exactly sixty wins',
+      'the whole roster is 4,294,967,040 points, which is exactly ninety-six '
+      'wins',
       () {
-        expect(fullRosterCost, 2097088);
-        // Sixty is the number to reason about; the totals are display. It is
-        // four wins at each of the fifteen locked rungs, not sixty wins at any
-        // one of them, so it is checked as the sum it actually is.
+        expect(fullRosterCost, 4294967040);
+        // Ninety-six is the number to reason about; the totals are display. It
+        // is four wins at each of the twenty-four locked rungs, not ninety-six
+        // wins at any one of them, so it is checked as the sum it actually is.
+        //
+        // Both numbers moved when the roster was recut from twenty rungs to
+        // thirty-one (D325). The total is unreadable and always was; what a
+        // player experiences is the four wins per rung, and that is the number
+        // the recut had to preserve.
         var wins = 0;
         for (var i = 0; i < opponentCatalogue.length; i++) {
           if (!isFree(opponentCatalogue[i])) wins += 4;
         }
-        expect(wins, 60);
+        expect(wins, 96);
       },
     );
   });
@@ -61,13 +67,15 @@ void main() {
       }
     });
 
-    test('is five opponents today — asserted as an observation, never as a '
+    test('is seven opponents today — asserted as an observation, never as a '
         'constant the code depends on', () {
       expect(opponentCatalogue.where(isFree).map((b) => b.id), [
         'pebble',
         'twig',
         'mote',
+        'hazel',
         'clover',
+        'sorrel',
         'bramble',
       ]);
     });
@@ -105,7 +113,7 @@ void main() {
     test('an unknown opponent id has no index rather than index zero', () {
       expect(rosterIndexOf('nobody'), isNull);
       expect(rosterIndexOf('pebble'), 0);
-      expect(rosterIndexOf('quadrim_prime'), 19);
+      expect(rosterIndexOf('quadrim_prime'), 30);
     });
 
     test('every catalogue id round-trips through its index', () {
@@ -195,9 +203,10 @@ void main() {
 
       // What the doubling actually prices out is grinding the bottom for the
       // *top*, and it does so by a factor nobody argues with.
-      expect(unlockCost(19) ~/ winValue(0), 1048576);
-      // The same unlock, bought one rung down instead of twenty: four games.
-      expect(unlockCost(19) ~/ winValue(18), 4);
+      expect(unlockCost(30) ~/ winValue(0), 2147483648);
+      // The same unlock, bought one rung down instead of thirty-one: four
+      // games.
+      expect(unlockCost(30) ~/ winValue(29), 4);
     });
   });
 

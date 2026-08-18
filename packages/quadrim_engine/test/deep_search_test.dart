@@ -303,13 +303,17 @@ void main() {
     });
   });
 
-  group('the Expert tier', () {
-    test('the four exist, with budgets in nodes and rising strength', () {
-      expect([corvus.id, lyra.id, quartz.id, titan.id],
-          ['corvus', 'lyra', 'quartz', 'titan']);
-      expect([corvus.rating, lyra.rating, quartz.rating, titan.rating],
-          [1800, 1900, 2000, 2100]);
-      for (final bot in [corvus, lyra, quartz, titan]) {
+  group('the budgeted opponents', () {
+    // Iterative deepening under a node budget, which is what the top of the
+    // ladder is made of. They were the Expert tier and are now the bottom of
+    // Master, one name lower each: the configurations moved with the rungs
+    // rather than with the names (D325).
+    test('they exist, with budgets in nodes and rising strength', () {
+      expect([basalt.id, cairn.id, flint.id, quartz.id, titan.id],
+          ['basalt', 'cairn', 'flint', 'quartz', 'titan']);
+      expect([basalt.rating, cairn.rating, flint.rating, quartz.rating,
+        titan.rating], [1800, 1900, 2000, 2100, 2200]);
+      for (final bot in [basalt, cairn, flint, quartz, titan]) {
         expect(bot.nodeBudget, greaterThan(0),
             reason: '${bot.id} must be budgeted in nodes, never in time');
         expect(bot.searchDepth, 0,
@@ -317,27 +321,34 @@ void main() {
         expect(bot.maxSearchDepth, greaterThan(0));
       }
       // Budget and forcing depth both rise with the rating.
-      expect([corvus, lyra, quartz, titan].map((b) => b.nodeBudget).toList(),
+      expect(
+          [basalt, cairn, flint, quartz, titan]
+              .map((b) => b.nodeBudget)
+              .toList(),
           _ascending);
       expect(
-          [corvus, lyra, quartz, titan].map((b) => b.threatSearchDepth).toList(),
+          [basalt, cairn, flint, quartz, titan]
+              .map((b) => b.threatSearchDepth)
+              .toList(),
           _ascending);
-      // Defence is the dial that separates this tier: raising the node budget
+      // Defence is the dial that separates them: raising the node budget
       // alone left it flat, and this did not (D169).
       expect(
-          [corvus, lyra, quartz, titan]
+          [basalt, cairn, flint, quartz, titan]
               .map((b) => b.defenceSearchDepth)
               .toList(),
           _ascending);
-      expect(corvus.defenceSearchDepth, 0,
-          reason: 'the bottom of the tier is the baseline the rest are '
+      expect(basalt.defenceSearchDepth, 0,
+          reason: 'the bottom of the group is the baseline the rest are '
               'measured against');
-      // Only Titan proves the endgame, and only Titan never blunders.
-      expect(titan.exactEmpties, greaterThan(0));
+      // Only the top two prove the endgame, and only they never blunder.
+      expect(quartz.exactEmpties, greaterThan(0));
+      expect(titan.exactEmpties, greaterThan(quartz.exactEmpties));
+      expect(quartz.blunderRate, 0);
       expect(titan.blunderRate, 0);
-      expect(corvus.blunderRate, 0.015);
-      expect(lyra.blunderRate, 0.01);
-      expect(quartz.blunderRate, 0.005);
+      expect(basalt.blunderRate, 0.015);
+      expect(cairn.blunderRate, 0.01);
+      expect(flint.blunderRate, 0.005);
     });
 
     test('every one returns only legal moves', () {
@@ -350,7 +361,7 @@ void main() {
       final random = Random(1111);
       final budgeted =
           opponentCatalogue.where((b) => b.nodeBudget > 0).toList();
-      expect(budgeted.length, greaterThanOrEqualTo(4));
+      expect(budgeted.length, greaterThanOrEqualTo(5));
       for (final bot in budgeted) {
         for (var i = 0; i < 6; i++) {
           final state = _randomPosition(random, minPlies: 6);

@@ -106,7 +106,7 @@ void main() {
           reason: 'Novice should have closed when Master opened');
 
       await _openTier(tester, BotTier.casual);
-      expect(find.text('Vireo'), findsOneWidget);
+      expect(find.text('Willow'), findsOneWidget);
       expect(find.text('Oracle'), findsNothing);
     });
 
@@ -358,9 +358,9 @@ void main() {
       // reclassify anybody (D179), and a band here would reintroduce that
       // coupling. Asking who is nearest needs no table.
       expect(tierNearest(600), BotTier.novice);
-      expect(tierNearest(1200), BotTier.casual);
-      expect(tierNearest(1650), BotTier.club);
-      expect(tierNearest(2100), BotTier.expert);
+      expect(tierNearest(1100), BotTier.casual);
+      expect(tierNearest(1300), BotTier.club);
+      expect(tierNearest(1640), BotTier.expert);
       expect(tierNearest(2400), BotTier.master);
     });
 
@@ -373,9 +373,9 @@ void main() {
     });
 
     test('the midpoint between two tiers resolves without throwing', () {
-      // 1350 is exactly between Kestrel (1300) and Marlin (1400). Whichever it
+      // 1200 is exactly between Aspen (1180) and Vireo (1220). Whichever it
       // picks, it must pick one — the first wins on a tie, which is Casual.
-      expect(tierNearest(1350), BotTier.casual);
+      expect(tierNearest(1200), BotTier.casual);
     });
   });
 }

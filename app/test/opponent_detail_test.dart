@@ -78,12 +78,13 @@ Finder tileFor(String name) =>
 void main() {
   group('where the row rests', () {
     test('is the lowest-rated opponent rated strictly above the player', () {
-      // Mote is rated exactly 800 and a player seeded at 800 rests on Clover:
-      // an even match is not "next" (D287).
+      // Mote is rated exactly 800 and a player seeded at 800 rests on Hazel:
+      // an even match is not "next" (D287). Hazel is 850, which the recut put
+      // between Mote and Clover (D325).
       expect(kSeedRating, 800);
-      expect(opponentCatalogue[restingIndex(800)].id, 'clover');
+      expect(opponentCatalogue[restingIndex(800)].id, 'hazel');
       expect(opponentCatalogue[restingIndex(799)].id, 'mote');
-      expect(opponentCatalogue[restingIndex(900)].id, 'bramble');
+      expect(opponentCatalogue[restingIndex(900)].id, 'sorrel');
     });
 
     test('a player below the whole roster rests at the first opponent', () {
@@ -174,8 +175,8 @@ void main() {
       expect(find.byType(OpponentDetail), findsOneWidget);
       expect(find.text('900 · Novice'), findsOneWidget);
       expect(find.text('1–1–0 in 2 games'), findsOneWidget);
-      // Clover is roster index 3, so a win pays eight.
-      expect(find.text('A win pays 8 points'), findsOneWidget);
+      // Clover is roster index 4 since the recut, so a win pays sixteen.
+      expect(find.text('A win pays 16 points'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsOneWidget);
     });
 
@@ -207,10 +208,10 @@ void main() {
         'unlock button', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await open(tester, repo, 'Willow');
+      await open(tester, repo, 'Juniper');
 
-      expect(find.text('64 points'), findsOneWidget);
-      expect(find.text('0 of 64'), findsOneWidget);
+      expect(find.text('256 points'), findsOneWidget);
+      expect(find.text('0 of 256'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsNothing);
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
@@ -224,12 +225,12 @@ void main() {
       for (var i = 0; i < 4; i++) {
         await _play(repo, botId: 'bramble');
       }
-      await open(tester, repo, 'Willow');
+      await open(tester, repo, 'Juniper');
 
-      expect(find.text('64 of 64'), findsOneWidget);
+      expect(find.text('256 of 256'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock Willow?'), findsOneWidget);
+      expect(find.text('Unlock Juniper?'), findsOneWidget);
     });
 
     testWidgets('the two Master opponents say so on the page itself, not only '

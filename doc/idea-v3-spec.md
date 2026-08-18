@@ -21,7 +21,7 @@ Three things make it hard to build well and are the reason most attempts stop. S
 
 ## 2. Solution
 
-A phone game with twenty named computer opponents whose ratings are measured rather than asserted, an unlock ladder that gives the single-player game a spine, and — from 2.0 — asynchronous play against real people.
+A phone game with thirty-one named computer opponents whose ratings are measured rather than asserted, an unlock ladder that gives the single-player game a spine, and — from 2.0 — asynchronous play against real people.
 
 The offline game is complete, private and makes no network call. The online game is a separate store with a separate rating and a separate trust model. Nothing crosses between them.
 
@@ -37,7 +37,7 @@ This goal changed on 2026-08-16 (D302). It used to be "twelve real people playin
 |---|---|
 | G1 ▲ | A tester cohort has the pre-1.0 build installed on their own devices and has opened it. **The size is now ours to choose**, not Google's to impose (D302) |
 | G2 ▲ | Signed builds are produced and published to a testing track by a repeatable process, **on each platform that has an account** |
-| G3 | All twenty opponents are distinguishable in play and calibrated by a self-play harness |
+| G3 | All thirty-one opponents are distinguishable in play and calibrated by a self-play harness |
 | G4 | A player can complete a whole game from launch to result using a screen reader |
 | G5 | The app is complete in English and Dutch, enforced by the build |
 | G6 ▲ | **1.0 passes store review and is publicly available.** Superseded "production access is unlocked at the end of the fourteen-day closed test", which was a Play-account concept and is now an Android-only gate (R11) rather than the gate |
@@ -51,7 +51,7 @@ This goal changed on 2026-08-16 (D302). It used to be "twelve real people playin
 
 | Release | Contains | Platforms | Public |
 |---|---|---|---|
-| **0.1** | The complete offline game: board, all twenty opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
+| **0.1** | The complete offline game: board, all thirty-one opponents, computer rating, **points, unlocks, quests and streaks**, history and replay, tutorial, settings, both languages | Android | no — closed test |
 | **0.2** | Real art, polish | Android | no |
 | **1.0** | **iOS, with no new gameplay.** The one-time unlock, the tier-2 subscription and the meter, entitlement read on the device. The Casual-tier roster fix | **+ iOS** | **first public release** |
 | **2.0** | Accounts and the cloud repository; async online play, free; invite links; push; chat with block, report and name validation; account deletion; privacy policy. Entitlement and the meter move to the server | Android + iOS | yes |
@@ -62,7 +62,7 @@ This goal changed on 2026-08-16 (D302). It used to be "twelve real people playin
 
 ### 4.2 Release 0.1 — in scope
 
-The board and all four layers drawn at once. Pass-and-play. All twenty computer opponents. The computer rating. **Points, the unlock ladder, quests and streaks.** History, replay and a move scrubber. The tutorial including an interactive practice game. Settings. English and Dutch. Portrait phone only.
+The board and all four layers drawn at once. Pass-and-play. All thirty-one computer opponents. The computer rating. **Points, the unlock ladder, quests and streaks.** History, replay and a move scrubber. The tutorial including an interactive practice game. Settings. English and Dutch. Portrait phone only.
 
 ### 4.2a Release 1.0 — in scope
 
@@ -90,7 +90,7 @@ Twenty-five tickets are complete: **0.1 and 0.2 are both done**, the second bein
 | Main screen | §11.3 | **Built, and being restructured** — ticket 013; see §12 |
 | Tutorial and practice game | §11.4 | **Built** — tickets 018–020 |
 | Settings, attribution | §11.3 | **Built** — ticket 028 |
-| Placeholder avatars, opponent content | §11.3 | **Superseded** — ticket 029's drawn identicons existed to be replaced and were, by ticket 038's twenty painted portraits |
+| Placeholder avatars, opponent content | §11.3 | **Superseded** — ticket 029's drawn identicons existed to be replaced and were, by ticket 038's painted portraits |
 | **The look: theme, background, portraits, plaques, fonts, launcher icon** | **§8.16** | **Built** — ticket 038 |
 | Build gate | §10 | **Built** — ticket 001 |
 | **Points, unlocks, quests, streaks** | **§7.3, §8.8, §11.6** | **Built** — tickets 031–034 |
@@ -120,7 +120,7 @@ Online play of any kind. Accounts. The human rating. Chat. Push notifications. S
 
 **Progressing (0.1).** As a player I can see what I have earned, what the next opponent costs, and how close I am to affording them — on the first screen, on first launch, before I have played anything. When a win pays for the next unlock I am told so at the moment it happens, and offered the purchase there rather than made to navigate for it.
 
-**Choosing an opponent (0.1).** As a player I can browse all twenty opponents grouped by tier, opened at the tier my own rating sits in, with each showing its rating, personality, my record against it, and — if locked — its price and my progress. I am warned when a pairing is too lopsided to be a fair test.
+**Choosing an opponent (0.1).** As a player I can browse all thirty-one opponents grouped by tier, opened at the tier my own rating sits in, with each showing its rating, personality, my record against it, and — if locked — its price and my progress. I am warned when a pairing is too lopsided to be a fair test.
 
 **Two humans on one device (0.1).** As two players sharing a phone we can play without either rating or points changing, and it is unambiguous whose turn it is.
 
@@ -154,7 +154,7 @@ No Flutter, no Firebase, no `dart:io`, no ambient clock, no ambient random, and 
 | `outcome(GameState)` | `ongoing`, `draw`, or `win` carrying **both the winner and the completed line** |
 | `threats(GameState, Player)` | Lines with three of `Player` and one empty cell. The primitive behind bot rules and tutorial hints |
 | `BotConfig` | The parameter axes of §6.1 of idea-v3.md. **No `locked` field** — entitlement is not an engine concern |
-| `chooseMove(BotConfig, GameState, int seed)` | The single bot brain, same function for all twenty. Takes a seed, not a `Random`, so the call can be hosted in an isolate. Returns a future; any transposition table is created and discarded within one call so E7 holds |
+| `chooseMove(BotConfig, GameState, int seed)` | The single bot brain, same function for all thirty-one. Takes a seed, not a `Random`, so the call can be hosted in an isolate. Returns a future; any transposition table is created and discarded within one call so E7 holds |
 | `opponentCatalogue` | The roster as data. **Twenty entries, in roster order.** The list index *is* the roster index §7.3 prices from |
 | `strategyBook` | Patashnik's dictionary, vendored byte for byte, keyed in canonical form |
 
@@ -288,19 +288,21 @@ Unchanged from the v1 spec, and unchanged by progression — this is the point o
 
 Still deleted. Settings and unlocks are the only local documents besides games.
 
-### 8.5 Opponent catalogue — all twenty
+### 8.5 Opponent catalogue — all thirty-one
 
 Code-side constants, not persisted. Defined once in §6.4 of idea-v3.md and not duplicated here. What matters to implementation is which engine capability each tier requires:
 
 | Tier | Opponents | Engine capability required |
 |---|---|---|
-| Novice | Pebble, Twig, Mote, Clover | Random selection; immediate win and block detection; blunder rate; corner preference |
-| Casual | Bramble, Willow, Vireo, Finch, Kestrel | All four strategic rules; centre preference; aggression-versus-defence weighting |
-| Club | Marlin, Ember, Basalt, Onyx, Sable | Full positional ladder including the building term; 2-ply and 4-ply alpha-beta; threat-space search |
-| Expert | Corvus, Lyra, Quartz, Titan | Transposition table; node budgets; **defensive forcing search**; exact solving below 10 empties |
-| Master | Oracle, Quadrim Prime | The strategy book from move one; Expert machinery from the second seat |
+| Novice | Pebble, Twig, Mote, Hazel, Clover, Sorrel | Random selection; immediate win and block detection; blunder rate; corner preference; building a double threat |
+| Casual | Bramble, Juniper, Bracken, Willow, Rowan, Aspen | All four strategic rules; centre and corner preference |
+| Club | Vireo, Finch, Kestrel, Osprey, Heron, Marlin | The full positional ladder including the building term |
+| Expert | Lynx, Sable, Ember, Lyra, Onyx, Corvus | 2-ply to 4-ply alpha-beta; threat-space search; aggression-versus-defence weighting |
+| Master | Basalt, Cairn, Flint, Quartz, Titan, Oracle, Quadrim Prime | Transposition table; node budgets; **defensive forcing search**; exact solving below 10 empties; the strategy book from move one |
 
 **Names were permuted at D257 and configurations were not.** Ten opponents changed name so the avatars read as a progression; no rating, configuration, tier or roster index moved. The v1 spec's names for the same slots are historical and are preserved there.
+
+**The roster was recut from twenty to thirty-one at D325**, and there both did move — but they moved *together*, and in the same direction as D257's rule rather than against it: a configuration belongs to a rung, so where a name changed rungs it took on whatever strength that rung already had. Eleven rungs were interpolated between the existing ones so that the stretch a beginner and an average player are on steps every forty rating points instead of every hundred.
 
 **Tier is stored on each catalogue entry, not derived from its rating** (D179) — otherwise a recalibration silently reclassifies an opponent.
 
@@ -386,7 +388,7 @@ Even locally, so 2.0's push-based implementation satisfies the same contract wit
 
 ### 9.7 The progression maths is a package, not part of the engine
 
-§7.1 forbids the engine knowing who owns what: the catalogue has no `locked` field, because the strength harness plays all twenty against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost belongs on the other side of that line (D263).
+§7.1 forbids the engine knowing who owns what: the catalogue has no `locked` field, because the strength harness plays all thirty-one against each other and has no business holding an entitlement. Arithmetic about what a player owns and what it cost belongs on the other side of that line (D263).
 
 ### 9.8 The board renders once
 
@@ -436,7 +438,7 @@ Every long run gets a hard timeout. A hung suite is indistinguishable from a slo
 
 - **The engine** is tested directly: it is pure, seeded and deterministic.
 - **The repository** is the flow seam. Widget tests must use the in-memory store — `testWidgets` runs in a fake-async zone that never completes real file I/O, so a widget test over the file store hangs.
-- **`quadrim_progression`** is tested exhaustively over the whole catalogue rather than by example, because it is small integer arithmetic over twenty known inputs and there is no excuse for sampling it.
+- **`quadrim_progression`** is tested exhaustively over the whole catalogue rather than by example, because it is small integer arithmetic over thirty-one known inputs and there is no excuse for sampling it.
 - **Calibration** is measurement, not a test. It reports measured against published and never fits a fresh scale.
 
 ### 10.3 Injecting the clock
@@ -523,7 +525,7 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | U22 ＋ | A locked opponent's tile and row are one accessibility node each — name, rating, record, stars, locked state and price — announced once |
 | U23 ＋ | Backing out of the opponent list cancels the whole flow rather than falling back to a default opponent |
 | U24 ＋ | Every screen sits on the forest background; no screen shows a white or otherwise undesigned surface |
-| U25 ＋ | Every one of the twenty opponents draws its own portrait, and a locked one draws as a silhouette rather than a dimmed face |
+| U25 ＋ | Every one of the opponents draws its own portrait, and a locked one draws as a silhouette rather than a dimmed face |
 | U26 ＋ | Every carved sign carries its caption in the player's language, drawn by the app; buttons announce it as their name and headings as a semantic header |
 | U28 ＋ | A section listing the four most recently completed quests appears below the closest-four section, with what each paid, and is absent until at least one has been completed |
 | U29 ＋ | Every heading sign is drawn at one height and overhangs its panel's top-left corner without being overlapped by the section above; the board is centred; layer captions are readable on both the forest and parchment |
@@ -670,7 +672,7 @@ Approach **B** with main-screen approach **M2** (D266, D267). Bottom-up was reje
 | **034** | Streaks: the eight rungs, the injected day boundary, reset across month, year and time-zone boundaries | P16–P19 |
 | **035** | The ten-game trend graph; the finished-game row changes; the end-of-game panel; the portrait lock | U10, U15, U19, U20, U21 |
 | **037** | Your Path scrolls the whole roster and rests on the rating rather than the unlock; the opponent detail page and its one action | U13, U13a, U13b, U13c |
-| **038** | The forest design: one theme, the background on every screen, the twenty painted portraits and their locked silhouettes, the carved plaques, Cinzel and EB Garamond, the new launcher icon, and `tools/artgen` | U24–U27 |
+| **038** | The forest design: one theme, the background on every screen, the painted portraits and their locked silhouettes, the carved plaques, Cinzel and EB Garamond, the new launcher icon, and `tools/artgen` | U24–U27 |
 | **039** | Blank signs lettered by the app so the wood is localisable; a carved heading on every section; Your Path's sign overhanging its card; the recently-completed quests panel | U26, U28 |
 | **040** | One height for every heading sign, each overhanging its panel; In progress moved under Your Path; Your Path snaps to a tile; a bigger detail avatar; the board centred; readable layer captions on parchment | U26, U29 |
 

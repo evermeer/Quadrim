@@ -81,7 +81,7 @@ const _volumeQuarters = [1, 2, 4, 8, 16];
 const _streakTargets = [5, 10, 30, 90, 180, 360, 720, 1440];
 const _streakQuarters = [4, 8, 16, 32, 48, 64, 96, 128];
 
-/// All fifty-three: twenty, twenty, five and eight.
+/// All seventy-five: thirty-one, thirty-one, five and eight.
 final List<Quest> questCatalogue = List.unmodifiable([
   for (var i = 0; i < opponentCatalogue.length; i++)
     Quest(

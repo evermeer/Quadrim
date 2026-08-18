@@ -49,7 +49,7 @@ Future<void> _win(LocalGameRepository repo, String botId, int count) async {
 
 /// Scrolls Your Path until [name]'s tile is on screen.
 ///
-/// The row carries all twenty opponents now, so a tile outside the resting
+/// The row carries all thirty-one opponents now, so a tile outside the resting
 /// window is built but off screen and cannot be tapped until the row is
 /// scrolled — the way a player reaches it (D287).
 Future<void> scrollTo(WidgetTester tester, String name) async {
@@ -67,13 +67,13 @@ void main() {
   group('the record', () {
     test('round-trips through JSON', () {
       final unlock = UnlockDocument(
-        opponentId: 'willow',
+        opponentId: 'juniper',
         unlockedAt: DateTime.utc(2026, 8, 14, 9, 12, 31),
-        pricePaid: 64,
+        pricePaid: 256,
       );
       final back = UnlockDocument.fromJson(unlock.toJson())!;
-      expect(back.opponentId, 'willow');
-      expect(back.pricePaid, 64);
+      expect(back.opponentId, 'juniper');
+      expect(back.pricePaid, 256);
       expect(back.source, UnlockSource.points);
       expect(back.unlockedAt, unlock.unlockedAt);
     });
@@ -93,9 +93,9 @@ void main() {
       expect(
           UnlockDocument.fromJson({
             'schemaVersion': 1,
-            'opponentId': 'willow',
+            'opponentId': 'juniper',
             'unlockedAt': 'not a date',
-            'pricePaid': 64,
+            'pricePaid': 256,
           }),
           isNull);
     });
@@ -104,22 +104,22 @@ void main() {
   group('the repository', () {
     test('records what was paid, not what the table says', () async {
       final repo = await _repository();
-      // Deliberately not unlockCost(5): the stored price is what was actually
+      // Deliberately not unlockCost(7): the stored price is what was actually
       // charged, so a later re-tune cannot rewrite it (spec §8.8).
-      final unlock = await repo.purchase('willow', pricePaid: 40);
+      final unlock = await repo.purchase('juniper', pricePaid: 40);
       expect(unlock.pricePaid, 40);
       expect((await repo.loadUnlocks()).single.pricePaid, 40);
     });
 
     test('only the next opponent in roster order may be bought', () async {
       final repo = await _repository();
-      // Willow is index 5 and the first locked one. Vireo is 6.
-      expect(() => repo.purchase('vireo', pricePaid: 128),
+      // Juniper is index 7 and the first locked one. Bracken is 8 (D325).
+      expect(() => repo.purchase('bracken', pricePaid: 512),
           throwsA(isA<ArgumentError>()));
-      await repo.purchase('willow', pricePaid: 64);
-      await repo.purchase('vireo', pricePaid: 128);
+      await repo.purchase('juniper', pricePaid: 256);
+      await repo.purchase('bracken', pricePaid: 512);
       expect((await repo.loadUnlocks()).map((u) => u.opponentId),
-          ['willow', 'vireo']);
+          ['juniper', 'bracken']);
     });
 
     test('a free opponent cannot be bought at all', () async {
@@ -130,8 +130,8 @@ void main() {
 
     test('buying the same opponent twice is refused', () async {
       final repo = await _repository();
-      await repo.purchase('willow', pricePaid: 64);
-      expect(() => repo.purchase('willow', pricePaid: 64),
+      await repo.purchase('juniper', pricePaid: 256);
+      expect(() => repo.purchase('juniper', pricePaid: 256),
           throwsA(isA<StateError>()));
       expect(await repo.loadUnlocks(), hasLength(1));
     });
@@ -142,24 +142,24 @@ void main() {
       // unlock is the one thing here a player cannot regenerate by playing.
       final store = MemoryDocumentStore();
       final first = await _repository(store);
-      await first.purchase('willow', pricePaid: 64);
+      await first.purchase('juniper', pricePaid: 256);
 
       final reopened = await _repository(store);
       final unlocks = await reopened.loadUnlocks();
-      expect(unlocks.single.opponentId, 'willow');
-      expect(unlocks.single.pricePaid, 64);
+      expect(unlocks.single.opponentId, 'juniper');
+      expect(unlocks.single.pricePaid, 256);
     });
 
     test('the balance survives a re-tune of the cost table', () async {
       final repo = await _repository();
-      await _win(repo, 'bramble', 4); // 4 * 16 = 64
-      await repo.purchase('willow', pricePaid: 64);
+      await _win(repo, 'bramble', 4); // 4 * 64 = 256
+      await repo.purchase('juniper', pricePaid: 256);
       final unlocks = await repo.loadUnlocks();
       final prices = [for (final u in unlocks) u.pricePaid];
 
-      expect(balance(earned: 64, pricesPaid: prices), 0);
+      expect(balance(earned: 256, pricesPaid: prices), 0);
       // If the table later said 96, the player is not retroactively 32 in debt.
-      expect(balance(earned: 64, pricesPaid: prices), isNonNegative);
+      expect(balance(earned: 256, pricesPaid: prices), isNonNegative);
     });
   });
 
@@ -174,29 +174,31 @@ void main() {
 
       expect(find.byType(YourPath), findsOneWidget);
       // This was the D262 test, inverted. A player seeded at 800 now rests on
-      // Clover — the lowest-rated opponent rated *strictly above* 800 — with
-      // Mote one tile left and Bramble one right. D262 refused this because a
-      // fixed window would have hidden the price ladder; the row scrolls now,
-      // so the ladder is one swipe right instead of invisible (D287).
-      for (final name in ['Mote', 'Clover', 'Bramble']) {
+      // Hazel — the lowest-rated opponent rated *strictly above* 800, since the
+      // recut put one at 850 (D325) — with Mote one tile left and Clover one
+      // right. D262 refused this because a fixed window would have hidden the
+      // price ladder; the row scrolls now, so the ladder is one swipe right
+      // instead of invisible (D287).
+      for (final name in ['Mote', 'Hazel', 'Clover']) {
         expect(find.text(name), findsOneWidget, reason: name);
       }
       // Mote is rated exactly 800 and sits to the left, not in the middle: an
       // even match is not "next".
       expect(tester.getRect(find.text('Mote')).left,
-          lessThan(tester.getRect(find.text('Clover')).left));
-      // Willow, the next unlock, is built but off screen until the player
-      // scrolls — the row holds all twenty, so it exists without being visible.
+          lessThan(tester.getRect(find.text('Hazel')).left));
+      // Juniper, the next unlock, is built but off screen until the player
+      // scrolls — the row holds all thirty-one, so it exists without being
+      // visible.
       // The scrolling row, not the whole section: `YourPath` is laid out at the
       // full width of the screen so its arrows can hang off the panel, and its
       // rect therefore runs past the row on both sides (D319).
       final viewport = tester.getRect(find.descendant(
           of: find.byType(YourPath), matching: find.byType(Scrollable)));
-      expect(tester.getRect(find.text('Willow')).left,
+      expect(tester.getRect(find.text('Juniper')).left,
           greaterThan(viewport.right),
           reason: 'off the right-hand edge until scrolled to');
-      await scrollTo(tester, 'Willow');
-      expect(tester.getRect(find.text('Willow')).left,
+      await scrollTo(tester, 'Juniper');
+      expect(tester.getRect(find.text('Juniper')).left,
           lessThan(viewport.right));
     });
 
@@ -208,9 +210,10 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Willow');
-      expect(find.text('64 points'), findsOneWidget, reason: "Willow's price");
-      expect(find.text('0 of 64'), findsOneWidget);
+      await scrollTo(tester, 'Juniper');
+      expect(find.text('256 points'), findsOneWidget,
+          reason: "Juniper's price");
+      expect(find.text('0 of 256'), findsOneWidget);
       // The unlock button exists but cannot be pressed on nothing.
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
@@ -226,14 +229,14 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Willow');
-      expect(find.text('64 of 64'), findsOneWidget);
+      await scrollTo(tester, 'Juniper');
+      expect(find.text('256 of 256'), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
 
       // The confirmation says what it costs and what is left.
-      expect(find.text('Unlock Willow?'), findsOneWidget);
-      expect(find.text('This costs 64 points and leaves you 0.'),
+      expect(find.text('Unlock Juniper?'), findsOneWidget);
+      expect(find.text('This costs 256 points and leaves you 0.'),
           findsOneWidget);
       // Scoped to the dialog: the tile behind it still carries an Unlock
       // button of its own, so a bare finder matches two.
@@ -242,9 +245,10 @@ void main() {
           matching: find.widgetWithText(FilledButton, 'Unlock')));
       await tester.pumpAndSettle();
 
-      expect((await repo.loadUnlocks()).single.opponentId, 'willow');
-      // The window slid: Willow is now owned and Vireo is next.
-      expect(find.text('128 points'), findsOneWidget, reason: "Vireo's price");
+      expect((await repo.loadUnlocks()).single.opponentId, 'juniper');
+      // The window slid: Juniper is now owned and Bracken is next.
+      expect(find.text('512 points'), findsOneWidget,
+          reason: "Bracken's price");
     });
 
     testWidgets('progress is the balance, not the earned total', (tester) async {
@@ -258,29 +262,29 @@ void main() {
       // same number and the defect is invisible. This one spends.
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 16); // 16 x 16 = 256 earned
-      await repo.purchase('willow', pricePaid: 64);
-      await repo.purchase('vireo', pricePaid: 128); // 192 spent, 64 left
+      await _win(repo, 'bramble', 16); // 16 x 64 = 1024 earned
+      await repo.purchase('juniper', pricePaid: 256);
+      await repo.purchase('bracken', pricePaid: 512); // 768 spent, 256 left
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Finch');
-      expect(find.text('64 of 256'), findsOneWidget,
+      await scrollTo(tester, 'Willow');
+      expect(find.text('256 of 1,024'), findsOneWidget,
           reason: 'the spendable balance');
-      expect(find.text('256 of 256'), findsNothing,
+      expect(find.text('1,024 of 1,024'), findsNothing,
           reason: 'the earned total, which is what the bug displayed');
 
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
       expect(button.onPressed, isNull,
-          reason: '64 does not buy a 256-point unlock');
+          reason: '256 does not buy a 1,024-point unlock');
     });
 
     testWidgets('the arrows step the row one tile and fade at the ends',
         (tester) async {
       // The row fits exactly three tiles, so nothing on screen says there are
-      // seventeen more. The arrows are what says it, and one tap is one tile
+      // twenty-eight more. The arrows are what says it, and one tap is one tile
       // (D318).
       _phone(tester);
       final repo = await _repository();
@@ -299,17 +303,19 @@ void main() {
       // Card too and is the other ancestor.
       Rect card(String name) => tester.getRect(
           find.ancestor(of: find.text(name), matching: find.byType(Card)).first);
-      final pitch = card('Clover').left - card('Mote').left;
-      final before = tester.getRect(find.text('Clover')).left;
+      // Mote and Hazel, which are adjacent: Clover is two tiles from Mote
+      // since the recut put Hazel between them (D325).
+      final pitch = card('Hazel').left - card('Mote').left;
+      final before = tester.getRect(find.text('Hazel')).left;
 
       await tester.tap(right);
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('Clover')).left,
+      expect(tester.getRect(find.text('Hazel')).left,
           closeTo(before - pitch, 0.5));
 
       await tester.tap(left);
       await tester.pumpAndSettle();
-      expect(tester.getRect(find.text('Clover')).left, closeTo(before, 0.5));
+      expect(tester.getRect(find.text('Hazel')).left, closeTo(before, 0.5));
 
       // Two more lefts reach Pebble, the weakest, and there the left arrow has
       // nowhere to go.
@@ -347,7 +353,7 @@ void main() {
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, 'Willow');
+      await scrollTo(tester, 'Juniper');
       await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
@@ -360,13 +366,14 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await _win(repo, 'bramble', 5); // 80 earned
-      await repo.purchase('willow', pricePaid: 64);
+      await _win(repo, 'bramble', 5); // 320 earned
+      await repo.purchase('juniper', pricePaid: 256);
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
 
-      expect(find.text('16'), findsOneWidget, reason: '80 earned, 64 spent');
+      expect(find.text('64'), findsOneWidget,
+          reason: '320 earned, 256 spent');
     });
 
     testWidgets('an opponent never faced shows no star row', (tester) async {
@@ -379,9 +386,10 @@ void main() {
       // The three resting tiles are all unlocked and unplayed: each says so
       // rather than drawing three empty stars, because unearned and failed
       // must not look the same.
-      // Five: the free set, all unlocked and none played. The row builds every
-      // tile, so this counts the roster rather than what is on screen.
-      expect(find.text('Not played yet'), findsNWidgets(5));
+      // Seven: the free set, all unlocked and none played. The row builds
+      // every tile, so this counts the roster rather than what is on screen —
+      // and the recut put two more opponents under the 1000 ceiling (D325).
+      expect(find.text('Not played yet'), findsNWidgets(7));
       expect(find.byIcon(Icons.star_border), findsNothing);
     });
 
@@ -395,10 +403,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Grey alone is not a fact a screen reader can read, so the tile says it.
-      await scrollTo(tester, 'Willow');
+      await scrollTo(tester, 'Juniper');
       expect(
         find.bySemanticsLabel(
-            RegExp(r'Willow, rated 1100\. Locked\. 64 points, you have 0\.')),
+            RegExp(r'Juniper, rated 1020\. Locked\. 256 points, you have 0\.')),
         findsOneWidget,
       );
       handle.dispose();
@@ -410,11 +418,12 @@ void main() {
         (tester) async {
       _phone(tester);
       final repo = await _repository();
-      // Buy the whole ladder up to Oracle, then earn its price.
-      for (var i = 5; i < 18; i++) {
+      // Buy the whole ladder up to Oracle, then earn its price. Oracle is
+      // index 29 since the recut, and the free set reaches index 6 (D325).
+      for (var i = 7; i < 29; i++) {
         await repo.purchase(opponentCatalogue[i].id, pricePaid: 0);
       }
-      await _win(repo, 'titan', 4); // 4 * 2^17 = Oracle's price
+      await _win(repo, 'titan', 4); // 4 * 2^28 = Oracle's price
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();

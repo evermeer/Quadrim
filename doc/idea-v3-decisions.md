@@ -1235,6 +1235,46 @@ Two stock defaults were doing it. On Android 12 and up the platform draws the sp
 
 **Cost:** `values/styles.xml` and `values-night/styles.xml` are now the same file twice. Deleting the night one would be tidier and wrong — the platform still needs a night answer, and the stock one it would fall back to is not this one. Below API 31 there is no icon on the splash at all, only the black field; that is what a window-background splash is, and it is not worth a bitmap layer to change.
 
+## D324 — The source art is named after the catalogue ids
+
+**Question:** `peble.png` and `quarts.png` were delivered misspelt and `artgen.py` carried a filename-to-id map to paper over it (D290). A third arrived misspelt as `ospray.png`. Keep mapping, or rename?
+
+**Decision:** Rename the files. `OPPONENTS` in `artgen.py` is now a plain list of ids, because the source filename *is* the id.
+
+The mapping was the right call at two entries and the wrong one at three. Its stated reason was that the source folder should match what was delivered — but a folder that matches a typo is not matching anything worth preserving, and the cost is a second place to look every time an id and a picture disagree. `art_assets_test.dart` still asserts that every id resolves to a file, which is the property the mapping existed to buy and the only one that ever mattered.
+
+**Cost:** Anyone holding the original delivery has three filenames that no longer match. Git records the renames, so the history follows them.
+
+## D325 — The roster is recut from twenty rungs to thirty-one, and strength follows the rung
+
+**Question:** A beginner climbs 600 → 700 → 800 → 900, and an average player 1000 → 1100 → 1200. A hundred rating points is roughly a week of improvement, so most of a player's time is spent between two rungs rather than on one. Eleven new opponents were commissioned to close that. What happens to the twenty configurations that already exist?
+
+**Decision:** **A configuration belongs to a rung, not to a name.** The thirty-one slots are filled by placing each of the twenty measured configurations at the new rating nearest the one it was calibrated to, and interpolating eleven new ones into the gaps. Where a name moved rungs — Sable from 1700 to 1500, Lyra from 1900 to 1580, Basalt from 1550 to 1800 — the name took on whatever strength its new rung already had, and the strength it used to carry stayed where it was under a new name.
+
+This is D257's rule applied to the other half of the pair. That entry permuted ten *names* so the avatars would read as a progression and moved no configuration, and `doc/history/Avatars.md` states the principle outright: ratings and playing strength are properties of the slot. Doing the opposite here — letting each name keep its configuration and publishing it at a new rating — would have published Sable at 1500 while it measured 1700, which is the one thing the whole calibration apparatus exists to prevent (D144).
+
+The blurbs moved with the configurations rather than with the names, for the same reason: a blurb describes what a player meets at the board. "Looks a move ahead, and spends it on attack" now belongs to Sable, because that is now the two-ply aggressive rung.
+
+Tiers are six / six / six / six / seven. The searching opponents moved from Club to Expert and the node-budgeted ones from Expert to Master, which is what makes room for a Club tier of positional opponents and a Novice tier that reaches 940.
+
+**Eleven of the thirty-one ratings are anchors nobody has measured yet.** The ladder shipped here is principled — good squares then blunder rate in Casual, forcing depth in Expert, budget and defence depth in Master — and it is not calibrated. `calibrate.dart` is what settles it, and it now plays 95 pairs rather than 47, which is the better part of an hour rather than a quarter of one. Until that run happens every new rung's rating is a claim rather than a measurement, and `search_test.dart` deliberately asserts only the pairs that were measured before the recut.
+
+**Cost, and it is the largest single cost in the project so far:**
+
+* **The point totals grew by a factor of two thousand.** `winValue` is 2^i and `unlockCost` is 2^(i+1); eleven new rungs move the top of the ladder from 1,048,576 to 2,147,483,648, and the whole roster from 2,097,088 to 4,294,967,040. **The invariant a player actually experiences is untouched** — four wins at any rung still buys the next one — which is what makes the change acceptable, but the numbers on screen are ten digits at the top. The points balance on the rating card had to become a `FittedBox`: at a 2× font scale it overflowed its row by 43 pixels.
+* **Twenty-eight app tests and eleven package tests were fixtures keyed on a roster index**, and every one of them had to move. Nothing was wrong with them; they were asserting real behaviour against numbers that changed underneath.
+* **The free set grew from five to seven** without anyone deciding it should, because `isFree` is defined by the 1000 ceiling rather than by a count (D228). That is the rule working exactly as designed — but it doubles what a new player is handed, and it deserves to be noticed rather than discovered.
+
+## D326 — Where the eleven new rungs went
+
+**Question:** Which gaps did the new opponents fill, and why those?
+
+**Decision:** Where a player spends time. Six of the eleven sit at or below 1180 — Hazel 850, Sorrel 940, Juniper 1020, Bracken 1060, Rowan 1140, Aspen 1180 — because that is the stretch a beginner and an average player are on, and it was the stretch with hundred-point gaps. Three more sit between 1340 and 1460, across the old Casual-to-Club boundary, which is the other place the ladder asked for a jump. Only two are above 1580.
+
+The top of the ladder was deliberately left coarse: Basalt to Quadrim Prime still steps in hundreds. Players there are not the ones the recut is for, and a rung every forty points at the top would be a rung nobody could tell apart from its neighbour.
+
+Sorrel is the one new opponent that adds a *rule* rather than a number: it is the first in the catalogue that builds a double threat and still cannot see one coming. That is the honest last lesson of the Novice tier, and it makes 940 a different opponent rather than a slightly better Clover.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
