@@ -1295,6 +1295,54 @@ Two stock defaults were doing it. On Android 12 and up the platform draws the sp
 
 **Cost:** none in the product, and one correction in the record — a criterion that had been ticked with the right observation and the wrong explanation. The general form is worth keeping: a platform declaration that *looks* load-bearing is not, and the way to tell is to delete it and rebuild, which took four minutes.
 
+## D329 — The iOS icon is one 1024, and the fifteen it replaced are deleted
+
+**Question:** Flutter's template ships fifteen icon PNGs and a `Contents.json` naming every one. Ticket 042 says a single 1024 is enough since Xcode 14. What happens to the other fifteen?
+
+**Decision:** `ios_app_icon` deletes every `Icon-App-*.png` before it writes, and the new `Contents.json` declares one `universal` 1024x1024 entry. Xcode derives the rest at build time — verified in the archive, which contains `AppIcon60x60@2x.png` and `AppIcon76x76@2x~ipad.png` that artgen never wrote, both with `hasAlpha: no`.
+
+**The deletion is the part worth writing down.** Dropping the declaration without dropping the files leaves fifteen Flutter logos in `Assets.xcassets` that nothing names and nothing renders — invisible in the app, present in the repository, and exactly the sort of thing that gets re-adopted by a future `flutter create` or a hand-edit in Xcode. A generator that owns a directory has to own what it removes as well as what it writes.
+
+**The inset is 70%, not the adaptive icon's 62% (D290's `launcher_icon`).** Android's adaptive mask eats the outer third and 62% is clearance for it; iOS shows the whole square and rounds the corners itself. Reusing 62% here would have put a small mark in a large green field.
+
+**Cost:** the icon is only checked by looking at it and by the archive not complaining. `art_assets_test.dart` cannot help — it tests what Flutter loads, and neither the icon nor the launch screen is loaded by Flutter.
+
+## D330 — The launch screen is JPEG, alone in this pipeline
+
+**Question:** Every shipped image in this project is WEBP, and the app icon must be PNG. The launch image was generated as PNG and came to 4.0 MB across the three scales — against a total art-and-font budget of 2.25 MB. What format should it be?
+
+**Decision:** JPEG at quality 88, 4:4:4. The three scales total 658 KB.
+
+WEBP was never available: the launch screen is drawn by iOS before Flutter exists, so it is read by the asset catalogue rather than by Flutter, and asset catalogues do not take WEBP. That leaves PNG and JPEG, and the image is a photograph with no alpha.
+
+**Measured on the 3x rather than assumed**, because "PNG is lossless so PNG is better" is the intuition this contradicts:
+
+| encoding | size | worst channel error |
+|---|---|---|
+| PNG | 2198 KB | 0 |
+| PNG, quantised to 256 colours | 1231 KB | 32 |
+| JPEG q88 | 375 KB | 10 |
+
+Quantising — the obvious way to shrink a PNG — is **three times larger and three times less accurate** than the JPEG. That is what the scrim does to this image: it compresses the whole picture into roughly 6-114 of each channel's range, which is a narrow band of smooth gradients, the case JPEG handles well and palettes handle badly.
+
+**Cost:** one format exception to explain, and a lossy launch screen. The error is under 10/255 on a picture that is deliberately out of focus behind a 62% scrim, so it is not visible; the entry exists so nobody "fixes" it back to PNG.
+
+## D331 — The launch screen bakes in the scrim, and that is what makes the hand-off invisible
+
+**Question:** Ticket 042 says the launch screen shows `background.png` "with nothing on top of it". The app never shows that picture — it shows it under D296's 62% scrim. Which one goes on the launch screen?
+
+**Decision:** The darkened one. `ios_launch_image` composites `Color(0x9E0B160E)` srcOver the photograph exactly as `ForestBackground` does, then crops it the way `BoxFit.cover` with `Alignment.topCenter` crops it.
+
+**"Nothing on top of it" means no logo and no text, not no scrim.** Shipping the bare photograph would have put a bright forest on screen for a few hundred milliseconds and then darkened it by 62% the instant Flutter's first frame landed — a flash, just not a white one, and criterion 4 is about exactly that class of discontinuity.
+
+**Verified numerically, because the eye is a bad instrument for this.** On a fixed strip of the left margin, the generated file reads `[64.8, 76.0, 55.5]` and the running app reads `[65.4, 76.4, 55.8]` — a difference of about half a level in 255, which is the JPEG quantisation and nothing else. The scrim arithmetic was confirmed independently: applying alpha 0.620 to the source predicts `[65.2, 76.6, 55.8]`, and that is what the app measures.
+
+**A screenshot taken during the app-open animation is not evidence.** One read `[29.1, 51.7, 36.0]` — half the brightness — and looked like a real defect for a while. iOS dims and scales the launch screen while it zooms the icon into place, so any frame captured mid-transition is darker than the asset. The file and the settled app are what can be compared.
+
+**The crop matches the app rather than approximating it.** `BoxFit.cover` against a target narrower than the source keeps the full height and crops the width, which leaves `Alignment.topCenter` no vertical excess to bias — so the app's top-anchoring and a centre crop are the same crop here. The image is authored at 440x956, the narrowest aspect any iPhone has, so `scaleAspectFill` crops a little on every other phone and letterboxes on none.
+
+**Cost:** the scrim constant now lives in two places — `forest.dart` and `artgen.py` — and a change to one silently desynchronises the other. Nothing checks it; the symptom would be a visible brightness step at launch.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

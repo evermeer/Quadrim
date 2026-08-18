@@ -176,3 +176,103 @@ commit range. Validated against the ticket's own acceptance criteria instead.
   `/var/db/xcode_select_link` does not exist on this Mac, so
   `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer` has
   never been run. It needs a password.
+
+---
+
+# Code Review: ticket 042 → main@36c6bb0
+
+> Generated: 2026-08-18
+> Base: 36c6bb0 (ticket 041)
+> Changed files: 8 tracked + 3 added, 15 deleted
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 0 |
+
+## Findings
+
+### [MINOR] The scrim is defined twice and nothing checks the two agree — `architecture`
+
+**File:** `tools/artgen/artgen.py:65` and `app/lib/design/forest.dart:47`
+
+**Evidence:**
+
+```python
+# tools/artgen/artgen.py:65
+SCRIM_RGB = (11, 22, 14)
+SCRIM_ALPHA = 0x9E / 255.0
+```
+
+```dart
+// app/lib/design/forest.dart:47
+colorFilter: ColorFilter.mode(Color(0x9E0B160E), BlendMode.srcOver),
+```
+
+`grep` over `tool/check.sh` and `app/test/` finds no reference to either.
+
+**Problem:** D331 makes the launch screen correct precisely by matching D296's
+scrim. That match is now a coincidence maintained by hand across a Dart file and
+a Python file. Change `0x9E0B160E` — which D296 says was *measured*, so it can
+move if the artwork or the contrast target does — and the launch screen keeps the
+old darkening. The symptom is a brightness step at launch on a real phone, the
+exact defect this ticket just fixed, and nothing in the gate would fail.
+
+**Fix:** Not a refactor — a check. The cheapest honest one is an assertion in
+`artgen.py` that reads the literal out of `forest.dart` and fails the run if it
+does not match, in the spirit of the existing dictionary SHA-256 check:
+
+```python
+src = (ROOT / "app/lib/design/forest.dart").read_text(encoding="utf-8")
+if f"0x{int(SCRIM_ALPHA*255):02X}{SCRIM_RGB[0]:02X}{SCRIM_RGB[1]:02X}{SCRIM_RGB[2]:02X}" not in src:
+    raise SystemExit("scrim in artgen.py no longer matches forest.dart (D331)")
+```
+
+Deferred rather than applied: it is a new cross-language coupling and belongs in
+a ticket that can weigh it, not in a commit about an icon. Recorded here so the
+next person to touch D296 finds it.
+
+### [MINOR] `DEVELOPMENT_TEAM` is committed into the project file — `style`
+
+**File:** `app/ios/Runner.xcodeproj/project.pbxproj:379, 559, 582`
+
+**Evidence:**
+
+```
++				DEVELOPMENT_TEAM = WTH4QGEA23;
+```
+
+**Problem:** An Apple Team ID is not a credential — it appears in every
+provisioning profile and in public App Store metadata — so this is not a leak.
+But it hardcodes one developer's account into a repository whose remote is a
+personal GitHub project, and any second machine or contributor building for a
+device now has to edit a tracked file to do it.
+
+**Fix:** Acceptable as-is for a single-developer project, and it is what Xcode
+writes by default. If the project ever gains a second signer, move it to an
+untracked `ios/Flutter/Signing.xcconfig` and leave the build setting referencing
+it. No change made now.
+
+## Checked and clean
+
+- **`ios_app_icon` deletes before it writes.** `out.glob("Icon-App-*.png")` is
+  unlinked first, so the fifteen template icons cannot survive as unnamed files
+  in the catalogue (D329). The same pattern guards `LaunchImage*.png`, which
+  matters more there — the format changed from PNG to JPEG, so the old files
+  would otherwise have been orphaned rather than overwritten.
+- **The generated icon is genuinely opaque.** `sips -g hasAlpha` reports `no` on
+  artgen's 1024, and on both icons Xcode *derived* into the archive. Pasting the
+  mark through its own alpha onto an `Image.new("RGB", ...)` is what flattens it;
+  there is no `convert("RGB")` at the end doing it by accident.
+- **The 32 re-encoded art files were verified pixel-identical before being
+  reverted**, not assumed. Max channel difference 0 across all 32, which is what
+  D290 describes and what this ticket's own note instructs.
+- **The archive validates.** `flutter build ipa --no-codesign` completed with no
+  asset-validation warning, and the release build then signed and installed on a
+  physical device.
+- **No user-facing string entered the storyboard**, so §11.6's rule is not
+  circumvented by a surface it cannot see.

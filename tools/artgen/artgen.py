@@ -48,9 +48,29 @@ SRC = ROOT / "doc" / "designs"
 ART = ROOT / "app" / "assets" / "art"
 FONTS = ROOT / "app" / "assets" / "fonts"
 ANDROID_RES = ROOT / "app" / "android" / "app" / "src" / "main" / "res"
+IOS_ASSETS = ROOT / "app" / "ios" / "Runner" / "Assets.xcassets"
 
 # The mockup's panel green, behind the launcher icon (Design-alt0.png).
 ICON_BACKGROUND = (28, 50, 32)
+
+# `QuadrimPalette.canopy` (app/lib/theme.dart), under the forest everywhere the
+# app draws it. The launch screen uses it too so the hand-off has nothing to
+# reveal at the edges.
+CANOPY = (18, 38, 26)
+
+# `ForestBackground`'s scrim, D296: Color(0x9E0B160E) painted srcOver the
+# photograph. It is not decoration — cream over the bare picture measures 2.9:1
+# — and the launch screen bakes it in so the first Flutter frame is the same
+# brightness as the image behind it.
+SCRIM_RGB = (11, 22, 14)
+SCRIM_ALPHA = 0x9E / 255.0
+
+# The tallest iPhone in logical points (440x956, iPhone 16 Pro Max and its
+# successors). Authoring the launch image at the narrowest aspect any phone has
+# means `scaleAspectFill` crops a little on every *other* phone and nothing on
+# that one, which is the right way round: cropping a soft forest is invisible,
+# and letterboxing it would not be.
+LAUNCH_PT = (440, 956)
 
 # Source filename -> bot id. Two of the twenty were delivered misspelt and the
 # id is what the catalogue says, so the mapping lives here rather than in a
@@ -390,6 +410,134 @@ def launcher_icon(mark: Image.Image) -> None:
     print("  mipmap-anydpi-v26 adaptive-icon + monochrome")
 
 
+def ios_app_icon(mark: Image.Image) -> None:
+    """One 1024x1024 opaque square, and the Contents.json that declares it."""
+    print("ios app icon")
+    out = IOS_ASSETS / "AppIcon.appiconset"
+    out.mkdir(parents=True, exist_ok=True)
+
+    # Every icon Flutter's template shipped, gone. Xcode 14 and later derive the
+    # whole ladder from the 1024, so leaving the others behind would leave
+    # fifteen stale Flutter logos in the catalogue for Contents.json to stop
+    # naming and nothing to delete.
+    for stale in out.glob("Icon-App-*.png"):
+        stale.unlink()
+
+    side = 1024
+    # 70%, the *legacy* Android inset, not the adaptive 62%. Android's adaptive
+    # mask eats the outer third and the 62% is breathing room for it; iOS shows
+    # the whole square and rounds the corners itself, so the same 62% would just
+    # be a small mark in a large green field.
+    inner = round(side * 0.70)
+    icon = Image.new("RGB", (side, side), ICON_BACKGROUND)
+    scaled = mark.resize((inner, inner), Image.LANCZOS)
+    offset = (side - inner) // 2
+    # Pasted *through* the mark's own alpha onto opaque green, which is what
+    # flattens it. An icon that reaches App Store Connect with an alpha channel
+    # is rejected, and the error names the asset without naming the reason.
+    icon.paste(scaled, (offset, offset), scaled)
+
+    name = "Icon-App-1024x1024@1x.png"
+    icon.save(out / name)
+    (out / "Contents.json").write_text(
+        '{\n'
+        '  "images" : [\n'
+        '    {\n'
+        f'      "filename" : "{name}",\n'
+        '      "idiom" : "universal",\n'
+        '      "platform" : "ios",\n'
+        '      "size" : "1024x1024"\n'
+        '    }\n'
+        '  ],\n'
+        '  "info" : {\n'
+        '    "author" : "artgen",\n'
+        '    "version" : 1\n'
+        '  }\n'
+        '}\n',
+        encoding="utf-8",
+    )
+    kb = (out / name).stat().st_size / 1024
+    print(f"  {name:38s} {side}x{side}  {kb:7.1f} KB  RGB, no alpha")
+
+
+def ios_launch_image() -> None:
+    """The forest, darkened exactly as the app darkens it, at 1x/2x/3x."""
+    print("ios launch image")
+    out = IOS_ASSETS / "LaunchImage.imageset"
+    out.mkdir(parents=True, exist_ok=True)
+
+    im = _load("background").convert("RGB")
+    scrim = np.array(SCRIM_RGB, dtype=np.float32)
+    darkened = np.array(im, dtype=np.float32) * (1 - SCRIM_ALPHA) + scrim * SCRIM_ALPHA
+    im = Image.fromarray(np.clip(darkened, 0, 255).astype(np.uint8), "RGB")
+
+    # `BoxFit.cover` against a target narrower than the source keeps the full
+    # height and crops the width; `Alignment.topCenter` then has no vertical
+    # excess left to bias, so this is a centre crop and matches the app exactly.
+    aspect = LAUNCH_PT[0] / LAUNCH_PT[1]
+    width = round(im.height * aspect)
+    left = (im.width - width) // 2
+    im = im.crop((left, 0, left + width, im.height))
+
+    # Stale PNGs from Flutter's template, and from this function before it
+    # emitted JPEG. Contents.json would stop naming them and they would sit in
+    # the catalogue being compiled into the app.
+    for stale in out.glob("LaunchImage*.png"):
+        stale.unlink()
+
+    for scale in (1, 2, 3):
+        suffix = "" if scale == 1 else f"@{scale}x"
+        target = (LAUNCH_PT[0] * scale, LAUNCH_PT[1] * scale)
+        name = f"LaunchImage{suffix}.jpg"
+        # JPEG, alone in this pipeline. Flutter's own assets are WEBP and the
+        # app icon must be PNG, but the launch image is read by iOS rather than
+        # by Flutter -- so WEBP is not an option -- and it is a photograph with
+        # no alpha, which is JPEG's exact case. Measured on the 3x: PNG 2198 KB,
+        # 256-colour PNG 1231 KB at a worst-channel error of 32, JPEG q88 375 KB
+        # at a worst-channel error of 10. Smaller *and* closer than quantising.
+        im.resize(target, Image.LANCZOS).save(
+            out / name, "JPEG", quality=88, optimize=True, subsampling=0
+        )
+        kb = (out / name).stat().st_size / 1024
+        print(f"  {name:38s} {target[0]}x{target[1]}  {kb:7.1f} KB")
+
+    (out / "Contents.json").write_text(
+        '{\n'
+        '  "images" : [\n'
+        + ",\n".join(
+            '    {\n'
+            f'      "filename" : "LaunchImage{"" if s == 1 else f"@{s}x"}.jpg",\n'
+            '      "idiom" : "universal",\n'
+            f'      "scale" : "{s}x"\n'
+            '    }'
+            for s in (1, 2, 3)
+        )
+        + '\n  ],\n'
+        '  "info" : {\n'
+        '    "author" : "artgen",\n'
+        '    "version" : 1\n'
+        '  }\n'
+        '}\n',
+        encoding="utf-8",
+    )
+    # Flutter's template leaves a README here telling you to replace these by
+    # hand in Xcode. That advice is now wrong -- anything dropped in is
+    # overwritten by the next run -- and wrong advice next to the files it is
+    # about is worse than none.
+    (out / "README.md").write_text(
+        "# Launch screen image\n"
+        "\n"
+        "Generated by `python tools/artgen/artgen.py` from `doc/designs/background.png`\n"
+        "(D290). Do not edit these files or drop replacements in from Xcode; the next\n"
+        "run overwrites them. Change the source art instead.\n"
+        "\n"
+        "The forest here is already darkened by `ForestBackground`'s scrim (D296), so\n"
+        "the launch screen and the first Flutter frame are the same picture at the same\n"
+        "brightness and the hand-off between them is invisible.\n",
+        encoding="utf-8",
+    )
+
+
 def fonts() -> None:
     """Instances each variable font at the weights used, then subsets it."""
     print("fonts")
@@ -434,6 +582,8 @@ def main() -> int:
     signs()
     arrows()
     launcher_icon(mark)
+    ios_app_icon(mark)
+    ios_launch_image()
     fonts()
     total = sum(f.stat().st_size for f in ART.rglob("*")) + sum(
         f.stat().st_size for f in FONTS.rglob("*.ttf")
