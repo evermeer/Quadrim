@@ -1637,6 +1637,60 @@ What that leaves is a clean statement of the last open problem on the ladder: **
 
 **Cost:** an iOS-side claim resting on a reading of the dependency graph at one moment. It should be re-read whenever `pubspec.yaml` gains a dependency, and nothing will remind anyone to do so. Narrowing `check.sh` to computer play rather than to the manifest — already flagged as the 0.3a Firebase problem — would let one mechanism cover both platforms, and is the real fix whenever someone wants it.
 
+## D348 — The one-time unlock is materialised into unlock records, not held as a flag
+
+**Question:** Owning "unlock all opponents" could be a boolean the roster consults, or thirty-one `UnlockDocument`s written at `UnlockSource.purchase`. Which?
+
+**Decision:** Both, with the entitlement as the authority and the records as its consequence. `Shop._grant` sets `Entitlement.unlockAll` and then calls `grantAllPurchased()`, which writes a record for every opponent not already unlocked.
+
+**A flag alone fails two acceptance criteria.** AC 7 wants points-earned and bought-outright distinguishable in storage, and AC 6 wants a refund to revoke exactly what it bought and nothing the player earned. Both are questions about *records*, and a boolean has none to answer with. `UnlockSource.purchase` has existed since ticket 031 for precisely this, with a comment saying it is unreachable until the product exists. It is reachable now.
+
+**Records alone fail differently:** they are a copy of a store answer, and a copy that disagrees with the store is the thing D303 exists to avoid. So the entitlement is what is believed and the records are what is written from it, re-derived at every launch — which also means an opponent added in a later release is covered the next time the app starts, with no migration.
+
+**`pricePaid` is zero on every record written this way.** The balance is earned minus the sum of these (§8.8), and the player paid the store rather than the points balance; any other number would bankrupt someone for buying the unlock.
+
+**Idempotent, and it refuses to overwrite.** An opponent already unlocked keeps its existing record, so an unlock earned with points stays `UnlockSource.points` and survives a later refund. That is the property AC 6 actually turns on, and it is tested.
+
+**Cost:** thirty-one small writes on the launch after a purchase, and two representations of one fact that must not drift. What keeps them from drifting is that only one of them is ever *read* as authority.
+
+## D349 — Entitlement is rebuilt every launch and never written to disk
+
+**Question:** The store is slow and sometimes unreachable. Should what the player owns be cached locally so the app knows it before the store answers?
+
+**Decision:** No. `Entitlement` is an in-memory value that starts empty at every launch and is populated by the restore that `Shop.start()` performs.
+
+**A cache is a second answer, and it is wrong exactly when it matters.** The store's signed transaction is the authority at 1.0 (D303, spec S9), there is no server and no receipt validation of our own. A cached entitlement disagrees with the store in precisely one situation — a refund, chargeback or lapse that the cache has not heard about — and in that situation the cache is the one still saying yes. Persisting it would convert "revocation follows the store's next refresh" into "revocation never happens on this device".
+
+**This is also what makes the lapse test writable.** A lapsed subscription is modelled as nothing more than a fresh launch where the store no longer re-delivers it, because that is all it is.
+
+**The cost is honest and is the reason it is written down.** Between launch and the store's answer, the app believes nothing is owned. A paying player who opens the app on a plane sees the unpaid state. 047 owns what that looks like on screen; what it must not do is guess in the player's favour and then take something away, which is worse than the wait.
+
+## D350 — Buying the whole roster gets its own method, so D229 stays categorical
+
+**Question:** `LocalGameRepository.purchase` throws unless the opponent is the lowest-indexed locked one (D229). The one-time unlock has to bypass that. Add a flag to `purchase`, or add a method?
+
+**Decision:** A method — `grantAllPurchased()`, beside `revokePurchasedUnlocks()`.
+
+**A flag would make D229 conditional in the one place that enforces it.** "Four wins buys the *next* opponent" stops being a promise the moment the method carrying the rule also carries a way to skip it, and the flag's default becomes the only thing standing between the ladder and a caller that passes `true` for an unrelated reason. Two methods keep the rule absolute where it is written and put the exception somewhere it can be read as an exception.
+
+**Revocation is the mirror and is equally narrow.** `revokePurchasedUnlocks` deletes records whose source is `purchase` and nothing else. No billing event on the *subscription* reaches it: §4.1 says losing the subscription loses unmetered play and nothing more, and the way to be sure of that is that no code path exists from one to the other.
+
+**Cost:** `DocumentStore` gained `deleteUnlock`, so unlocks are now deletable where before they were append-only. That is a sharper tool than the app previously had, reachable from exactly one caller.
+
+## D351 — The shop starts without being awaited, and subscribes before it awaits anything
+
+**Question:** `Shop.start()` reaches the network. Where in launch does it go?
+
+**Decision:** After the repository, before `runApp`, and **not awaited** — `unawaited(shop.start())`.
+
+**Awaiting it would make a bad connection into a hung launch**, for a game whose entire premise is that computer play needs no network at all (D93, S1, and on Android enforced by the absence of `INTERNET`). Nothing on the first screen depends on knowing what is owned.
+
+**But the order inside `start()` is load-bearing.** It attaches the purchase-stream listener *first*, before any `await`. The plugin delivers purchases interrupted by a crash, a lost connection or an "Ask to Buy" approval on the first stream event after launch; a listener attached after the product query would miss them, the store would redeliver forever, and a player would have been charged for something they never received. That is AC 4, and it is a property of statement order rather than of anything visible in a type.
+
+**Every delivered purchase is completed, including errors and cancellations.** The completion call sits outside the status switch on purpose — the plugin marks exactly which ones need it, and an uncompleted purchase is redelivered on every launch for the life of the install.
+
+**Cost:** the entitlement arrives some hundreds of milliseconds after the first frame, so anything drawn from it must tolerate starting empty. That is 047's problem and it is now stated in advance.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

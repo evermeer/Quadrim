@@ -704,6 +704,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShowTutorial => 'Show the tutorial again';
 
   @override
+  String get settingsPurchases => 'Purchases';
+
+  @override
+  String get settingsRestorePurchases => 'Restore purchases';
+
+  @override
+  String get settingsRestoreExplanation =>
+      'Already bought something? This brings it back without paying again.';
+
+  @override
+  String get settingsRestoreDone => 'Purchases restored.';
+
+  @override
+  String get settingsRestoreNothing => 'Nothing to restore on this account.';
+
+  @override
+  String get settingsRestoreUnavailable =>
+      'The store is not available right now.';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

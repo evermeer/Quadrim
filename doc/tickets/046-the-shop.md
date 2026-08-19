@@ -3,8 +3,12 @@
 **Depends on:** 041 (an iOS project to test on), 015 (store accounts and the
 products created in each console)
 
-**Status:** blocked — needs the Apple Developer account. The Android half is
-additionally blocked on the Play account.
+**Status:** **code complete, unverified against a store.** The whole shop is
+written and under test against a fake; nothing has been bought anywhere, so AC 2
+through 6 are open and AC 1 needs the App Store Connect console. **Stays in
+`doc/tickets/` rather than moving to `done/` for that reason** — see the closure
+notes for what is left and who has to do it. The Android half remains blocked on
+the Play account.
 
 ## Why
 
@@ -122,3 +126,98 @@ the closure so the next person does not wait for a real year.
 returns. Write it, test what can be tested against the plugin's own fakes, and
 record explicitly in the closure that the Play path is unverified — a
 half-tested purchase flow that is described as done is how money goes missing.
+
+## Closure
+
+**Partially complete, and the incomplete half is named rather than implied.**
+Everything that can be built and tested without a store console is done and
+under test. Nothing has been bought — not in sandbox, not against a StoreKit
+configuration — so **AC 2 through 6 are unverified**, and a half-tested purchase
+flow described as done is how money goes missing, which this ticket says itself.
+
+`bash tool/check.sh`: **ALL CHECKS PASSED**, 357 app tests (was 341).
+
+### What exists
+
+`app/lib/shop/` is the whole of it, and nothing outside `app/` gained a
+dependency — the purity scan still passes, so AC 8 is met.
+
+- **`products.dart`** — the two ids, fixed forever, and `Entitlement`.
+- **`shop.dart`** — `PurchasePlatform`, an interface this app owns over
+  `InAppPurchase`, its real adapter, and `Shop`. The interface exists so the
+  part that can lose money is testable without a store in the room.
+- **`Quadrim.storekit`** — a StoreKit configuration with both products, the
+  subscription inside a group holding one base plan, so a purchase can be
+  exercised in Xcode with no App Store Connect products at all.
+
+Three design decisions the ticket left open, all recorded: the unlock is
+**materialised into `UnlockDocument`s** at `UnlockSource.purchase` rather than
+held as a flag, because AC 6 and AC 7 are questions about records (D348);
+entitlement is **rebuilt each launch and never persisted**, because a cache is
+a second answer that is wrong exactly when a refund has landed (D349); and
+buying the whole roster gets **its own repository method** so D229's sequential
+rule stays categorical in the method that carries it (D350).
+
+`Shop.start()` is called but **not awaited** at launch, and subscribes to the
+purchase stream before its first `await` — which is what AC 4 turns on (D351).
+
+### What is tested
+
+`test/shop_test.dart`, 16 tests against a fake store. The ones that matter:
+
+- an errored *and* a cancelled purchase are still completed, because an
+  uncompleted purchase is redelivered forever and the player is charged for
+  something they never received;
+- a pending purchase owns nothing and completes nothing;
+- a lapse leaves every unlock intact, modelled as what it actually is — a fresh
+  launch where the store no longer re-delivers the subscription;
+- a refund revokes only `UnlockSource.purchase` records, and an opponent earned
+  with points keeps both its source and the price it cost;
+- granting twice does not overwrite an earned unlock.
+
+### The iOS build takes the plugin without a Podfile
+
+`in_app_purchase_storekit` resolves through Swift Package Manager like
+`path_provider_foundation` (D325), so there is still no `ios/Podfile`. The
+release build signs and installs.
+
+**It also ships its own `PrivacyInfo.xcprivacy`, and it is empty** — no
+tracking, no collection, no accessed APIs. That is a useful confirmation of
+D345's reasoning rather than a contradiction of it: a plugin with a native
+bundle can carry a manifest and does; `path_provider_foundation` has no native
+bundle and therefore cannot. **The app's own manifest needs no change** — with
+no server of ours, nothing about a purchase is collected or transmitted, so
+`NSPrivacyCollectedDataTypes` stays empty.
+
+### Acceptance criteria
+
+| AC | Status |
+|----|--------|
+| 1 — both products exist in both consoles, subscription in a group with one base plan | **Not met.** The *StoreKit configuration* has exactly this shape, which is what lets the code be exercised. Creating the real products needs the App Store Connect web console and an account login. Play is additionally blocked on the Play account. |
+| 2 — a sandbox purchase of each completes, entitlement readable after | **Not met**, and untested even locally. |
+| 3 — a reinstall restores both, via the explicit action, without re-paying | **Covered by test, not by a store.** The restore action exists in settings and `start()` restores at launch. |
+| 4 — an interrupted purchase completes on next launch | **Covered by test, not by a store.** The stream is subscribed before any await (D351) and every delivered purchase is completed. |
+| 5 — a lapsed subscription leaves unlocks intact | **Covered by test, not by a store.** |
+| 6 — refunds revoke precisely | **Covered by test, not by a store.** |
+| 7 — purchased unlocks carry `source` | **Met.** Written at `UnlockSource.purchase`, tested. |
+| 8 — no package outside `app/` gains a dependency | **Met.** Purity scan passes. |
+| 9 — `bash tool/check.sh` passes | **Met.** |
+
+### What has to happen next, and by whom
+
+1. **Create both products in App Store Connect** — a web console action needing
+   the account. The subscription must go inside a group with one base plan; the
+   group cannot be retro-fitted later around a product that already has
+   subscribers (D223).
+2. **Run the StoreKit configuration pass in Xcode** — scheme → Options → StoreKit
+   Configuration → `Quadrim.storekit`. This turns a console round trip into an
+   edit and should be the first thing tried.
+3. **Then re-test against real sandbox products**, because the two do not behave
+   identically on restore. Needs a Sandbox Apple Account, created in App Store
+   Connect and signed in under Settings → Developer, **not** the device's main
+   App Store account.
+4. **Record the sandbox subscription duration mapping** in this section when it
+   is known — a year renews in minutes there, and it is the only practical way
+   to test a lapse.
+5. **The Android half is written but entirely unverified** and stays that way
+   until the Play account returns.

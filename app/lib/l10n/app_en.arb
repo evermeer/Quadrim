@@ -517,6 +517,18 @@
   },
   "languageDutch": "Nederlands",
   "settingsShowTutorial": "Show the tutorial again",
+  "settingsPurchases": "Purchases",
+  "@settingsPurchases": {
+    "description": "Settings heading for the restore action. Apple requires a visible restore, and a player who reinstalls needs one."
+  },
+  "settingsRestorePurchases": "Restore purchases",
+  "@settingsRestorePurchases": {
+    "description": "Settings row that asks the store to re-deliver anything already bought. Never charges."
+  },
+  "settingsRestoreExplanation": "Already bought something? This brings it back without paying again.",
+  "settingsRestoreDone": "Purchases restored.",
+  "settingsRestoreNothing": "Nothing to restore on this account.",
+  "settingsRestoreUnavailable": "The store is not available right now.",
   "settingsAbout": "About",
   "yourPath": "Your path",
   "@yourPath": {

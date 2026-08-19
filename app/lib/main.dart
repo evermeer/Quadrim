@@ -13,6 +13,7 @@ import 'data/game_repository.dart';
 import 'data/local_game_repository.dart';
 import 'home/home_screen.dart';
 import 'l10n/app_localizations.dart';
+import 'shop/shop.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -33,10 +34,23 @@ Future<void> main() async {
   final store =
       await FileDocumentStore.open(Directory('${support.path}/quadrim'));
   final repository = await LocalGameRepository.open(store);
+
+  // The store, and it is deliberately not awaited before `runApp`. `start()`
+  // reaches the network, and a launch that blocks on it is a launch that hangs
+  // on a bad connection — for a game whose whole point is that computer play
+  // needs no network at all (D93, S1). What must happen early is the *stream
+  // subscription*, which `start()` opens first thing, before any await.
+  final shop = Shop(
+    platform: InAppPurchasePlatformAdapter(),
+    unlocks: repository,
+  );
+  unawaited(shop.start());
+
   runApp(QuadrimApp(
     repository: repository,
     settings: repository,
     unlocks: repository,
+    shop: shop,
   ));
 }
 
@@ -48,6 +62,7 @@ class QuadrimApp extends StatefulWidget {
     required this.unlocks,
     this.locale,
     this.random,
+    this.shop,
   });
 
   final GameRepository repository;
@@ -56,6 +71,11 @@ class QuadrimApp extends StatefulWidget {
   /// What the player has bought. A third contract satisfied by the same local
   /// implementation, kept separate so 0.3a can move one without the others.
   final UnlockRepository unlocks;
+
+  /// Null in every widget test and in any build with no store attached. The
+  /// shop is the one dependency here that reaches off the device, so it is
+  /// optional by construction rather than faked into existence (ticket 046).
+  final Shop? shop;
 
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
@@ -123,6 +143,7 @@ class _QuadrimAppState extends State<QuadrimApp> {
         settings: widget.settings,
         unlocks: widget.unlocks,
         random: widget.random,
+        shop: widget.shop,
       ),
     );
   }

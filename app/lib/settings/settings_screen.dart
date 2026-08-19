@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
+import '../shop/shop.dart';
 import '../tutorial/tutorial_screen.dart';
 
 /// The two things a player can change: language, and another look at the
@@ -20,9 +23,14 @@ import '../tutorial/tutorial_screen.dart';
 /// fails if it renders nowhere (D174). This screen inherited it from the
 /// placeholder it replaced.
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key, required this.settings});
+  const SettingsScreen({super.key, required this.settings, this.shop});
 
   final SettingsRepository settings;
+
+  /// Null in the tests that are about language and the tutorial, and in any
+  /// build with no store attached. The restore row is simply absent then —
+  /// a button that cannot reach a store is worse than no button.
+  final Shop? shop;
 
   Future<void> _save(SettingsDocument next) => settings.saveSettings(next);
 
@@ -83,6 +91,11 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (shop != null) ...[
+                    const Divider(),
+                    _Heading(l10n.settingsPurchases),
+                    _RestoreRow(shop: shop!),
+                  ],
                   const Divider(),
                   _Heading(l10n.settingsAbout),
                   Padding(
@@ -151,4 +164,88 @@ class _Choice extends StatelessWidget {
       if (v != null && v != group) onSelected(v);
     },
   );
+}
+
+
+/// The explicit restore action (§4.1, ticket 046).
+///
+/// **Apple requires one**, and it is not merely a formality: a player who
+/// reinstalls has paid and owns nothing until this runs. [Shop.start] restores
+/// silently at launch too, but a silent path the player cannot trigger is no
+/// use on the day it does not fire.
+class _RestoreRow extends StatefulWidget {
+  const _RestoreRow({required this.shop});
+
+  final Shop shop;
+
+  @override
+  State<_RestoreRow> createState() => _RestoreRowState();
+}
+
+class _RestoreRowState extends State<_RestoreRow> {
+  bool _running = false;
+
+  /// How long to wait for the store to answer before saying it found nothing.
+  ///
+  /// The store replies on the purchase stream rather than by returning, so
+  /// there is nothing to await. **Reporting "nothing to restore" too early is
+  /// the failure that matters**: it tells a player who has paid that they own
+  /// nothing, which reads as a lost purchase. So this waits for the entitlement
+  /// to change and only gives up after a generous timeout.
+  static const Duration _restoreTimeout = Duration(seconds: 8);
+
+  Future<void> _restore() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    if (!widget.shop.storeAvailable) {
+      messenger.showSnackBar(
+          SnackBar(content: Text(l10n.settingsRestoreUnavailable)));
+      return;
+    }
+
+    setState(() => _running = true);
+    final entitlement = widget.shop.entitlement;
+    final before = entitlement.value;
+
+    // Resolves on the first change, or on the timeout, whichever comes first.
+    final settled = Completer<void>();
+    void onChange() {
+      if (!settled.isCompleted) settled.complete();
+    }
+
+    entitlement.addListener(onChange);
+    await widget.shop.restore();
+    await settled.future.timeout(_restoreTimeout, onTimeout: () {});
+    entitlement.removeListener(onChange);
+
+    if (!mounted) return;
+    setState(() => _running = false);
+
+    final after = entitlement.value;
+    // Already owning something and seeing no change is still a success: the
+    // player asked for their purchases back and they have them.
+    final owns = after.unlockAll || after.unlimited;
+    messenger.showSnackBar(SnackBar(
+      content: Text(owns
+          ? l10n.settingsRestoreDone
+          : after == before
+              ? l10n.settingsRestoreNothing
+              : l10n.settingsRestoreDone),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListTile(
+      leading: const Icon(Icons.restore_outlined),
+      title: Text(l10n.settingsRestorePurchases),
+      subtitle: Text(l10n.settingsRestoreExplanation),
+      trailing: _running
+          ? const SizedBox(
+              width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          : null,
+      onTap: _running ? null : _restore,
+    );
+  }
 }

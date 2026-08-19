@@ -382,3 +382,150 @@ for an Android reason (D131). Nothing checks that they still agree. A future
 change of storage directory made for one platform would move the other
 platform's guarantee silently, and `art_assets_test.dart`-style coverage does
 not exist for this.
+
+---
+
+# Code Review: ticket 046 → main@2465ec0
+
+> Generated: 2026-08-19
+> Base: 2465ec0
+> Changed files: 11 (4 added, 7 modified)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 1 (fixed) |
+| minor | 2 |
+| nit | 0 |
+
+## Findings
+
+### [MAJOR — fixed] The restore action told paying players they owned nothing — `bug`
+
+**File:** `app/lib/settings/settings_screen.dart` (as first written)
+
+**Evidence:** The original `_restore` waited a flat second and then decided:
+
+```dart
+await widget.shop.restore();
+await Future<void>.delayed(const Duration(seconds: 1));
+...
+final owns = after.unlockAll || after.unlimited;
+messenger.showSnackBar(SnackBar(content: Text(owns ? l10n.settingsRestoreDone : ...)));
+```
+
+**Problem:** The store answers on the purchase stream, not by returning, so
+there is nothing to await and one second is a guess. A store slower than that —
+a poor connection, a cold StoreKit cache, the first call after a reinstall,
+which is *exactly when restore is used* — produced "Nothing to restore on this
+account." for a player who had paid. That reads as a lost purchase and is the
+single most damaging thing this screen could say.
+
+**Fix (applied):** Wait for the entitlement to actually change, with a generous
+timeout instead of a fixed delay:
+
+```dart
+final settled = Completer<void>();
+void onChange() { if (!settled.isCompleted) settled.complete(); }
+entitlement.addListener(onChange);
+await widget.shop.restore();
+await settled.future.timeout(_restoreTimeout, onTimeout: () {});
+entitlement.removeListener(onChange);
+```
+
+`_restoreTimeout` is 8 seconds. **Mutation-checked**: restoring the flat
+one-second wait fails `settings_restore_test.dart`'s "a slow store is waited for
+rather than reported as empty", which drives a fake store that answers after
+three seconds.
+
+---
+
+### [MINOR] `Shop` is never disposed — `architecture`
+
+**File:** `app/lib/main.dart:44`
+
+**Evidence:** `Shop` is constructed in `main()` and owns a stream subscription
+and four `ValueNotifier`s. `Shop.dispose()` exists and nothing calls it.
+
+**Problem:** Nothing leaks in practice — the object lives exactly as long as the
+process, which is the correct lifetime for the app's connection to the store,
+and `QuadrimApp.dispose` would be the wrong place because the shop outlives the
+widget. But an unused `dispose()` invites someone to conclude it is called.
+
+**Fix:** None applied. Either delete `dispose()` or comment why it exists for
+tests only. Left as-is because 047 attaches listeners to these notifiers and may
+want the method; changing it now would be churn in the wrong ticket.
+
+---
+
+### [MINOR] Nothing reads `Entitlement` yet — `test-coverage`
+
+**File:** `app/lib/shop/products.dart:31`
+
+**Evidence:** `grep` for `entitlement` outside `app/lib/shop/` returns nothing.
+
+**Problem:** The entitlement is computed, tested, and unconsumed. That is
+correct for this ticket — 047 owns the paywall and the meter, and this one
+"ends with products that can be bought and an entitlement the rest of the app
+can ask about" — but it means the *integration* is unexercised: no screen has
+yet had to cope with entitlement arriving after first frame (D351's stated
+cost).
+
+**Fix:** None. Recorded so 047 starts knowing the empty-then-populated sequence
+is untested end to end.
+
+## Checked and clean
+
+- **The money-losing paths are tested and the tests are not vacuous.** Errored
+  and cancelled purchases are still completed — an uncompleted purchase is
+  redelivered by the store forever — and that assertion sits outside the status
+  switch in the code for the same reason it is tested separately.
+- **A refund cannot revoke an earned unlock.** `grantAllPurchased` skips
+  opponents already unlocked, so a points-bought opponent keeps
+  `UnlockSource.points` *and* its original `pricePaid`;
+  `revokePurchasedUnlocks` filters on source. Both directions tested, including
+  the price, which is what stops a re-tuned cost table bankrupting someone
+  (§8.8).
+- **D229 stays categorical.** `purchase()` is untouched and still throws for any
+  opponent that is not the next locked one; the bulk grant is a separate method
+  rather than a flag on the rule's own enforcer (D350).
+- **Purity holds.** `in_app_purchase` is in `app/pubspec.yaml` alone; no package
+  under `packages/` gained a dependency and `check.sh`'s scan passes.
+- **The iOS build takes the plugin with no Podfile** — SPM resolves
+  `in_app_purchase_storekit`, consistent with D325 — and the release build signs
+  and installs on the device.
+- **The plugin ships an empty `PrivacyInfo.xcprivacy`**, which confirms rather
+  than contradicts D345: a plugin with a native bundle can carry a manifest and
+  does. The app's manifest correctly needs no change — with no server of ours,
+  nothing about a purchase is collected or transmitted.
+- **`bash tool/check.sh`: ALL CHECKS PASSED**, 361 app tests (was 341).
+
+## Functional Validation
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| AC-1 | Products in both consoles, subscription in a group with one base plan | ❌ | Only in `Quadrim.storekit`; the real products need the App Store Connect console |
+| AC-2 | A sandbox purchase completes, entitlement readable | ❌ | Nothing has been bought anywhere |
+| AC-3 | Reinstall restores both without re-paying | ⚠️ | `shop_test.dart` covers it against a fake; no store involved |
+| AC-4 | Interrupted purchase completes on next launch | ⚠️ | Same — stream subscribed before any await (D351), completion tested |
+| AC-5 | Lapsed subscription leaves unlocks intact | ⚠️ | Tested against the fake |
+| AC-6 | Refunds revoke precisely | ⚠️ | Tested against the fake, both directions |
+| AC-7 | Purchased unlocks carry `source` | ✅ | Written at `UnlockSource.purchase`, asserted |
+| AC-8 | No package outside `app/` gains a dependency | ✅ | Purity scan passes |
+| AC-9 | `check.sh` passes | ✅ | ALL CHECKS PASSED |
+
+### Gaps
+
+**Five of nine criteria are unverified against a real store**, and four of those
+are "tested against a fake, which is not the same thing". The fake was written
+from the plugin's documented contract, so it encodes what the plugin is
+*believed* to do; the ways real StoreKit differs from that belief are precisely
+what sandbox testing exists to find. The closure notes say this rather than
+claiming the tests close the criteria.
+
+**The ordering constraint in AC-1 is the one with a deadline.** The subscription
+group cannot be retro-fitted around a product that already has subscribers
+(D223), so the group must be right at creation — before anything ships, not
+before anything is tested.

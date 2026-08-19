@@ -1262,6 +1262,42 @@ abstract class AppLocalizations {
   /// **'Show the tutorial again'**
   String get settingsShowTutorial;
 
+  /// Settings heading for the restore action. Apple requires a visible restore, and a player who reinstalls needs one.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases'**
+  String get settingsPurchases;
+
+  /// Settings row that asks the store to re-deliver anything already bought. Never charges.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get settingsRestorePurchases;
+
+  /// No description provided for @settingsRestoreExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Already bought something? This brings it back without paying again.'**
+  String get settingsRestoreExplanation;
+
+  /// No description provided for @settingsRestoreDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases restored.'**
+  String get settingsRestoreDone;
+
+  /// No description provided for @settingsRestoreNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to restore on this account.'**
+  String get settingsRestoreNothing;
+
+  /// No description provided for @settingsRestoreUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The store is not available right now.'**
+  String get settingsRestoreUnavailable;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

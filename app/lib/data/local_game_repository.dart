@@ -322,6 +322,43 @@ class LocalGameRepository
   }
 
   @override
+  Future<List<UnlockDocument>> grantAllPurchased() async {
+    final created = <UnlockDocument>[];
+    for (final bot in engine.opponentCatalogue) {
+      // Already unlocked is already unlocked, whatever paid for it. An
+      // opponent earned with points keeps its points record, so a later refund
+      // of the purchase cannot revoke something the player worked for.
+      if (_unlocks.containsKey(bot.id)) continue;
+      final unlock = UnlockDocument(
+        opponentId: bot.id,
+        unlockedAt: _now(),
+        // Zero, always: the store was paid, not the points balance, and the
+        // balance is earned minus the sum of these (§8.8).
+        pricePaid: 0,
+        source: UnlockSource.purchase,
+      );
+      await _store.writeUnlock(bot.id, unlock.toJson());
+      _unlocks[bot.id] = unlock;
+      created.add(unlock);
+    }
+    if (created.isNotEmpty) _emit();
+    return created;
+  }
+
+  @override
+  Future<List<String>> revokePurchasedUnlocks() async {
+    final revoked = <String>[];
+    for (final entry in _unlocks.entries.toList()) {
+      if (entry.value.source != UnlockSource.purchase) continue;
+      await _store.deleteUnlock(entry.key);
+      _unlocks.remove(entry.key);
+      revoked.add(entry.key);
+    }
+    if (revoked.isNotEmpty) _emit();
+    return revoked;
+  }
+
+  @override
   Stream<SettingsDocument> watchSettings() => _watch(() => _settings);
 
   @override

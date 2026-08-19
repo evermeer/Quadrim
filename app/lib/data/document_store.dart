@@ -28,6 +28,13 @@ abstract interface class DocumentStore {
 
   Future<void> writeUnlock(String opponentId, Map<String, Object?> json);
 
+  /// Removes one unlock record.
+  ///
+  /// Reached only by a refund of the one-time "unlock all" purchase, which
+  /// revokes what it bought and nothing the player earned (ticket 046). Points
+  /// are never refunded, so nothing else in the app deletes an unlock.
+  Future<void> deleteUnlock(String opponentId);
+
   /// Null when settings have never been written or cannot be read.
   Future<Map<String, Object?>?> readSettings();
 
@@ -100,6 +107,12 @@ class FileDocumentStore implements DocumentStore {
       _writeAtomically(_unlockFile(opponentId), json);
 
   @override
+  Future<void> deleteUnlock(String opponentId) async {
+    final file = _unlockFile(opponentId);
+    if (file.existsSync()) await file.delete();
+  }
+
+  @override
   Future<Map<String, Object?>?> readSettings() async =>
       _settingsFile.existsSync() ? _read(_settingsFile) : null;
 
@@ -153,6 +166,10 @@ class MemoryDocumentStore implements DocumentStore {
   @override
   Future<void> writeUnlock(String opponentId, Map<String, Object?> json) async =>
       _unlocks[opponentId] = Map.of(json);
+
+  @override
+  Future<void> deleteUnlock(String opponentId) async =>
+      _unlocks.remove(opponentId);
 
   @override
   Future<Map<String, Object?>?> readSettings() async => _settings;

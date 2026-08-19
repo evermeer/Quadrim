@@ -704,6 +704,25 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsShowTutorial => 'Uitleg opnieuw bekijken';
 
   @override
+  String get settingsPurchases => 'Aankopen';
+
+  @override
+  String get settingsRestorePurchases => 'Aankopen herstellen';
+
+  @override
+  String get settingsRestoreExplanation =>
+      'Al iets gekocht? Hiermee krijg je het terug zonder opnieuw te betalen.';
+
+  @override
+  String get settingsRestoreDone => 'Aankopen hersteld.';
+
+  @override
+  String get settingsRestoreNothing => 'Niets te herstellen op dit account.';
+
+  @override
+  String get settingsRestoreUnavailable => 'De winkel is nu niet beschikbaar.';
+
+  @override
   String get settingsAbout => 'Over';
 
   @override

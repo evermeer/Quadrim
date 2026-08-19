@@ -1,0 +1,59 @@
+{
+  "identifier" : "5A3C1B20",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "1000000001",
+      "localizations" : [
+        {
+          "description" : "Play every opponent on the ladder, straight away.",
+          "displayName" : "Unlock all opponents",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "nl.evict.quadrim.unlock_all",
+      "referenceName" : "Unlock all opponents",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "20D4F1A6",
+      "localizations" : [],
+      "name" : "Quadrim play",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "2000000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Play as much as you like, all year.",
+              "displayName" : "Unlimited play",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "nl.evict.quadrim.unlimited",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Unlimited play",
+          "subscriptionGroupID" : "20D4F1A6",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

@@ -15,6 +15,7 @@ import '../design/forest.dart';
 import '../game/game_screen.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../shop/shop.dart';
 import '../settings/settings_screen.dart';
 import '../theme.dart';
 import '../tutorial/tutorial_screen.dart';
@@ -61,6 +62,7 @@ class HomeScreen extends StatefulWidget {
     required this.repository,
     required this.settings,
     required this.unlocks,
+    this.shop,
     this.random,
     this.now,
   });
@@ -70,6 +72,10 @@ class HomeScreen extends StatefulWidget {
   /// What the player has bought. Separate contract from [repository] even
   /// though 0.1's one implementation satisfies both.
   final UnlockRepository unlocks;
+
+  /// Null when no store is attached; the settings screen then omits its
+  /// restore row entirely (ticket 046).
+  final Shop? shop;
 
   /// Read on first frame to decide whether to offer the tutorial, and written
   /// once the offer has been made. Separate from [repository] because they are
@@ -437,7 +443,8 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: l10n.settings,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => SettingsScreen(settings: widget.settings),
+                builder: (_) => SettingsScreen(
+                    settings: widget.settings, shop: widget.shop),
               ),
             ),
           ),

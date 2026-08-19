@@ -87,5 +87,33 @@ abstract interface class UnlockRepository {
     required int pricePaid,
     UnlockSource source,
   });
+
+  /// Grants every opponent not already unlocked, at [UnlockSource.purchase].
+  ///
+  /// The one-time "unlock all opponents" product (§4.1, ticket 046). Deliberately
+  /// **not** [purchase]: that method enforces roster order because "four wins
+  /// buys the *next* opponent" would stop being a promise if any path could
+  /// skip ahead (D229). Buying the whole roster is precisely the case that is
+  /// allowed to, and giving it its own method keeps D229's rule categorical in
+  /// the method that carries it rather than adding a flag that weakens it.
+  ///
+  /// `pricePaid` is zero on every document written here: the player paid the
+  /// store, not points, and the balance is earned minus the sum of these. A
+  /// non-zero price would bankrupt someone for buying the unlock (§8.8).
+  ///
+  /// Returns the unlocks it created. Idempotent — an opponent already unlocked
+  /// by points keeps its [UnlockSource.points] record and is not overwritten,
+  /// so a later refund cannot revoke something that was earned.
+  Future<List<UnlockDocument>> grantAllPurchased();
+
+  /// Removes every unlock written at [UnlockSource.purchase], and nothing else.
+  ///
+  /// What a refund of the one-time unlock revokes (§4.1). Unlocks earned with
+  /// points are untouched, and no billing event on the *subscription* ever
+  /// reaches this method: losing the subscription loses unmetered play and
+  /// nothing else.
+  ///
+  /// Returns the opponent ids it revoked.
+  Future<List<String>> revokePurchasedUnlocks();
 }
 
