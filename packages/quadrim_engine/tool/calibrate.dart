@@ -32,6 +32,15 @@ import 'package:quadrim_rating/quadrim_rating.dart';
 /// hour it was budgeted at.
 const int kDefaultGames = 50;
 
+/// How many times the base count a pair of search-free opponents plays.
+///
+/// Four, which quarters the variance and so halves the noise: about 24 rating
+/// points against rungs that are forty apart (D344). It costs almost nothing —
+/// the whole bottom two thirds of the ladder decides its moves in
+/// microseconds, and the pairs that make a run long are all above Lynx and do
+/// not qualify.
+const int kCheapGamesFactor = 4;
+
 /// How far up the roster each opponent is measured against.
 ///
 /// Every opponent plays the [kReach] rungs above it, which on a roster of
@@ -152,14 +161,43 @@ List<(BotConfig, BotConfig)> _pairsFor(String id) {
     ],
   ];
 }
+/// Whether this opponent decides in microseconds — no search of any kind.
+///
+/// Everything below Lynx. Such a pair costs milliseconds a game, so it can
+/// afford far more of them than a Master-tier pair can.
+bool _isCheap(BotConfig c) =>
+    c.nodeBudget == 0 &&
+    c.searchDepth == 0 &&
+    c.threatSearchDepth == 0 &&
+    c.defenceSearchDepth == 0;
+
+/// Games for one pair: [kCheapGamesFactor] times the base where both sides are
+/// cheap, and the base otherwise.
+///
+/// **The rungs are finer than the instrument** (D344). Fifty games leaves about
+/// 49 points of sampling noise and the ladder's rungs are forty apart, so a
+/// perfectly ordered ladder still reports two or three inversions per run
+/// purely by chance — which is exactly what a run of the ramp did, naming three
+/// pairs that six hundred games each had measured the right way round. Noise
+/// falls with the square root of the count, so four times the games halves it
+/// to about 24 and puts it comfortably under a rung.
+///
+/// Only the cheap pairs get it, and that is the whole trick: they are the ones
+/// with forty-point rungs *and* the ones that cost nothing. The Master tier,
+/// where a single pair is twenty minutes, keeps the base count — its rungs are
+/// a hundred points apart and do not need the resolution.
+int _gamesFor(BotConfig a, BotConfig b, int base) =>
+    _isCheap(a) && _isCheap(b) ? base * kCheapGamesFactor : base;
+
 _PairResult _duel(BotConfig a, BotConfig b, _Options options) {
   final left = _scaled(a, options.budgetScale);
   final right = _scaled(b, options.budgetScale);
+  final games = _gamesFor(a, b, options.games);
   var wins = 0;
   var losses = 0;
   var draws = 0;
 
-  for (var g = 0; g < options.games; g++) {
+  for (var g = 0; g < games; g++) {
     // Both seats, alternately: Qubic is a first-player win with perfect play,
     // so a pairing played from one seat measures the seat.
     final opener = g.isEven ? left : right;
@@ -316,7 +354,7 @@ final class _PairResult {
                 ? '  (swept: the gap is at least this)'
                 : '';
     return '${label.padRight(30)} '
-        '${'$wins-$losses-$draws'.padLeft(9)}  '
+        '${'$wins-$losses-$draws'.padLeft(11)}  '
         'measured ${_signed(measuredGap.round()).padLeft(5)}  '
         'published ${_signed(publishedGap).padLeft(5)}$tail';
   }
@@ -457,8 +495,11 @@ void _reportDefects(List<_PairResult> results, _Options options) {
       print('  $pair');
     }
   }
-  print('tolerance $kTolerance points; sampling noise at ${options.games} '
-      'games is roughly ${_noise(options.games)} points near an even result.');
+  print('tolerance $kTolerance points; sampling noise is roughly '
+      '${_noise(options.games)} points at ${options.games} games and '
+      '${_noise(options.games * kCheapGamesFactor)} at '
+      '${options.games * kCheapGamesFactor}, which is what every pair below '
+      'Lynx plays (D344).');
 }
 
 /// The rating equivalent of one standard error on the score.

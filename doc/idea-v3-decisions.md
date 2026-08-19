@@ -1572,6 +1572,24 @@ Four of those were inversions and two were five-fold cliffs.
 
 **Cost.** Fourteen catalogue entries rewritten with their doc comments, four pinned test values moved, two blurbs, and one test in `deep_search_test.dart` that turned out to generate its endgame fixtures by self-playing **Kestrel** — so re-spacing the Club tier changed which positions it reached and a *proof* test failed on its sample count rather than on the solver. That fixture is now a frozen configuration owned by the test. A tuning pass on the roster must not be able to break a proof.
 
+## D344 — The cheap pairs play four times the games, and Heron is not a defect
+
+**Question:** The run that measured [D343](#d343)'s ramp put every anchor inside tolerance for the first time, and then reported five inversions. Two were the known Master-tier budget artefacts ([D342](#d342)). The other three — Clover over Sorrel, Willow over Rowan, Aspen over Vireo — contradicted duels of six hundred games each that had measured those same pairs at −41, −40 and −42, the right way round. Which is wrong, the run or the duels?
+
+**Decision:** Neither. **The rungs are now finer than the instrument resolves**, and the fix is to play more games where they are cheap.
+
+Sampling noise at fifty games is about 49 rating points and the ladder's rungs are forty apart. A *perfectly ordered* ladder therefore reports a couple of inversions per run purely by chance, and three is what turned up. That is not a defect in the roster; it is the report telling the truth about its own precision, and it becomes actively misleading once the ladder is good enough that real inversions are rare — every run would name a different innocent pair.
+
+**Every pair in which neither side searches now plays `kCheapGamesFactor` — four — times the base count.** Noise falls with the square root, so two hundred games brings it to about 25, comfortably under a rung. The choice of *which* pairs is the whole trick: the opponents below Lynx are exactly the ones with forty-point rungs **and** exactly the ones that decide a move in microseconds, so the resolution is free. The Master tier keeps the base count — its rungs are a hundred points apart and a single pair there is twenty minutes.
+
+The reported noise line now prints both figures rather than one, because a run no longer has a single precision.
+
+**And Heron's +122 was investigated and is not Heron's to fix.** It was the one error the run flagged that looked like a genuine configuration defect. It is not: the adjacent chain from Vireo reads 50, 54, 104, 92 — three hundred points where the roster publishes 160 — and the direct Vireo–Heron pair measures −312, agreeing with the chain. Heron simply sits where the accumulated excess of the too-steep top becomes visible in the estimate column.
+
+Weakening it was tried and measured rather than reasoned about. `osprey → heron` improved from 92 to 53 and `heron → marlin` degraded from 67 to 121 — the total went from 159 to 174 and the distribution became *less* even. **The excess is conserved**, exactly as D343 predicted it must be: a dial can only weaken, so the span between two fixed configurations is an invariant and tuning a rung inside it moves points from one side to the other. The change was reverted.
+
+What that leaves is a clean statement of the last open problem on the ladder: **Kestrel to Lynx is about twice as steep as published, and nothing between them can fix it.** The span shrinks only if one of the endpoints moves, which means bringing the Master tier's node budgets down — the one place D144's "change the configuration, never the rating" still has room, and work that should follow the full-budget run D342 describes rather than precede it.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
