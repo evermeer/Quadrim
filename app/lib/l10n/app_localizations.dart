@@ -1298,6 +1298,120 @@ abstract class AppLocalizations {
   /// **'The store is not available right now.'**
   String get settingsRestoreUnavailable;
 
+  /// Paywall heading when the DAILY cap refused a new computer game. Names the limit that actually bit (F16) -- saying the weekly one here would be false.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s today\'s three games'**
+  String get paywallDailyTitle;
+
+  /// No description provided for @paywallDailyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start three games a day against the computer. The next one is available tomorrow.'**
+  String get paywallDailyBody;
+
+  /// Paywall heading when the WEEKLY cap refused the game, even though the daily one had room.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s this week\'s nine games'**
+  String get paywallWeeklyTitle;
+
+  /// No description provided for @paywallWeeklyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start nine games a week against the computer. The next one is available on Monday.'**
+  String get paywallWeeklyBody;
+
+  /// On the paywall. States what is NOT refused, because a wall that looks total when it is not reads as broken.
+  ///
+  /// In en, this message translates to:
+  /// **'Games you have already started can always be finished, and pass and play is never limited.'**
+  String get paywallFooter;
+
+  /// No description provided for @paywallSeeOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'See options'**
+  String get paywallSeeOptions;
+
+  /// No description provided for @paywallNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get paywallNotNow;
+
+  /// No description provided for @shopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shop'**
+  String get shopTitle;
+
+  /// No description provided for @shopUnlimitedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited play'**
+  String get shopUnlimitedName;
+
+  /// No description provided for @shopUnlimitedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start as many games against the computer as you like. Yearly, cancel any time.'**
+  String get shopUnlimitedBody;
+
+  /// No description provided for @shopUnlockAllName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock all opponents'**
+  String get shopUnlockAllName;
+
+  /// No description provided for @shopUnlockAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every opponent on the ladder, straight away, instead of earning them with points.'**
+  String get shopUnlockAllBody;
+
+  /// Deliberately prominent. The unlock sells impatience, not capability -- a buyer who finds this out afterwards has been misled.
+  ///
+  /// In en, this message translates to:
+  /// **'This does not change how many games you can start. You still play three a day unless you also have unlimited play.'**
+  String get shopUnlockAllCaveat;
+
+  /// No description provided for @shopOwned.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned'**
+  String get shopOwned;
+
+  /// No description provided for @shopBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get shopBuy;
+
+  /// No description provided for @shopUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The store is not available right now.'**
+  String get shopUnavailable;
+
+  /// S19. At 1.0 the meter is device-local and a reinstall clears it, so nothing here may imply an account-wide guarantee that does not exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Your free games are counted on this device.'**
+  String get shopMeterNote;
+
+  /// On a volume quest tile a free player cannot reach: five games in a day exceeds the free cap of three, so the rung is subscriber-only by arithmetic. A permanently unreachable goal shown without explanation reads as a bug.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs unlimited play'**
+  String get questVolumeLocked;
+
+  /// On the end-of-game panel, and only when the number has got small. A player told this after every game is being nagged by their own game.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No games left today} =1{1 game left today} other{{count} games left today}}'**
+  String resultGamesLeft(int count);
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

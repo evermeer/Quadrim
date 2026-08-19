@@ -63,6 +63,7 @@ class QuadrimApp extends StatefulWidget {
     this.locale,
     this.random,
     this.shop,
+    this.now,
   });
 
   final GameRepository repository;
@@ -76,6 +77,10 @@ class QuadrimApp extends StatefulWidget {
   /// shop is the one dependency here that reaches off the device, so it is
   /// optional by construction rather than faked into existence (ticket 046).
   final Shop? shop;
+
+  /// Injected in tests, like [random]. The meter and the streak are both
+  /// day-shaped, so a test that cannot move the clock cannot reach either.
+  final DateTime Function()? now;
 
   /// Injected so a test can pin who opens a new game. Null means unseeded.
   final Random? random;
@@ -144,6 +149,7 @@ class _QuadrimAppState extends State<QuadrimApp> {
         unlocks: widget.unlocks,
         random: widget.random,
         shop: widget.shop,
+        now: widget.now,
       ),
     );
   }

@@ -7,6 +7,7 @@ import '../data/game_repository.dart';
 import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
 import '../shop/shop.dart';
+import '../shop/shop_screen.dart';
 import '../tutorial/tutorial_screen.dart';
 
 /// The two things a player can change: language, and another look at the
@@ -94,6 +95,15 @@ class SettingsScreen extends StatelessWidget {
                   if (shop != null) ...[
                     const Divider(),
                     _Heading(l10n.settingsPurchases),
+                    ListTile(
+                      leading: const Icon(Icons.storefront_outlined),
+                      title: Text(l10n.shopTitle),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ShopScreen(shop: shop!),
+                        ),
+                      ),
+                    ),
                     _RestoreRow(shop: shop!),
                   ],
                   const Divider(),

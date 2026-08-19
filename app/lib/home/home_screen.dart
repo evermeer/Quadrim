@@ -15,6 +15,8 @@ import '../design/forest.dart';
 import '../game/game_screen.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../data/meter_fold.dart' as meter_fold;
+import '../shop/paywall.dart';
 import '../shop/shop.dart';
 import '../settings/settings_screen.dart';
 import '../theme.dart';
@@ -101,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<GameDocument>>? _active;
   StreamSubscription<List<GameDocument>>? _completed;
   StreamSubscription<List<UnlockDocument>>? _unlocks;
+  StreamSubscription<SettingsDocument>? _settingsSub;
   AppLifecycleListener? _lifecycle;
 
   List<GameDocument> _activeGames = const [];
@@ -119,6 +122,20 @@ class _HomeScreenState extends State<HomeScreen> {
   List<GameDocument> get _startedGames =>
       _activeGames.where((game) => game.moves.length >= _kListedFrom).toList();
   HomeSummary _summary = HomeSummary.empty;
+  SettingsDocument? _settingsDoc;
+
+  /// What the meter says right now, folded rather than stored.
+  ///
+  /// Both lists, because a game started today may still be unfinished — the
+  /// meter counts games *started*, and counting only completed ones would let
+  /// a player open three games and start a fourth.
+  MeterState get _meter => meterState(
+        games: meter_fold.startedGamesFrom([..._activeGames, ..._completedGames]),
+        now: (widget.now ?? DateTime.now)(),
+        freeMonth: _settingsDoc == null
+            ? null
+            : meter_fold.freeMonthFrom(_settingsDoc!),
+      );
   List<UnlockDocument> _unlockList = const [];
 
   /// The four quests closest to completion, folded from the same list of
@@ -181,6 +198,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _active = widget.repository
         .watchActiveGames()
         .listen((games) => setState(() => _activeGames = games));
+    _settingsSub = widget.settings
+        .watchSettings()
+        .listen((doc) => setState(() => _settingsDoc = doc));
     // Watched rather than loaded once: the criteria ask both for a single
     // list folded four ways and for the screen to update when a game finishes,
     // and a stream gives one list per change rather than four sweeps (D158).
@@ -234,6 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _completed?.cancel();
     _unlocks?.cancel();
     _lifecycle?.dispose();
+    _settingsSub?.cancel();
     super.dispose();
   }
 
@@ -310,6 +331,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (mode == null || !mounted) return;
 
+    // **Refused before the player is made to choose an opponent.** `_start`
+    // guards too, and that is the guard that counts — it is the single place a
+    // game is created, so the challenge and rematch buttons cannot slip past
+    // it. This one exists so the wall does not arrive after a choice, which
+    // reads as the app changing its mind.
+    if (mode == GameMode.vsComputer && !_meter.canStart) {
+      await showPaywall(context, limit: _meter.blocked, shop: widget.shop);
+      return;
+    }
+
+    // **Refused before the player is made to choose an opponent.** `_start`
+    // guards too, and that is the guard that counts — it is the single place a
+    // game is created, so the challenge and rematch buttons cannot slip past
+    // it. This one exists so the wall does not arrive after a choice, which
+    // reads as the app changing its mind.
+    if (mode == GameMode.vsComputer && !_meter.canStart) {
+      await showPaywall(context, limit: _meter.blocked, shop: widget.shop);
+      return;
+    }
+
     BotConfig? bot;
     if (mode == GameMode.vsComputer) {
       bot = await Navigator.of(context).push<BotConfig>(
@@ -345,6 +386,19 @@ class _HomeScreenState extends State<HomeScreen> {
           await _openGame(game.id);
           return;
         }
+      }
+    }
+    // **The wall, and it is here rather than earlier for two reasons.** The
+    // resume loop above has already returned for a game in progress, so
+    // finishing one is never refused (§4.2); and `mode` is checked, so pass and
+    // play is never refused either. The tutorial's practice game never reaches
+    // this method at all — it is not stored, which is also why it is not
+    // metered.
+    if (mode == GameMode.vsComputer) {
+      final meter = _meter;
+      if (!meter.canStart) {
+        await showPaywall(context, limit: meter.blocked, shop: widget.shop);
+        return;
       }
     }
     final game = await widget.repository.createGame(
@@ -507,7 +561,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         if (_completedGames.isNotEmpty) ...[
                           const SizedBox(height: kSectionGap),
-                          QuestsSection(quests: _quests),
+                          QuestsSection(
+                            quests: _quests,
+                            // Capped unless the free month still covers today
+                            // or the subscription is owned. The entitlement
+                            // starts empty and fills in after the store
+                            // answers (D349), so this can flip shortly after
+                            // launch — which is right: it must never claim a
+                            // rung is unreachable for someone who has paid.
+                            capped: !_meter.inFreeMonth &&
+                                !(widget.shop?.entitlement.value.unlimited ??
+                                    false),
+                          ),
                         ],
                         // Only once something has actually been finished. A
                         // heading over an empty list is a heading for nothing.

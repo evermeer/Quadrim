@@ -529,6 +529,47 @@
   "settingsRestoreDone": "Purchases restored.",
   "settingsRestoreNothing": "Nothing to restore on this account.",
   "settingsRestoreUnavailable": "The store is not available right now.",
+  "paywallDailyTitle": "That's today's three games",
+  "@paywallDailyTitle": {
+    "description": "Paywall heading when the DAILY cap refused a new computer game. Names the limit that actually bit (F16) -- saying the weekly one here would be false."
+  },
+  "paywallDailyBody": "You can start three games a day against the computer. The next one is available tomorrow.",
+  "paywallWeeklyTitle": "That's this week's nine games",
+  "@paywallWeeklyTitle": {
+    "description": "Paywall heading when the WEEKLY cap refused the game, even though the daily one had room."
+  },
+  "paywallWeeklyBody": "You can start nine games a week against the computer. The next one is available on Monday.",
+  "paywallFooter": "Games you have already started can always be finished, and pass and play is never limited.",
+  "@paywallFooter": {
+    "description": "On the paywall. States what is NOT refused, because a wall that looks total when it is not reads as broken."
+  },
+  "paywallSeeOptions": "See options",
+  "paywallNotNow": "Not now",
+  "shopTitle": "Shop",
+  "shopUnlimitedName": "Unlimited play",
+  "shopUnlimitedBody": "Start as many games against the computer as you like. Yearly, cancel any time.",
+  "shopUnlockAllName": "Unlock all opponents",
+  "shopUnlockAllBody": "Every opponent on the ladder, straight away, instead of earning them with points.",
+  "shopUnlockAllCaveat": "This does not change how many games you can start. You still play three a day unless you also have unlimited play.",
+  "@shopUnlockAllCaveat": {
+    "description": "Deliberately prominent. The unlock sells impatience, not capability -- a buyer who finds this out afterwards has been misled."
+  },
+  "shopOwned": "Owned",
+  "shopBuy": "Buy",
+  "shopUnavailable": "The store is not available right now.",
+  "shopMeterNote": "Your free games are counted on this device.",
+  "@shopMeterNote": {
+    "description": "S19. At 1.0 the meter is device-local and a reinstall clears it, so nothing here may imply an account-wide guarantee that does not exist."
+  },
+  "questVolumeLocked": "Needs unlimited play",
+  "@questVolumeLocked": {
+    "description": "On a volume quest tile a free player cannot reach: five games in a day exceeds the free cap of three, so the rung is subscriber-only by arithmetic. A permanently unreachable goal shown without explanation reads as a bug."
+  },
+  "resultGamesLeft": "{count, plural, =0{No games left today} =1{1 game left today} other{{count} games left today}}",
+  "@resultGamesLeft": {
+    "description": "On the end-of-game panel, and only when the number has got small. A player told this after every game is being nagged by their own game.",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "settingsAbout": "About",
   "yourPath": "Your path",
   "@yourPath": {

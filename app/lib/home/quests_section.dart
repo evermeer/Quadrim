@@ -19,9 +19,22 @@ import '../l10n/app_localizations.dart';
 /// that earn them exist, and four tiles where two carry a figure and two carry
 /// a blank reads as a bug rather than as a distinction.
 class QuestsSection extends StatelessWidget {
-  const QuestsSection({super.key, required this.quests});
+  const QuestsSection({
+    super.key,
+    required this.quests,
+    this.capped = false,
+  });
 
   final List<QuestStatus> quests;
+
+  /// True when the daily cap applies to this player — not subscribed and not
+  /// inside the free month.
+  ///
+  /// **Five games in a day exceeds a free cap of three**, so no free player can
+  /// complete even the first rung of the volume ladder: it is subscriber-only
+  /// by arithmetic rather than by a rule (§7.4). The tile says so, because a
+  /// permanently unreachable goal shown without explanation reads as a bug.
+  final bool capped;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +44,8 @@ class QuestsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final status in quests) QuestTile(status: status),
+          for (final status in quests)
+            QuestTile(status: status, capped: capped),
         ],
       ),
     );
@@ -44,22 +58,32 @@ class QuestsSection extends StatelessWidget {
 /// to a screen reader and hard to read at the largest font scale; the pair is
 /// what makes the progress available two ways (criterion U-series, ticket 021).
 class QuestTile extends StatelessWidget {
-  const QuestTile({super.key, required this.status});
+  const QuestTile({super.key, required this.status, this.capped = false});
 
   final QuestStatus status;
+
+  /// See [QuestsSection.capped].
+  final bool capped;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final name = questName(l10n, status.quest);
+    // Only the volume family is unreachable under the cap. The per-opponent
+    // and streak families are all completable on three games a day.
+    final unreachable =
+        capped && status.quest.family == QuestFamily.gamesInDay;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Semantics(
         container: true,
         // State with progress, not decoration: a bar conveys nothing to a
         // screen reader, so the tile says where it stands in words.
-        label: l10n.questSemantics(name, status.current, status.quest.target),
+        label: unreachable
+            ? '${l10n.questSemantics(name, status.current, status.quest.target)}. '
+                '${l10n.questVolumeLocked}'
+            : l10n.questSemantics(name, status.current, status.quest.target),
         child: ExcludeSemantics(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +116,14 @@ class QuestTile extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (unreachable) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.questVolumeLocked,
+                        style: theme.textTheme.labelSmall
+                            ?.copyWith(color: theme.colorScheme.primary),
+                      ),
+                    ],
                   ],
                 ),
               ),

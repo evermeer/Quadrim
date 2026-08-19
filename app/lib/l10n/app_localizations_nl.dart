@@ -723,6 +723,79 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsRestoreUnavailable => 'De winkel is nu niet beschikbaar.';
 
   @override
+  String get paywallDailyTitle => 'Dat waren je drie partijen van vandaag';
+
+  @override
+  String get paywallDailyBody =>
+      'Je kunt drie partijen per dag tegen de computer beginnen. De volgende kan morgen.';
+
+  @override
+  String get paywallWeeklyTitle => 'Dat waren je negen partijen van deze week';
+
+  @override
+  String get paywallWeeklyBody =>
+      'Je kunt negen partijen per week tegen de computer beginnen. De volgende kan maandag.';
+
+  @override
+  String get paywallFooter =>
+      'Partijen die al begonnen zijn kun je altijd afmaken, en samen spelen op één toestel is nooit beperkt.';
+
+  @override
+  String get paywallSeeOptions => 'Bekijk de mogelijkheden';
+
+  @override
+  String get paywallNotNow => 'Niet nu';
+
+  @override
+  String get shopTitle => 'Winkel';
+
+  @override
+  String get shopUnlimitedName => 'Onbeperkt spelen';
+
+  @override
+  String get shopUnlimitedBody =>
+      'Begin zoveel partijen tegen de computer als je wilt. Per jaar, elk moment op te zeggen.';
+
+  @override
+  String get shopUnlockAllName => 'Alle tegenstanders vrijspelen';
+
+  @override
+  String get shopUnlockAllBody =>
+      'Meteen alle tegenstanders op de ladder, in plaats van ze met punten te verdienen.';
+
+  @override
+  String get shopUnlockAllCaveat =>
+      'Dit verandert niet hoeveel partijen je kunt beginnen. Je speelt er nog steeds drie per dag, tenzij je ook onbeperkt spelen hebt.';
+
+  @override
+  String get shopOwned => 'In bezit';
+
+  @override
+  String get shopBuy => 'Kopen';
+
+  @override
+  String get shopUnavailable => 'De winkel is nu niet beschikbaar.';
+
+  @override
+  String get shopMeterNote =>
+      'Je gratis partijen worden op dit toestel geteld.';
+
+  @override
+  String get questVolumeLocked => 'Vereist onbeperkt spelen';
+
+  @override
+  String resultGamesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nog $count partijen vandaag',
+      one: 'Nog 1 partij vandaag',
+      zero: 'Geen partijen meer vandaag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsAbout => 'Over';
 
   @override

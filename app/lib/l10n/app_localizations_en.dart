@@ -724,6 +724,78 @@ class AppLocalizationsEn extends AppLocalizations {
       'The store is not available right now.';
 
   @override
+  String get paywallDailyTitle => 'That\'s today\'s three games';
+
+  @override
+  String get paywallDailyBody =>
+      'You can start three games a day against the computer. The next one is available tomorrow.';
+
+  @override
+  String get paywallWeeklyTitle => 'That\'s this week\'s nine games';
+
+  @override
+  String get paywallWeeklyBody =>
+      'You can start nine games a week against the computer. The next one is available on Monday.';
+
+  @override
+  String get paywallFooter =>
+      'Games you have already started can always be finished, and pass and play is never limited.';
+
+  @override
+  String get paywallSeeOptions => 'See options';
+
+  @override
+  String get paywallNotNow => 'Not now';
+
+  @override
+  String get shopTitle => 'Shop';
+
+  @override
+  String get shopUnlimitedName => 'Unlimited play';
+
+  @override
+  String get shopUnlimitedBody =>
+      'Start as many games against the computer as you like. Yearly, cancel any time.';
+
+  @override
+  String get shopUnlockAllName => 'Unlock all opponents';
+
+  @override
+  String get shopUnlockAllBody =>
+      'Every opponent on the ladder, straight away, instead of earning them with points.';
+
+  @override
+  String get shopUnlockAllCaveat =>
+      'This does not change how many games you can start. You still play three a day unless you also have unlimited play.';
+
+  @override
+  String get shopOwned => 'Owned';
+
+  @override
+  String get shopBuy => 'Buy';
+
+  @override
+  String get shopUnavailable => 'The store is not available right now.';
+
+  @override
+  String get shopMeterNote => 'Your free games are counted on this device.';
+
+  @override
+  String get questVolumeLocked => 'Needs unlimited play';
+
+  @override
+  String resultGamesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count games left today',
+      one: '1 game left today',
+      zero: 'No games left today',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsAbout => 'About';
 
   @override

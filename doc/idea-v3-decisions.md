@@ -1691,6 +1691,44 @@ What that leaves is a clean statement of the last open problem on the ladder: **
 
 **Cost:** the entitlement arrives some hundreds of milliseconds after the first frame, so anything drawn from it must tolerate starting empty. That is 047's problem and it is now stated in advance.
 
+## D352 — The wall is checked twice, and only one of the two is the guard
+
+**Question:** Where does the cap refuse a game — before the player picks an opponent, or at the single place a game is created?
+
+**Decision:** Both, and they are not the same kind of check.
+
+`_start` is the guard. It is the one place a game is created, which is why D322's resume rule lives there too, and it is reached by the challenge button and the rematch path as well as by the new-game flow. A check anywhere else can be walked around; this one cannot.
+
+`_newGame` checks as well, immediately after the mode is chosen and **before** the opponent list is pushed. That one is not a guard — if it were deleted nothing would get through that `_start` does not already stop. It exists so the refusal does not arrive *after* the player has chosen who to play, which reads as the app changing its mind.
+
+**The order inside `_start` is what makes criterion 3 true.** The resume loop runs first and returns for a game already in progress, so finishing one is never refused; the `mode` check means pass and play is never refused; and the tutorial's practice game never reaches this method at all, because it is not stored — which is also why it is not metered (§4.2).
+
+**Cost:** two call sites of one condition, and if the meter's meaning ever changes, both must move. The alternative was one check in the wrong place, which is worse in a way the player would feel.
+
+## D353 — A missing settings document means unmetered, and that hole is deliberate
+
+**Question:** `MeterState` treats a null `FreeMonth` as unmetered — nothing is ever blocked. The home screen's settings document arrives asynchronously, so for the first frames after launch it is null. Does the wall therefore leak?
+
+**Decision:** Yes, briefly, and that is the right direction to fail.
+
+`meter_fold.freeMonthFrom` returns null when `freeMonthStartedAt` has never been stamped or cannot be read, and `meterState` reads null as "no cap applies". It was written that way for damaged records: a player whose settings document is unreadable must fail towards being allowed to play rather than towards a wall nobody can explain. The loading window inherits the same behaviour for free.
+
+**What it costs is bounded and small.** The window is between first frame and the settings stream's first event — one or two frames — and reaching the wall inside it requires tapping New game and choosing the computer within that time. A player who managed it would get one extra game, once, on a meter that is device-local at 1.0 anyway (S19).
+
+**What the alternative costs is worse.** Blocking while settings are unknown means a player whose storage is briefly slow is told they have used games they have not, and that is the failure the whole of D221 is about: the app must not appear to misunderstand its own rules.
+
+## D354 — The volume-quest restriction is computed from the cap, not from a flag on the quest
+
+**Question:** §7.4 says no free player can complete even the first rung of the volume ladder. Should the quest carry that fact, or should the tile derive it?
+
+**Decision:** The tile derives it, from `family == QuestFamily.gamesInDay` and whether the cap currently applies.
+
+**The restriction is arithmetic, not policy.** Five games in a day exceeds a free cap of three; that is the whole of it. Marking the quest itself would put a `subscriberOnly` field in `quadrim_progression`, which is a package that may not know what an entitlement is — the same line §7.1 draws when it forbids the engine a `locked` field on `BotConfig`. It would also go stale the moment either number moved.
+
+**"Currently" is doing work in that sentence.** The tile is unmarked inside the free month and unmarked for a subscriber, and the entitlement starts empty and fills in after the store answers (D349) — so a paying player may see the mark for a fraction of a second at launch. That is the acceptable direction: briefly under-promising to someone who has paid is recoverable, and telling a free player a rung is reachable when it is not is the thing §7.4 exists to prevent.
+
+**Cost:** if a later release changes the daily cap to five or the first volume rung to three, this tile lies and no test fails, because nothing connects `kDailyLimit` to `_volumeTargets.first`. That connection is the honest thing to add if either number is ever touched.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

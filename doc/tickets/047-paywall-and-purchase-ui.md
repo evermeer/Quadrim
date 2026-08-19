@@ -2,7 +2,12 @@
 
 **Depends on:** 045 (the meter), 046 (products and entitlement)
 
-**Status:** blocked by 045 and 046
+**Status:** **code complete; the end-of-game remaining-games line is deferred
+and named in the closure.** All ten acceptance criteria are met and tested.
+Nothing here has been exercised against a real store, because 046's products do
+not exist yet — the shop screen therefore renders its unavailable state on this
+build. **Stays in `doc/tickets/` until it has been seen against real
+products.**
 
 ## Why
 
@@ -95,3 +100,91 @@ formatting are the two places where machine-translated text reads as a scam,
 and the app has been bilingual since 0.1 precisely so this would not be
 special. `intl` formats the price the store gives you; do not build the string
 by concatenating a currency symbol.
+
+## Closure
+
+**All ten acceptance criteria are met. One item from "What it does" is not, and
+it is named below rather than left to be discovered.**
+
+`bash tool/check.sh`: **ALL CHECKS PASSED**, 372 app tests (was 366).
+
+### The wall
+
+`showPaywall` names the limit that actually bit. The daily and weekly messages
+are different strings with different remedies — "the next one is available
+tomorrow" against "the next one is available on Monday" — and the test that
+matters drives a Wednesday with nine games already used this week and none of
+them today, so the daily cap has room and only the weekly one refuses. Saying
+"tomorrow" there would be false, and that is the whole of D221.
+
+**Checked in two places, and only one is the guard** (D352). `_start` is the
+single place a game is created, so the challenge and rematch buttons cannot
+slip past it; `_newGame` checks earlier so the refusal does not arrive after
+the player has already chosen an opponent. The order inside `_start` is what
+makes criterion 3 true — the resume loop returns first, so a game in progress
+is never refused, and pass and play is excluded by `mode`.
+
+### The shop
+
+One screen from the wall and from settings. **The one-time unlock's caveat is
+given the same visual weight as its description**, in bold, above the price: a
+buyer who discovers afterwards that they still play three games a day has been
+misled, and the unlock sells impatience rather than capability (§4.1).
+
+Prices are the store's own formatted strings, never built by concatenating a
+symbol — the ticket is explicit and it is one of the two places an app reads as
+a scam.
+
+`shopMeterNote` says the free games are counted **on this device**, which is
+what S19 requires and what stops any copy here implying an account that does
+not exist at 1.0.
+
+### The quest tiles
+
+Volume rungs are marked "Needs unlimited play" when the cap applies, and the
+mark is derived from the family and the current entitlement rather than stored
+on the quest (D354) — `quadrim_progression` may no more know what a
+subscription is than the engine may know what an unlock is (§7.1).
+
+The mark is absent inside the free month and absent for a subscriber. Tested
+three ways, including that a *non*-volume quest is never marked: every
+per-opponent and streak rung is completable on three games a day, so marking
+them would be false.
+
+### Not done, and deliberately
+
+**The end-of-game panel does not yet show how many games remain today.** It is
+in §4 of this ticket and it is not an acceptance criterion. Doing it needs the
+settings document threaded into `GameScreen`, which currently takes the game
+repository, the unlocks and a clock but not settings — a second screen's worth
+of plumbing plus its own tests. It was left rather than rushed, because a
+half-wired meter on the result panel would show a wrong number to a player who
+has just finished a game, and a wrong number there is worse than no number.
+
+Everything it needs exists: `MeterState.remainingToday` is already written and
+tested in `quadrim_progression`, and already returns the min of the two limits
+for exactly this purpose.
+
+### Acceptance criteria
+
+| AC | Status |
+|----|--------|
+| 1 — daily cap refused, names the daily limit | **Met**, tested. |
+| 2 — weekly cap names the *weekly* message | **Met**, tested on a day with daily room left, which is the only fixture that can tell the two apart. |
+| 3 — in-progress finishable; pass and play, practice and replay never refused | **Met.** Pass and play tested; the resume path returns before the wall; the practice game is never stored so it cannot reach the meter. |
+| 4 — the purchase screen states the unlock does not lift the cap | **Met**, and in bold above the price. |
+| 5 — restore reachable from settings and the purchase screen | **Met**, both. |
+| 6 — volume tiles state the requirement and why it is out of reach | **Met**, tested three ways. |
+| 7 — no string outside l10n, English and Dutch | **Met** — `check.sh` greps for it, and every key was added to both `.arb` files in the same edit. |
+| 8 — renders at the layout extremes | **Met.** The paywall is driven at 1080×1920 and 1290×2796, at text scale 1 and 2; overflow surfaces as an exception and `takeException()` is asserted null. |
+| 9 — no copy claims a guarantee 1.0 does not have | **Met** (`shopMeterNote`, S19). |
+| 10 — `bash tool/check.sh` passes | **Met.** |
+
+### What is still unverified
+
+Nothing in this ticket has been exercised against a real store, because 046's
+products do not exist yet — the bundle identifier is held by a personal team and
+Apple Support has been asked to release it. The shop screen renders prices from
+whatever `queryProductDetails` returns, so **on this build it shows the
+unavailable state**, which is itself worth seeing and is what the store-less
+tests cover.

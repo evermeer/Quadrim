@@ -529,3 +529,123 @@ claiming the tests close the criteria.
 group cannot be retro-fitted around a product that already has subscribers
 (D223), so the group must be right at creation — before anything ships, not
 before anything is tested.
+
+---
+
+# Code Review: ticket 047 → main@82c92e2
+
+> Generated: 2026-08-19
+> Base: 82c92e2
+> Changed files: 10 (3 added, 7 modified)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 2 |
+| nit | 0 |
+
+## Findings
+
+### [MINOR] The wall leaks for a frame or two after launch — `bug`
+
+**File:** `app/lib/home/home_screen.dart` (`_meter`), `app/lib/data/meter_fold.dart:40`
+
+**Evidence:**
+
+```dart
+freeMonth: _settingsDoc == null ? null : meter_fold.freeMonthFrom(_settingsDoc!),
+```
+
+and in `meter.dart`, a null `FreeMonth` means unmetered — `freeMonth == null || freeMonth.covers(now)`.
+
+**Problem:** `_settingsDoc` is populated by a stream and is null until its first
+event. During that window `canStart` is true regardless of how many games have
+been started, so a player who taps New game fast enough gets one extra game.
+
+**Fix:** None applied, and the behaviour is now recorded as deliberate (D353).
+Failing towards letting the player play is the direction `meter_fold` was
+already written for — a damaged settings document must not produce a wall
+nobody can explain — and the loading window inherits it. Blocking while
+settings are unknown would tell a player with briefly slow storage that they
+had used games they had not, which is the failure D221 is about. The leak is
+one or two frames, once, on a meter that is device-local anyway (S19).
+
+---
+
+### [MINOR] Nothing ties the daily cap to the first volume rung — `test-coverage`
+
+**File:** `app/lib/home/quests_section.dart` (`unreachable`)
+
+**Evidence:** The tile marks a volume quest unreachable whenever the cap
+applies:
+
+```dart
+final unreachable = capped && status.quest.family == QuestFamily.gamesInDay;
+```
+
+`kDailyLimit` is 3 and `_volumeTargets.first` is 5. Nothing asserts 5 > 3.
+
+**Problem:** The mark is true *because* five exceeds three. If a later release
+raises the cap to five, or lowers the first rung to three, the tile tells a
+player a reachable goal is out of reach and no test fails.
+
+**Fix:** None applied — it would be a test about two constants in a package
+this ticket did not touch. Recorded in D354 so whoever moves either number
+knows the tile depends on their relationship.
+
+## Checked and clean
+
+- **Criterion 3 is a property of statement order and was checked as such.** In
+  `_start` the resume loop returns before the wall, so a game in progress is
+  never refused; `mode` excludes pass and play; the tutorial's practice game is
+  never stored and so cannot reach the meter at all. Pass and play is tested
+  against a fixture that is over *both* caps.
+- **The daily/weekly distinction is tested with the only fixture that can tell
+  them apart** — a Wednesday with nine games this week and none today, so the
+  daily limit has room and only the weekly one refuses. A fixture over both
+  caps would pass whichever message the code emitted.
+- **The two guards are not redundant** (D352): deleting the early one changes
+  no outcome, deleting the one in `_start` lets the challenge and rematch
+  buttons through.
+- **Prices come from the store already formatted.** No currency symbol is
+  concatenated anywhere; `ProductDetails.price` is rendered as given, and the
+  unavailable state is what shows when the query returned nothing — which is
+  the state this build is actually in.
+- **Every new key exists in both `.arb` files**, added in the same edit rather
+  than English-first, and `check.sh` rejects any `Text('...')` with letters in
+  `app/lib`.
+- **The layout extremes are asserted by exception**, not by eye:
+  `takeException()` must be null at 1080×1920 and 1290×2796, at text scale 1
+  and 2. The shop screen's price-and-button row is a `Wrap` for that reason —
+  at scale 2 on the narrow phone they do not fit side by side.
+- **`bash tool/check.sh`: ALL CHECKS PASSED**, 372 app tests (was 366).
+
+## Functional Validation
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| AC-1 | Daily cap refused, names the daily limit | ✅ | `paywall_test.dart` |
+| AC-2 | Weekly cap uses the weekly message | ✅ | Wednesday fixture, daily room left |
+| AC-3 | In-progress finishable; pass and play never refused | ✅ | Tested; order in `_start` |
+| AC-4 | Purchase screen states the unlock does not lift the cap | ✅ | `shopUnlockAllCaveat`, bold, above the price |
+| AC-5 | Restore reachable from settings and purchase screen | ✅ | Both |
+| AC-6 | Volume tiles state the requirement and why | ✅ | Three tests, including the negative |
+| AC-7 | No string outside l10n; English and Dutch | ✅ | Enforced by `check.sh` |
+| AC-8 | Renders at the layout extremes | ✅ | Three configurations, exception asserted null |
+| AC-9 | No copy claims a guarantee 1.0 lacks | ✅ | `shopMeterNote` |
+| AC-10 | `check.sh` passes | ✅ | ALL CHECKS PASSED |
+
+### Gaps
+
+**Not an acceptance criterion, but in the ticket:** the end-of-game panel does
+not show remaining games. Deferred explicitly in the closure with the reason —
+`GameScreen` has no settings document and wiring one badly would put a wrong
+number in front of a player who has just finished a game.
+
+**Nothing here has met a real store.** The shop screen has only ever rendered
+its unavailable branch, because 046's products do not exist while the bundle
+identifier is held by a personal team. The purchase and owned states are
+covered by `shop_test.dart` at the `Shop` level but have not been seen drawn.
