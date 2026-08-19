@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- No tracking, in any release (§5.2). There is no identifier to track
+	     with: D90 forbids generating, storing or transmitting a device
+	     identifier anywhere, so there is no ATT prompt and nothing to put in
+	     NSPrivacyTrackingDomains. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<!-- Empty for 1.0, and deliberately present rather than omitted. It stops
+	     being empty at 2.0 when accounts arrive, and the diff at that point
+	     should be one visible array filling up rather than a key appearing
+	     from nowhere. -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!-- Required-reason APIs this app's own code reaches. File timestamps:
+	     `DocumentStore` enumerates its games and unlocks directories with
+	     `Directory.list()` (document_store.dart:64, 89), which reaches
+	     Foundation's directory enumeration and so the timestamp category.
+	     C617.1 is the app-container reason -- the files are inside this app's
+	     own container and their timestamps never leave it. -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

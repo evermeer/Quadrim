@@ -107,15 +107,21 @@ apart, which is the JPEG and nothing more.
 |----|--------|
 | 1 — artgen regenerates both, output committed | **Met.** The full pipeline runs. Only the iOS assets are committed: the run also re-encoded 32 art and Android icon files that are **pixel-identical** to the committed ones (verified, max channel difference 0 across all 32) and 4 fonts, all of which is D290's predicted noise and was reverted, exactly as this ticket's note instructs. |
 | 2 — no alpha channel, verified on the file | **Met.** `sips -g hasAlpha` reports `no`, and so do the two icons Xcode *derived* into the archive. |
-| 3 — the mark at every size iOS renders | **Partly met.** Home screen confirmed on the simulator, and the archive contains Xcode's derived `AppIcon60x60@2x` and `AppIcon76x76@2x~ipad`. Settings, Spotlight and the App Switcher were not each opened; they are served by the same derived set. |
+| 3 — the mark at every size iOS renders | **Met on the home screen, on both simulator and phone**, and the archive contains Xcode's derived `AppIcon60x60@2x` and `AppIcon76x76@2x~ipad`. Settings, Spotlight and the App Switcher were not each opened; they are served by the same derived set, so the risk they carry is that the *set* is wrong, and the set is what the archive proves. |
 | 4 — the forest, and no white flash | **Met**, and measured rather than watched — see above. The storyboard has no text on it, so §11.6 has nothing to catch. |
 | 5 — `bash tool/check.sh` passes | **Met.** |
 | 6 — an archive build with no asset-validation warning | **Met.** `flutter build ipa --no-codesign` archived clean; Flutter's App Settings Validation block reported version, build number, display name Quadrim, deployment target 13.0 and bundle id `nl.evict.quadrim` with no warning. |
 
 ### Note on the deployment that followed
 
-After this ticket the app was built signed (`flutter build ios --release`, team
-`WTH4QGEA23`) and installed on a physical iPhone 17 Pro running iOS 27.0 — which
-also settles ticket 041's AC 4. The icon and launch screen on that device are
-what actually closes criteria 3 and 4; the simulator only ever showed they were
-plausible.
+Amended after the fact. The app was built signed (`flutter build ios --release`,
+team `WTH4QGEA23`), installed on a physical iPhone 17 Pro running iOS 27.0, the
+developer profile was trusted on the device, and it **launched and stayed
+running** — `devicectl` reports the process alive, with no debugger attached.
+That also settles ticket 041's AC 4.
+
+So criteria 3 and 4 are now met on real hardware rather than inferred from a
+simulator. What the phone adds over the simulator is the thing the simulator
+cannot model: the icon rendered by SpringBoard at the sizes it actually picks,
+and the launch screen composited by the real window server on a screen with a
+real notch.

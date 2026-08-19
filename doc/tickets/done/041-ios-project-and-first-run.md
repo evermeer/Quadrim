@@ -185,18 +185,21 @@ terminating (D326). And `flutter create` touched three things outside `ios/`,
 two of which had to be put back — including an `.metadata` that silently
 *replaced* the Android platform entry with the iOS one (D327).
 
-### Not verified, and not claimed
+### Criteria, and what settled them
 
-Four criteria need hardware or an interaction this run could not perform. They
-are listed here rather than ticked.
+Amended after the fact: this ticket closed with the device criteria pending,
+because there was no Apple ID on the Mac. There is one now — a paid developer
+account, team `WTH4QGEA23` — so a signed release build was installed on a
+physical iPhone 17 Pro running iOS 27.0 and launched there. The rows below say
+what is actually true, not what was true on the day.
 
 | AC | Status |
 |----|--------|
 | 4 — launches on the simulator | **Met.** Built, installed and launched on iPhone 17 Pro / iOS 26.5; screenshot taken of the running app. |
-| 4 — launches on a physical iPhone | **Pending.** A device is visible to `flutter doctor` but the run needs an Apple ID in Xcode. |
-| 5 — a full game played to a win on the device | **Pending**, with the same cause. Also unreachable on the simulator this run: the tap-injection path needs `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer`, which has never been run on this Mac (`/var/db/xcode_select_link` does not exist), and needs a password. |
+| 4 — launches on a physical iPhone | **Met.** `flutter build ios --release` signed with team `WTH4QGEA23`, installed to device `00008150-000A4D281ADA401C`, and launched — `devicectl` reports the process alive. It is a *release* build, so it runs with no debugger attached and no cable; a debug build could not have proved this, because a Flutter debug build needs the JIT and will not start on its own. |
+| 5 — a full game played to a win on the device | **Still open, and it needs a person.** The app launches and the first screen draws, but nobody has played sixty-four cells to a win on the phone. There is no tap-injection path to a physical device from this Mac, and the simulator's needs `sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer` — never run here (`/var/db/xcode_select_link` does not exist) — which takes a password. This is the one criterion in the ticket that no amount of tooling closes: it is a human playing a game and saying it felt right. |
 | 6 — portrait-locked and does not rotate | **Met at the declaration**, which is where the lock lives: portrait alone in the built `Info.plist`, both keys. Not observed by rotating a device. |
-| 7 — a Dutch device runs the app in Dutch | **Met.** The Mac's locale is `nl-NL`, the simulator inherits it, and the app came up in Dutch — "Voor het eerst hier?", "Tegen de computer", "Nieuwe partij". Not, however, *because* of `CFBundleLocalizations`, which the review disproved by experiment (D328). |
+| 7 — a Dutch device runs the app in Dutch | **Met on the simulator.** The Mac's locale is `nl-NL`, the simulator inherits it, and the app came up in Dutch — "Voor het eerst hier?", "Tegen de computer", "Nieuwe partij". Not, however, *because* of `CFBundleLocalizations`, which the review disproved by experiment (D328). |
 
 The fonts and the artwork are right on the first thing iOS drew: Cinzel small
 caps in the headings, EB Garamond in the body, the forest photograph behind a

@@ -276,3 +276,109 @@ it. No change made now.
   physical device.
 - **No user-facing string entered the storyboard**, so §11.6's rule is not
   circumvented by a surface it cannot see.
+
+---
+
+# Code Review: ticket 043 → main@d488516
+
+> Generated: 2026-08-19
+> Base: d488516
+> Changed files: 6 (1 added test, 1 added manifest, pbxproj, 2 amended tickets, decisions)
+
+## Summary
+
+| Severity | Count |
+|---|---|
+| critical | 0 |
+| major | 0 |
+| minor | 1 |
+| nit | 0 |
+
+## Findings
+
+### [MINOR] The `xcodeproj` gem made an incidental change beyond the one asked for — `style`
+
+**File:** `app/ios/Runner.xcodeproj/project.pbxproj:9, 121`
+
+**Evidence:** The intended change was four lines adding `PrivacyInfo.xcprivacy`.
+The gem also rewrote a Swift Package Manager reference's display comment:
+
+```diff
+-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
++		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
+```
+
+**Problem:** Editing `project.pbxproj` with a tool means accepting whatever else
+that tool normalises. Here it is cosmetic — pbxproj `/* … */` comments are
+decorative, Xcode regenerates them, and the reference body is untouched:
+
+```
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
+```
+
+The UUID and the `relativePath` both survive, and a signed release build
+succeeded after the edit and produced a working app, so nothing is broken. But
+the diff is larger than the change, and the next person reading it has to work
+out that two of the six lines are noise.
+
+**Fix:** None applied. Hand-editing pbxproj to avoid this is the worse trade —
+it is a format with cross-referenced UUIDs in four sections, and getting one
+wrong produces a project that opens and silently omits a file. The tool is the
+right instrument; this is its documented cost.
+
+## Checked and clean
+
+- **The manifest is in the Runner target's resources, not merely on disk.** Four
+  references in `project.pbxproj` — one `PBXBuildFile`, one `PBXFileReference`,
+  one group entry, one entry in the Resources build phase — which is the exact
+  set required, with none leaking into `RunnerTests`. Confirmed the only way
+  that counts: `Runner.app/PrivacyInfo.xcprivacy` exists in the signed release
+  bundle and reads back with all four keys. **This is the failure mode the
+  ticket does not mention** — an `.xcprivacy` outside Copy Bundle Resources
+  ships nothing and reports nothing.
+- **The declared API is traced to a line, not guessed.** `C617.1` covers
+  `Directory.list()` at `document_store.dart:64` and `:89`. No other
+  required-reason category is reached: no `shared_preferences` so no
+  `UserDefaults`, no disk-space query, and the only plugin with an iOS side
+  resolves container paths.
+- **`path_provider_foundation` genuinely ships no manifest**, checked in the
+  package (no native sources, `dartPluginClass` only) and in the built app (the
+  sole other `.xcprivacy` is `Flutter.framework`'s). The ticket's instruction to
+  rely on the plugin's own manifest was followed and found empty, not skipped.
+- **The new test is not vacuous.** `sign_semantics_test.dart` was
+  mutation-checked: removing `ExcludeSemantics` from `SectionSign` fails both
+  assertions, and restoring it passes them. A semantics test that survives its
+  own guard being deleted is the usual way this kind of coverage goes wrong.
+- **The storage path was read out of a real container**, not inferred from the
+  Android-oriented comment at `main.dart:31`:
+  `<container>/Library/Application Support/quadrim/{games,unlocks,settings.json}`.
+- **`bash tool/check.sh`: ALL CHECKS PASSED**, 341 app tests (up 2).
+
+## Functional Validation
+
+Validated against the ticket's own acceptance criteria; this repo has no Jira.
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| AC-1 | Unlocks survive a real backup and restore | ❌ | Mechanism confirmed (D346); the restore itself needs two devices and a person |
+| AC-2 | Manifest declares no tracking, no collection, every reached API | ✅ | `Runner.app/PrivacyInfo.xcprivacy`, verified in the signed bundle |
+| AC-3 | An upload produces no privacy-manifest warning | ⚠️ | Pending 048, which the ticket explicitly permits; noted, not claimed |
+| AC-4 | A whole game played under VoiceOver | ❌ | Needs the phone; the ticket says the simulator cannot stand in |
+| AC-5 | Headings announce as headers, artwork silent | ⚠️ | Met structurally by test and mutation-checked; not confirmed by ear |
+| AC-6 | Network claim recorded at its real strength | ✅ | D347 — reviewed, not enforced, with the asymmetry stated |
+| AC-7 | `bash tool/check.sh` passes | ✅ | ALL CHECKS PASSED |
+
+### Gaps
+
+Three criteria need a person holding a phone and none is blocked on code: AC-1,
+AC-4, and AC-3 (which waits on ticket 048). The closure notes list them as open
+rather than ticking them, which is the correct handling — and matches how 041
+handled the same situation.
+
+**One risk worth carrying forward.** D346 records that the iOS backup guarantee
+and the Android allowlist agree only because one storage path was chosen once,
+for an Android reason (D131). Nothing checks that they still agree. A future
+change of storage directory made for one platform would move the other
+platform's guarantee silently, and `art_assets_test.dart`-style coverage does
+not exist for this.

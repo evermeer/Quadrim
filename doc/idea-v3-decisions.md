@@ -1590,6 +1590,53 @@ Weakening it was tried and measured rather than reasoned about. `osprey → hero
 
 What that leaves is a clean statement of the last open problem on the ladder: **Kestrel to Lynx is about twice as steep as published, and nothing between them can fix it.** The span shrinks only if one of the endpoints moves, which means bringing the Master tier's node budgets down — the one place D144's "change the configuration, never the rating" still has room, and work that should follow the full-budget run D342 describes rather than precede it.
 
+## D345 — The privacy manifest declares one API, and no dependency declares it for us
+
+**Question:** Ticket 043 says to declare the required-reason APIs the app reaches, and adds: "**Check the plugin manifests too**: `path_provider` ships its own privacy manifest, and Xcode merges them, so the app's file declares what the *app* does, not what its dependencies do." Is that division still right?
+
+**Decision:** `ios/Runner/PrivacyInfo.xcprivacy` declares `NSPrivacyTracking` false, an empty `NSPrivacyTrackingDomains`, an empty `NSPrivacyCollectedDataTypes`, and exactly one accessed-API entry: `NSPrivacyAccessedAPICategoryFileTimestamp` with reason `C617.1`.
+
+**The ticket's premise about the plugin is no longer true, and that is why the entry has to be here.** `path_provider_foundation` 2.6.0 has no native code at all — its pubspec declares a `dartPluginClass` and its package directory contains no Swift and no `.xcprivacy`. It reaches Foundation through `objective_c` FFI bindings from Dart. A plugin with no bundle has nothing to carry a manifest in, so there is no dependency manifest to merge and nothing declares the file-timestamp access on the app's behalf. Checked on the built app rather than inferred: the only other `PrivacyInfo.xcprivacy` in `Runner.app` is `Flutter.framework`'s own, which covers the engine, not us.
+
+**The reach is real and was traced to a line, not guessed.** `DocumentStore` enumerates its two directories with `Directory.list()` (`document_store.dart:64` and `:89`), which lands on Foundation's directory enumeration — on Apple's required-reason list under the file-timestamp category. `C617.1` is the app-container reason, which is exactly the case: the files are this app's own and their timestamps never leave the device.
+
+**Nothing else on the list is reached.** No `UserDefaults` (no `shared_preferences` — the only runtime dependency with a platform side is `path_provider`), no disk-space query, no active-keyboard or system-boot-time access from app code.
+
+**The file is in the Runner target's resources, not merely on disk.** A manifest that is not in Copy Bundle Resources ships nothing and fails silently, so it was added through the `xcodeproj` gem and then confirmed in the built product: `Runner.app/PrivacyInfo.xcprivacy` exists and reads back with the four keys above.
+
+**Cost:** one more thing that must be revisited when a dependency is added, and no mechanism that will notice if it is not. The failure is an email from App Store Connect after upload rather than a build error — ticket 043 says so, and it remains true.
+
+## D346 — The unlocks are backed up, and not from the directory the ticket named
+
+**Question:** D11 says a restore onto a new device returns every unlock the player earned. Ticket 043 argues this already holds on iOS because "the app's `Documents` directory is backed up to iCloud by default, and `path_provider`'s `getApplicationDocumentsDirectory()` maps to exactly that". Does it?
+
+**Decision:** The guarantee holds. The stated reason does not, because this app never calls `getApplicationDocumentsDirectory()`.
+
+`main.dart:30` calls `getApplicationSupportDirectory()` and opens the store at `quadrim/` beneath it — chosen for Android, where it resolves to `files/quadrim/` and is precisely the path the backup allowlist includes (D131). Confirmed on iOS by looking in the container rather than by reading the code: the store lands at `<container>/Library/Application Support/quadrim/`, holding `games/`, `unlocks/` and `settings.json`.
+
+**That directory is backed up.** iOS backs up everything in the app container except `Library/Caches`, `tmp`, and anything explicitly flagged `NSURLIsExcludedFromBackupKey`. `Library/Application Support` is none of those, and nothing in this repository sets that flag anywhere. The app's own `Library/Caches/nl.evict.quadrim` holds Metal shader caches, which is regenerable data correctly outside the backup.
+
+**So one platform's guarantee is an allowlist and the other's is a default**, and they happen to agree because the same path was chosen once for Android's sake. That is a coincidence worth naming: a future change of storage directory made for an Android reason would silently move the iOS backup guarantee with it, in whichever direction.
+
+**Apple's "don't back up regenerable data" guidance does not bite**, for the reason ticket 043 gives: unlock records are precisely the *non*-regenerable data. Balances, streaks, quest progress and statistics are all folds over game history (§7.4) and would survive being thrown away; an unlock is a fact about what the player earned and exists nowhere else.
+
+**Cost:** the mechanism is confirmed and the *outcome* is not. Only a real backup and a real restore onto another device settles AC 1, and that needs two devices and a person.
+
+## D347 — On iOS the no-network claim is a review, and the review is recorded
+
+**Question:** On Android, "computer play makes no network call" is enforced by the absence of `INTERNET` from the release manifest, and `check.sh` fails if it appears (D212, and the check is still there at `tool/check.sh:54`). iOS has no permission to withhold. What is the claim worth there?
+
+**Decision:** It is a **review, not an enforcement**, and it is stated at that strength rather than at Android's (S20, D306). The review was done and this is its result.
+
+- **Runtime dependencies are unchanged since 0.2**: `flutter`, `flutter_localizations`, `intl`, `path_provider`, and the three local packages. Nothing was added between there and here.
+- **One plugin has an iOS side**, `path_provider_foundation`, and it resolves container paths. It opens no socket.
+- **There is no `Podfile.lock` to audit** — D325, iOS resolves through Swift Package Manager — so the artefact ticket 043 names for this check does not exist. What was audited instead is the generated SPM package, whose only dependency is `FlutterFramework`, and the frameworks actually bundled into `Runner.app`: `App.framework`, `Flutter.framework`, `objective_c.framework`. No networking library among them.
+- **The engine packages cannot reach a network by construction.** `quadrim_engine`, `quadrim_rating` and `quadrim_progression` may declare no runtime dependencies and may not import `dart:io`, and `check.sh` greps for it. That half *is* enforced, on both platforms, and it is the half that contains computer play.
+
+**What is not enforced on iOS is the app layer.** Nothing would stop a future `HttpClient` in `app/lib` from compiling and running on iOS, where on Android it would fail at runtime for want of the permission and fail at commit for want of `check.sh`. That asymmetry is real and is the honest content of this entry.
+
+**Cost:** an iOS-side claim resting on a reading of the dependency graph at one moment. It should be re-read whenever `pubspec.yaml` gains a dependency, and nothing will remind anyone to do so. Narrowing `check.sh` to computer play rather than to the manifest — already flagged as the 0.3a Firebase problem — would let one mechanism cover both platforms, and is the real fix whenever someone wants it.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
