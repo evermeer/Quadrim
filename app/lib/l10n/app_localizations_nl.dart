@@ -358,7 +358,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbClover =>
-      'Let op winst en blokkades, is dol op hoeken, en vergist zich nog vaak.';
+      'Let op winst en blokkades, en vergist zich nog vaak.';
 
   @override
   String get blurbBramble =>
@@ -420,7 +420,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get blurbSorrel =>
-      'Heeft geleerd een val te zetten. Nog niet om die van jou te zien.';
+      'Heeft net geleerd een val te zetten, en denkt er soms aan.';
 
   @override
   String get blurbJuniper =>

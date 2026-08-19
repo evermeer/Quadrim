@@ -414,6 +414,30 @@ final Matcher _ascending = predicate<List<int>>(
   'rises with the rating',
 );
 
+/// The opponent that generates the endgame fixtures — **deliberately not a
+/// catalogue entry** (D343).
+///
+/// It was Kestrel until the Club tier was re-spaced, and re-spacing it changed
+/// how Kestrel's games end: fewer of them reached eight empty cells without a
+/// win, so `agrees with an independent solver` failed on the number of
+/// positions it had sampled rather than on anything the solver did. A tuning
+/// pass on the roster must not be able to break a proof test. This
+/// configuration is frozen here and belongs to the test.
+const BotConfig _fixturePlayer = BotConfig(
+  id: 'endgame-fixture',
+  rating: 1300,
+  rules: {
+    StrategicRule.winNow,
+    StrategicRule.blockNow,
+    StrategicRule.makeDoubleThreat,
+    StrategicRule.blockDoubleThreat,
+  },
+  blunderRate: 0.08,
+  centreBias: 1,
+  cornerBias: 0.5,
+  lineBias: 0.25,
+);
+
 /// Positions with exactly [empties] cells left.
 ///
 /// Reached by having a strong opponent play both sides, not by random moves:
@@ -423,8 +447,8 @@ List<GameState> _endgames(int empties, int want, Random random) {
   final found = <GameState>[];
   var attempts = 0;
   // A deep endgame is rare on purpose: a position with ten cells left and no
-  // completed line means neither side won for fifty-four plies, and Kestrel
-  // usually finishes sooner. Sixty attempts yielded one or two positions where
+  // completed line means neither side won for fifty-four plies, and a strong
+  // opponent usually finishes sooner. Sixty attempts yielded one or two positions where
   // the callers want five or more, which read as assertion failures about the
   // solver rather than about the fixture. Each attempt is one fast self-play
   // game, so the cap is cheap to raise (D178).
@@ -435,7 +459,7 @@ List<GameState> _endgames(int empties, int want, Random random) {
         found.add(state);
         break;
       }
-      state = applyMove(state, chooseMove(state, kestrel, random));
+      state = applyMove(state, chooseMove(state, _fixturePlayer, random));
     }
   }
   return found;

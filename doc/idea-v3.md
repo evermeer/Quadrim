@@ -338,30 +338,25 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 | 1 | Twig | 700 | Random, but takes an immediate win. No blunder rate — its weakness is knowing one rule. |
 | 2 | Mote | 800 | Wins and blocks, 40% blunder rate. |
 | 3 | Hazel | 850 | The same two rules, 30% blunder rate. |
-| 4 | Clover | 900 | Wins and blocks, 20% blunder rate, drawn to corners. |
-| 5 | Sorrel | 940 | The first that builds a double threat, 18%, drawn to corners. Still cannot see yours. |
+| 4 | Clover | 900 | Wins and blocks, 23% blunder rate. No feel for the board — that starts at Juniper (D343). |
+| 5 | Sorrel | 940 | The first that builds a double threat, and plays it one time in twenty. 21%. |
 
-**Casual** — all four rules; what separates them is how many good squares they prefer. Bramble is free; the rest are earned. **No opponent in this tier sets aggression** (D314), **and none of them ranks the corners first** (D336).
+**Casual and Club** — one ramp rather than two tiers of steps (D343). Every rule and every positional preference is introduced as a *probability* that rises rung by rung, because introduced outright each is worth 100 to 162 rating points against rungs that are forty apart. `fork` and `deny` are the chances of `makeDoubleThreat` and `blockDoubleThreat` firing; `pos` is the chance the positional preference is consulted at all. Bramble is free; the rest are earned. **No opponent here sets aggression** (D314) **and none ranks the corners first** (D336).
 
-| # | Name | Rating | Prefers | Blunder |
-|---|---|---|---|---|
-| 6 | Bramble | 980 | none of the sixteen | 0.15 |
-| 7 | Juniper | 1020 | the 8 centres | 0.14 |
-| 8 | Bracken | 1060 | the 8 centres | 0.13 |
-| 9 | Willow | 1100 | the 8 centres | 0.12 |
-| 10 | Rowan | 1140 | all 16, centres first | 0.10 |
-| 11 | Aspen | 1180 | all 16, centres first | 0.105 |
-
-**Club** — sixteen good squares throughout, and at its top the building term, which is the lever that separates it from Casual rather than another point of accuracy.
-
-| # | Name | Rating | Prefers | Blunder |
-|---|---|---|---|---|
-| 12 | Vireo | 1220 | all 16, centres first | 0.11 |
-| 13 | Finch | 1260 | all 16, centres first | 0.115 |
-| 14 | Kestrel | 1300 | all 16, centres first | 0.08 |
-| 15 | Osprey | 1340 | 16 plus the building term | 0.075 |
-| 16 | Heron | 1380 | 16, classes further apart, more building | 0.07 |
-| 17 | Marlin | 1420 | the full positional ladder | 0.06 |
+| # | Name | Rating | Prefers | fork | deny | pos | line | Blunder |
+|---|---|---|---|---|---|---|---|---|
+| 6 | Bramble | 980 | nothing | 0.10 | 0.03 | — | — | 0.19 |
+| 7 | Juniper | 1020 | the 8 centres | 0.16 | 0.06 | 0.09 | — | 0.185 |
+| 8 | Bracken | 1060 | the 8 centres | 0.24 | 0.11 | 0.16 | — | 0.18 |
+| 9 | Willow | 1100 | the 8 centres | 0.33 | 0.17 | 0.26 | — | 0.175 |
+| 10 | Rowan | 1140 | all 16 | 0.43 | 0.24 | 0.29 | — | 0.17 |
+| 11 | Aspen | 1180 | all 16 | 0.52 | 0.31 | 0.36 | — | 0.165 |
+| 12 | Vireo | 1220 | all 16 | 0.60 | 0.38 | 0.44 | — | 0.16 |
+| 13 | Finch | 1260 | all 16 | 0.64 | 0.44 | 0.48 | 0.05 | 0.15 |
+| 14 | Kestrel | 1300 | all 16, wider | 0.74 | 0.58 | 0.62 | 0.10 | 0.13 |
+| 15 | Osprey | 1340 | all 16, wider | 0.86 | 0.78 | 0.80 | 0.17 | 0.11 |
+| 16 | Heron | 1380 | the full ladder | 0.96 | 0.94 | 0.93 | 0.22 | 0.082 |
+| 17 | Marlin | 1420 | the full ladder | 1.0 | 1.0 | 0.97 | 0.25 | 0.07 |
 
 **Expert** — the searching opponents. What separates them is how far they look, at what, and with which temperament.
 
@@ -390,7 +385,7 @@ Thirty-one opponents across five tiers. **Ratings are fixed anchors.** The `#` c
 
 **The Novice tier is about twice as steep as it is published, and that is the next thing to fix.** Pebble to Sorrel is 340 points on paper and 676 on the board; Hazel and Clover measure −424 and −552 from Pebble against a published −250 and −300. Pebble's *adjacent* gap is exact since D341 — 97 measured against 100 published, over a thousand games — so the excess belongs to Mote, Hazel, Clover and Sorrel being too strong for the span they are given. It became visible only once Pebble stopped being 400 points wrong and drowning it.
 
-**Rungs 10 to 13 carry a rising blunder rate, and that is measured rather than mistaken** (D340). Those four are one configuration at four rates, and the one that blunders most beat the one that blunders least across all six head-to-heads inside the group. It also means **they are not distinguishable in play**, which §6.4 requires of every opponent and this stretch does not deliver — the honest consequence of D336 removing the only other thing that separated them.
+**Eleven consecutive rungs from Hazel to Kestrel now measure between 37 and 54 points apart** against a published forty (D343), where four of them were inversions and two were five-fold cliffs. **The last four — Kestrel to Lynx — are still about twice too steep**, evenly and in the right order. That excess cannot be dialled away: a dial only weakens, so the span between two fixed configurations is an invariant, and Hazel's and Lynx's are about 880 Elo apart where the roster allots 610. Closing it means bringing the Master tier's node budgets down, after the full-budget run D342 describes.
 
 **The Master tier is ordered, and the calibration report was wrong about it.** Run at full budget, Titan beats Quartz by 115 against a published 100, beats Flint by 241 against 200, and Flint beats Cairn by 147 against 100 — three correct orderings where the 10% run reported two inversions. **A reduced budget does not blur these opponents, it inverts them** (D342): a Master move costs 0 ms at the median and ~900 ms at the mean, so the reduction leaves the cheap moves alone and removes exactly the deep search that separates one rung from the next. Their *spacing* is still unmeasured — three pairings is not a tier — and settling it is an overnight `--budget 1` run over Lynx upward.
 ### 6.5 What actually makes an opponent strong

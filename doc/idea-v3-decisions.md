@@ -1521,6 +1521,57 @@ D208's argument holds where it was made: below Lynx nothing spends a node or for
 
 **And one number to check on hardware.** Titan's worst move here was 11.8 seconds against [D164](#d164)'s twenty-second ceiling. That ceiling is a phone number and this is a desktop measurement, so the headroom is unverified rather than comfortable.
 
+## D343 — The levers were cliffs, so they were given dials
+
+**Question:** [D341](#d341) fixed Pebble's anchor and, with it out of the way, the shape of the bottom of the ladder became readable: from Hazel (850) to Juniper (1020) the roster asks for 170 rating points and the configurations delivered **618**, while from Juniper to Willow it asks for 80 and delivered **12**. Every rung down there was either a cliff or a no-op. Why, and what fixes it?
+
+**Decision:** **Two new fields, `BotConfig.ruleChance` and `BotConfig.positionChance`, and the whole stretch from Clover to Marlin re-spaced as a ramp.**
+
+**The cause, measured in isolation rather than argued.** Holding everything else equal and running a thousand games a pair:
+
+| lever | worth |
+|---|---|
+| a preference for the sixteen seven-line cells | **162** |
+| `makeDoubleThreat` | **100** |
+| `blockDoubleThreat` | **128** |
+| the blunder rate | **~6 points per 0.01** |
+
+The rungs in this stretch are forty to fifty points apart. So every rule and every positional preference overshot its rung by three or four rungs' worth, and any rung that introduced none of them was left with the blunder rate, which cannot cover forty points without moving a quarter of the way across its whole usable range. There was no arrangement of these levers that produced an ordered ladder — not a tuning failure but an arithmetic one, and the same shape of finding as [D336](#d336)'s.
+
+**The fix is to stop introducing them all at once.** `ruleChance` gives each strategic rule a probability of firing; `positionChance` gives the positional preference a probability of being consulted at all. A rule worth 100 points introduced at a chance of 0.05 is worth about five. The cliffs become dials, and the ladder becomes a ramp: `makeDoubleThreat` climbs 0.05 → 0.10 → 0.16 → … → 1.0 across fourteen rungs, `blockDoubleThreat` behind it, `positionChance` behind that, and the blunder rate falls underneath all three.
+
+**What it measures.** Eleven consecutive adjacent gaps, six hundred games each, against a published forty (fifty for the first):
+
+| pair | before | after |
+|---|---|---|
+| Hazel → Clover | −247 | **−45** |
+| Clover → Sorrel | −188 | **−41** |
+| Sorrel → Bramble | **+17** | **−37** |
+| Bramble → Juniper | −200 | **−46** |
+| Juniper → Bracken | −42 | −42 |
+| Bracken → Willow | −7 | **−40** |
+| Willow → Rowan | −200 | **−40** |
+| Rowan → Aspen | **+78** | **−50** |
+| Aspen → Vireo | **+49** | **−42** |
+| Vireo → Finch | **+28** | **−50** |
+| Finch → Kestrel | −49 | −54 |
+
+Four of those were inversions and two were five-fold cliffs.
+
+**It also describes something real**, which matters more than it sounds. An opponent that has heard of forks before it reliably spots them, and notices the middle of the cube before it always plays there, is how people actually learn this game. The previous ladder said a player goes from never having heard of a double threat to always seeing one, in one rung.
+
+**Three consequences worth recording.**
+
+*[D340](#d340)'s blunder reversal is superseded.* That entry had to let the blunder rate *rise* across four Club rungs, because those four were one configuration at four rates and measured in the opposite order to the one the rates implied. They are no longer one configuration — three dials separate them — so the blunder rate falls monotonically again and `strategic_bot_test.dart` asserts it strictly. The spec §6.4 complaint that those four were indistinguishable in play goes with it.
+
+*Clover and Sorrel lose their corner preference.* A preference is 162 points and their rungs are fifty. Board sense now starts at Juniper behind `positionChance` and arrives a fraction at a time. Their blurbs change in both locales, and the Novice tier's character becomes learning the *rules* rather than learning the board — which is the better story for it anyway.
+
+*Both fields are inert at their defaults, deliberately.* A chance of 1 draws no random number, so no opponent that predates them moved by a single move: `hazel vs clover` measured −247 before the fields existed and −247 after. A test pins that property rather than trusting it, because it is what let this ship without re-measuring the roster.
+
+**What is not fixed, and cannot be with these two dials.** The last four gaps — Kestrel to Osprey to Heron to Marlin to Lynx — measure 104, 92, 67 and 90 against a target of forty. They are even and correctly ordered, but roughly twice too steep, and no setting of the dials fixes them: **a dial can only weaken an opponent, so the span between two fixed configurations is an invariant.** Hazel's configuration and Lynx's are about 880 Elo apart and the roster allots them 610. The excess can be moved but not removed, and it settles at the top because Lynx's forcing search is the first lever these dials do not reach. Closing it means bringing the Master tier's node budgets down — a real lever, and the one place D144's "change the configuration" still has room — and that should wait for the full-budget run [D342](#d342) describes.
+
+**Cost.** Fourteen catalogue entries rewritten with their doc comments, four pinned test values moved, two blurbs, and one test in `deep_search_test.dart` that turned out to generate its endgame fixtures by self-playing **Kestrel** — so re-spacing the Club tier changed which positions it reached and a *proof* test failed on its sample count rather than on the solver. That fixture is now a frozen configuration owned by the test. A tuning pass on the roster must not be able to break a proof.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

@@ -58,11 +58,13 @@ final class BotConfig {
     this.canonicalPlies = 0,
     this.forcingBudget = kForcingBudget,
     this.rules = const <StrategicRule>{},
+    this.ruleChance = const <StrategicRule, double>{},
     this.blunderRate = 0,
     this.centreBias = 0,
     this.cornerBias = 0,
     this.edgeBias = 0,
     this.lineBias = 0,
+    this.positionChance = 1,
     this.aggression = 0.5,
     this.tieBreakRandomness = 1,
   })  : assert(blunderRate >= 0 && blunderRate <= 1),
@@ -70,6 +72,7 @@ final class BotConfig {
         assert(cornerBias >= 0 && cornerBias <= 1),
         assert(edgeBias >= 0 && edgeBias <= 1),
         assert(lineBias >= 0 && lineBias <= 1),
+        assert(positionChance >= 0 && positionChance <= 1),
         assert(aggression >= 0 && aggression <= 1),
         assert(tieBreakRandomness >= 0 && tieBreakRandomness <= 1),
         assert(searchDepth >= 0),
@@ -163,6 +166,28 @@ final class BotConfig {
 
   final Set<StrategicRule> rules;
 
+  /// How often each rule in [rules] actually fires, as a probability. A rule
+  /// absent from this map fires every time, which is what every rule did
+  /// before D343.
+  ///
+  /// **The rules are cliffs and the ladder needs steps.** Measured in
+  /// isolation on this board, `makeDoubleThreat` is worth about 100 rating
+  /// points, `blockDoubleThreat` about 128 and a positional preference about
+  /// 162 — against rungs that are forty to fifty points apart. So a rung that
+  /// introduces a rule overshoots by three or four rungs' worth, and one that
+  /// does not is left with the blunder rate, worth about six points per
+  /// hundredth. That is why Hazel to Juniper asked for 170 points and its
+  /// configurations delivered 618.
+  ///
+  /// A probability turns each of those cliffs into a dial: `makeDoubleThreat`
+  /// at 0.35 is worth roughly a third of 100. It also describes something real
+  /// — a player who has learnt about traps and spots them sometimes — rather
+  /// than a knob with no meaning at the board.
+  ///
+  /// A chance of 1 draws no random number at all, so adding this field moved
+  /// no existing opponent's play by a single move.
+  final Map<StrategicRule, double> ruleChance;
+
   /// Probability of discarding the chosen move for a different legal one.
   /// This is what separates opponents that share a rule set.
   final double blunderRate;
@@ -190,6 +215,22 @@ final class BotConfig {
   /// larger weight lets a later opponent care more about its own structure
   /// than about where on the board that structure sits (D149).
   final double lineBias;
+
+  /// How often the positional preference is consulted at all. Below 1 the
+  /// opponent sometimes ignores where it likes to play and takes any of the
+  /// moves in front of it.
+  ///
+  /// **The last cliff on the ladder** (D343). A preference for the sixteen
+  /// seven-line cells measures 162 rating points against rungs forty points
+  /// apart, and unlike a rule it cannot be dialled by [ruleChance] because it
+  /// is not a rule — it is how every remaining move is ranked once the rules
+  /// have had their say. Without this, Juniper's `centreBias` lands 162 points
+  /// on a forty-point rung and no arrangement of the other levers absorbs it:
+  /// its rule chances would have to go below zero.
+  ///
+  /// At 1 — the default, and what every opponent had before — no random number
+  /// is drawn and the ranking is used exactly as it always was.
+  final double positionChance;
 
   /// 0 is fully defensive, 1 fully aggressive, 0.5 weighs both equally.
   ///
@@ -282,28 +323,25 @@ const BotConfig hazel = BotConfig(
   blunderRate: 0.30,
 );
 
-/// Wins and blocks, blunders a fifth of the time, drawn to corners.
+/// Wins and blocks, and slips about a quarter of the time.
+///
+/// Lost its corner preference in D343: a preference for the sixteen seven-line
+/// cells is worth 162 rating points and this rung is fifty, so it arrived as a
+/// cliff. Board sense now starts at Juniper and arrives gradually.
 const BotConfig clover = BotConfig(
   id: 'clover',
   tier: BotTier.novice,
   rating: 900,
   rules: {StrategicRule.winNow, StrategicRule.blockNow},
-  blunderRate: 0.20,
-  cornerBias: 0.6,
+  blunderRate: 0.23,
 );
 
-/// The first opponent that sets a trap.
+/// The first opponent that sets a trap — occasionally.
 ///
-/// Clover plus `makeDoubleThreat`, and still no idea what to do about yours.
-/// Building one before you can see one is the honest last lesson of the Novice
-/// tier: the rule that beats you here is the rule you have not learned yet.
-///
-/// **Its calibration estimate is not its strength** (D340). It measured 1062,
-/// above the three rungs directly above it — and head to head it loses to all
-/// three, 16-34 to Juniper, 15-35 to Bracken and 17-33 to Willow. The estimate
-/// is inflated because Sorrel is within five rungs of Pebble and Bramble is
-/// not: Pebble plays some 400 points below its published 600, so every pair
-/// against it hands the other side a large credit measured from a wrong anchor.
+/// It knows `makeDoubleThreat` and plays it one time in twenty. Knowing the
+/// rule outright is worth about a hundred points against a forty-point rung,
+/// so what this rung introduces is not the rule but the first glimpse of it
+/// (D343).
 const BotConfig sorrel = BotConfig(
   id: 'sorrel',
   tier: BotTier.novice,
@@ -313,140 +351,131 @@ const BotConfig sorrel = BotConfig(
     StrategicRule.blockNow,
     StrategicRule.makeDoubleThreat,
   },
-  blunderRate: 0.18,
-  cornerBias: 0.6,
+  blunderRate: 0.21,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.05,
+  },
 );
 
-/// All four rules, no positional sense at all.
+/// All four rules, and almost never the two that matter.
+///
+/// Builds a fork one time in ten and denies one three times in a hundred. It is
+/// the last rung with no feel for the board at all.
 const BotConfig bramble = BotConfig(
   id: 'bramble',
   tier: BotTier.casual,
   rating: 980,
   rules: _allRules,
-  blunderRate: 0.15,
+  blunderRate: 0.19,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.1,
+    StrategicRule.blockDoubleThreat: 0.03,
+  },
 );
 
-// What orders the Casual tier is how many of the sixteen seven-line cells an
-// opponent prefers, not its blunder rate (D210).
+// **This stretch is a ramp, not a set of steps** (D343).
 //
-// The eight corners and the eight cells of the inner 2x2x2 each lie on seven
-// of the 76 lines; every other cell lies on four. Preferring one of those two
-// groups is worth far more than the fraction of a percentage point of blunder
-// rate that separates neighbours here. So the ladder is: Bramble prefers none
-// of the sixteen, Juniper, Bracken and Willow prefer eight each, and Rowan and
-// Aspen all sixteen. Spec 8.4 gives the whole tier a centre preference, so this
-// is the tier conforming to it rather than departing from it.
+// Measured in isolation, the levers here are enormous against the rungs they
+// have to fill: `makeDoubleThreat` is worth about 100 rating points,
+// `blockDoubleThreat` about 128, and a preference for the sixteen seven-line
+// cells about 162 — against rungs forty to fifty points apart. Introducing any
+// of them outright overshoots by three or four rungs, which is why Hazel to
+// Juniper once asked for 170 points and delivered 618.
 //
-// **Every rung from here to Marlin ranks the same way — centre, then corner,
-// then the rest — and that is the second lesson of the same defect** (D336).
-// Ranking corners first was used as a *strength* step at three rungs, and it is
-// not one: it is a style axis, and putting a style axis in a ladder produces a
-// cycle rather than an order. Measured over the whole roster, every centre-first
-// opponent from Bracken to Marlin came out in its published order, and all six
-// of the tier's inversions involved one of the three corners-first rungs. So the
-// order now rests on how many cells an opponent prefers, on `lineBias`, and on
-// the blunder rate — all three monotone by construction — and preferring corners
-// survives nowhere in the catalogue.
+// So none of them is introduced outright. `ruleChance` and `positionChance`
+// bring each in as a probability that rises rung by rung, and the blunder rate
+// falls underneath. What a player meets is an opponent that has heard of forks
+// before it reliably spots them, and notices the middle of the cube before it
+// always plays there — which is how people learn this game anyway.
 //
-// Only the *order* of the bias weights reaches the board. With no lineBias
-// there is nothing to compare their magnitudes against, so an opponent that
-// ranks corners above centres above everything else plays identically at
-// (0.55, 0.35) and at (0.8, 0.6) — measured, byte for byte, when a first
-// attempt at this tried to weaken a rung by lowering both.
-//
-// **No opponent in this tier sets `aggression`, and that is load-bearing**
-// (D314, ticket 044). It used to: two rungs built and blocked at 0.67 and 0.30,
-// which read well and made the tier **intransitive** rather than ordered.
-// Measured over 200 games each, three of them formed a cycle rather than a
-// ladder — because `aggression` above 0.5 skips a share of denials
-// (`_denialSkipChance`) and below 0.5 surrenders the initiative, so which
-// setting wins depends on which setting it is playing, exactly like
-// rock-paper-scissors. Adding aggression to a Casual opponent re-opens it.
+// **No opponent in this stretch sets `aggression`** (D314), and **none ranks
+// the corners above the centre** (D336). Both were tried as spacing levers and
+// both produced cycles rather than orders.
 
-/// Eight good squares — the middle of the cube — and the loosest grip on them.
+/// Where board sense begins: a pull to the middle, felt one move in eleven.
 ///
-/// Ranked corners first until D336, which is what made it beat the two rungs
-/// above it. Juniper, Bracken and Willow are now the same opponent at three
-/// blunder rates, which is a thinner distinction than the roster had before and
-/// an honest one: it is the distinction that measures.
+/// `positionChance` is what makes this a rung rather than a cliff (D343). The
+/// preference itself is unchanged from the one Willow used to hold; what is new
+/// is that it only sometimes gets consulted.
 const BotConfig juniper = BotConfig(
   id: 'juniper',
   tier: BotTier.casual,
   rating: 1020,
   rules: _allRules,
-  blunderRate: 0.14,
+  blunderRate: 0.185,
   centreBias: 0.6,
+  positionChance: 0.09,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.16,
+    StrategicRule.blockDoubleThreat: 0.06,
+  },
 );
 
-/// The same eight, held a little more firmly.
+/// The same middle, twice as often, and a little sharper on forks.
 const BotConfig bracken = BotConfig(
   id: 'bracken',
   tier: BotTier.casual,
   rating: 1060,
   rules: _allRules,
-  blunderRate: 0.13,
+  blunderRate: 0.18,
   centreBias: 0.6,
+  positionChance: 0.16,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.24,
+    StrategicRule.blockDoubleThreat: 0.11,
+  },
 );
 
-/// All four rules and a strong pull to the middle of the cube.
+/// A quarter of its moves are chosen for position now, and it denies a fork
+/// one time in six.
 const BotConfig willow = BotConfig(
   id: 'willow',
   tier: BotTier.casual,
   rating: 1100,
   rules: _allRules,
-  blunderRate: 0.12,
+  blunderRate: 0.175,
   centreBias: 0.6,
+  positionChance: 0.26,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.33,
+    StrategicRule.blockDoubleThreat: 0.17,
+  },
 );
 
-// Rowan, Aspen, Vireo and Finch are **one configuration at four blunder rates**
-// — all sixteen good squares, centre first — and the rates run 0.10, 0.105,
-// 0.11, 0.115 *up* the ladder rather than down. That is not a slip (D340).
-//
-// Measured over fifty games a pair, the one that blunders most beat the one
-// that blunders least, and all six head-to-heads inside the group agreed:
-// 30-19, 28-21, 27-23, 29-20, 27-22, 28-21. Six for six is about 1.6% by
-// chance. So across this range the blunder rate is worth nothing at best and
-// carries the wrong sign at worst, and ordering these rungs by measurement
-// means ordering them by *increasing* blunder rate. The catalogue's usual rule
-// — a higher rung blunders less — is suspended here and only here, and
-// `strategic_bot_test.dart` allows the exception rather than dropping the rule.
-//
-// **None of these four is distinguishable from the others in play**, which is
-// spec 6.4's requirement and this stretch does not meet it. Blunder rates 1.5
-// percentage points apart are invisible at the board. That is D336's unpaid
-// bill: removing the corner ranking removed the only thing separating them, and
-// what should replace it is `lineBias`, which is monotone and measured at
-// 60-120 points per 0.05 step.
-
-/// The first of the tier to want all sixteen good squares, and the steadiest of
-/// the four rungs that share its configuration.
+/// The first to want all sixteen good squares rather than the middle eight.
 ///
-/// This is the configuration Vireo held at 1200 before the roster was recut:
-/// the rung kept the strength and handed it a new name (D333). It ranked the
-/// corners first until D336. Dropping `centreBias` from a corners-first
-/// opponent was tried once and reverted — eight corner cells measured
-/// *stronger* than sixteen corners-first (D315), which is the finding D336
-/// generalises: corner ranking is a style axis and does not belong in a ladder
-/// at all.
+/// The wider preference is worth about 190 points on its own, so `positionChance`
+/// steps *back* here to pay for it — the rung gains reach and loses a little
+/// consistency, which nets the forty points the roster asks for (D343).
 const BotConfig rowan = BotConfig(
   id: 'rowan',
   tier: BotTier.casual,
   rating: 1140,
   rules: _allRules,
-  blunderRate: 0.10,
+  blunderRate: 0.17,
   centreBias: 0.7,
   cornerBias: 0.5,
+  positionChance: 0.29,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.43,
+    StrategicRule.blockDoubleThreat: 0.24,
+  },
 );
 
-/// The same sixteen squares as Rowan, and half a point looser on them.
+/// The same sixteen, consulted a third of the time, and forks about half seen.
 const BotConfig aspen = BotConfig(
   id: 'aspen',
   tier: BotTier.casual,
   rating: 1180,
   rules: _allRules,
-  blunderRate: 0.105,
+  blunderRate: 0.165,
   centreBias: 0.7,
   cornerBias: 0.5,
+  positionChance: 0.36,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.52,
+    StrategicRule.blockDoubleThreat: 0.31,
+  },
 );
 
 // The Club tier. Sixteen good squares throughout, a tightening blunder rate,
@@ -454,88 +483,103 @@ const BotConfig aspen = BotConfig(
 // opponent is already working — which is the lever that separates it from
 // Casual rather than another point of accuracy.
 
-/// The tier's first rung: the same sixteen again, looser still.
-///
-/// Corner-hungry until D336, when it was the single worst offender the first
-/// whole-roster run found — 107 points above its anchor, beating three rungs
-/// above it. Centre-first it measured 1219 against a published 1220, which is
-/// the closest any opponent on the ladder came to its own anchor.
+/// The tier's first rung: position on four moves in nine, and most forks built.
 const BotConfig vireo = BotConfig(
   id: 'vireo',
   tier: BotTier.club,
   rating: 1220,
   rules: _allRules,
-  blunderRate: 0.11,
+  blunderRate: 0.16,
   centreBias: 0.7,
   cornerBias: 0.5,
+  positionChance: 0.44,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.6,
+    StrategicRule.blockDoubleThreat: 0.38,
+  },
 );
 
-/// The same sixteen, and the loosest grip of the four — which is why it holds
-/// the highest of their rungs rather than the lowest (D340).
+/// Half its moves positional, and the first with a sense of what it is
+/// already building — `lineBias` arrives here, small.
 const BotConfig finch = BotConfig(
   id: 'finch',
   tier: BotTier.club,
   rating: 1260,
   rules: _allRules,
-  blunderRate: 0.115,
+  blunderRate: 0.15,
   centreBias: 0.7,
   cornerBias: 0.5,
+  lineBias: 0.05,
+  positionChance: 0.48,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.64,
+    StrategicRule.blockDoubleThreat: 0.44,
+  },
 );
 
-/// All four rules cleanly applied, the full sixteen good squares, and nothing
-/// given away.
+/// Solid on the fundamentals, and it rarely gives anything away.
 const BotConfig kestrel = BotConfig(
   id: 'kestrel',
   tier: BotTier.club,
   rating: 1300,
   rules: _allRules,
-  blunderRate: 0.08,
+  blunderRate: 0.13,
   centreBias: 0.8,
   cornerBias: 0.6,
+  lineBias: 0.1,
+  positionChance: 0.62,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.74,
+    StrategicRule.blockDoubleThreat: 0.58,
+  },
 );
 
-/// The first opponent with a plan: the positional ladder gains its third rung,
-/// the cell on the most lines it is already building.
-///
-/// The weights realise the ladder as an order — any centre cell outscores any
-/// corner, which outscores any other cell, and the building term decides within
-/// each class. That is why `lineBias` stays below the *gap* between the class
-/// weights rather than merely below the weights themselves (D149).
+/// Plays on the lines it is already building, not merely on good squares.
 const BotConfig osprey = BotConfig(
   id: 'osprey',
   tier: BotTier.club,
   rating: 1340,
   rules: _allRules,
-  blunderRate: 0.075,
+  blunderRate: 0.11,
   centreBias: 0.9,
   cornerBias: 0.6,
-  lineBias: 0.15,
+  lineBias: 0.17,
+  positionChance: 0.8,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.86,
+    StrategicRule.blockDoubleThreat: 0.78,
+  },
 );
 
-/// Osprey with the classes further apart and more weight on what it is
-/// building.
+/// Builds patiently, denies nearly everything, and waits for a line to open.
 const BotConfig heron = BotConfig(
   id: 'heron',
   tier: BotTier.club,
   rating: 1380,
   rules: _allRules,
-  blunderRate: 0.07,
+  blunderRate: 0.082,
   centreBias: 1,
   cornerBias: 0.5,
-  lineBias: 0.2,
+  lineBias: 0.22,
+  positionChance: 0.93,
+  ruleChance: {
+    StrategicRule.makeDoubleThreat: 0.96,
+    StrategicRule.blockDoubleThreat: 0.94,
+  },
 );
 
-/// The tier's ceiling: the full positional ladder and a 6% blunder rate
-/// (idea-v3 §6.4).
+/// The tier's ceiling: the full positional game, every rule at full strength,
+/// and hardly a wasted move. The first real test.
 const BotConfig marlin = BotConfig(
   id: 'marlin',
   tier: BotTier.club,
   rating: 1420,
   rules: _allRules,
-  blunderRate: 0.06,
+  blunderRate: 0.07,
   centreBias: 1,
   cornerBias: 0.5,
   lineBias: 0.25,
+  positionChance: 0.97,
 );
 
 // The Expert tier's searching opponents. All six are Marlin's rules and
@@ -1033,13 +1077,26 @@ List<Cell>? _ruleCandidates(
   if (config.rules.isEmpty) return null;
   final opponent = me.opponent;
 
+  /// Whether [rule] fires this move: it must be enabled, and it must survive
+  /// its [BotConfig.ruleChance] if it has one (D343).
+  ///
+  /// The `>= 1` short-circuit is load-bearing rather than an optimisation. A
+  /// rule at full chance draws nothing, so the random stream of every opponent
+  /// that predates this field is untouched and their play is identical to the
+  /// move — which is what let this ship without re-measuring the roster.
+  bool applies(StrategicRule rule) {
+    if (!config.rules.contains(rule)) return false;
+    final chance = config.ruleChance[rule] ?? 1;
+    return chance >= 1 || random.nextDouble() < chance;
+  }
+
   // Rules 1 and 2 are never reordered: taking an offered win is never wrong,
   // and missing an offered loss is what blunderRate is for.
-  if (config.rules.contains(StrategicRule.winNow)) {
+  if (applies(StrategicRule.winNow)) {
     final wins = _immediateWins(state, me);
     if (wins.isNotEmpty) return wins;
   }
-  if (config.rules.contains(StrategicRule.blockNow)) {
+  if (applies(StrategicRule.blockNow)) {
     final losses = _immediateWins(state, opponent);
     if (losses.isNotEmpty) return losses;
   }
@@ -1048,11 +1105,11 @@ List<Cell>? _ruleCandidates(
   final buildFirst = config.aggression >= 0.5;
   final skipDenial = random.nextDouble() < config._denialSkipChance;
 
-  List<Cell>? build() => config.rules.contains(StrategicRule.makeDoubleThreat)
+  List<Cell>? build() => applies(StrategicRule.makeDoubleThreat)
       ? _doubleThreatCells(state, me)
       : null;
   List<Cell>? deny() =>
-      config.rules.contains(StrategicRule.blockDoubleThreat) && !skipDenial
+      applies(StrategicRule.blockDoubleThreat) && !skipDenial
           ? _doubleThreatCells(state, opponent)
           : null;
 
@@ -1126,6 +1183,14 @@ Cell _positionalPick(
   List<Cell> candidates,
 ) {
   if (candidates.length == 1) return candidates.first;
+
+  // The preference does not always get consulted (D343). Short-circuited at 1
+  // so that an opponent without the dial draws nothing here and plays exactly
+  // as it did before the field existed.
+  if (config.positionChance < 1 &&
+      random.nextDouble() >= config.positionChance) {
+    return candidates[random.nextInt(candidates.length)];
+  }
 
   var best = <Cell>[];
   var bestScore = double.negativeInfinity;

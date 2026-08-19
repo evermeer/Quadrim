@@ -89,7 +89,7 @@ void main() {
       expect(marlin.id, 'marlin');
       expect(marlin.rating, 1420);
       expect(marlin.rules.length, 4);
-      expect(marlin.blunderRate, 0.06);
+      expect(marlin.blunderRate, 0.07);
       expect(marlin.searchDepth, 0, reason: 'search is ticket 010');
       expect(marlin.lineBias, greaterThan(0), reason: 'the third rule');
       expect(opponentCatalogue, contains(marlin));

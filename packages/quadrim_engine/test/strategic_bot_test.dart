@@ -50,33 +50,39 @@ void main() {
       expect(twig.rules, {StrategicRule.winNow});
       expect(mote.rules, {StrategicRule.winNow, StrategicRule.blockNow});
       expect(mote.blunderRate, 0.40);
-      expect(clover.blunderRate, 0.20);
-      expect(clover.cornerBias, greaterThan(0));
+      // Clover lost its corner preference in D343: a preference for the
+      // sixteen seven-line cells measures 162 points and this rung is fifty,
+      // so it could only ever arrive as a cliff. Board sense now starts at
+      // Juniper, behind `positionChance`, and arrives a fraction at a time.
+      expect(clover.blunderRate, 0.23);
+      expect(clover.cornerBias, 0);
+      expect(clover.centreBias, 0);
       expect(bramble.rules.length, 4);
       expect(bramble.centreBias, 0, reason: 'no positional sense');
       expect(bramble.cornerBias, 0);
       expect(willow.centreBias, greaterThan(0.5), reason: 'strong centre');
       expect(vireo.centreBias, greaterThan(vireo.cornerBias),
           reason: 'centre before corner since D336');
-      expect(kestrel.blunderRate, 0.08);
+      // 0.13 since D343, not 0.08: the Club tier's spacing moved off the
+      // blunder rate and onto `ruleChance` and `positionChance`, so every rate
+      // in the stretch rose to leave the dials room to do the ordering.
+      expect(kestrel.blunderRate, 0.13);
       // Among opponents that both win and block, blunder rate falls as rating
       // rises. Twig is excluded deliberately: it never blunders, and its
       // weakness is that it only knows one rule.
       expect(twig.blunderRate, 0);
       //
-      // **Non-increasing to within 0.01, not strictly non-increasing** (D340).
-      // The roster is ordered by measured strength, and blunder rate is not
-      // monotone in measured strength: four rungs of the Club tier are one
-      // configuration whose blunder rate rises with the rating because that is
-      // the direction they measured in. The tolerance is what keeps the rule
-      // useful — it still catches an opponent handed a wildly wrong rate, and
-      // it no longer forbids the catalogue from following its own instrument.
+      // **Strictly non-increasing again since D343.** D340 had to allow 0.01
+      // of slack, because four Club rungs were one configuration at four
+      // blunder rates and measured in the opposite order to the one the rates
+      // implied. They are no longer one configuration: `ruleChance` and
+      // `positionChance` separate them, so the blunder rate is free to fall
+      // monotonically the way the catalogue always meant it to.
       final rated =
           opponentCatalogue.where((b) => b.rules.length >= 2).toList();
       for (var i = 1; i < rated.length; i++) {
-        expect(rated[i].blunderRate,
-            lessThanOrEqualTo(rated[i - 1].blunderRate + 0.01),
-            reason: '${rated[i].id} blunders far more than ${rated[i - 1].id}');
+        expect(rated[i].blunderRate, lessThanOrEqualTo(rated[i - 1].blunderRate),
+            reason: '${rated[i].id} blunders more than ${rated[i - 1].id}');
       }
     });
 
@@ -100,6 +106,91 @@ void main() {
         expect(bot.cornerBias, lessThanOrEqualTo(bot.centreBias),
             reason: '${bot.id} prefers corners to the centre');
       }
+    });
+
+    test('a dialled rule fires about as often as its chance says', () {
+      // The dial has to be a *dial*: monotone in the chance and landing near
+      // it, or D343's whole spacing argument is built on sand.
+      final state = GameState.fromMoves([0, 21, 1, 22, 2, 26]);
+      int taken(double chance) {
+        final bot = BotConfig(
+          id: 'probe',
+          rating: 1000,
+          rules: const {StrategicRule.winNow},
+          ruleChance: {StrategicRule.winNow: chance},
+        );
+        return [
+          for (var s = 0; s < 400; s++)
+            chooseMove(state, bot, Random(s)).index,
+        ].where((c) => c == 3).length;
+      }
+
+      // Cell 3 completes the line, so it is taken whenever the rule fires and
+      // otherwise only by chance — about 1 in 58 of the remaining cells.
+      expect(taken(0), lessThan(40), reason: 'never firing is near chance');
+      expect(taken(1), 400, reason: 'always firing takes it every time');
+      final quarter = taken(0.25);
+      final half = taken(0.5);
+      expect(quarter, inInclusiveRange(70, 145));
+      expect(half, inInclusiveRange(160, 240));
+      expect(half, greaterThan(quarter), reason: 'monotone in the chance');
+    });
+
+    test('a chance of 1 draws no randomness, so it moves no existing opponent',
+        () {
+      // The property the whole feature shipped on (D343): every opponent that
+      // predates the dials must play byte-identically, which is only true if a
+      // full chance short-circuits before touching the random stream. Compare
+      // an explicit 1 against the default — same seed, same moves.
+      const withField = BotConfig(
+        id: 'explicit',
+        rating: 1000,
+        rules: {StrategicRule.winNow, StrategicRule.blockNow},
+        ruleChance: {StrategicRule.winNow: 1},
+        positionChance: 1,
+        centreBias: 0.6,
+      );
+      const without = BotConfig(
+        id: 'default',
+        rating: 1000,
+        rules: {StrategicRule.winNow, StrategicRule.blockNow},
+        centreBias: 0.6,
+      );
+      for (var seed = 0; seed < 40; seed++) {
+        var a = GameState.initial();
+        var b = GameState.initial();
+        while (outcome(a) is Ongoing) {
+          a = applyMove(a, chooseMove(a, withField, Random(seed)));
+          b = applyMove(b, chooseMove(b, without, Random(seed)));
+        }
+        expect(a.moves, b.moves, reason: 'seed $seed diverged');
+      }
+    });
+
+    test('positionChance below 1 loosens the preference without removing it',
+        () {
+      // Half the time it ranks, half the time it takes whatever is there — so
+      // it must land between a bot that always ranks and one that never does.
+      int centres(double chance) {
+        final bot = BotConfig(
+          id: 'probe',
+          rating: 1000,
+          centreBias: 1,
+          positionChance: chance,
+        );
+        return [
+          for (var s = 0; s < 300; s++)
+            chooseMove(GameState.initial(), bot, Random(s)),
+        ].where(isCentreCell).length;
+      }
+
+      final never = centres(0);
+      final sometimes = centres(0.5);
+      final always = centres(1);
+      expect(always, 300, reason: 'a full chance always takes a centre cell');
+      expect(never, lessThan(80), reason: 'eight of sixty-four are centres');
+      expect(sometimes, greaterThan(never));
+      expect(sometimes, lessThan(always));
     });
 
     test('no Casual opponent sets aggression', () {

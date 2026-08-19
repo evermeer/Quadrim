@@ -221,11 +221,13 @@ BotConfig _scaled(BotConfig config, double scale) => BotConfig(
       canonicalPlies: config.canonicalPlies,
       forcingBudget: _scaleBudget(config.forcingBudget, scale),
       rules: config.rules,
+      ruleChance: config.ruleChance,
       blunderRate: config.blunderRate,
       centreBias: config.centreBias,
       cornerBias: config.cornerBias,
       edgeBias: config.edgeBias,
       lineBias: config.lineBias,
+      positionChance: config.positionChance,
       aggression: config.aggression,
       tieBreakRandomness: config.tieBreakRandomness,
     );

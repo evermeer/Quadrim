@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @blurbClover.
   ///
   /// In en, this message translates to:
-  /// **'Watches for wins and blocks, loves a corner, and still slips often.'**
+  /// **'Watches for wins and blocks, and still slips often.'**
   String get blurbClover;
 
   /// No description provided for @blurbBramble.
@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// No description provided for @blurbSorrel.
   ///
   /// In en, this message translates to:
-  /// **'Has learned to set a trap. Has not learned to spot yours.'**
+  /// **'Has just learned to set a trap, and remembers now and then.'**
   String get blurbSorrel;
 
   /// No description provided for @blurbJuniper.

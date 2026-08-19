@@ -128,11 +128,13 @@ BotConfig _parse(String name) {
     canonicalPlies: base.canonicalPlies,
     forcingBudget: budget,
     rules: base.rules,
+    ruleChance: base.ruleChance,
     blunderRate: base.blunderRate,
     centreBias: base.centreBias,
     cornerBias: base.cornerBias,
     edgeBias: base.edgeBias,
     lineBias: base.lineBias,
+    positionChance: base.positionChance,
     aggression: base.aggression,
     tieBreakRandomness: base.tieBreakRandomness,
   );

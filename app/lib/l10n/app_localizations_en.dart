@@ -358,7 +358,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbClover =>
-      'Watches for wins and blocks, loves a corner, and still slips often.';
+      'Watches for wins and blocks, and still slips often.';
 
   @override
   String get blurbBramble =>
@@ -420,7 +420,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbSorrel =>
-      'Has learned to set a trap. Has not learned to spot yours.';
+      'Has just learned to set a trap, and remembers now and then.';
 
   @override
   String get blurbJuniper =>
