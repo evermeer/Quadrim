@@ -1864,6 +1864,20 @@ The target declared `TARGETED_DEVICE_FAMILY = "1,2"` — iPhone and iPad — whi
 
 **Cost:** one more line whose truth is not mechanically checked. `check.sh` can see that `INTERNET` is absent from the Android manifest; it cannot see that a Dart package has not started encrypting something. The comment beside the key is the whole defence, as with D358's ratchet.
 
+## D362 — The minimum iOS is 15.0, and this time Apple chose it
+
+**Question:** The second delivery to App Store Connect was refused with ITMS-90068: *this app has a MinimumOSVersion of 13.0. Starting in Spring 2027, all iOS apps must have a MinimumOSVersion of 15.0 or later in order to be uploaded to App Store Connect or submitted for distribution.* D324 settled 13.0 and said it stood for 1.0 unchanged. Does it still?
+
+**Decision:** No. `IPHONEOS_DEPLOYMENT_TARGET = 15.0` in all three configurations. **D324 is superseded**, and it is worth being precise about which half of it: D324's *reasoning* was that nobody had evidence to tune the number with, so the default stood. That was correct then and there is evidence now. The number was never defended on its merits, which is exactly why it costs nothing to give up.
+
+**The warning names Spring 2027 and the delivery was refused today**, which is a contradiction only if the message is read as a policy statement. Read it as a deadline being enforced early on new records instead: whatever the mechanism, 13.0 does not upload from this account today, and arguing with a validator is not a strategy.
+
+**What it drops:** iPhone 6s and 6s Plus, iPhone SE (1st generation), and iPod touch (7th generation) — the devices that stop at iOS 15.8. Ten-year-old hardware, on a game whose Master tier already spends up to twelve seconds on a single move. D324 named this trade in advance: raising the floor later drops devices that had the app, so it is a product decision. Nothing has shipped to any iOS device yet, so today it drops nobody at all — which makes now the cheapest moment this decision will ever have.
+
+**Android is untouched.** Its `minSdk` answers to a different market and to Play, and nothing in this entry applies to it.
+
+**Cost:** the floor is now two OS versions above what Flutter 3.44.9 would default to, so it is a number someone has to maintain rather than inherit — a future Flutter upgrade that raises its own default past 15.0 will silently agree with this, and one that does not will leave this looking deliberate when it is merely enforced. The paragraph above is the record of which it is.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
