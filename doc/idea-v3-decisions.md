@@ -1813,6 +1813,57 @@ The consequence worth stating plainly: **`0.1.0+1` is permanently spent.** It is
 
 **Cost:** nothing enforces the ratchet. Editing `pubspec.yaml` down, or forgetting to raise it, produces a rejection at upload time rather than a failing check — and `check.sh` cannot help, because it cannot know what Play already holds. The pubspec comment is the whole defence.
 
+## D359 — The iOS bundle identifier is `nl.evict.quadrim2`, and the two stores no longer agree
+
+**Question:** D213 settled `nl.evict.quadrim` as *the* application id, on both stores, permanent from the first upload. The Apple Developer enrolment completed on 2026-08-21 and the App Store Connect app record was created as **`nl.evict.quadrim2`**. Does Android follow, or do the two platforms diverge?
+
+**Decision:** They diverge, and neither one moves again.
+
+- **Android stays `nl.evict.quadrim`.** It is on Play internal testing already (D355), which is exactly the event D213 named as the point of no return. Changing it now would mean a second Play listing and abandoning the first.
+- **iOS is `nl.evict.quadrim2`**, in all three Runner configurations, with `RunnerTests` renamed to match. The App Store Connect record exists under that id, and an app record's bundle id cannot be reassigned.
+
+**D213 is not repealed — it is narrowed.** What it actually guaranteed is that an id is permanent *per store* once uploaded there. It assumed one id would serve both because nothing had yet been uploaded anywhere. The assumption is what failed, not the rule.
+
+**What does *not* change:** the product ids stay `nl.evict.quadrim.unlock_all` and `nl.evict.quadrim.unlimited`. StoreKit product ids are unique per developer account and have no requirement to sit under the app's bundle id; renaming them would break the ids already configured on the Play side for nothing. `storekit_config_test.dart` still asserts the `nl.evict.quadrim.` prefix and still passes — read that prefix now as a namespace the project owns, not as the iOS bundle id.
+
+**The signing team changed with it.** `DEVELOPMENT_TEAM` was `WTH4QGEA23`, the free personal team ticket 041 used to get a release build onto a phone. It is now `JPC3M2UF4R`, the paid membership. A personal team cannot produce an App Store distribution build, so this had to move regardless of the id.
+
+**One build-number counter serves both stores.** `pubspec.yaml` has one `+N` field and Flutter feeds it to `versionCode` and `CFBundleVersion` alike. Splitting it would mean a second source of truth in the Xcode project, which is what `manageAppVersionAndBuildNumber = false` in `ExportOptions.plist` exists to prevent. Raised on every upload to *either* store; a gap on one store's side is not a problem, because each only requires the number to increase. This supersedes ticket 048's note that the two counters should be independent.
+
+**Cost:** the two stores now hold the same app under different ids, and every place that names one has to say which platform it means — this file, `CLAUDE.md`, ticket 048, and any later Firebase or deep-link configuration, where a single id assumed across platforms is a silent misconfiguration rather than a build error. The `2` also reads as a sequel in the one place users can see it, the iOS URL scheme and any `itms-apps` link, which is a cosmetic loss that is not worth a new App Store Connect record to undo.
+
+## D360 — iOS ships iPhone-only, because an iPad build cannot be portrait-only
+
+**Question:** The first upload to App Store Connect was rejected by Transporter before the binary transferred:
+
+> Invalid bundle. The "UIInterfaceOrientationPortrait" orientations were provided for the UISupportedInterfaceOrientations Info.plist key in the nl.evict.quadrim2 bundle, but you need to include all of the [four] orientations to support iPad multitasking.
+
+The target declared `TARGETED_DEVICE_FAMILY = "1,2"` — iPhone and iPad — while `Info.plist` offered iPad portrait alone. Which of the two moves?
+
+**Decision:** The device family moves. **`TARGETED_DEVICE_FAMILY = 1`**, iPhone only, in all three configurations. The orientation keys are untouched.
+
+**Why not simply declare the four orientations**, which is the answer every search result gives. It is a declaration that the app supports landscape, and spec U10 says the opposite in as many words: *the app is portrait-only on every device, and no large-screen layout exists or is reachable by rotation or resizing*. Ticket 017 would have built the landscape layout and was cancelled. Declaring what U10 forbids to satisfy a validator is how a build passes review and then draws a game into a window it has no layout for.
+
+**The iOS 26 SDK removes the escape hatch.** `UIRequiresFullScreen` used to let an iPad app refuse multitasking and keep an orientation lock. Built against this SDK an iPad app is freely resizable and the lock is not honoured, so `setPreferredOrientations` in `main.dart` — the half the framework obeys, and the half a test can see — would stop being the guarantee it is on a phone. There is no configuration in which "iPad" and "portrait-only" are both true any more.
+
+**What an iPad owner gets:** the app, in iPhone compatibility mode — letterboxed, portrait, the one layout that exists and the one the geometry in §5.2 was derived for. That is a better iPad experience than a resizable window with no landscape layout behind it, and it costs an iPad-native listing the project was never going to earn.
+
+**Cost:** no iPad screenshots and no iPad presence in search; the App Store lists it as an iPhone app. Reversing it means building ticket 017 first, not flipping a flag — which is the honest ordering, and was already the ordering before the validator said so.
+
+**The rejection cost no build number.** Validation failed at the asset-description stage, before the binary transferred, and Transporter deleted the build record (`DELETE /v1/builds/... 204`). App Store Connect holds no build 3, so `0.1.1+3` is not spent and the retry reuses it. This is the one case D358's "spent on upload" rule does not cover: a delivery that never reached the store at all.
+
+## D361 — Export compliance is declared in the bundle, not answered per build
+
+**Question:** Without `ITSAppUsesNonExemptEncryption`, App Store Connect asks the export-compliance question about every build before it can go to a tester, and a build sits unavailable until someone answers it. Declare it in `Info.plist`, or answer it each time?
+
+**Decision:** Declared in `Info.plist` as `false`.
+
+**It is a statement of fact here rather than a judgement.** The app implements no cryptography and links none: **computer play makes no network call in any release** (D93), and the merged Android manifest is forbidden from even declaring `INTERNET`, enforced against the built artifact (D357). The only encryption anywhere near this binary is the TLS the system frameworks use for StoreKit, which is exempt on two independent grounds — it is Apple's own implementation, and it is standard HTTPS for the app's own transactions.
+
+**What it buys:** a build reaches internal testers without a manual gate. What it costs is that the answer is now committed rather than considered, so **anything later that ships an algorithm — a custom save-file cipher, a non-Apple network library, an encrypted local database — makes this key a false declaration that must move to `true` in the same commit.** Firebase in 0.3a is the first thing on the roadmap that gets near it; the transports it brings are Apple TLS and stay exempt, but that is a conclusion to re-reach at the time rather than assume.
+
+**Cost:** one more line whose truth is not mechanically checked. `check.sh` can see that `INTERNET` is absent from the Android manifest; it cannot see that a Dart package has not started encrypting something. The comment beside the key is the whole defence, as with D358's ratchet.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

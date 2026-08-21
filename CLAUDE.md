@@ -134,7 +134,10 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 - **No user-facing string outside l10n**, and none inside the artwork either. `check.sh` rejects `Text('...')` with letters in `app/lib`; the wooden signs ship blank and the app letters them, so they are localised too (D297). D292's exception is gone.
 - **Every image is drawn in a box the layout already knows** — both dimensions, before decode. An `Image` with an unknown dimension reports zero until its bytes arrive, which is a layout that jumps once on first launch and is permanently broken in a widget test. This cost three bugs in one ticket (D295).
 - **Nothing but cream sits on the background photograph**, and the photograph is darkened under everything so that cream always works. Ink over the bare picture measured 2.9:1 (D296).
-- **The application id is `nl.evict.quadrim` and is permanent** once published to any track, including closed testing (D213). Nothing has been uploaded yet, so today it is still changeable; the moment a closed test goes out it is not.
+- **The application ids differ by platform, and neither can change now** (D213, D359). Android is `nl.evict.quadrim`,
+  which is on Play internal testing; iOS is `nl.evict.quadrim2`, which is the App Store Connect record that exists.
+  The two StoreKit product ids stay under the `nl.evict.quadrim.` namespace on both platforms — that prefix is a
+  namespace the project owns, not the iOS bundle id, and `storekit_config_test.dart` still asserts it.
 - Keystore credentials stay out of version control (ticket 015).
 
 ## Working conventions

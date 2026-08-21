@@ -3,11 +3,14 @@ description: "Quadrim - four in a row inside a 4x4x4 cube."
 publish_to: 'none'
 # <name>+<code>, and the two halves answer to different masters (D358).
 #
-# The name is for people and may say anything; the code is for Play and must
+# The name is for people and may say anything; the code is a ratchet and must
 # only ever increase. **A build number is spent the moment it is uploaded** --
 # even to a closed track, even if that release is discarded -- so the code is
-# raised on every upload and never reused. 0.1.0+1 is on internal testing.
-version: 0.1.1+2
+# raised on every upload and never reused. One counter serves both stores
+# (D359): it is raised for an upload to either, and neither store cares that
+# the other skipped a number. 0.1.0+1 is on Play internal testing; +3 is the
+# first build sent to App Store Connect.
+version: 0.1.1+3
 
 environment:
   sdk: ^3.12.2

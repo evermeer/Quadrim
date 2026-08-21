@@ -26,7 +26,8 @@ the Android `versionCode`, which has the same rule and its own counter.
 
 ### 2. Signing
 
-- An App ID for `nl.evict.quadrim` in the developer portal.
+- An App ID for `nl.evict.quadrim2` in the developer portal — **not**
+  `nl.evict.quadrim`, which is the Android id and stays Android's (D359).
 - Distribution certificate and provisioning profile.
 - **Automatic signing in Xcode** unless there is a reason not to; a solo
   developer on one Mac gains nothing from managing profiles by hand and loses
@@ -83,9 +84,10 @@ restore checks here, from TestFlight, and record the result separately.
 
 **The Android half of 1.0 is the same version and a different queue.** When
 the Play account returns, the Android build ships as 1.0 with no version bump
-and no new work beyond its own upload (D302). Keep the two build numbers
-independent; they count uploads to different stores and have no reason to
-agree.
+and no new work beyond its own upload (D302). **Superseded by D359:** one `+N` counter in
+`pubspec.yaml` serves both stores and is raised on every upload to either, so
+the stores see gaps rather than separate sequences. Each store only requires
+the number to increase, which a shared ratchet satisfies.
 
 **Do not let the first upload be the first time anyone reads Apple's review
 guidelines.** The likely friction points for this app are the subscription

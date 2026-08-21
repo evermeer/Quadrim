@@ -29,6 +29,13 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- No, and it is not a judgement call: computer play makes no network call
+	     in any release (D93), the merged Android manifest is not even allowed to
+	     declare INTERNET (D357), and nothing here implements or links a crypto
+	     algorithm. Declaring it up front is what stops TestFlight asking the
+	     export-compliance question again on every single build (D361). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
@@ -62,6 +69,10 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- Inert while TARGETED_DEVICE_FAMILY is 1, and kept as the record of why
+	     it is 1: an iPad-capable bundle must offer all four orientations, which
+	     spec U10 forbids (D360). An iPad runs this in iPhone compatibility mode
+	     and gets the one layout that exists. -->
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

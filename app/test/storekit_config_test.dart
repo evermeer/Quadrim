@@ -77,7 +77,10 @@ void main() {
 
   test('both ids are namespaced under the permanent application id', () {
     // `nl.evict.quadrim` can never change once published to any track (D213),
-    // and these inherit that permanence.
+    // and these inherit that permanence. It is the Android application id and
+    // a namespace the project owns -- since D359 it is *not* the iOS bundle
+    // id, which is `nl.evict.quadrim2`. Product ids have no requirement to sit
+    // under the bundle id, so this prefix stays whatever iOS is called.
     for (final id in kProductIds) {
       expect(id, startsWith('nl.evict.quadrim.'));
     }

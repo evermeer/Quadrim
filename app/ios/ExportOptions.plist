@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Committed on purpose: it holds no secret, only the shape of the export
+	     (ticket 048 §2). The certificate and the profile stay out of the repo. -->
+	<key>destination</key>
+	<string>export</string>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>JPC3M2UF4R</string>
+	<!-- Automatic: a solo developer on one Mac gains nothing from hand-managed
+	     profiles and loses an afternoon each time one expires (ticket 048). -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<!-- The build number comes from pubspec.yaml and only from there (D358).
+	     Left true, Xcode would raise it behind the scheme's back and the two
+	     stores would disagree about what +N means. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>stripSwiftSymbols</key>
+	<true/>
+</dict>
+</plist>
