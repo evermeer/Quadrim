@@ -556,6 +556,16 @@
   },
   "shopOwned": "Owned",
   "shopBuy": "Buy",
+  "shopBuyProduct": "Buy {product}",
+  "@shopBuyProduct": {
+    "description": "Screen-reader label for a buy button. The visible label is just 'Buy'; two products means two identical buttons, and by ear they are indistinguishable without the product name (ticket 021).",
+    "placeholders": {
+      "product": {
+        "type": "String",
+        "example": "Unlimited play"
+      }
+    }
+  },
   "shopUnavailable": "The store is not available right now.",
   "shopMeterNote": "Your free games are counted on this device.",
   "@shopMeterNote": {

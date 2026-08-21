@@ -474,21 +474,37 @@ class _HomeScreenState extends State<HomeScreen> {
         // picture of a letter Q announced as well would say it twice.
         title: Row(
           children: [
-            // Both dimensions given. An `Image` reports zero size until it has
-            // decoded, so a logo with only a height is a zero-width gap on the
-            // first frame and forever in a widget test.
-            const ExcludeSemantics(
-              child: SizedBox(
-                width: 30,
-                height: 30,
-                child: Image(
-                  image: AssetImage(Art.logo),
-                  filterQuality: FilterQuality.medium,
+            // **The decorative mark yields to the name at large text scale**
+            // (ticket 021). At 2x on a 320pt phone the logo, its gap and the
+            // title need 257pt of the 240 the bar allows, and the row
+            // overflowed by 17. Dropping the logo returns exactly the 40 that
+            // closes it, and costs nothing a screen reader was ever told
+            // about: the mark is already excluded from semantics because the
+            // title beside it says the same word.
+            //
+            // The `Flexible` below is the guarantee rather than this is — a
+            // threshold is a number that some future font will step past. It
+            // ellipsises in the case the threshold misses; the threshold is
+            // what keeps that case from arising.
+            if (MediaQuery.textScalerOf(context).scale(16) < 24) ...[
+              // Both dimensions given. An `Image` reports zero size until it
+              // has decoded, so a logo with only a height is a zero-width gap
+              // on the first frame and forever in a widget test.
+              const ExcludeSemantics(
+                child: SizedBox(
+                  width: 30,
+                  height: 30,
+                  child: Image(
+                    image: AssetImage(Art.logo),
+                    filterQuality: FilterQuality.medium,
+                  ),
                 ),
               ),
+              const SizedBox(width: 10),
+            ],
+            Flexible(
+              child: Text(l10n.appTitle, overflow: TextOverflow.ellipsis),
             ),
-            const SizedBox(width: 10),
-            Text(l10n.appTitle),
           ],
         ),
         actions: [

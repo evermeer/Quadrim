@@ -775,6 +775,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopBuy => 'Buy';
 
   @override
+  String shopBuyProduct(String product) {
+    return 'Buy $product';
+  }
+
+  @override
   String get shopUnavailable => 'The store is not available right now.';
 
   @override

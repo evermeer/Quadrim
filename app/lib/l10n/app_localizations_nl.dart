@@ -774,6 +774,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopBuy => 'Kopen';
 
   @override
+  String shopBuyProduct(String product) {
+    return '$product kopen';
+  }
+
+  @override
   String get shopUnavailable => 'De winkel is nu niet beschikbaar.';
 
   @override

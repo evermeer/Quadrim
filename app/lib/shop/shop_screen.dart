@@ -141,12 +141,25 @@ class _Product extends StatelessWidget {
             children: [
               if (owned)
                 Text(l10n.shopOwned, style: theme.textTheme.titleSmall)
+              else if (price == null)
+                // **Not a disabled button carrying a sentence** (ticket 021).
+                // "The store is not available right now" is a status, and a
+                // button is a promise of an action; the two read as each other
+                // only on screen. By ear both products then announced the same
+                // long sentence as their only control.
+                Text(l10n.shopUnavailable, style: theme.textTheme.bodySmall)
               else ...[
-                if (price != null)
-                  Text(price!, style: theme.textTheme.titleSmall),
+                Text(price!, style: theme.textTheme.titleSmall),
                 FilledButton(
-                  onPressed: price == null ? null : onBuy,
-                  child: Text(price == null ? l10n.shopUnavailable : l10n.shopBuy),
+                  onPressed: onBuy,
+                  // **The visible word stays "Buy" and the announced one names
+                  // the product** (ticket 021). Two products means two buttons
+                  // reading "Buy, button", which `labeledTapTargetGuideline`
+                  // passes — a label is present — while leaving a screen-reader
+                  // user unable to tell what they are about to pay for. The
+                  // guideline is a floor, not the goal.
+                  child: Text(l10n.shopBuy,
+                      semanticsLabel: l10n.shopBuyProduct(name)),
                 ),
               ],
             ],

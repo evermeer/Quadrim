@@ -1388,6 +1388,12 @@ abstract class AppLocalizations {
   /// **'Buy'**
   String get shopBuy;
 
+  /// Screen-reader label for a buy button. The visible label is just 'Buy'; two products means two identical buttons, and by ear they are indistinguishable without the product name (ticket 021).
+  ///
+  /// In en, this message translates to:
+  /// **'Buy {product}'**
+  String shopBuyProduct(String product);
+
   /// No description provided for @shopUnavailable.
   ///
   /// In en, this message translates to:
