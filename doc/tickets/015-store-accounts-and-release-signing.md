@@ -49,7 +49,7 @@ and 049, and through them the whole of 1.0.
 - [x] Keystore credentials are kept out of version control, and a check enforces this — `check.sh` asks git what is tracked rather than trusting `.gitignore`
 - [ ] A signed release build installs and runs correctly on a physical Android device — **previously ticked in error**: the 0.1 and 0.2 builds were signed with the debug key (D355)
 - [ ] The same is true on iOS, which is ticket 048's whole subject
-- [ ] The app version and build number scheme is defined and applied
+- [x] The app version and build number scheme is defined and applied — `<name>+<code>` in `pubspec.yaml`, the name for people and the code a ratchet Play enforces; spent on upload rather than on release (D358)
 - [ ] The app name's availability is checked on both stores and against trademark registers, and the result recorded — it sits beside the application id in irreversibility and is currently unchecked
 - [ ] What **each** store requires of an individual developer account regarding a publicly displayed contact address is checked and recorded — **this now applies at 1.0**, which is sooner than the 0.3b these items were written for
 - [ ] Whether a non-residential address is acceptable, and the current scope of KvK address shielding for a home-run sole trader, are checked and recorded with a date — for a solo developer both questions point at a home address

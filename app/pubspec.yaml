@@ -1,7 +1,13 @@
 name: quadrim
 description: "Quadrim - four in a row inside a 4x4x4 cube."
 publish_to: 'none'
-version: 0.1.0+1
+# <name>+<code>, and the two halves answer to different masters (D358).
+#
+# The name is for people and may say anything; the code is for Play and must
+# only ever increase. **A build number is spent the moment it is uploaded** --
+# even to a closed track, even if that release is discarded -- so the code is
+# raised on every upload and never reused. 0.1.0+1 is on internal testing.
+version: 0.1.1+2
 
 environment:
   sdk: ^3.12.2

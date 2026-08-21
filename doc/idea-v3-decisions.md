@@ -1797,6 +1797,22 @@ That has been true since [D212](#d212) and was invisible for as long as nothing 
 
 **Cost:** a `tools:` namespace and a directive in the manifest that will look like dead weight to anyone who does not read the comment, which is why the comment names the library. And a standing hazard: any future dependency that declares `INTERNET` is now silently stripped rather than loudly rejected, so if something one day genuinely needs the network, the failure will be a runtime error rather than a build one. That is the correct direction for this project and it is not free.
 
+## D358 — The version name is a story, the build number is a ratchet
+
+**Question:** Ticket 015 has carried "the app version and build number scheme is defined and applied" since it was written. The second upload forces it: what are the two numbers, and who decides them?
+
+**Decision:** `version: <name>+<code>` in `pubspec.yaml`, which Flutter splits into `versionName` and `versionCode`. They are not two views of one number and treating them as one is the mistake this entry exists to prevent.
+
+**The name is for people.** `0.1.1` today. It may go up, sideways, or nowhere; it may repeat across stores; nothing technical depends on it. It is the number a tester quotes back when reporting a bug, which is its whole job.
+
+**The code is for Play, and it only ratchets.** An integer that must be strictly greater than any build already uploaded. **It is spent on upload, not on release** — a bundle sent to internal testing and then discarded has still consumed its number, and Play will not take it again. So it is raised on *every* upload, never reused, and never reasoned about as "this release is only a test".
+
+The consequence worth stating plainly: **`0.1.0+1` is permanently spent.** It is on internal testing (D355), so 1 is gone whatever happens to that release. This build is `+2`.
+
+**Why not derive the code from the name.** A scheme like `0.1.1 → 101` is tempting and fails the first time two builds of one version are uploaded, which is exactly what a testing track is for. Decoupling them costs one number to remember and removes a class of upload rejection that arrives at the worst moment.
+
+**Cost:** nothing enforces the ratchet. Editing `pubspec.yaml` down, or forgetting to raise it, produces a rejection at upload time rather than a failing check — and `check.sh` cannot help, because it cannot know what Play already holds. The pubspec comment is the whole defence.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
