@@ -603,7 +603,21 @@ class _ReviewBar extends StatelessWidget {
     final atStart = index == 0;
     final atEnd = index >= total;
 
-    return Row(
+    // **Ink, not the theme's gold.** The app-wide icon colour is gold because
+    // most icons sit on the dark panel; these four sit on parchment, where
+    // gold on cream is the one pairing this palette cannot carry. Scoped to
+    // the scrubber with an `IconButtonTheme` rather than set four times, and
+    // scoped rather than changed globally because the gold is right everywhere
+    // else.
+    return IconButtonTheme(
+      data: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: QuadrimPalette.ink,
+          disabledForegroundColor:
+              QuadrimPalette.inkSoft.withValues(alpha: 0.38),
+        ),
+      ),
+      child: Row(
       children: [
         IconButton(
           icon: const Icon(Icons.first_page),
@@ -647,6 +661,7 @@ class _ReviewBar extends StatelessWidget {
           onPressed: atEnd ? null : () => onReview(total),
         ),
       ],
+      ),
     );
   }
 }

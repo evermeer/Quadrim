@@ -7,17 +7,57 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
 
-/// How long a piece stays green after it is played, and how long the winning
-/// line pulses once a game is decided.
-const Duration kFlashDuration = Duration(seconds: 4);
+/// How long a piece stays green after it is played.
+///
+/// Ten seconds rather than four: four was long enough to notice and too short
+/// to go back to. It ends on its own, and a new move ends it early — the last
+/// two moves are the only ones lit (see [flashCells]), so a piece that falls
+/// out of that pair stops the moment the next move lands.
+///
+/// **The winning line does not use this.** It pulses longer and then holds;
+/// see [kWinPulseDuration].
+const Duration kFlashDuration = Duration(seconds: 10);
 
 /// Complete bright-dim cycles inside [kFlashDuration].
 ///
-/// Four over four seconds is 1 Hz. WCAG 2.3.1 draws the seizure-risk line at
+/// Ten over ten seconds is 1 Hz. WCAG 2.3.1 draws the seizure-risk line at
 /// three flashes per second, so this sits at a third of the limit — the pulse
 /// has to be slow enough to read as "look here" rather than as a strobe
-/// anyway, and those two requirements point the same way (D203).
-const int kFlashPulses = 4;
+/// anyway, and those two requirements point the same way (D203). **Raised with
+/// the duration to hold the rate**, which is the part the guideline is about.
+const int kFlashPulses = 10;
+
+/// How long the winning line pulses before settling into a steady light.
+///
+/// **The win keeps announcing itself; it just stops moving to do it.** Thirty
+/// seconds is long enough that a player who looks away and back still sees
+/// which four cells won it, and after that the line stays fully lit rather
+/// than going out — so the answer is still on screen an hour later, with
+/// nothing repainting to keep it there.
+///
+/// An endless pulse was tried first and cost more than it was worth on both
+/// ends: on a phone it repaints for as long as a decided board is open, and in
+/// the suite it means the framework never goes idle, so every `pumpAndSettle`
+/// on a finished game waits for a frame that is never the last one. A bounded
+/// pulse needs neither a battery argument nor a test-only escape hatch.
+const Duration kWinPulseDuration = Duration(seconds: 30);
+
+/// Complete bright-dim cycles inside [kWinPulseDuration].
+///
+/// Thirty over thirty seconds is 1 Hz, the same rate as [kFlashPulses], so the
+/// WCAG 2.3.1 argument there carries over unchanged (D203).
+const int kWinPulses = 30;
+
+/// How green a winning piece is at [t], the fraction of [kWinPulseDuration].
+///
+/// No `1 - t` envelope, unlike [flashStrength]: this does not fade to nothing.
+/// It pulses [kWinPulses] times and **ends held at full brightness**, which is
+/// the steady state — `cos` is 1 at both ends of every cycle, so the last pulse
+/// runs into the hold without a seam.
+double winPulseStrength(double t) {
+  if (t >= 1) return 1;
+  return 0.5 + 0.5 * math.cos(t * 2 * math.pi * kWinPulses);
+}
 
 /// How green a flashing piece is at [t], the fraction of the flash elapsed.
 ///
@@ -124,21 +164,61 @@ class _BoardViewState extends State<BoardView>
     duration: kFlashDuration,
   );
 
+  /// What [_syncFlash] last acted on. Reduce-motion is part of it because the
+  /// setting can change while a finished board is on screen, and it decides
+  /// whether the controller repeats at all.
+  List<int> _lastFlash = const [];
+  bool _lastWinning = false;
+  bool _lastReduceMotion = false;
+
   @override
-  void initState() {
-    super.initState();
-    if (widget.flash.isNotEmpty) _flash.forward(from: 0);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Here rather than in `initState`, because it reads `MediaQuery`.
+    _syncFlash();
   }
 
   @override
   void didUpdateWidget(BoardView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncFlash();
+  }
+
+  /// Starts, restarts or stops the flash to match the board.
+  ///
+  /// The two modes differ in more than duration: a played piece fades out once
+  /// and is done, the winning line repeats until the board leaves the screen.
+  void _syncFlash() {
+    final winning = outcome(widget.state) is Win;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     // Contents, not identity: every rebuild hands over a freshly built list,
     // so comparing references would restart the flash on every frame.
-    if (listEquals(oldWidget.flash, widget.flash)) return;
+    if (listEquals(_lastFlash, widget.flash) &&
+        winning == _lastWinning &&
+        reduceMotion == _lastReduceMotion) {
+      return;
+    }
+    _lastFlash = widget.flash;
+    _lastWinning = winning;
+    _lastReduceMotion = reduceMotion;
+
     if (widget.flash.isEmpty) {
       _flash.stop();
+      return;
+    }
+    if (winning) {
+      _flash.duration = kWinPulseDuration;
+      if (reduceMotion) {
+        // Straight to the steady state. `winPulseStrength(1)` is 1, so parking
+        // the controller at the end leaves the line fully lit without a single
+        // scheduled frame — the same place the pulse would have arrived.
+        _flash.stop();
+        _flash.value = 1;
+      } else {
+        _flash.forward(from: 0);
+      }
     } else {
+      _flash.duration = kFlashDuration;
       _flash.forward(from: 0);
     }
   }
@@ -386,6 +466,10 @@ class _CellView extends StatelessWidget {
                     light: owner == Player.first,
                     diameter: size * 0.62,
                     flash: flash,
+                    // Derived here rather than threaded down from the board:
+                    // this widget already holds the state, and only the few
+                    // cells that are flashing ever ask.
+                    sustained: flash != null && outcome(state) is Win,
                   ),
                 ),
         ),
@@ -406,10 +490,15 @@ class _Pebble extends StatelessWidget {
     required this.light,
     required this.diameter,
     this.flash,
+    this.sustained = false,
   });
 
   final bool light;
   final double diameter;
+
+  /// Whether this is the winning line, which pulses without end, rather than a
+  /// played piece, which fades out once.
+  final bool sustained;
 
   /// Null unless this piece is flashing. Its value is elapsed fraction, not
   /// strength — [flashStrength] turns one into the other.
@@ -453,12 +542,19 @@ class _Pebble extends StatelessWidget {
     // Read here rather than threaded down: only the flashing pebbles ask, so
     // this adds a handful of dependencies rather than sixty-four.
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion && sustained) {
+      // The winning line, held lit. The controller is not running in this
+      // case, so there is nothing to rebuild against.
+      return _build(1);
+    }
     return AnimatedBuilder(
       animation: animation,
       builder: (_, _) => _build(
         reduceMotion
             ? (animation.value >= 1 ? 0.0 : 1.0)
-            : flashStrength(animation.value),
+            : sustained
+                ? winPulseStrength(animation.value)
+                : flashStrength(animation.value),
       ),
     );
   }

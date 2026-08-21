@@ -220,4 +220,108 @@ void main() {
       );
     });
   });
+
+  group('the winning line', () {
+    /// Light takes {0,1,2,3}; the dark cells form no line.
+    GameState won() => GameState.fromMoves([0, 21, 1, 22, 2, 26, 3]);
+
+    test('winPulseStrength ends held at full brightness, not at nothing', () {
+      // Unlike flashStrength, which fades out. The hold *is* the steady state,
+      // and cos is 1 at both ends of every cycle, so the last pulse runs into
+      // it without a seam.
+      expect(winPulseStrength(0), closeTo(1, 1e-9));
+      expect(winPulseStrength(1), 1);
+      expect(winPulseStrength(2), 1, reason: 'past the end it stays lit');
+      expect(winPulseStrength(0.5 / kWinPulses), closeTo(0, 1e-9));
+      for (var i = 0; i <= 200; i++) {
+        expect(winPulseStrength(i / 100), inInclusiveRange(0, 1));
+      }
+    });
+
+    test('pulses well under the three-per-second seizure limit', () {
+      // WCAG 2.3.1 draws the line at three flashes per second (D203). Thirty
+      // cycles over thirty seconds is 1 Hz, the same rate as a played piece.
+      final hz = kWinPulses / kWinPulseDuration.inSeconds;
+      expect(hz, lessThan(3));
+      expect(hz, closeTo(1, 1e-9));
+    });
+
+    testWidgets('still pulsing long after a played piece has stopped',
+        (tester) async {
+      final state = won();
+      await tester.pumpWidget(_host(state, flash: flashCells(state)));
+
+      final resting = _piece(tester, 26);
+      expect(_piece(tester, 0), isNot(resting), reason: 'not lit at the start');
+
+      // Past the point a played piece has faded to nothing, and still moving.
+      await tester.pump(kFlashDuration + const Duration(seconds: 5));
+      final bright = _piece(tester, 0);
+      await tester.pump(const Duration(milliseconds: 500));
+      final dim = _piece(tester, 0);
+
+      expect(bright, isNot(dim), reason: 'the line stopped moving too early');
+      expect([bright, dim], isNot(contains(resting)),
+          reason: 'the line went back to its resting colour');
+    });
+
+    testWidgets('settles into a steady light rather than going out',
+        (tester) async {
+      final state = won();
+      await tester.pumpWidget(_host(state, flash: flashCells(state)));
+      final resting = _piece(tester, 26);
+
+      await tester.pump(kWinPulseDuration);
+      final held = _piece(tester, 0);
+      expect(held, isNot(resting), reason: 'the winning line went out');
+
+      // Still there, still not moving — an hour later there is nothing to
+      // repaint and the answer is still on screen.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(_piece(tester, 0), held);
+      await tester.pump(kWinPulseDuration * 10);
+      expect(_piece(tester, 0), held);
+    });
+
+    testWidgets('goes straight to the steady light when motion is reduced',
+        (tester) async {
+      final state = won();
+      await tester.pumpWidget(
+          _host(state, flash: flashCells(state), reduceMotion: true));
+
+      final resting = _piece(tester, 26);
+      final lit = _piece(tester, 0);
+      expect(lit, isNot(resting));
+
+      // Marked from the first frame and never moving, which is the same place
+      // the pulse arrives at — reduce motion skips the journey, not the answer.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(_piece(tester, 0), lit);
+      await tester.pump(kWinPulseDuration * 2);
+      expect(_piece(tester, 0), lit);
+    });
+  });
+
+  testWidgets('a played piece stops early when the next move lands',
+      (tester) async {
+    // Four moves in, so cells 2 and 3 are lit and 0 and 1 are already at rest.
+    // Cell 0 is the baseline: light, like cell 2, and not flashing. Taking it
+    // from a cell that is itself flashing is the trap this test fell into.
+    var state = GameState.fromMoves([0, 1, 2, 3]);
+    await tester.pumpWidget(_host(state, flash: flashCells(state)));
+    final resting = _piece(tester, 0);
+    expect(_piece(tester, 2), isNot(resting), reason: 'cell 2 should be lit');
+
+    // A quarter of the way through cell 2's ten seconds, light plays again.
+    // `flashCells` keeps only the last move of each side, so cell 2 drops out
+    // and stops immediately rather than serving out its remaining seconds.
+    await tester.pump(kFlashDuration ~/ 4);
+    state = GameState.fromMoves([0, 1, 2, 3, 4]);
+    await tester.pumpWidget(_host(state, flash: flashCells(state)));
+    await tester.pump();
+
+    expect(flashCells(state), isNot(contains(2)));
+    expect(_piece(tester, 2), resting,
+        reason: 'the superseded move kept flashing');
+  });
 }
