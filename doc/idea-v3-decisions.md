@@ -1729,10 +1729,78 @@ What that leaves is a clean statement of the last open problem on the ladder: **
 
 **Cost:** if a later release changes the daily cap to five or the first volume rung to three, this tile lies and no test fails, because nothing connects `kDailyLimit` to `_volumeTargets.first`. That connection is the honest thing to add if either number is ever touched.
 
+## D355 — A release build without the upload keystore fails, and ticket 015 was wrong about Android signing
+
+**Question:** The Google Play account is active again, so the Android upload that [D302](#d302) parked is live work. Ticket 015 records Android release signing as **done** — "met for the 0.1 and 0.2 builds", with a signed build ticked as installed on a physical device. Is it?
+
+**Decision:** No. `app/android/app/build.gradle.kts` still carried the Flutter template verbatim:
+
+```kotlin
+// TODO: Add your own signing config for the release build.
+// Signing with the debug keys for now, so `flutter run --release` works.
+signingConfig = signingConfigs.getByName("debug")
+```
+
+There was no `key.properties` and no keystore anywhere in the tree. Whatever ran on a device for 0.1 and 0.2 was signed with the debug certificate, which Play rejects on upload. **The ticket recorded an intention as an outcome**, and the only reason it cost nothing is that nothing was ever uploaded.
+
+**The fix is not to add a signing config but to delete the fallback.** The template's default is the actual defect: it signs a release with the debug key and says nothing, so the failure surfaces at the store rather than at the build — or, as here, does not surface at all and gets written down as success. A missing `key.properties` now throws at configure time for any task whose name contains `Release`. Verified both ways: `flutter build appbundle --release` fails with the message, `flutter build apk --debug` builds clean.
+
+**The keystore lives outside the repository, not merely outside git.** `key.properties` names an absolute path. `.gitignore` already listed `**/*.jks`, but a rule is a habit with a config file — `git add -f` beats it and so does an accidental edit — so `check.sh` now asks git what is *tracked* rather than trusting what is *ignored*. That closes ticket 015's "a check enforces this", which had been open since the ticket was written.
+
+**What this does not do.** It produces a signable build; it does not produce a signed one. `keytool` needs passwords, so generating and backing up the key stays with the developer, and ticket 015's backup-and-restore-verify criterion is untouched by any of this.
+
+**And it puts [D306](#d306)'s empirical question on the critical path.** Whether Play Billing's manifest merge injects `INTERNET` — and therefore whether `check.sh`'s categorical grep survives on Android — is answered by the first internal-track install, not before it. The upload is now the experiment.
+
+**Cost:** a developer without the keystore can no longer run `flutter run --release`, which the template's fallback allowed. For a one-developer project that is the correct trade; on a team it would need a second path, and the honest one is a debug-signed *build type* that is named as such rather than a release that quietly is one.
+
+## D356 — Billing brings `INTERNET` after all, and `check.sh` has been grepping the wrong file since D212
+
+**Question:** [D306](#d306) parked one thing to be "checked empirically at implementation time, not assumed either way": whether Play Billing's manifest merge injects `INTERNET`. The first release bundle makes it answerable. Does it?
+
+**Decision:** **Yes, and the check that was supposed to catch it cannot see it.** Two findings, the second worse than the first.
+
+**One: `INTERNET` arrives, from a library nobody chose.** Not from `billing:8.0.0`, whose manifest declares only `com.android.vending.BILLING`, and not from `in_app_purchase_android`, whose manifest is empty. It comes from `com.google.android.datatransport:transport-backend-cct:3.1.8` — Google's telemetry transport, transitively behind billing — which declares both `INTERNET` and `ACCESS_NETWORK_STATE`. The shipped `app-release.aab` carries `INTERNET`, `ACCESS_NETWORK_STATE`, `BIND_JOB_SERVICE` and `DUMP`.
+
+**An intermediate conclusion here was wrong and is recorded rather than quietly fixed.** Reading the two obvious AARs and finding no `INTERNET` produced a confident "the check survives unchanged". The AAR scan was the wrong instrument: it enumerated the dependencies that were *thought of* instead of asking the merger what it actually produced. `manifest-merger-blame-release-report.txt` names the contributor of every line and would have answered it in one grep. **Read the artifact, not the inputs** — the same lesson [D341](#d341) records about trusting an estimate column over a head-to-head score.
+
+**Two, and this is the real defect: `check.sh` greps `app/android/app/src/main/AndroidManifest.xml`.** That is the *source* manifest. The permission that ships comes from the *merge*. So the check passes — it passed on this very build — while the artifact it is supposed to be guarding declares the permission it exists to forbid.
+
+That has been true since [D212](#d212) and was invisible for as long as nothing merged a permission in. D212's claim was that "the strongest available guarantee is not a code review but the permission itself"; what was implemented is a grep of a file that does not determine the permission. **The guarantee was never enforced — it merely had nothing to catch.**
+
+**Cost, stated plainly:** every release built before this one would have passed the check with any permission a dependency cared to add. Nothing did, so nothing shipped wrong, and D93's substance ("computer play makes no network call") was never violated because no code makes one. What was lost is the claim that a mechanism rather than a promise was holding it — and that claim is in the spec, in `check.sh`'s own comment, and in [D306](#d306)'s account of what iOS gives up relative to Android. All three overstate what Android was doing.
+
+**What is not yet decided** is whether to strip the permission with `tools:node="remove"` and keep the guarantee categorical, or to accept it and narrow the check to computer play. That turns on whether `BillingClient` still works without `INTERNET` — it binds to the Play Store over IPC and the Play Store does the networking, so it should — and that is a measurement on the internal track, not an argument. Left open deliberately: this entry records what is true, and the next one records what was chosen.
+
+## D357 — The permission is stripped from the merge, and the check now tests the artifact
+
+**Question:** [D356](#d356) left two things open: whether to strip `INTERNET` or accept it, and what to do about a check that was grepping a file which does not determine the shipped permission. Both are decided here.
+
+**Decision: strip it, with `tools:node="remove"`, and rebuild the check around the merged manifest.**
+
+**Why strip rather than accept.** Accepting would have meant narrowing the check to computer play, which [D212](#d212) already anticipates for 2.0's Firebase work — the simpler route, and the one with no risk to purchases. It was declined because of *what* brings the permission. This is not billing needing a socket; it is `transport-backend-cct`, a telemetry transport, riding in behind billing. Accepting the permission to keep a library quiet that nobody asked for, in a project whose privacy claim is "the platform refuses the call", is paying the whole price of the compromise for none of its benefit. Removing it leaves billing to reach the Play Store over IPC, which is how it works anyway, and leaves the transport unable to do the one thing it exists for.
+
+**`ACCESS_NETWORK_STATE` is deliberately left in place.** It grants no access — only the ability to ask whether a network exists — and stripping permissions a dependency declares is something to do for a reason. There is a reason for `INTERNET`; tidiness is not one for this.
+
+**The check now tests three things in increasing order of authority**, replacing one grep that tested none of them:
+
+1. Our own manifest declares no `INTERNET` — a line carrying the removal directive is excluded by name, since it is the fix rather than the violation.
+2. The removal directive is present. **Absence is no longer sufficient**, because absence is exactly the state in which the permission shipped.
+3. If a merged release manifest exists on disk, it is checked, and that is the authority. When it does not exist the run *says so* rather than passing quietly — a check whose limits are invisible is how D356 survived from D212 until the first bundle.
+
+**What step 3 still cannot do.** `check.sh` does not build a release, and should not: it would need the keystore, which CI does not have, and it would add over a minute to every run. So the authoritative check is opportunistic — it fires for anyone who has built a bundle, and CI runs steps 1 and 2 only. **The honest statement is that the guarantee is verified at release time and asserted the rest of the time**, which is weaker than D212 claimed and stronger than what D212 shipped.
+
+**The evidence that purchases will survive is better than "it should".** `billing-8.0.0.aar`'s own classes were scanned for network APIs — `java.net.URL`, `HttpURLConnection`, `javax.net.ssl`, `java.net.Socket`, `okhttp3` — and reference **none of them**. The library is pure IPC to the Play Store, which does the networking in its own process under its own permissions. That is consistent with where the `INTERNET` declaration actually came from: a *separate* library, for telemetry, not billing. It is still not proof — the Play Store service could in principle refuse a caller lacking the permission — so the internal-track install was left as the settling test.
+
+**It settled the right way.** The bundle built here was uploaded to internal testing on 2026-08-21, both products were created against it, and they are live. **Play Billing works with no `INTERNET` permission**, which means the categorical guarantee and a paid app are not in tension on Android after all — the thing D306 was right to refuse to assume in either direction.
+
+**Hot reload survives, and that was not obvious.** `tools:node="remove"` in `main` could plausibly have stripped the `INTERNET` that Flutter's *debug* source-set manifest adds for hot reload, breaking `flutter run` in a way that would have been diagnosed weeks later and blamed on something else. It does not: the build-type manifest outranks `main` in the merger, so the directive reaches the libraries below and not the source set above. Measured on both builds rather than reasoned about — release drops it, debug keeps it.
+
+**Cost:** a `tools:` namespace and a directive in the manifest that will look like dead weight to anyone who does not read the comment, which is why the comment names the library. And a standing hazard: any future dependency that declares `INTERNET` is now silently stripped rather than loudly rejected, so if something one day genuinely needs the network, the failure will be a runtime error rather than a build one. That is the correct direction for this project and it is not free.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
 
 **Closed since:** the two Casual-tier rating inversions, which had been owned by a 1.0 roster revision that no longer exists and are now fixed before 1.0 ships (D305).
 
-**Opened by the re-cut:** Apple Developer enrolment, which is the critical path for 1.0 and is not yet started (D302); whether Play Billing's manifest merge injects `INTERNET`, which decides whether `check.sh` keeps its categorical form on Android (D306); and how the 1.0 tester cohort is structured now that no store imposes a size or a duration (D302).
+**Opened by the re-cut:** Apple Developer enrolment, which is the critical path for 1.0 and is not yet started (D302); ~~whether to strip `INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the merged manifest (D357). What remains is empirical: whether purchases still work without it, which the first internal-track install settles; and how the 1.0 tester cohort is structured now that no store imposes a size or a duration (D302).

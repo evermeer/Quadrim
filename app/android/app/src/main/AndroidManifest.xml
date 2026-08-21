@@ -1,4 +1,18 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- **Removed from the merge, not merely absent from this file** (D357).
+         Play Billing pulls in com.google.android.datatransport:transport-backend-cct
+         transitively, and that library - a telemetry transport, not a billing
+         component - declares INTERNET and ACCESS_NETWORK_STATE. Without this
+         directive the shipped bundle carries INTERNET, which is what D93 and
+         spec S1/F13 forbid, and check.sh could not see it because it greps
+         this file rather than the merged manifest (D356).
+
+         ACCESS_NETWORK_STATE is left alone deliberately: it grants no access,
+         only the ability to ask whether a network exists, and removing a
+         permission a library declares is a thing to do for a reason rather
+         than for tidiness. This is the reason; that is not. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
     <application
         android:label="Quadrim"
         android:name="${applicationName}"

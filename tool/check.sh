@@ -46,16 +46,61 @@ fi
 
 echo "== the shipped app cannot reach the network =="
 # D93 and spec S1/F13: computer play makes no network call, in any release.
-# The strongest available guarantee is not a code review but the permission
-# itself — without INTERNET in the *release* manifest, Android refuses the call
-# whatever the code asks for. Flutter's own debug and profile manifests declare
-# it for hot reload and are deliberately not checked; only what ships is
-# (ticket 027).
-if grep -q 'android.permission.INTERNET' app/android/app/src/main/AndroidManifest.xml; then
-  echo "FAIL: the release manifest declares INTERNET."
-  echo "      The computer rating and computer play are offline in every"
-  echo "      release (D93). If a later release genuinely needs the network,"
-  echo "      that is a spec change, not a manifest edit."
+# The guarantee is the permission itself: without INTERNET, Android refuses the
+# call whatever the code asks for.
+#
+# **This used to grep the source manifest, which is not what decides the
+# permission** (D356). Play Billing pulls in a telemetry transport that
+# declares INTERNET, so a bundle shipped with it while this check passed. What
+# follows tests three things instead of one, in increasing order of authority.
+MAIN=app/android/app/src/main/AndroidManifest.xml
+
+# 1. Nothing in our own manifest may declare it. A line carrying the removal
+#    directive is the fix, not a violation, so it is excluded by name.
+if grep -E 'uses-permission[^>]*android\.permission\.INTERNET' "$MAIN"      | grep -qv 'tools:node="remove"'; then
+  echo "FAIL: $MAIN declares INTERNET."
+  echo "      Computer play is offline in every release (D93). If a later"
+  echo "      release genuinely needs the network, that is a spec change,"
+  echo "      not a manifest edit."
+  fail=1
+fi
+
+# 2. It must actively strip what dependencies merge in. Absence is not enough:
+#    the permission arrives from a library nobody chose (D357).
+if ! grep -q 'android.permission.INTERNET" tools:node="remove"' "$MAIN"; then
+  echo "FAIL: $MAIN no longer removes INTERNET from the merge."
+  echo "      Play Billing brings com.google.android.datatransport, which"
+  echo "      declares it. Deleting the directive ships the permission."
+  fail=1
+fi
+
+# 3. The merged manifest is the authority, and it only exists after a release
+#    build. Checked when present rather than skipped silently — a check whose
+#    limits are invisible is how D356 stayed hidden for as long as it did.
+MERGED=$(find app/build -path '*merged_manifest/release*' -name AndroidManifest.xml 2>/dev/null | head -1)
+if [ -n "$MERGED" ]; then
+  if grep -q 'android.permission.INTERNET' "$MERGED"; then
+    echo "FAIL: the MERGED release manifest declares INTERNET: $MERGED"
+    echo "      A dependency is contributing it past the removal directive."
+    fail=1
+  else
+    echo "   (verified against the merged release manifest)"
+  fi
+else
+  echo "   (no release build on disk - steps 1 and 2 only; run"
+  echo "    'flutter build appbundle --release' to verify the real artifact)"
+fi
+
+echo "== keystore credentials are not in version control =="
+# Ticket 015 asks for a check rather than a habit. .gitignore already covers
+# these, but a rule is not a check: `git add -f` beats it, and so does a rule
+# edited by accident. This asks git what is actually tracked.
+tracked=$(git ls-files -- 'key.properties' '**/key.properties' '*.jks' '*.keystore')
+if [ -n "$tracked" ]; then
+  echo "FAIL: signing material is tracked by git:"; echo "$tracked"
+  echo "      Remove it from history, then rotate the upload key through"
+  echo "      Play Console - a published key that has ever been public is"
+  echo "      not made private again by deleting the file."
   fail=1
 fi
 

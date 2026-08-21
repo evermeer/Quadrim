@@ -430,7 +430,9 @@ One script, run before every commit, that analyses and tests every package and a
 
 That last one is how "computer play makes no network call" is enforced. Grepping for an HTTP client only checks the spellings you thought of, and a transitive dependency could reach the network without any of them appearing; the **permission** is categorical. When 2.0 genuinely needs networking, narrow the check to computer play rather than deleting it.
 
-**Two things at 1.0 may reach that check earlier than planned** (D306). Play Billing needs `com.android.vending.BILLING`, and whether its manifest merge also injects `INTERNET` must be checked empirically rather than assumed — if it does, the check must narrow one release early. And **iOS has no counterpart at all**: an iOS app may open a socket without declaring anything, so on that platform this guarantee drops from enforced to reviewed. The Android build still proves it, about code both platforms share; that is weaker than a platform refusal and is claimed at its real strength.
+**The transitive dependency that paragraph warns about turned out to be real** (D356). Play Billing needs `com.android.vending.BILLING`, and it also pulls in `com.google.android.datatransport:transport-backend-cct` — a telemetry transport, not a billing component — which declares `INTERNET`. Worse, the check could not see it: it grepped `src/main/AndroidManifest.xml`, which is not the manifest that determines what ships, so a bundle carrying the permission passed the gate. **The categorical guarantee was never enforced; it merely had nothing to catch.** Both are fixed in D357 — the permission is stripped from the merge with `tools:node="remove"`, and the check now tests the merged manifest when a release build exists and says so when one does not. The honest statement is that it is verified at release time and asserted between releases.
+
+And **iOS has no counterpart at all**: an iOS app may open a socket without declaring anything, so on that platform this guarantee drops from enforced to reviewed. The Android build still proves it, about code both platforms share; that is weaker than a platform refusal and is claimed at its real strength.
 
 Every long run gets a hard timeout. A hung suite is indistinguishable from a slow one.
 
@@ -737,7 +739,7 @@ Every item is a business, account or measurement decision. **None is functional,
 | Store price points | $1.99 and $4.99 are intended; store tiers, tax treatment and per-country equivalents are not chosen. **Needed before 1.0**, which is three releases sooner than it used to be. Gates R16 |
 | **Apple Developer enrolment** | **The critical path for 1.0 and not yet started.** Mac available, account not. Gates R14, and through it everything else in §11.7a (D302) |
 | **The Google Play Console account** | Cannot currently be reactivated. It now blocks only the Android half of 1.0, which is the entire point of the re-cut. Gates R11 |
-| **Whether Play Billing forces the INTERNET permission** | Decides whether `check.sh` keeps its categorical form on Android at 1.0. **Check empirically; assume neither answer** (D306) |
+| ~~Whether Play Billing forces the INTERNET permission~~ | **Answered: yes, via `transport-backend-cct`** — and the check was grepping the wrong file (D356). Stripped from the merge; check rebuilt around the merged manifest (D357). Open only as: do purchases still work without it (first internal-track install) |
 | **The 1.0 tester cohort** | No store imposes a size or a duration any more. Gates R20, and with it whether R13's two signals are ever measured (D302) |
 | App name availability | Against both stores and trademark registers. Not yet done |
 | The reference device | The twenty-second ceiling is a device number and the node-to-seconds conversion must be confirmed on real hardware. Gates F14 |
