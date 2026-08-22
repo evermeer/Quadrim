@@ -5,6 +5,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# **A silent death is the expensive kind.** `set -e` aborts on any unguarded
+# non-zero exit, and when that happens inside a command substitution the script
+# stops without reaching whatever it was going to print — CI reported "exit code
+# 1" under a section heading three builds running, which reads as a real finding
+# and is not one. This names the line instead.
+trap 'echo "check.sh: aborted at line $LINENO (exit $?) - an unguarded command, not a finding" >&2' ERR
+
 fail=0
 
 echo "== purity: pure packages must not depend on Flutter, Firebase, or IO =="
@@ -77,7 +84,12 @@ fi
 # 3. The merged manifest is the authority, and it only exists after a release
 #    build. Checked when present rather than skipped silently — a check whose
 #    limits are invisible is how D356 stayed hidden for as long as it did.
-MERGED=$(find app/build -path '*merged_manifest/release*' -name AndroidManifest.xml 2>/dev/null | head -1)
+# `|| true` is load-bearing under `set -euo pipefail`: `find` exits non-zero
+# when its starting point does not exist, `pipefail` carries that through
+# `head`, and a failing command substitution in an assignment kills the script.
+# CI has never built a release, so `app/build` is absent there and this check
+# took the whole run down with it while printing nothing at all.
+MERGED=$(find app/build -path '*merged_manifest/release*'   -name AndroidManifest.xml 2>/dev/null | head -1 || true)
 if [ -n "$MERGED" ]; then
   if grep -q 'android.permission.INTERNET' "$MERGED"; then
     echo "FAIL: the MERGED release manifest declares INTERNET: $MERGED"

@@ -1399,7 +1399,6 @@ Sorrel is the one new opponent that adds a *rule* rather than a number: it is th
 
 **Cost:** Roughly thirty test fixtures moved again, one release after D333 moved them. Several app fixtures had to change *which opponent they farm* as well as how often, because the free set now stops at Sorrel and Bramble is the first purchase — a fixture that earned points by beating Bramble and then bought Bramble was nonsense the old free set had been hiding.
 
-
 ## D336 — Ranking corners first is a style, and a style cannot be a rung
 
 **Question:** The first whole-roster calibration after the recut reported nine ordering inversions. Six were in the Casual and Club tiers, which [D314](#d314) and ticket 044 had already been through once. What was left in there that still produces a cycle?
@@ -1451,7 +1450,6 @@ A fixed reach deletes the concept of a tier from the sampling. Every rung is tie
 **Fifty games rather than thirty** because thirty leaves about 64 points of noise on rungs that are forty apart, so one pair could not distinguish a correct rung from an inverted one; several of the nine inversions in the motivating run sat within a game or two of even. Fifty brings it to about 50. The run is affordable because the 95-pair run took twenty minutes, not the hour `CLAUDE.md` had budgeted for it.
 
 **What is given up is the long brace.** Nothing plays anything more than five rungs away any more, so Hazel against Quartz is gone. Those pairs were swept almost without exception and produced a bound rather than a value, so the loss is small — but they were the only check on the ladder's *absolute* span rather than on its ordering, and if that span is ever in question the brace has to come back.
-
 
 ## D340 — Rungs dealt out by measurement, and the column that is not a ranking
 
@@ -1877,6 +1875,15 @@ The target declared `TARGETED_DEVICE_FAMILY = "1,2"` — iPhone and iPad — whi
 **Android is untouched.** Its `minSdk` answers to a different market and to Play, and nothing in this entry applies to it.
 
 **Cost:** the floor is now two OS versions above what Flutter 3.44.9 would default to, so it is a number someone has to maintain rather than inherit — a future Flutter upgrade that raises its own default past 15.0 will silently agree with this, and one that does not will leave this looking deliberate when it is merely enforced. The paragraph above is the record of which it is.
+## D363 — The gate died where it was meant to admit ignorance
+
+**Question:** CI failed three builds running, printing the heading `== the shipped app cannot reach the network ==` and then `exit code 1` with no finding under it. Every one of those commits passed the same script locally. What differs?
+
+**Decision:** `app/build` exists on a development machine and never on CI, and [D357](#d357)'s third step began `MERGED=$(find app/build ... | head -1)`. `find` exits non-zero when its starting point is missing, `pipefail` carries that through `head`, and under `set -e` **a failing command substitution in an assignment ends the script** — before reaching the branch whose entire job was to say "no release build on disk, steps 1 and 2 only". The check designed to be honest about its own limits was killed at exactly the line where it would have declared them. Fixed with `|| true`, which lines 13 and 19 of the same file had been using for this hazard since it was written.
+
+**The symptom was worse than the bug.** A silent abort under a section heading is indistinguishable from that section failing, so the log accused the network check of finding something. **`check.sh` now carries a `trap ... ERR` that names the line and says it is an unguarded command rather than a finding.** That is the part worth keeping: the bug was a one-character omission, and what cost three builds was that the script could not say where it stopped.
+
+**Cost, and it is not zero.** The abort was at the *fourth* of nine sections, so nothing after it has run on CI since ticket 015 landed — not the generated-source staleness checks, not `flutter test`, not the per-package suites. Local runs covered all of them on every commit, so this is a lapsed safety net rather than an unexamined one, but **the next CI run is the first to exercise those steps in three commits and may surface something this one hid.**
 
 ## Open items
 
