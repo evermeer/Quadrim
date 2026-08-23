@@ -1885,6 +1885,26 @@ The target declared `TARGETED_DEVICE_FAMILY = "1,2"` — iPhone and iPad — whi
 
 **Cost, and it is not zero.** The abort was at the *fourth* of nine sections, so nothing after it has run on CI since ticket 015 landed — not the generated-source staleness checks, not `flutter test`, not the per-package suites. Local runs covered all of them on every commit, so this is a lapsed safety net rather than an unexamined one, but **the next CI run is the first to exercise those steps in three commits and may surface something this one hid.**
 
+## D364 — A reasoning comment made the privacy manifest invalid XML
+
+**Question:** Apple rejected build 4 with ITMS-91056, "the PrivacyInfo.xcprivacy file is invalid. Keys and values in your app's privacy manifests must be valid." Which key or value is wrong?
+
+**Decision:** **None of them.** The file was not valid XML at all, so nothing in it was ever read. `plistlib` puts the fault at line 25, column 43:
+
+```
+C617.1 is the app-container reason -- the files are inside this app's
+```
+
+**XML forbids `--` inside a comment**, and this project writes reasoning comments everywhere, in a house style full of em-dashes. Typed as two hyphens inside `<!-- -->`, an em-dash ends the document's well-formedness. The keys were correct throughout: no tracking, nothing collected, and `C617.1` is a valid reason for `NSPrivacyAccessedAPICategoryFileTimestamp`.
+
+**The rejection message pointed away from the fault, which is the part worth remembering.** "Keys and values must be valid" sends you to read the keys and values, and they are fine; the file simply never parsed. Two minutes with a parser answered what an hour of reading the manifest would not have.
+
+**So the gate now parses it.** `check.sh` loads every `*.xcprivacy` under `app/ios` with `plistlib` and fails with the parser's own message. It also fails when *no* manifest is found, because an iOS build needs one and its absence is as shippable a mistake as its malformation. Where `python3` is missing the run says so out loud rather than skipping quietly — [D363](#d363) was written about a check that failed silently, one commit earlier, and the same mistake twice in two days would be a pattern rather than an accident.
+
+**Cost:** a `python3` dependency in the gate, which [D290](#d290) deliberately avoided for the art pipeline. The reasoning differs: D290's objection was that re-encoding art with a different Pillow build produces different bytes, so the check would fail on a library upgrade. XML well-formedness has no such drift — a file either parses or it does not, in every version of every parser.
+
+**And build 4 is spent.** A rejected TestFlight build consumes its number exactly as an accepted one does ([D358](#d358)), so this ships as `0.1.1+5`.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

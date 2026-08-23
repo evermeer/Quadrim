@@ -12,7 +12,7 @@ publish_to: 'none'
 # about whether a given delivery "counted" -- +3 met a rejection whose warning
 # text says uploads continue until Spring 2027, so it may or may not be spent,
 # and raising costs nothing where guessing wrong costs a rejection (D362).
-version: 0.1.1+4
+version: 0.1.1+5
 
 environment:
   sdk: ^3.12.2

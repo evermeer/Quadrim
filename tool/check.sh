@@ -116,6 +116,32 @@ if [ -n "$tracked" ]; then
   fail=1
 fi
 
+echo "== the iOS privacy manifest parses =="
+# ITMS-91056, and Apple was right (D364). The manifest is XML, XML forbids `--`
+# inside a comment, and a reasoning comment written with a double hyphen made
+# the file unparseable. **Nothing about the privacy keys was wrong**, which is
+# exactly why the rejection was hard to read: it names the manifest, so the
+# manifest's *contents* are where you look.
+#
+# A file that must parse should be parsed by the gate rather than eyeballed.
+# `|| true` on the find for the reason in D363.
+MANIFESTS=$(find app/ios -name '*.xcprivacy' 2>/dev/null || true)
+if [ -z "$MANIFESTS" ]; then
+  echo "FAIL: no *.xcprivacy found under app/ios - iOS builds need one."
+  fail=1
+elif command -v python3 >/dev/null 2>&1; then
+  for m in $MANIFESTS; do
+    if ! python3 -c "import plistlib,sys; plistlib.load(open(sys.argv[1],'rb'))" "$m" >/dev/null 2>&1; then
+      echo "FAIL: $m is not a valid plist:"
+      python3 -c "import plistlib,sys; plistlib.load(open(sys.argv[1],'rb'))" "$m" 2>&1 | tail -1
+      fail=1
+    fi
+  done
+else
+  # Said out loud rather than skipped quietly, which is the whole lesson of D363.
+  echo "   (python3 absent - the privacy manifest was NOT parsed)"
+fi
+
 echo "== the strategy dictionary's attribution is still in the app =="
 # Its terms permit use only "as long as its source is credited", and it is the
 # built app that reaches people. A grep, because the alternative is trusting
