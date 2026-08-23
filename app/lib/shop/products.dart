@@ -4,10 +4,14 @@
 /// them in the same category as the application id (D213): free to choose
 /// carefully now, impossible to change later. They are written here once and
 /// referred to by name everywhere else.
+///
+/// They moved once, from the `nl.evict.quadrim.` namespace to `nl.evict.quadrim2.`,
+/// which App Store Connect required (D365). That was only possible because no
+/// product existed on either store at the time. It is not possible again.
 library;
 
 /// The one-time, non-consumable "unlock all opponents" purchase (§4.1).
-const String kUnlockAllProductId = 'nl.evict.quadrim.unlock_all';
+const String kUnlockAllProductId = 'nl.evict.quadrim2.unlock_all';
 
 /// The auto-renewing subscription — "unlimited play", yearly at 1.0.
 ///
@@ -18,7 +22,7 @@ const String kUnlockAllProductId = 'nl.evict.quadrim.unlock_all';
 /// group that contains tier 3. A group cannot be retro-fitted around a product
 /// that already has subscribers, and getting it wrong produces double-billed
 /// users and a refund queue (D223).
-const String kUnlimitedProductId = 'nl.evict.quadrim.unlimited';
+const String kUnlimitedProductId = 'nl.evict.quadrim2.unlimited';
 
 /// Every id this app asks the store about.
 const Set<String> kProductIds = {kUnlockAllProductId, kUnlimitedProductId};

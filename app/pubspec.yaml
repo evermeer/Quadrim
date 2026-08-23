@@ -8,11 +8,9 @@ publish_to: 'none'
 # even to a closed track, even if that release is discarded -- so the code is
 # raised on every upload and never reused. One counter serves both stores
 # (D359): it is raised for an upload to either, and neither store cares that
-# the other skipped a number. That rule is the whole point of not reasoning
-# about whether a given delivery "counted" -- +3 met a rejection whose warning
-# text says uploads continue until Spring 2027, so it may or may not be spent,
-# and raising costs nothing where guessing wrong costs a rejection (D362).
-version: 0.1.1+5
+# the other skipped a number. +5 reached App Store Connect; this build renames
+# the two purchase products (D365) and so is +6.
+version: 0.1.1+6
 
 environment:
   sdk: ^3.12.2

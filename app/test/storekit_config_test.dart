@@ -75,21 +75,28 @@ void main() {
             'with no error anywhere');
   });
 
-  test('both ids are namespaced under the permanent application id', () {
-    // `nl.evict.quadrim` can never change once published to any track (D213),
-    // and these inherit that permanence. It is the Android application id and
-    // a namespace the project owns -- since D359 it is *not* the iOS bundle
-    // id, which is `nl.evict.quadrim2`. Product ids have no requirement to sit
-    // under the bundle id, so this prefix stays whatever iOS is called.
+  test('both ids are namespaced under the iOS bundle id', () {
+    // They follow the *iOS* bundle id, not the Android application id, because
+    // App Store Connect is what refused the old namespace (D365). D359 said
+    // this prefix would never move; it moved, and the reason it could is that
+    // no product had been created on either store yet. Once one exists this
+    // becomes as immovable as D213 says -- a product id is never reusable
+    // after deletion, on either store.
     for (final id in kProductIds) {
-      expect(id, startsWith('nl.evict.quadrim.'));
+      expect(id, startsWith('nl.evict.quadrim2.'));
     }
   });
 
   test('the subscription id carries no tier number', () {
     // 3.0 adds a *plan* to this product rather than a second product, so an id
     // reading "tier2" would name a group that contains tier 3 (D223).
-    expect(kUnlimitedProductId, isNot(contains('tier')));
-    expect(kUnlimitedProductId, isNot(matches(RegExp(r'\d'))));
+    //
+    // Asserted on the last segment rather than the whole id: the namespace has
+    // carried a digit since it followed the iOS bundle id (D365), and a bare
+    // "no digits anywhere" check reads that `2` as a tier number. What D223
+    // protects is the product's own name, which is this segment.
+    final name = kUnlimitedProductId.split('.').last;
+    expect(name, isNot(contains('tier')));
+    expect(name, isNot(matches(RegExp(r'\d'))));
   });
 }

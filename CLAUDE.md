@@ -136,8 +136,9 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 - **Nothing but cream sits on the background photograph**, and the photograph is darkened under everything so that cream always works. Ink over the bare picture measured 2.9:1 (D296).
 - **The application ids differ by platform, and neither can change now** (D213, D359). Android is `nl.evict.quadrim`,
   which is on Play internal testing; iOS is `nl.evict.quadrim2`, which is the App Store Connect record that exists.
-  The two StoreKit product ids stay under the `nl.evict.quadrim.` namespace on both platforms — that prefix is a
-  namespace the project owns, not the iOS bundle id, and `storekit_config_test.dart` still asserts it.
+  The two StoreKit product ids follow the **iOS** id on both platforms — `nl.evict.quadrim2.unlock_all` and
+  `nl.evict.quadrim2.unlimited` (D365), which is what App Store Connect would accept. `storekit_config_test.dart`
+  asserts the prefix. A product id can never be reused after deletion on either store, so these are now fixed too.
 - Keystore credentials stay out of version control (ticket 015).
 
 ## Working conventions

@@ -35,8 +35,8 @@ them in the same category as the application id: cheap to choose carefully now,
 impossible to change later.
 
 ```
-nl.evict.quadrim.unlock_all          non-consumable / one-time
-nl.evict.quadrim.unlimited           subscription, yearly base plan
+nl.evict.quadrim2.unlock_all          non-consumable / one-time
+nl.evict.quadrim2.unlimited           subscription, yearly base plan
 ```
 
 The subscription id carries no tier number and no "tier2", because 3.0 adds a

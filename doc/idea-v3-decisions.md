@@ -1905,6 +1905,22 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **And build 4 is spent.** A rejected TestFlight build consumes its number exactly as an accepted one does ([D358](#d358)), so this ships as `0.1.1+5`.
 
+## D365 — The product ids follow the iOS bundle id, and D359 was wrong to promise they would not
+
+**Question:** Configuring the two in-app purchases in App Store Connect ran into the store, and the ids had to become `nl.evict.quadrim2.unlock_all` and `nl.evict.quadrim2.unlimited`. [D359](#d359) said the opposite in as many words: *the product ids stay `nl.evict.quadrim.unlock_all` and `nl.evict.quadrim.unlimited` … renaming them would break the ids already configured on the Play side for nothing.* Which half of that survives?
+
+**Decision:** Neither half. The ids move to the `nl.evict.quadrim2.` namespace, in `products.dart`, in `Quadrim.storekit`, and in the guard test, which now asserts that prefix.
+
+**D359's factual error is worth naming, because it is the kind that reads as reasoning.** It justified keeping the old namespace by claiming the ids were "already configured on the Play side". They were not: ticket 015's *"Both store products are created"* is still an unchecked box, and nothing has ever been created on either store. The sentence sounded like a constraint and was an assumption, and it made the wrong recommendation sound settled.
+
+**What was true in D359** is that a product id has no technical requirement to match the bundle id. That is still true, and it is not the binding consideration — the binding consideration is what the store in front of you will accept.
+
+**This is the last time they move.** A product id can never be reused after deletion, on either store. The rename was free only because both stores are empty of products; the moment either has one, these join the application ids in [D213](#d213)'s category of things that are chosen once. The comment in `products.dart` says so at the point of definition, which is where someone would otherwise repeat this.
+
+**Android inherits an iOS-shaped namespace**, and that is deliberate. One id per product across both stores is worth more than each platform's ids matching its own application id — a second set would mean a platform branch in `products.dart`, two entitlement paths, and a class of bug where the wrong store is asked about the right product.
+
+**Cost:** the Play products, when they are created, sit under a namespace that reads like the iOS bundle id and matches neither the Android application id nor anything a Play reviewer would expect. Cosmetic, permanent, and cheaper than the branch.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

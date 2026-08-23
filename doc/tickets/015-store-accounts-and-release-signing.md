@@ -35,8 +35,8 @@ and 049, and through them the whole of 1.0.
       1.0, and the one item here that cannot be shortened by working harder
 - [ ] An App ID for `nl.evict.quadrim` exists in the developer portal, and a
       distribution certificate and provisioning profile are in place (see 048)
-- [ ] Both store products are created — `nl.evict.quadrim.unlock_all` as a
-      non-consumable, and `nl.evict.quadrim.unlimited` as a subscription **in a
+- [ ] Both store products are created — `nl.evict.quadrim2.unlock_all` as a
+      non-consumable, and `nl.evict.quadrim2.unlimited` as a subscription **in a
       group with one base plan**, so 3.0 can add tier 3 as a second plan (046)
 - [ ] Price points are chosen per country with tax treatment confirmed — spec
       gate R16, and the longest-standing open item in the project

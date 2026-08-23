@@ -13,7 +13,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "nl.evict.quadrim.unlock_all",
+      "productID" : "nl.evict.quadrim2.unlock_all",
       "referenceName" : "Unlock all opponents",
       "type" : "NonConsumable"
     }
@@ -43,7 +43,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "nl.evict.quadrim.unlimited",
+          "productID" : "nl.evict.quadrim2.unlimited",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Unlimited play",
           "subscriptionGroupID" : "20D4F1A6",
