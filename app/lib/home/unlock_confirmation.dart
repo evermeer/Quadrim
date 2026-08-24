@@ -5,6 +5,8 @@ import 'package:quadrim_progression/quadrim_progression.dart';
 import '../data/documents.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../shop/shop.dart';
+import '../shop/shop_screen.dart';
 
 /// Confirms spending points on an opponent, and says what is being bought.
 ///
@@ -71,12 +73,54 @@ Future<bool> runUnlock(
   required int price,
   required int points,
   required Future<void> Function(String opponentId, int price) purchase,
+  /// Null where the store is not reachable from this screen, in which case a
+  /// shortfall is reported without an offer rather than with a dead one.
+  Shop? shop,
 }) async {
   final l10n = AppLocalizations.of(context)!;
   final messenger = ScaffoldMessenger.of(context);
   if (points < price) {
-    messenger.showSnackBar(
-        SnackBar(content: Text(l10n.unlockNotAffordable(price - points))));
+    // **A dialog rather than a snackbar, and the button that reaches it is no
+    // longer disabled.** Testers pressed an unlock they could not afford and
+    // nothing happened at all, because both call sites greyed the button out.
+    // A disabled control explains nothing: it does not say how short you are,
+    // and it hides the one thing that would answer the question.
+    if (shop == null) {
+      messenger.showSnackBar(
+          SnackBar(content: Text(l10n.unlockNotAffordable(price - points))));
+      return false;
+    }
+    final toShop = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.unlockNotAffordableTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.unlockNotAffordable(price - points)),
+            const SizedBox(height: 12),
+            Text(l10n.unlockBuyInstead,
+                style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.paywallNotNow),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.paywallSeeOptions),
+          ),
+        ],
+      ),
+    );
+    if (toShop == true && context.mounted) {
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ShopScreen(shop: shop),
+      ));
+    }
     return false;
   }
   if (!await showUnlockConfirmation(

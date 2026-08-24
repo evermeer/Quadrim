@@ -130,7 +130,7 @@
     }
   },
   "passAndPlayNoRating": "No rating changes in pass and play.",
-  "rematch": "Rematch",
+  "rematch": "Play again",
   "resign": "Resign",
   "resignConfirmTitle": "Resign this game?",
   "resignConfirmBody": "The game ends as a loss for the side to move. There is no draw offer.",
@@ -652,6 +652,14 @@
     }
   },
   "unlockNotAffordable": "You need {short} more points.",
+  "unlockNotAffordableTitle": "Not enough points yet",
+  "@unlockNotAffordableTitle": {
+    "description": "Title of the dialog shown when the unlock button is pressed and the balance is short (tester feedback)."
+  },
+  "unlockBuyInstead": "You can unlock every opponent at once instead, without earning the points.",
+  "@unlockBuyInstead": {
+    "description": "The offer under the shortfall. Deliberately does not promise more games: the unlock-all product leaves the daily limit alone."
+  },
   "@unlockNotAffordable": {
     "description": "Why the unlock button is unavailable.",
     "placeholders": {

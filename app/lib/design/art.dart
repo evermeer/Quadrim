@@ -195,9 +195,11 @@ class SignArt {
     aspect: 768 / 512,
     // Low and slightly right of centre — the open book takes the top third.
     centre: Alignment(0.02, 0.24),
-    // The one sign that is not level. 8.2 degrees, measured off the lettering
-    // the artwork used to carry.
-    tiltDegrees: 8.2,
+    // The one sign that is not level. 8.2 was measured off the lettering the
+    // artwork used to carry — but that lettering is gone (D297) and the plank
+    // it has to match leans further than the old glyphs did, which is what
+    // testers saw. 9.5 is a judgement against the plank, not a measurement.
+    tiltDegrees: 9.5,
     widthFraction: 0.62,
     fontFraction: 0.44,
     plankTop: 186 / 512,
@@ -207,7 +209,11 @@ class SignArt {
   static const newGame = SignArt(
     asset: Art.newGame,
     aspect: 1024 / 383,
-    centre: Alignment(0.01, -0.13),
+    // The plank runs from 0.232 to 0.720 of the file, so its middle is at
+    // Alignment y -0.047. The caption used to sit at -0.13, eight hundredths
+    // high, which testers read as "not properly centred" — derived from the
+    // plank rather than nudged by eye.
+    centre: Alignment(0.01, -0.047),
     tiltDegrees: 0,
     widthFraction: 0.58,
     fontFraction: 0.52,

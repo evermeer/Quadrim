@@ -7,6 +7,9 @@ import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/home/your_path.dart';
 import 'package:quadrim/main.dart';
+import 'package:quadrim/shop/shop.dart';
+
+import 'shop_test.dart' show FakeStore;
 import 'package:quadrim_engine/quadrim_engine.dart';
 import 'package:quadrim_progression/quadrim_progression.dart';
 
@@ -217,10 +220,55 @@ void main() {
       expect(find.text('42 points'), findsOneWidget,
           reason: "Bramble's price");
       expect(find.text('0 of 42'), findsOneWidget);
-      // The unlock button exists but cannot be pressed on nothing.
+      // **The button is pressable even on nothing** (tester feedback). Greyed
+      // out it answered nothing at all, so what is asserted now is the outcome
+      // rather than the enabled flag: pressing explains the shortfall and does
+      // not unlock anything.
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
-      expect(button.onPressed, isNull, reason: 'nothing earned yet');
+      expect(button.onPressed, isNotNull, reason: 'it must be able to explain');
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
+      await tester.pumpAndSettle();
+      expect(find.text('You need 42 more points.'), findsOneWidget);
+      expect(await repo.loadUnlocks(), isEmpty, reason: 'nothing was bought');
+    });
+
+    testWidgets('short of the price, it offers the way past it', (tester) async {
+      // The shortfall is the moment the one-time unlock is worth mentioning,
+      // and the only moment the player has asked a question it answers. With
+      // no store reachable it stays a plain message, which the test above
+      // covers; this is the version with one.
+      _phone(tester);
+      final repo = await _repository();
+      final shop = Shop(platform: FakeStore(), unlocks: repo);
+      await shop.start();
+      addTearDown(shop.dispose);
+
+      await tester.pumpWidget(QuadrimApp(
+          repository: repo,
+          settings: repo,
+          unlocks: repo,
+          shop: shop,
+          random: Random(1)));
+      await tester.pumpAndSettle();
+
+      await scrollTo(tester, 'Bramble');
+      await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Not enough points yet'), findsOneWidget);
+      expect(find.text('You need 42 more points.'), findsOneWidget);
+      expect(
+          find.text('You can unlock every opponent at once instead, without '
+              'earning the points.'),
+          findsOneWidget);
+
+      // And it reaches the shop rather than merely mentioning it.
+      await tester.tap(find.widgetWithText(FilledButton, 'See options'));
+      await tester.pumpAndSettle();
+      expect(find.text('Unlock all opponents'), findsWidgets);
+      expect(await repo.loadUnlocks(), isEmpty, reason: 'still nothing bought');
     });
 
     testWidgets('earning the price makes the unlock available, and buying it '
@@ -280,8 +328,14 @@ void main() {
 
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
-      expect(button.onPressed, isNull,
+      expect(button.onPressed, isNotNull, reason: 'it must be able to explain');
+
+      final before = (await repo.loadUnlocks()).length;
+      await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
+      await tester.pumpAndSettle();
+      expect(find.text('You need 100 more points.'), findsOneWidget,
           reason: '10 does not buy a 110-point unlock');
+      expect((await repo.loadUnlocks()).length, before);
     });
 
     testWidgets('the arrows step the row one tile and fade at the ends',

@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 # stops without reaching whatever it was going to print — CI reported "exit code
 # 1" under a section heading three builds running, which reads as a real finding
 # and is not one. This names the line instead.
-trap 'echo "check.sh: aborted at line $LINENO (exit $?) - an unguarded command, not a finding" >&2' ERR
+trap 'echo "check.sh: stopped at line $LINENO (exit $?) - read the output above; a bare stop here with nothing above it is an unguarded command rather than a finding" >&2' ERR
 
 fail=0
 

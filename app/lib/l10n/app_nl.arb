@@ -38,7 +38,7 @@
     }
   },
   "passAndPlayNoRating": "Samen op één toestel telt niet mee voor je rating.",
-  "rematch": "Revanche",
+  "rematch": "Speel opnieuw",
   "resign": "Opgeven",
   "resignConfirmTitle": "Deze partij opgeven?",
   "resignConfirmBody": "De partij eindigt als verlies voor de speler die aan zet is. Remise aanbieden kan niet.",
@@ -240,6 +240,8 @@
   "unlockConfirmBody": "Dit kost {cost} punten en je houdt {left} over.",
   "unlockConfirmBook": "{name} speelt een bewezen strategie en is onverslaanbaar als hij begint. Vanaf de tweede zet speelt hij op zoekkracht, net als de rest.",
   "unlockNotAffordable": "Je hebt nog {short} punten nodig.",
+  "unlockNotAffordableTitle": "Nog niet genoeg punten",
+  "unlockBuyInstead": "Je kunt ook in één keer alle tegenstanders vrijspelen, zonder de punten te verdienen.",
   "unlockDone": "{name} vrijgespeeld.",
   "starsLabel": "{count} van 3 sterren",
   "neverPlayed": "Nog niet gespeeld",

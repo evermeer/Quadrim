@@ -282,6 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
         points: _balance,
         purchase: (id, paid) =>
             widget.unlocks.purchase(id, pricePaid: paid),
+        shop: widget.shop,
       );
     } finally {
       if (mounted) setState(() => _unlocking = false);

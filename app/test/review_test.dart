@@ -169,10 +169,10 @@ void main() {
     expect(_board(tester).state.moves, _winMoves.take(6));
     // The result panel is out of the way while reviewing — its Rematch button
     // starts a different game.
-    expect(find.text('Rematch'), findsNothing);
+    expect(find.text('Play again'), findsNothing);
 
     await _tapIcon(tester, Icons.close);
-    expect(find.text('Rematch'), findsOneWidget);
+    expect(find.text('Play again'), findsOneWidget);
     expect(find.text('Light wins!'), findsOneWidget);
   });
 

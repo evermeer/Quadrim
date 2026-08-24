@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @rematch.
   ///
   /// In en, this message translates to:
-  /// **'Rematch'**
+  /// **'Play again'**
   String get rematch;
 
   /// No description provided for @resign.
@@ -1489,6 +1489,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You need {short} more points.'**
   String unlockNotAffordable(int short);
+
+  /// Title of the dialog shown when the unlock button is pressed and the balance is short (tester feedback).
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough points yet'**
+  String get unlockNotAffordableTitle;
+
+  /// The offer under the shortfall. Deliberately does not promise more games: the unlock-all product leaves the daily limit alone.
+  ///
+  /// In en, this message translates to:
+  /// **'You can unlock every opponent at once instead, without earning the points.'**
+  String get unlockBuyInstead;
 
   /// Confirmation after a successful unlock.
   ///

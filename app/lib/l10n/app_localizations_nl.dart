@@ -118,7 +118,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Samen op één toestel telt niet mee voor je rating.';
 
   @override
-  String get rematch => 'Revanche';
+  String get rematch => 'Speel opnieuw';
 
   @override
   String get resign => 'Opgeven';
@@ -874,6 +874,13 @@ class AppLocalizationsNl extends AppLocalizations {
 
     return 'Je hebt nog $shortString punten nodig.';
   }
+
+  @override
+  String get unlockNotAffordableTitle => 'Nog niet genoeg punten';
+
+  @override
+  String get unlockBuyInstead =>
+      'Je kunt ook in één keer alle tegenstanders vrijspelen, zonder de punten te verdienen.';
 
   @override
   String unlockDone(String name) {

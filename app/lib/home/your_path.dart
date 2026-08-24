@@ -668,11 +668,21 @@ class _LockedFooter extends StatelessWidget {
               style: theme.textTheme.labelSmall),
           const SizedBox(height: 4),
           FilledButton.tonal(
-            onPressed: affordable ? onUnlock : null,
+            // **Enabled even when it cannot be afforded** (tester feedback).
+            // Greyed out, it answered nothing: not how many points are short,
+            // and not that the shortfall can be bought past. `runUnlock` says
+            // both.
+            //
+            // It still *reads* as out of reach — muted lettering rather than a
+            // dead control — because losing that signal would trade one
+            // confusion for another.
+            onPressed: onUnlock,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              foregroundColor:
+                  affordable ? null : theme.colorScheme.onSurfaceVariant,
             ),
             child: Text(l10n.unlockAction,
                 maxLines: 1, overflow: TextOverflow.ellipsis),

@@ -120,7 +120,7 @@ void main() {
       findsOneWidget,
       reason: 'must not be mistakable for a universal rating',
     );
-    expect(find.text('Rematch'), findsOneWidget);
+    expect(find.text('Play again'), findsOneWidget);
   });
 
   testWidgets('a pass-and-play result says plainly that no rating changed',
@@ -156,7 +156,7 @@ void main() {
     await tester.pumpWidget(_harness(repo, first.id));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Rematch'));
+    await tester.tap(find.text('Play again'));
     await tester.pump(kBotMoveDelay);
     await tester.pumpAndSettle();
 
@@ -281,7 +281,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Je wint!'), findsOneWidget);
-    expect(find.text('Revanche'), findsOneWidget);
+    expect(find.text('Speel opnieuw'), findsOneWidget);
     expect(
       find.text('Je rating tegen de computer, alleen op dit toestel.'),
       findsOneWidget,

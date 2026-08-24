@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 import 'game_row.dart';
 
 /// One finished game: who it was against, when, how it ended, what it did to
@@ -60,6 +61,10 @@ class FinishedGameTile extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.replay),
             tooltip: l10n.challengeAgain,
+            // Ink, not the theme's icon colour. The app-wide one is chosen for
+            // icons on the dark panel; this row sits on parchment, where it is
+            // barely visible. The same fix the review scrubber needed.
+            color: QuadrimPalette.ink,
             onPressed: onChallenge,
           ),
       ],

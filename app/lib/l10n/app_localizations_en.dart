@@ -117,7 +117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passAndPlayNoRating => 'No rating changes in pass and play.';
 
   @override
-  String get rematch => 'Rematch';
+  String get rematch => 'Play again';
 
   @override
   String get resign => 'Resign';
@@ -874,6 +874,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return 'You need $shortString more points.';
   }
+
+  @override
+  String get unlockNotAffordableTitle => 'Not enough points yet';
+
+  @override
+  String get unlockBuyInstead =>
+      'You can unlock every opponent at once instead, without earning the points.';
 
   @override
   String unlockDone(String name) {

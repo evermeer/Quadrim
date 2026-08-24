@@ -213,9 +213,16 @@ void main() {
       expect(find.text('42 points'), findsOneWidget);
       expect(find.text('0 of 42'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsNothing);
+      // Pressable even on nothing, so it can say how short the balance is and
+      // offer the way past it. What matters is the outcome, not the flag.
       final button = tester.widget<ButtonStyleButton>(
           find.widgetWithText(FilledButton, 'Unlock'));
-      expect(button.onPressed, isNull, reason: 'nothing earned yet');
+      expect(button.onPressed, isNotNull);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Unlock'));
+      await tester.pumpAndSettle();
+      expect(find.text('You need 42 more points.'), findsOneWidget);
+      expect(await repo.loadUnlocks(), isEmpty, reason: 'nothing was bought');
     });
 
     testWidgets('and once affordable it reaches the same confirmation',

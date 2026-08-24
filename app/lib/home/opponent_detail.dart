@@ -183,7 +183,10 @@ class OpponentDetail extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: points >= price ? onUnlock : null,
+                  // Enabled below the price too: `runUnlock` explains the
+                  // shortfall and offers the way past it, which a disabled
+                  // button cannot do (tester feedback).
+                  onPressed: onUnlock,
                   child: Text(l10n.unlockAction),
                 ),
               ),

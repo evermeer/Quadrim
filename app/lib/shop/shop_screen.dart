@@ -86,7 +86,13 @@ class ShopScreen extends StatelessWidget {
   }
 }
 
-class _Product extends StatelessWidget {
+/// **Stateful only to hold "a purchase is in flight"** (tester feedback).
+///
+/// The store sheet takes a noticeable moment to appear, and a button that still
+/// looks pressable during it invites a second tap — which opens the sheet again
+/// after the first purchase completes. The flag is local rather than on [Shop]
+/// because it is about this button's appearance, not about what is owned.
+class _Product extends StatefulWidget {
   const _Product({
     required this.name,
     required this.body,
@@ -112,9 +118,33 @@ class _Product extends StatelessWidget {
   final Future<void> Function() onBuy;
 
   @override
+  State<_Product> createState() => _ProductState();
+}
+
+class _ProductState extends State<_Product> {
+  bool _busy = false;
+
+  Future<void> _buy() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.onBuy();
+    } finally {
+      // The sheet may outlive this screen if the player navigates away, so the
+      // mounted check is the difference between a released state and a throw.
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final name = widget.name;
+    final body = widget.body;
+    final caveat = widget.caveat;
+    final price = widget.price;
+    final owned = widget.owned;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
@@ -126,7 +156,7 @@ class _Product extends StatelessWidget {
           if (caveat != null) ...[
             const SizedBox(height: 8),
             Text(
-              caveat!,
+              caveat,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
@@ -149,17 +179,25 @@ class _Product extends StatelessWidget {
                 // long sentence as their only control.
                 Text(l10n.shopUnavailable, style: theme.textTheme.bodySmall)
               else ...[
-                Text(price!, style: theme.textTheme.titleSmall),
+                Text(price, style: theme.textTheme.titleSmall),
                 FilledButton(
-                  onPressed: onBuy,
+                  onPressed: _busy ? null : _buy,
                   // **The visible word stays "Buy" and the announced one names
                   // the product** (ticket 021). Two products means two buttons
                   // reading "Buy, button", which `labeledTapTargetGuideline`
                   // passes — a label is present — while leaving a screen-reader
                   // user unable to tell what they are about to pay for. The
                   // guideline is a floor, not the goal.
-                  child: Text(l10n.shopBuy,
-                      semanticsLabel: l10n.shopBuyProduct(name)),
+                  child: _busy
+                      // Same footprint as the word it replaces, so the row does
+                      // not jump while the store is opening.
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.shopBuy,
+                          semanticsLabel: l10n.shopBuyProduct(name)),
                 ),
               ],
             ],
