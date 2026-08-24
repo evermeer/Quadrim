@@ -923,7 +923,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialGoalBody.
   ///
   /// In en, this message translates to:
-  /// **'Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.'**
+  /// **'Put four of your pieces in a straight line and you win. The board below is one cube, drawn as its four layers pulled apart so you can see inside it — the posts at the corners are where they join. Lines run in every direction through it, and there are 76 of them.'**
   String get tutorialGoalBody;
 
   /// Screen-reader description of one tutorial board. The board itself is silenced and described as a whole, because swiping through 64 cells to find four highlighted ones is not comprehension (D195).

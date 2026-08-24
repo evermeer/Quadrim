@@ -52,10 +52,10 @@ class _TutorialScreenState extends State<TutorialScreen> {
   }
 
   void _goTo(int index) => _controller.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+    index,
+    duration: const Duration(milliseconds: 250),
+    curve: Curves.easeOut,
+  );
 
   /// Hands the player a real game against a real opponent, and finishes the
   /// tutorial if they see it through.
@@ -74,8 +74,9 @@ class _TutorialScreenState extends State<TutorialScreen> {
     if (_finishing) return;
     _finishing = true;
     final settings = await widget.settings.loadSettings();
-    await widget.settings
-        .saveSettings(settings.copyWith(tutorialCompleted: true));
+    await widget.settings.saveSettings(
+      settings.copyWith(tutorialCompleted: true),
+    );
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -97,73 +98,76 @@ class _TutorialScreenState extends State<TutorialScreen> {
       body: SafeArea(
         child: ParchmentSheet(
           child: Column(
-          children: [
-            _Progress(
-              index: _index,
-              total: steps.length,
-              title: steps[_index].title,
-            ),
-            Expanded(
-              // Swipeable as well as buttoned: "steps can be revisited" is
-              // cheapest to honour by leaving the gesture the widget already
-              // has, and a player who has just been told to tap the board will
-              // try to swipe it.
-              child: PageView.builder(
-                controller: _controller,
-                onPageChanged: (i) => setState(() => _index = i),
-                itemCount: steps.length,
-                itemBuilder: (_, i) => _StepView(step: steps[i]),
+            children: [
+              _Progress(
+                index: _index,
+                total: steps.length,
+                title: steps[_index].title,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                children: [
-                  // At the end of a section, finishing is offered on a line of
-                  // its own rather than as a third button in the row below.
-                  // Three buttons abreast fit at a text scale of 1.0 and stop
-                  // fitting well before 2.0, which is the trap D188 already
-                  // cost this project once.
-                  if (steps[_index].endsSection)
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: _finish,
-                        child: Text(l10n.tutorialFinishHere),
-                      ),
-                    ),
-                  // The same slot on the last step: the practice game is the
-                  // optional extra there, and Done stays the plain way out.
-                  if (last)
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: _practice,
-                        child: Text(l10n.practicePlay),
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      Expanded(
+              Expanded(
+                // Swipeable as well as buttoned: "steps can be revisited" is
+                // cheapest to honour by leaving the gesture the widget already
+                // has, and a player who has just been told to tap the board will
+                // try to swipe it.
+                child: PageView.builder(
+                  controller: _controller,
+                  onPageChanged: (i) => setState(() => _index = i),
+                  itemCount: steps.length,
+                  itemBuilder: (_, i) =>
+                      _StepView(step: steps[i], intro: i == 0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  children: [
+                    // At the end of a section, finishing is offered on a line of
+                    // its own rather than as a third button in the row below.
+                    // Three buttons abreast fit at a text scale of 1.0 and stop
+                    // fitting well before 2.0, which is the trap D188 already
+                    // cost this project once.
+                    if (steps[_index].endsSection)
+                      SizedBox(
+                        width: double.infinity,
                         child: TextButton(
-                          onPressed:
-                              _index == 0 ? null : () => _goTo(_index - 1),
-                          child: Text(l10n.tutorialBack),
+                          onPressed: _finish,
+                          child: Text(l10n.tutorialFinishHere),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: last ? _finish : () => _goTo(_index + 1),
-                          child:
-                              Text(last ? l10n.tutorialDone : l10n.tutorialNext),
+                    // The same slot on the last step: the practice game is the
+                    // optional extra there, and Done stays the plain way out.
+                    if (last)
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: _practice,
+                          child: Text(l10n.practicePlay),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: _index == 0
+                                ? null
+                                : () => _goTo(_index - 1),
+                            child: Text(l10n.tutorialBack),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: last ? _finish : () => _goTo(_index + 1),
+                            child: Text(
+                              last ? l10n.tutorialDone : l10n.tutorialNext,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
             ],
           ),
         ),
@@ -219,9 +223,17 @@ class _Progress extends StatelessWidget {
 }
 
 class _StepView extends StatelessWidget {
-  const _StepView({required this.step});
+  const _StepView({required this.step, required this.intro});
 
   final TutorialStep step;
+
+  /// Whether this step's board opens with the cube turning.
+  ///
+  /// The first step only. It is the step where a player has never seen the
+  /// board before, and the one whose picture - a flat row inside layer 1 - is
+  /// least able to argue on its own that the four drawings are one solid
+  /// (D366).
+  final bool intro;
 
   /// Share of the page the board may claim.
   ///
@@ -237,8 +249,10 @@ class _StepView extends StatelessWidget {
     final theme = Theme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final boardHeight =
-            math.max(_minBoardHeight, constraints.maxHeight * _boardShare);
+        final boardHeight = math.max(
+          _minBoardHeight,
+          constraints.maxHeight * _boardShare,
+        );
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Column(
@@ -264,18 +278,7 @@ class _StepView extends StatelessWidget {
                     container: true,
                     label: step.boardLabel,
                     child: ExcludeSemantics(
-                      child: BoardView(
-                        // Ink, because this board sits on parchment. Cream is
-                        // for the board on the darkened forest (D300).
-                        captionColour: QuadrimPalette.ink,
-                        state: GameState.fromMoves(step.moves),
-                        // Nothing on a tutorial board is placeable: the
-                        // position is the lesson, and a stray tap that changed
-                        // it would make the caption a lie.
-                        enabled: false,
-                        onCellTap: (_) {},
-                        highlight: step.line,
-                      ),
+                      child: _TutorialBoard(step: step, intro: intro),
                     ),
                   ),
                 ),
@@ -284,6 +287,92 @@ class _StepView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// The board on one tutorial step.
+///
+/// Stateful only for the cube intro. The first step opens with the four layers
+/// shut into one solid, turns it so that it reads as an object with sides, and
+/// then lets it out into exactly the board the rest of the tutorial draws
+/// (D366). Every other step gets a controller that is already finished, which
+/// is the resting board and not one scheduled frame.
+class _TutorialBoard extends StatefulWidget {
+  const _TutorialBoard({required this.step, required this.intro});
+
+  final TutorialStep step;
+  final bool intro;
+
+  @override
+  State<_TutorialBoard> createState() => _TutorialBoardState();
+}
+
+class _TutorialBoardState extends State<_TutorialBoard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _cube;
+  bool _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cube = AnimationController(
+      vsync: this,
+      duration: kCubeIntroDuration,
+      value: widget.intro ? 0 : 1,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.intro || _started) return;
+    _started = true;
+    // Here rather than in `initState` because it reads MediaQuery. Parking the
+    // controller at the end honours reduce-motion by leaving the board exactly
+    // where the intro would have put it, without a frame in between - the same
+    // trick the win pulse uses.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _cube.value = 1;
+    } else {
+      _cube.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _cube.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final board = BoardView(
+      // Ink, because this board sits on parchment. Cream is for the board on
+      // the darkened forest (D300).
+      captionColour: QuadrimPalette.ink,
+      state: GameState.fromMoves(widget.step.moves),
+      // Nothing on a tutorial board is placeable: the position is the lesson,
+      // and a stray tap that changed it would make the caption a lie.
+      enabled: false,
+      onCellTap: (_) {},
+      highlight: widget.step.line,
+      // Every step, not just the first: the posts are what keeps saying "one
+      // object" once the intro has finished saying it.
+      cubeEdges: true,
+      intro: widget.intro ? _cube : null,
+    );
+    if (!widget.intro) return board;
+    return GestureDetector(
+      // Replayable, because two seconds happens once and a player still
+      // reading the title missed it. Nothing on a tutorial board answers a tap,
+      // so this takes the gesture from nothing.
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (MediaQuery.disableAnimationsOf(context)) return;
+        _cube.forward(from: 0);
+      },
+      child: board,
     );
   }
 }

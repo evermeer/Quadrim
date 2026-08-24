@@ -500,7 +500,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tutorialGoalBody =>
-      'Leg vier van jouw stenen op een rechte lijn en je wint. Lijnen lopen in elke richting door de kubus; er zijn er 76.';
+      'Leg vier van jouw stenen op een rechte lijn en je wint. Het bord hieronder is één kubus, getekend als vier lagen die uit elkaar zijn getrokken zodat je erin kunt kijken — de stijlen op de hoeken laten zien waar ze aan elkaar zitten. Lijnen lopen in elke richting door de kubus; er zijn er 76.';
 
   @override
   String get tutorialGoalBoard =>

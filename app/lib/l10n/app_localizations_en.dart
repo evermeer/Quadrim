@@ -500,7 +500,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialGoalBody =>
-      'Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.';
+      'Put four of your pieces in a straight line and you win. The board below is one cube, drawn as its four layers pulled apart so you can see inside it — the posts at the corners are where they join. Lines run in every direction through it, and there are 76 of them.';
 
   @override
   String get tutorialGoalBoard =>

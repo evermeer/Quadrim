@@ -382,7 +382,7 @@
   "tutorialOfferAccept": "Show me",
   "tutorialOfferDecline": "Not now",
   "tutorialGoalTitle": "The goal",
-  "tutorialGoalBody": "Put four of your pieces in a straight line and you win. Lines run in every direction through the cube, and there are 76 of them.",
+  "tutorialGoalBody": "Put four of your pieces in a straight line and you win. The board below is one cube, drawn as its four layers pulled apart so you can see inside it — the posts at the corners are where they join. Lines run in every direction through it, and there are 76 of them.",
   "tutorialGoalBoard": "Layer 1, row 1: four light pieces filling the row, highlighted as a completed line.",
   "@tutorialGoalBoard": {
     "description": "Screen-reader description of one tutorial board. The board itself is silenced and described as a whole, because swiping through 64 cells to find four highlighted ones is not comprehension (D195)."

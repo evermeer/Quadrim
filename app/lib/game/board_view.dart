@@ -85,11 +85,77 @@ double flashStrength(double t) {
 /// to read the flash in practice has to find it doing the same thing in a real
 /// game.
 List<int> flashCells(GameState state) => switch (outcome(state)) {
-      Win(line: final line) => line,
-      _ => state.moves.length <= 2
-          ? state.moves
-          : state.moves.sublist(state.moves.length - 2),
-    };
+  Win(line: final line) => line,
+  _ =>
+    state.moves.length <= 2
+        ? state.moves
+        : state.moves.sublist(state.moves.length - 2),
+};
+
+/// How long the tutorial's opening turn of the cube lasts.
+///
+/// Two seconds. Long enough to read as one solid object being turned, short
+/// enough to be over before a player who came to read the paragraph notices
+/// they are waiting for it. It plays once per visit; a tap replays it (D366).
+const Duration kCubeIntroDuration = Duration(seconds: 2);
+
+/// How far the board swings during the intro, in degrees.
+///
+/// Well short of 90. The four layers are flat drawings carried through a 3D
+/// transform rather than a volumetric render, so at 90 degrees they are edge-on
+/// and the board disappears entirely. Fifty-two keeps every cell readable for
+/// the whole turn and still shows the stack from enough angles to read as a
+/// thing with sides.
+const double _cubeIntroSweep = 52;
+
+/// The fraction of the intro the cube stays shut before it opens.
+///
+/// It has to be seen as a cube before it can be seen coming apart; opening
+/// immediately just looks like four layers that were briefly overlapping.
+const double _cubeIntroHold = 0.45;
+
+/// How far the layers have travelled from shut cube to resting board at [t].
+///
+/// **Reaches exactly 1**, which is the whole reason the intro interpolates
+/// these parameters rather than the matrices they end up in: the last frame of
+/// the intro has to *be* the board the player then reads for the rest of the
+/// tutorial. An animation that lands next to its resting state and snaps
+/// teaches nothing - the player saw two unrelated pictures (D366).
+double cubeIntroSpread(double t) {
+  if (t <= _cubeIntroHold) return 0;
+  if (t >= 1) return 1;
+  return Curves.easeOutCubic.transform(
+    (t - _cubeIntroHold) / (1 - _cubeIntroHold),
+  );
+}
+
+/// How visible the "Layer N" captions are at a given [spread].
+///
+/// Held back until the board is nearly open, because a caption needs the whole
+/// 18 logical pixels of chrome above its grid and the gap is only that wide at
+/// the very end. Fading them in with the spread put half-lit lettering across
+/// the artwork of the layer above for most of the opening, which looked like a
+/// bug rather than like a board coming apart (D366).
+double cubeIntroCaption(double spread) =>
+    ((spread - 0.75) / 0.25).clamp(0.0, 1.0);
+
+/// The board's rotation in radians at [t], decaying to exactly 0.
+///
+/// A swing that settles rather than a full turn, for the reason
+/// [_cubeIntroSweep] gives. The cosine carries it round and back; the `1 - t`
+/// envelope is what guarantees it arrives square to the screen.
+double cubeIntroAngle(double t) {
+  if (t >= 1) return 0;
+  return _cubeIntroSweep *
+      (math.pi / 180) *
+      (1 - t) *
+      math.cos(2 * math.pi * 0.75 * t);
+}
+
+/// The perspective term that makes the swing read as depth rather than as a
+/// horizontal squeeze. Decays to 0, so the resting board is drawn by a matrix
+/// with nothing in it.
+double cubeIntroPerspective(double t) => t >= 1 ? 0 : 0.0011 * (1 - t);
 
 /// The 4x4x4 board as four sheared 4x4 grids stacked in one column, aligned
 /// to the right edge (D137).
@@ -111,6 +177,8 @@ class BoardView extends StatefulWidget {
     this.highlight = const [],
     this.flash = const [],
     this.captionColour = QuadrimPalette.cream,
+    this.intro,
+    this.cubeEdges = false,
   });
 
   final GameState state;
@@ -140,6 +208,28 @@ class BoardView extends StatefulWidget {
   /// put it on parchment, where cream is invisible (D300).
   final Color captionColour;
 
+  /// The opening turn of the cube, or null for a board that simply appears.
+  ///
+  /// Drives both halves of it: the whole board swings on one axis while the
+  /// four layers slide out of a solid stack. Null on every board in a real
+  /// game - the intro answers "are these four separate boards?", which is a
+  /// question only a player who has never seen one asks (D366).
+  ///
+  /// It does not conflict with D135's choice of shear over perspective. That
+  /// governs the *resting* state of a board being played on, where a rotated
+  /// cell would no longer be its own hit area; this rotates for two seconds on
+  /// a board built with `enabled: false`, and arrives back at the shear.
+  final Animation<double>? intro;
+
+  /// Whether to draw the cube's corner posts across the gaps between layers.
+  ///
+  /// Four parallelograms with a gap and nothing joining them read as four
+  /// pictures near each other. The posts are what every exploded-view diagram
+  /// ever printed uses to say "one object, pulled apart", and unlike the intro
+  /// they are still saying it a minute later, in a screenshot, and with
+  /// animations turned off (D366).
+  final bool cubeEdges;
+
   static const _shear = 0.15; // horizontal skew; depth cue (see D135)
   static const _cellGap = 2.0;
   static const _layerGap = 8.0;
@@ -152,6 +242,23 @@ class BoardView extends StatefulWidget {
 
   /// Cells stop growing here so the board does not balloon on wide screens.
   static const _maxCellSize = 48.0;
+
+  /// How far apart the layers sit while the cube is shut, in cells.
+  ///
+  /// Not zero: four layers exactly on top of each other are one layer, and
+  /// thickness is the only thing the shut cube has to show. Not large either -
+  /// at 0.55 each layer showed better than half a cell below the one in front,
+  /// and four of those read as a grid seven rows deep rather than as one solid
+  /// four rows deep. A sliver reads as an edge; a row reads as a row (D366).
+  static const _shutStep = 0.3;
+
+  /// How far each layer is offset sideways while the cube is shut, in cells.
+  ///
+  /// Stacked with no sideways offset, all four layers' cell gaps line up, and
+  /// the shut cube reads as four tall columns with parchment showing between
+  /// them rather than as one solid. The stagger puts each layer's cells over
+  /// the gaps of the one in front, which is what closes the object up (D366).
+  static const _shutLean = 0.3;
 
   @override
   State<BoardView> createState() => _BoardViewState();
@@ -231,17 +338,17 @@ class _BoardViewState extends State<BoardView>
 
   @override
   Widget build(BuildContext context) {
-    final state = widget.state;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Width holds one sheared grid; the shear consumes extra width.
         final byWidth =
             (constraints.maxWidth / (1 + BoardView._shear) -
-                    3 * BoardView._cellGap) /
-                4;
+                3 * BoardView._cellGap) /
+            4;
         // Height holds four layers: 16 cell rows, 12 cell gaps, 3 layer gaps
         // and four captions.
-        final byHeight = (constraints.maxHeight -
+        final byHeight =
+            (constraints.maxHeight -
                 4 * BoardView._layerChrome -
                 12 * BoardView._cellGap -
                 3 * BoardView._layerGap) /
@@ -249,36 +356,233 @@ class _BoardViewState extends State<BoardView>
         // math.max guards degenerate constraints; a negative size would throw
         // in the Container below rather than merely look wrong.
         final cellSize = math.max(
-            1.0, math.min(math.min(byWidth, byHeight), BoardView._maxCellSize));
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          // Centred. D137 put the board against the right edge for one-handed
-          // reach; measured against that, a board that sits in the middle of
-          // the screen is what the owner asked for and what reads as the
-          // subject of the screen rather than something pushed aside (D300).
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            for (var z = 0; z < 4; z++)
-              Padding(
-                padding:
-                    EdgeInsets.only(top: z == 0 ? 0 : BoardView._layerGap),
-                child: _LayerView(
-                  z: z,
-                  state: state,
-                  enabled: widget.enabled,
-                  onCellTap: widget.onCellTap,
-                  highlight: widget.highlight,
-                  flash: widget.flash,
-                  flashAnimation: _flash,
-                  cellSize: cellSize,
-                  captionColour: widget.captionColour,
-                ),
-              ),
-          ],
+          1.0,
+          math.min(math.min(byWidth, byHeight), BoardView._maxCellSize),
+        );
+        final intro = widget.intro;
+        // No intro means no rebuild-per-frame and no Transform at all: the
+        // board every real game draws is the one this widget always drew.
+        if (intro == null) return _board(cellSize, 1);
+        return AnimatedBuilder(
+          animation: intro,
+          builder: (_, _) => _board(cellSize, intro.value),
         );
       },
     );
   }
+
+  /// The board [t] of the way through the cube intro; 1 is the resting board.
+  Widget _board(double cellSize, double t) {
+    final gridSize = 4 * cellSize + 3 * BoardView._cellGap;
+    // The distance from one layer's top to the next once the board is laid
+    // out, and what that distance is at this instant.
+    final step = BoardView._layerChrome + gridSize + BoardView._layerGap;
+    final shut = cellSize * BoardView._shutStep;
+    final spread = cubeIntroSpread(t);
+    final spacing = t >= 1 ? step : shut + (step - shut) * spread;
+
+    // Resting takes the plain column, not the intro's stack with `spacing`
+    // happening to equal `step`. The two agree by arithmetic, but only one of
+    // them is the tree every other board in the app is built from, and that is
+    // the one the player has to be left looking at (D366).
+    // How far the stack leans sideways: all of it while shut, none of it once
+    // open, so the layers arrive in the one column the resting board draws.
+    final lean = cellSize * BoardView._shutLean * (1 - spread);
+
+    final layers = t >= 1
+        ? _restingLayers(cellSize)
+        : _shutLayers(
+            cellSize,
+            gridSize,
+            step,
+            spacing,
+            lean,
+            cubeIntroCaption(spread),
+          );
+
+    // CustomPaint with a child, not a Stack. A Stack hands its children loose
+    // constraints and aligns them top-start, so wrapping the column in one
+    // shrank the board to its own width and dropped it against the left edge -
+    // exactly the D137 regression the tutorial's own test exists to catch, and
+    // it caught it. CustomPaint passes constraints straight through and paints
+    // the posts behind.
+    final board = widget.cubeEdges
+        ? CustomPaint(
+            painter: _CubeEdgePainter(
+              gridSize: gridSize,
+              spacing: spacing,
+              lean: lean,
+              colour: widget.captionColour,
+              strength: spread,
+            ),
+            child: layers,
+          )
+        : layers;
+
+    if (t >= 1) return board;
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, cubeIntroPerspective(t))
+        ..rotateY(cubeIntroAngle(t))
+        // The shut stack is shorter than the box the resting board needs.
+        // Without this it would sit against the top of that box and appear to
+        // grow downwards rather than to open.
+        ..translateByDouble(0.0, 3 * (step - spacing) / 2, 0.0, 1.0),
+      child: board,
+    );
+  }
+
+  /// The layers as this board has always drawn them: a column, layer 1 on top.
+  Widget _restingLayers(double cellSize) => Column(
+    mainAxisSize: MainAxisSize.min,
+    // Centred. D137 put the board against the right edge for one-handed
+    // reach; measured against that, a board that sits in the middle of
+    // the screen is what the owner asked for and what reads as the
+    // subject of the screen rather than something pushed aside (D300).
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      for (var z = 0; z < 4; z++)
+        Padding(
+          padding: EdgeInsets.only(top: z == 0 ? 0 : BoardView._layerGap),
+          child: _layer(z, cellSize, 1),
+        ),
+    ],
+  );
+
+  /// The layers part of the way out of the shut cube.
+  ///
+  /// A Stack rather than a Column because paint order and layout order have to
+  /// disagree here. While the cube is shut the layers overlap, and the one that
+  /// belongs on top is layer 1 - the nearest - which is also the first one laid
+  /// out. A Column paints its children in the order it lays them out, so it can
+  /// only ever put layer 4 in front, which draws the cube back to front and
+  /// teaches the opposite of what the board says (D366).
+  ///
+  /// The box is the resting board's, so the layout never moves; only the
+  /// layers inside it do.
+  Widget _shutLayers(
+    double cellSize,
+    double gridSize,
+    double step,
+    double spacing,
+    double lean,
+    double captionOpacity,
+  ) => Align(
+    // Top-centre, which is where the resting column puts its layers under the
+    // same constraints. Align is also what lets the box below keep a size of
+    // its own: the constraints arriving here are tight.
+    alignment: Alignment.topCenter,
+    child: SizedBox(
+      // Wide enough for the lean, which is nothing by the time it settles.
+      width: gridSize * (1 + BoardView._shear) + 3 * lean,
+      height: BoardView._layerChrome + gridSize + 3 * step,
+      child: Stack(
+        children: [
+          for (var z = 3; z >= 0; z--)
+            Positioned(
+              top: z * spacing,
+              left: z * lean,
+              child: _layer(z, cellSize, captionOpacity),
+            ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _layer(int z, double cellSize, double captionOpacity) => _LayerView(
+    z: z,
+    state: widget.state,
+    enabled: widget.enabled,
+    onCellTap: widget.onCellTap,
+    highlight: widget.highlight,
+    flash: widget.flash,
+    flashAnimation: _flash,
+    cellSize: cellSize,
+    captionColour: widget.captionColour,
+    captionOpacity: captionOpacity,
+  );
+}
+
+/// The cube's four corner posts, drawn across the gaps between the layers.
+///
+/// Twelve short vertical lines. The layers are pulled apart along the screen's
+/// vertical, so the connectors run parallel to that, which is what an exploded
+/// view does. Corresponding corners of two layers share an x, so every post is
+/// vertical; only the part lying in a gap is drawn, because the rest of it runs
+/// behind a grid.
+class _CubeEdgePainter extends CustomPainter {
+  const _CubeEdgePainter({
+    required this.gridSize,
+    required this.spacing,
+    required this.lean,
+    required this.colour,
+    required this.strength,
+  });
+
+  /// The side of one layer's square grid, before the shear.
+  final double gridSize;
+
+  /// The distance from one layer's top to the next, right now.
+  final double spacing;
+
+  /// How far each layer is offset sideways, right now. Zero at rest, which is
+  /// what makes the posts vertical there and slanted while the cube opens.
+  final double lean;
+
+  final Color colour;
+
+  /// Fades the posts in with the cube: 0 while it is shut, 1 at rest. A post
+  /// drawn across a gap that is not there yet is a line through the artwork.
+  final double strength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (strength <= 0) return;
+    final layerWidth = gridSize * (1 + BoardView._shear);
+    // Derived rather than assumed zero: at a large text scale a layer's caption
+    // can be wider than its grid, which makes the column wider than the layer,
+    // and the layers are centred in it.
+    final left = (size.width - layerWidth - 3 * lean) / 2;
+    // The parallelogram's four corners. The shear pushes the far row right, so
+    // the back pair sit inboard at the top and the front pair at the bottom.
+    final xs = <double>[
+      left,
+      left + gridSize,
+      left + BoardView._shear * gridSize,
+      left + layerWidth,
+    ];
+    final paint = Paint()
+      ..color = colour.withValues(alpha: 0.45 * strength)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    for (var z = 0; z < 3; z++) {
+      final top = z * spacing + BoardView._layerChrome + gridSize;
+      final bottom = (z + 1) * spacing + BoardView._layerChrome;
+      // Inverted while the cube is shut, when the layers overlap instead of
+      // leaving a gap. There is nothing to bridge, and drawing it anyway would
+      // put a line up the front of the board.
+      if (bottom <= top) continue;
+      for (final x in xs) {
+        // Slanted while the stack leans, vertical once it does not. A post
+        // joins the same corner of two layers, so it follows wherever those
+        // two have got to.
+        canvas.drawLine(
+          Offset(x + z * lean, top),
+          Offset(x + (z + 1) * lean, bottom),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CubeEdgePainter old) =>
+      old.gridSize != gridSize ||
+      old.spacing != spacing ||
+      old.lean != lean ||
+      old.colour != colour ||
+      old.strength != strength;
 }
 
 class _LayerView extends StatelessWidget {
@@ -292,6 +596,7 @@ class _LayerView extends StatelessWidget {
     required this.flashAnimation,
     required this.cellSize,
     required this.captionColour,
+    required this.captionOpacity,
   });
 
   final int z;
@@ -303,6 +608,13 @@ class _LayerView extends StatelessWidget {
   final Animation<double> flashAnimation;
   final double cellSize;
   final Color captionColour;
+
+  /// Fades the "Layer N" caption out while the cube is shut.
+  ///
+  /// The captions sit above their grids, so a stack of overlapping layers puts
+  /// each one across the artwork of the layer above. They come back as the
+  /// board opens and are fully there by the time it settles.
+  final double captionOpacity;
 
   /// One cell, built from a single [Cell] rather than three identical
   /// constructions of it inside the collection-for below.
@@ -343,23 +655,26 @@ class _LayerView extends StatelessWidget {
               // Fixed height keeps the cell-size arithmetic exact; scaleDown
               // means a large system text scale shrinks the caption instead
               // of overflowing it.
-              child: SizedBox(
-                height: BoardView._captionHeight,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  // Cream, because this caption is one of the very few things
-                  // in the app drawn straight onto the background photograph
-                  // rather than onto a card. `labelSmall` carries the ink
-                  // colour meant for parchment, and Layer 4's caption lands on
-                  // the lit path at the bottom of the picture, where ink is
-                  // invisible — seen on the running app, not deduced (D296).
-                  child: Text(
-                    l10n.layerLabel(z + 1),
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: captionColour),
+              child: Opacity(
+                opacity: captionOpacity,
+                child: SizedBox(
+                  height: BoardView._captionHeight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    // Cream, because this caption is one of the very few things
+                    // in the app drawn straight onto the background photograph
+                    // rather than onto a card. `labelSmall` carries the ink
+                    // colour meant for parchment, and Layer 4's caption lands
+                    // on the lit path at the bottom of the picture, where ink
+                    // is invisible — seen on the running app, not deduced
+                    // (D296).
+                    child: Text(
+                      l10n.layerLabel(z + 1),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: captionColour),
+                    ),
                   ),
                 ),
               ),
@@ -389,9 +704,7 @@ class _LayerView extends StatelessWidget {
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (var x = 0; x < 4; x++) _cell(x, y),
-                          ],
+                          children: [for (var x = 0; x < 4; x++) _cell(x, y)],
                         ),
                       ),
                   ],
@@ -553,8 +866,8 @@ class _Pebble extends StatelessWidget {
         reduceMotion
             ? (animation.value >= 1 ? 0.0 : 1.0)
             : sustained
-                ? winPulseStrength(animation.value)
-                : flashStrength(animation.value),
+            ? winPulseStrength(animation.value)
+            : flashStrength(animation.value),
       ),
     );
   }

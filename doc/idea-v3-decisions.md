@@ -1921,6 +1921,30 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Cost:** the Play products, when they are created, sit under a namespace that reads like the iOS bundle id and matches neither the Android application id nor anything a Play reviewer would expect. Cosmetic, permanent, and cheaper than the branch.
 
+## D366 — The tutorial's first board is a cube before it is four layers
+
+**Question:** The first tester to reach the tutorial read step 1 as four separate boards. The step draws all four layers and teaches `kGoalLine` — a flat row inside layer 1 — so the one picture a first-time player sees argues *against* the sentence it sits under. The owner asked how hard a real cube would be: spinning for a moment, then stretching out into the layers.
+
+**Decision:** All three of it. The board opens shut, turns, and comes apart over two seconds ([kCubeIntroDuration](../app/lib/game/board_view.dart)); the corner posts stay drawn across the gaps for good; and the step's own text now points at the picture instead of talking past it.
+
+**The spin cost far less than D135 makes it sound.** D135 chose a shear over a perspective rotation because shear leaves every cell its own hit area, and that is still the rule for a board being *played on*. The tutorial's board is built with `enabled: false` and wrapped in `ExcludeSemantics` behind one `boardLabel`, so the two things that make 3D-in-Flutter expensive — hit testing through an inverted perspective matrix, and sixty-four semantics nodes moving — cost nothing here. What is rotated is a flat drawing carried through a 3D transform, not a volumetric render; the pebbles do not reproject, which is why the swing stops at 52 degrees instead of turning all the way. Past about 90 the layers would be edge-on and the board would not be there.
+
+**The intro interpolates parameters, never matrices, and that is the load-bearing decision.** Spread, angle and perspective each arrive at exactly the value the resting board is drawn with, and at `t >= 1` the widget returns the plain column every other board in the app is built from — not the intro's stack with its spacing happening to equal the resting spacing. An animation that lands *next to* its resting state and snaps has taught nothing: the player saw two unrelated pictures. `cube_intro_test.dart` asserts all sixty-four cell rectangles match a board built with no intro at all, which is the only form of that promise worth having.
+
+**Three things had to be found by looking at it, not by reasoning about it.**
+
+- **The layers had to be staggered sideways while shut, not only stacked.** Offset purely vertically, all four grids' cell gaps line up and the parchment shows straight through: the shut cube read as four tall columns. A sideways lean puts each layer's cells over the gaps of the one in front and the object closes up.
+- **The shut spacing had to come down from 0.55 cells to 0.3.** At 0.55 each layer showed better than half a cell below the one in front, and four of those read as a grid seven rows deep rather than as one solid four rows deep. A sliver reads as an edge; a row reads as a row.
+- **The captions had to be held back almost to the end.** A "Layer N" caption needs the whole 18 logical pixels of chrome above its grid, and the gap is only that wide in the last few percent of the opening. Fading them in with the spread put half-lit lettering across the artwork of the layer above for most of the animation, which looked like a bug rather than like a board coming apart.
+
+**The posts are the part that matters most, and they are the cheapest.** Four parallelograms with a gap and nothing joining them read as four pictures near each other; the connectors are what every exploded-view diagram uses to say "one object, pulled apart". Unlike the intro they are still saying it a minute later, in a store screenshot, and with animations turned off. If only one of these two had shipped it should have been this one.
+
+**`CustomPaint` with a child, not a `Stack`.** The first attempt wrapped the layer column in a Stack to put the painter behind it. A Stack hands its children loose constraints and aligns them top-start, so the board shrank to its own width and dropped against the left edge — exactly the D137 regression that `tutorial_test.dart`'s *"the board sits where a game puts it"* was written to catch after it once shipped. It caught it inside a minute. CustomPaint passes constraints straight through.
+
+**Two seconds, and replayable by tapping the board.** Three was asked for and is too long: it is three seconds a player cannot read the paragraph, on every visit to step 1. Reduce-motion parks the controller at the end, which is the resting board with no frame scheduled in between — the same trick the win pulse uses.
+
+**Cost:** the tutorial's first board rebuilds once per frame for two seconds and its layout box is sized for the open board throughout, so the shut cube sits in the middle of a box four times its height. The replay tap is undiscoverable — nothing says the board answers a tap, and a line of chrome saying so would cost more room than the feature is worth. And `BoardView` now has two layer layouts rather than one; they agree by arithmetic and by the test above, but they are two.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
