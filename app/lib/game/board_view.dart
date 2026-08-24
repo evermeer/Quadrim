@@ -178,7 +178,6 @@ class BoardView extends StatefulWidget {
     this.flash = const [],
     this.captionColour = QuadrimPalette.cream,
     this.intro,
-    this.cubeEdges = false,
   });
 
   final GameState state;
@@ -220,15 +219,6 @@ class BoardView extends StatefulWidget {
   /// cell would no longer be its own hit area; this rotates for two seconds on
   /// a board built with `enabled: false`, and arrives back at the shear.
   final Animation<double>? intro;
-
-  /// Whether to draw the cube's corner posts across the gaps between layers.
-  ///
-  /// Four parallelograms with a gap and nothing joining them read as four
-  /// pictures near each other. The posts are what every exploded-view diagram
-  /// ever printed uses to say "one object, pulled apart", and unlike the intro
-  /// they are still saying it a minute later, in a screenshot, and with
-  /// animations turned off (D366).
-  final bool cubeEdges;
 
   static const _shear = 0.15; // horizontal skew; depth cue (see D135)
   static const _cellGap = 2.0;
@@ -381,15 +371,16 @@ class _BoardViewState extends State<BoardView>
     final spread = cubeIntroSpread(t);
     final spacing = t >= 1 ? step : shut + (step - shut) * spread;
 
-    // Resting takes the plain column, not the intro's stack with `spacing`
-    // happening to equal `step`. The two agree by arithmetic, but only one of
-    // them is the tree every other board in the app is built from, and that is
-    // the one the player has to be left looking at (D366).
     // How far the stack leans sideways: all of it while shut, none of it once
     // open, so the layers arrive in the one column the resting board draws.
     final lean = cellSize * BoardView._shutLean * (1 - spread);
 
-    final layers = t >= 1
+    // Resting takes the plain column, not the intro's stack with `spacing`
+    // happening to equal `step`. The two agree by arithmetic, but only one of
+    // them is the tree every other board in the app is built from, and that is
+    // the one the player has to be left looking at (D366).
+
+    final board = t >= 1
         ? _restingLayers(cellSize)
         : _shutLayers(
             cellSize,
@@ -399,25 +390,6 @@ class _BoardViewState extends State<BoardView>
             lean,
             cubeIntroCaption(spread),
           );
-
-    // CustomPaint with a child, not a Stack. A Stack hands its children loose
-    // constraints and aligns them top-start, so wrapping the column in one
-    // shrank the board to its own width and dropped it against the left edge -
-    // exactly the D137 regression the tutorial's own test exists to catch, and
-    // it caught it. CustomPaint passes constraints straight through and paints
-    // the posts behind.
-    final board = widget.cubeEdges
-        ? CustomPaint(
-            painter: _CubeEdgePainter(
-              gridSize: gridSize,
-              spacing: spacing,
-              lean: lean,
-              colour: widget.captionColour,
-              strength: spread,
-            ),
-            child: layers,
-          )
-        : layers;
 
     if (t >= 1) return board;
     return Transform(
@@ -502,87 +474,6 @@ class _BoardViewState extends State<BoardView>
     captionColour: widget.captionColour,
     captionOpacity: captionOpacity,
   );
-}
-
-/// The cube's four corner posts, drawn across the gaps between the layers.
-///
-/// Twelve short vertical lines. The layers are pulled apart along the screen's
-/// vertical, so the connectors run parallel to that, which is what an exploded
-/// view does. Corresponding corners of two layers share an x, so every post is
-/// vertical; only the part lying in a gap is drawn, because the rest of it runs
-/// behind a grid.
-class _CubeEdgePainter extends CustomPainter {
-  const _CubeEdgePainter({
-    required this.gridSize,
-    required this.spacing,
-    required this.lean,
-    required this.colour,
-    required this.strength,
-  });
-
-  /// The side of one layer's square grid, before the shear.
-  final double gridSize;
-
-  /// The distance from one layer's top to the next, right now.
-  final double spacing;
-
-  /// How far each layer is offset sideways, right now. Zero at rest, which is
-  /// what makes the posts vertical there and slanted while the cube opens.
-  final double lean;
-
-  final Color colour;
-
-  /// Fades the posts in with the cube: 0 while it is shut, 1 at rest. A post
-  /// drawn across a gap that is not there yet is a line through the artwork.
-  final double strength;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (strength <= 0) return;
-    final layerWidth = gridSize * (1 + BoardView._shear);
-    // Derived rather than assumed zero: at a large text scale a layer's caption
-    // can be wider than its grid, which makes the column wider than the layer,
-    // and the layers are centred in it.
-    final left = (size.width - layerWidth - 3 * lean) / 2;
-    // The parallelogram's four corners. The shear pushes the far row right, so
-    // the back pair sit inboard at the top and the front pair at the bottom.
-    final xs = <double>[
-      left,
-      left + gridSize,
-      left + BoardView._shear * gridSize,
-      left + layerWidth,
-    ];
-    final paint = Paint()
-      ..color = colour.withValues(alpha: 0.45 * strength)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    for (var z = 0; z < 3; z++) {
-      final top = z * spacing + BoardView._layerChrome + gridSize;
-      final bottom = (z + 1) * spacing + BoardView._layerChrome;
-      // Inverted while the cube is shut, when the layers overlap instead of
-      // leaving a gap. There is nothing to bridge, and drawing it anyway would
-      // put a line up the front of the board.
-      if (bottom <= top) continue;
-      for (final x in xs) {
-        // Slanted while the stack leans, vertical once it does not. A post
-        // joins the same corner of two layers, so it follows wherever those
-        // two have got to.
-        canvas.drawLine(
-          Offset(x + z * lean, top),
-          Offset(x + (z + 1) * lean, bottom),
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CubeEdgePainter old) =>
-      old.gridSize != gridSize ||
-      old.spacing != spacing ||
-      old.lean != lean ||
-      old.colour != colour ||
-      old.strength != strength;
 }
 
 class _LayerView extends StatelessWidget {

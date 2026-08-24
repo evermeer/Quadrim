@@ -8,9 +8,14 @@ publish_to: 'none'
 # even to a closed track, even if that release is discarded -- so the code is
 # raised on every upload and never reused. One counter serves both stores
 # (D359): it is raised for an upload to either, and neither store cares that
-# the other skipped a number. +5 reached App Store Connect; this build renames
-# the two purchase products (D365) and so is +6.
-version: 0.1.1+6
+# the other skipped a number. +5 reached App Store Connect and +6 renamed the
+# two purchase products (D365). +7 was built with the tutorial's cube intro
+# *and* its corner posts, and the posts came straight back out (D366); the
+# bundle left the machine, so whether that number is spent is not knowable from
+# here and +8 is the one that ships. The name moves to 0.1.2 because the intro
+# is a change a tester can see, and a build that cannot be told apart from the
+# one already installed is a support question waiting to happen.
+version: 0.1.2+8
 
 environment:
   sdk: ^3.12.2

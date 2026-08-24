@@ -13,25 +13,24 @@ import 'plaques.dart';
 ///
 /// The size is what a phone gives the tutorial's board, not what the screen
 /// gives a game: the intro only ever runs there.
-Widget _host({Animation<double>? intro, bool cubeEdges = false}) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: Center(
-          child: SizedBox(
-            width: 340,
-            height: 620,
-            child: BoardView(
-              state: GameState.fromMoves(const [0, 48]),
-              enabled: false,
-              onCellTap: (_) {},
-              intro: intro,
-              cubeEdges: cubeEdges,
-            ),
-          ),
+Widget _host({Animation<double>? intro}) => MaterialApp(
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(
+    body: Center(
+      child: SizedBox(
+        width: 340,
+        height: 620,
+        child: BoardView(
+          state: GameState.fromMoves(const [0, 48]),
+          enabled: false,
+          onCellTap: (_) {},
+          intro: intro,
         ),
       ),
-    );
+    ),
+  ),
+);
 
 /// The top-left corner of one cell, wherever it has been painted.
 Offset _cell(WidgetTester tester, int index) =>
@@ -39,8 +38,9 @@ Offset _cell(WidgetTester tester, int index) =>
 
 /// Every cell's rectangle, in order — the whole geometry of the board in one
 /// value, so two boards can be compared without naming what might differ.
-List<Rect> _geometry(WidgetTester tester) =>
-    [for (var i = 0; i < 64; i++) tester.getRect(find.byKey(ValueKey('cell-$i')))];
+List<Rect> _geometry(WidgetTester tester) => [
+  for (var i = 0; i < 64; i++) tester.getRect(find.byKey(ValueKey('cell-$i'))),
+];
 
 void main() {
   group('the intro parameters', () {
@@ -113,28 +113,15 @@ void main() {
     });
   });
 
-  testWidgets('the corner posts are drawn only when asked for', (tester) async {
-    bool hasPosts() => find
-        .byWidgetPredicate((w) =>
-            w is CustomPaint &&
-            w.painter.runtimeType.toString().contains('CubeEdge'))
-        .evaluate()
-        .isNotEmpty;
-
-    await tester.pumpWidget(_host());
-    expect(hasPosts(), isFalse);
-
-    await tester.pumpWidget(_host(cubeEdges: true));
-    expect(hasPosts(), isTrue);
-  });
-
   group('in the tutorial', () {
     Future<LocalGameRepository> repository() async {
       final repository = await LocalGameRepository.open(MemoryDocumentStore());
       addTearDown(repository.dispose);
       // Already offered, or the first-launch dialog is over the main screen and
       // the button underneath it cannot be pressed.
-      await repository.saveSettings(const SettingsDocument(tutorialOffered: true));
+      await repository.saveSettings(
+        const SettingsDocument(tutorialOffered: true),
+      );
       return repository;
     }
 
@@ -146,14 +133,21 @@ void main() {
       tester.view.devicePixelRatio = 2.5;
       addTearDown(tester.view.reset);
       final repo = await repository();
-      await tester.pumpWidget(MediaQuery(
-        // From the view, not a bare MediaQueryData: that one has no size, and
-        // an app laid out in a zero-sized window has no buttons to tap.
-        data: MediaQueryData.fromView(tester.view)
-            .copyWith(disableAnimations: reduceMotion),
-        child: QuadrimApp(
-            repository: repo, settings: repo, unlocks: repo, locale: null),
-      ));
+      await tester.pumpWidget(
+        MediaQuery(
+          // From the view, not a bare MediaQueryData: that one has no size, and
+          // an app laid out in a zero-sized window has no buttons to tap.
+          data: MediaQueryData.fromView(
+            tester.view,
+          ).copyWith(disableAnimations: reduceMotion),
+          child: QuadrimApp(
+            repository: repo,
+            settings: repo,
+            unlocks: repo,
+            locale: null,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.tap(plaqueLabelled('Tutorial'));
       await tester.pumpAndSettle();
@@ -162,8 +156,9 @@ void main() {
     // Two seconds of animation on entry is two seconds a `pumpAndSettle` has
     // to sit through, which is fine, and two seconds a player has to sit
     // through, which is why it is bounded and why this checks it ends.
-    testWidgets('the first step settles into the resting board',
-        (tester) async {
+    testWidgets('the first step settles into the resting board', (
+      tester,
+    ) async {
       await openTutorial(tester);
       final settled = _geometry(tester);
       // Nothing left running: the intro is over and the board is static.
@@ -171,8 +166,9 @@ void main() {
       expect(_geometry(tester), settled);
     });
 
-    testWidgets('reduce motion gets the resting board with no intro at all',
-        (tester) async {
+    testWidgets('reduce motion gets the resting board with no intro at all', (
+      tester,
+    ) async {
       await openTutorial(tester, reduceMotion: true);
       final immediate = _geometry(tester);
       await tester.pump(kCubeIntroDuration);

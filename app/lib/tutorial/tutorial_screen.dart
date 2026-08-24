@@ -357,9 +357,6 @@ class _TutorialBoardState extends State<_TutorialBoard>
       enabled: false,
       onCellTap: (_) {},
       highlight: widget.step.line,
-      // Every step, not just the first: the posts are what keeps saying "one
-      // object" once the intro has finished saying it.
-      cubeEdges: true,
       intro: widget.intro ? _cube : null,
     );
     if (!widget.intro) return board;
