@@ -193,8 +193,16 @@ class SignArt {
   static const tutorial = SignArt(
     asset: Art.tutorial,
     aspect: 768 / 512,
-    // Low and slightly right of centre — the open book takes the top third.
-    centre: Alignment(0.02, 0.24),
+    // Low and just left of centre — the open book takes the top third, and
+    // testers wanted the word a touch further down and left again.
+    //
+    // **Alignment units are not pixels here.** `Align` moves the caption
+    // through the space the sign has left over, so one unit is half of
+    // `sign - caption`: 27.2 logical px across and 34.6 down for this board.
+    // The move below is ten screen pixels at this device's 2.625 ratio, which
+    // is 3.8 logical — ten *logical* pixels would be a quarter of the plank's
+    // height and would put the lettering on its bottom edge.
+    centre: Alignment(-0.12, 0.35),
     // The one sign that is not level. 8.2 was measured off the lettering the
     // artwork used to carry — but that lettering is gone (D297) and the plank
     // it has to match leans further than the old glyphs did, which is what
