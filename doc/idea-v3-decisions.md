@@ -2013,6 +2013,20 @@ Sweeping both numbers: **0.3 of a cell at yaw 0.61, pitch 0.35 reaches 55**, and
 
 **Cost:** a second renderer for the same game, which every future change to how a position looks now has to be made twice — the flash, the winning line and the piece colours are shared, but the geometry, the highlight and the hit testing are not. Against that, the cube is where a 4x4x4 game actually lives, and the layered board has needed a two-second animation to explain itself since D366. Whether it earns its keep is what the `3d-board` branch is for.
 
+## D370 — The cube's empty markers are parchment, not grey
+
+**Question:** The sixty-four dots that mark an empty cell in the cube board (D369) were `0xFFB4B4BC`, a neutral grey chosen so they could not be mistaken for a piece. On the forest background, under the glass, they read as grey — the one grey in an interface that otherwise has none. Do they stay?
+
+**Decision:** No. They are `QuadrimPalette.parchment`, the same beige as the turn banner directly above the board.
+
+**The original reasoning survives the change; only its conclusion was wrong.** Grey was picked as "a tint of neither side". But the light piece is a white-to-grey gradient that ends at `0xFFC3C3C8`, so a flat `0xFFB4B4BC` marker sat *inside* the light piece's own range and was told apart mostly by being smaller. Parchment is warm, and neither piece is warm — the marker is now further from a piece than it was, which is what the rule was always trying to buy.
+
+**The contrast argument improves too.** `0xFFE9DCBD` is lighter than the grey it replaces, so the marker holds the photograph better rather than worse; the failure recorded against `0xFF8B8B93` — vanishing into the picture behind the glass, D296's 2.9:1 problem — moves further away. The dark rim is untouched and still carries the marker where the background is pale.
+
+**And it makes the tappable thing look like the app.** The marker is what a player aims at. Drawing it in the palette's own beige ties it to the parchment surfaces every other interactive surface uses, instead of leaving the board's only affordance in a colour that appears nowhere else in the design.
+
+**Cost:** the layered board and the cube board now draw an empty cell differently — the layers show an empty parchment *tile*, the cube a parchment *dot* — which is a consistency the two views never had anyway, since one is tiles and the other is glass boxes. What must not drift is the *pieces*, and those still come from the shared `kPieceLight`/`kPieceDark` lists for exactly the reason D369 gives: a player who switches display mid-game must not find the stones have changed colour.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

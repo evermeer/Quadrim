@@ -542,12 +542,21 @@ class _CubePainter extends CustomPainter {
   static const _wonFillAlpha = 0.16;
   static const _wonEdgeAlpha = 0.85;
 
-  /// An empty cell's marker. Grey rather than a tint of either side, so it
-  /// cannot be misread as a piece at a glance, and light enough to hold its
-  /// own: at 0xFF8B8B93 it disappeared into the forest photograph behind the
-  /// glass, which is the same 2.9:1 problem D296 found for ink on that picture.
-  /// The rim is what keeps it from vanishing where the background is pale.
-  static const _emptyBallColour = Color(0xFFB4B4BC);
+  /// An empty cell's marker: [QuadrimPalette.parchment], the turn banner's own
+  /// colour, so the thing a player taps is drawn in the app's beige rather than
+  /// in a grey belonging to nothing (D370).
+  ///
+  /// It replaces 0xFFB4B4BC and improves on it twice over. **Neither side is
+  /// beige** — the light piece is a white-to-grey gradient ending at 0xFFC3C3C8
+  /// — so a warm marker is further from a piece than the old neutral grey was,
+  /// not nearer, which is what the "cannot be misread as a piece" rule was
+  /// always after. And it is lighter, so it holds the forest photograph better:
+  /// at 0xFF8B8B93 the marker disappeared into the picture behind the glass,
+  /// the same 2.9:1 problem D296 found for ink on it.
+  ///
+  /// The rim is unchanged and still does its job — it is what keeps a marker
+  /// from vanishing where the background is pale.
+  static const _emptyBallColour = QuadrimPalette.parchment;
   static const _emptyBallRim = Color(0x99202024);
 
   @override
