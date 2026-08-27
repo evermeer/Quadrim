@@ -12,10 +12,17 @@ publish_to: 'none'
 # two purchase products (D365). +7 was built with the tutorial's cube intro
 # *and* its corner posts, and the posts came straight back out (D366); the
 # bundle left the machine, so whether that number is spent is not knowable from
-# here and +8 is the one that ships. The name moves to 0.1.2 because the intro
-# is a change a tester can see, and a build that cannot be told apart from the
-# one already installed is a support question waiting to happen.
-version: 0.1.2+8
+# here. +8 was handed over as a bundle too, and the same reasoning applies to
+# it for the same reason -- so +9 is the one that ships. **The rule is not
+# "raise it when the last one was definitely uploaded"**; it is "raise it when
+# the last one might have been", because the two mistakes cost different
+# amounts: a skipped number costs nothing at all, and a reused one is a
+# rejected upload.
+#
+# The name moves to 0.1.3 because the cube board is a whole second way to look
+# at a game (D369), and a build that cannot be told apart from the one already
+# installed is a support question waiting to happen.
+version: 0.1.3+9
 
 environment:
   sdk: ^3.12.2
