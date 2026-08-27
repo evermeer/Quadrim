@@ -1949,9 +1949,43 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Cost:** the tutorial's first board rebuilds once per frame for two seconds, and its layout box is sized for the open board throughout, so the shut cube sits in the middle of a box four times its height. The replay tap is undiscoverable — nothing says the board answers a tap, and a line of chrome saying so would cost more room than the feature is worth, so most players will see the intro exactly once. And `BoardView` now has two layer layouts rather than one; they agree by arithmetic and by the test above, but they are two.
 
+## D367 — Apple's standard EULA, linked from the description, rather than a custom one
+
+**Question:** App Review refused 0.1.2 under guideline 3.1.2: *"offers auto-renewable subscriptions but does not include a functional link to the Terms of Use (EULA) in the app metadata that appears on the app's App Store product page."* Apple gives two ways out — link their standard EULA from the App Description, or write a custom one and paste it into App Store Connect. Which, and where exactly does the link go?
+
+**Decision:** Apple's standard EULA, linked from the App Description, in both languages, alongside a link to the privacy policy. The App Description is the long description on the product page — not the privacy-policy field, not the promotional text, and nothing inside the binary.
+
+**A custom EULA buys nothing this game needs.** It is a legal document to keep correct, in Dutch and English, for as long as the app ships, and its only purpose would be to vary terms — liability, warranty, permitted use — that this game has no reason to vary. It sells a board game with two purchases and holds no user data (see the privacy policy in [store-listing.md](store-listing.md)). The standard agreement already says what would have been written.
+
+**The link was checked rather than assumed**, because *functional* is the word the rejection used and a dead link fails the same guideline a second time. `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` returns 200 and is titled *Licensed Application End User License Agreement*. Re-check it before each submission; it costs one request and it is the exact failure mode Apple named.
+
+**The same guideline asks for three more things, and one of them is still a placeholder.** 3.1.2 wants the subscription's title, length and price in the metadata together with the links. The description gives the title and says "per year"; `[PRICE]` is unfilled, which is spec gate R16 and ticket 015's longest-standing open item. **Submitting with it unfilled is the next rejection, from the same guideline for a different clause** — worth naming, because a resubmission that fixes only the sentence Apple quoted is the obvious and wrong move.
+
+**This also split the listing copy by store.** The description was drafted for App Store Connect and had already been Apple-shaped — it names the Apple Account and states Apple's renewal terms — but the file's header claimed it served Google Play too, which was wrong before this change and is more wrong now that it carries an Apple-only EULA line. The header now says so. A Play listing reuses the first two thirds and rewrites those three things.
+
+**What is still missing is in the app, not in the metadata.** The shop screen shows each product's name, "Yearly, cancel any time" and the store's localised price, which covers title, length and price; it has no Terms of Use or privacy link, and `grep -ri privacy app/lib` returns nothing at all. Reviewers commonly ask for both on the purchase screen itself, so this is the likely second round. It belongs with ticket 028's settings screen, and the strings go through l10n like every other user-facing string (D297).
+
+**Cost:** two lines of the description are boilerplate that reads like boilerplate, and someone tightening the copy later will be tempted to cut them. The note in [store-listing.md](store-listing.md) says what cutting them costs. And the privacy-policy URL is a placeholder in the description as well as in the policy itself, so the description cannot be pasted until the page is actually hosted.
+
+## D368 — The two prices, and why the description names them in euros
+
+**Question:** Apple's guideline 3.1.2 wants the subscription's price in the metadata, so the listing could not go in with `[PRICE]` in it. What are the two prices, and how should a single description state one price to every country that reads it?
+
+**Decision:** **€4.99 to unlock all opponents, one payment. €2.99 a year for unlimited play.** Both are euro base prices; each store derives its own per-country price from them. The description carries the euro figures and one line saying that outside the euro area the store charges the local equivalent.
+
+**That line exists because the English description is not read only in the euro area.** A bare "€2.99" is not merely unhelpful to a reader in Canada or Japan, it is wrong, and 3.1.2 is a guideline about the metadata being accurate. Naming the currency and saying what happens elsewhere satisfies the guideline without making a claim that is false in most of the world. It also survives the stores' own price-tier arithmetic, which will not produce a clean 2.99 everywhere.
+
+**This closes spec gate R16's first half after it spent the whole project open.** Ticket 015 carried *"price points are chosen per country with tax treatment confirmed"* as one item, and it is two: choosing a price is a decision, and the tax treatment of that price is a fact about how Apple and Google operate. The first is now made. The second stays open and is now its own line, because both stores act as merchant of record in most territories and remit VAT themselves — which is the answer, but not one to assume without checking.
+
+**The subscription is cheaper than the one-off, and that is not a mistake to fix in the copy.** €2.99 a year buys unlimited games; €4.99 once buys every opponent. A player who wants both pays both. The risk is a player buying the cheaper one expecting the other's benefit, and the shop screen already answers it — each product's body says what it does not do, and `shopUnlockAllCaveat` exists for exactly this. Worth re-reading on a device once real prices are showing, because that is the first time the two will sit side by side with a number under each.
+
+**`Quadrim.storekit` had 1.99 and would not have failed anything.** The local StoreKit configuration file is what the simulator serves during development, and it priced the subscription a euro under what the store will charge. Nothing tests it — `storekit_config_test.dart` asserts the product **ids**, because those are the thing that can never be changed after release (D365) — so the file would have gone on quietly showing the wrong price in every local test of the shop. Corrected to 2.99. **It is a second place the price lives**, and the two have no mechanism keeping them together.
+
+**Cost:** the prices are now in four places — both stores' consoles, the description in two languages, and the StoreKit test file — and only the consoles are authoritative. Changing a price later means remembering the other three. The description is the one that matters, because a listing that disagrees with the store's own price display is the kind of thing 3.1.2 exists to catch.
+
 ## Open items
 
-Carried forward to [idea-v3.md](idea-v3.md) §14: store price points and tax treatment, store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
+Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
 
 **Closed since:** the two Casual-tier rating inversions, which had been owned by a 1.0 roster revision that no longer exists and are now fixed before 1.0 ships (D305).
 

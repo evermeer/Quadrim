@@ -38,8 +38,14 @@ and 049, and through them the whole of 1.0.
 - [ ] Both store products are created — `nl.evict.quadrim2.unlock_all` as a
       non-consumable, and `nl.evict.quadrim2.unlimited` as a subscription **in a
       group with one base plan**, so 3.0 can add tier 3 as a second plan (046)
-- [ ] Price points are chosen per country with tax treatment confirmed — spec
-      gate R16, and the longest-standing open item in the project
+- [x] Price points are chosen — spec gate R16, and for two years the
+      longest-standing open item in the project. €4.99 to unlock all
+      opponents, €2.99 a year for unlimited play, decided 2026-08-27 (D368).
+      Both are euro base prices; each store derives its own per-country price
+      from them
+- [ ] Tax treatment is confirmed rather than assumed — both stores act as
+      merchant of record in most territories and remit VAT themselves, which is
+      the half of R16 that is a fact to check and not a choice to make
 - [x] A Google Play Console developer account exists and is verified —
       reactivated 2026-08-21, and the app entry created in the console
 - [x] The final application id is chosen, recorded, and applied, replacing the placeholder — `nl.evict.quadrim`, set 2026-08-11 before any upload (D213). **It is the iOS bundle identifier too**, checked in ticket 041

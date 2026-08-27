@@ -1,7 +1,13 @@
 # Store listing copy and privacy policy
 
-Draft copy for App Store Connect and Google Play, in both listing languages
-(ticket 049 §1), followed by the privacy policy both stores require.
+Draft copy for App Store Connect in both listing languages (ticket 049 §1),
+followed by the privacy policy both stores require.
+
+**The listing copy is Apple's, not Play's.** It names the Apple Account, states
+Apple's renewal terms, and carries the Terms of Use link Apple demands and
+Google does not. A Play listing reuses the first two thirds and needs those
+three things rewritten — do not paste it across.
+
 **Not yet submitted, and several things in it are placeholders** — read the notes
 at the end before pasting any of this into a console or onto a website.
 
@@ -61,10 +67,15 @@ WHAT IS FREE
 The first month is unlimited. After that you can start three games a day and nine a week against the computer, free, for as long as you like. Pass and play, the tutorial, and finishing a game you have already started are never limited.
 
 TWO OPTIONAL PURCHASES
-- Unlimited play: [PRICE] per year, auto-renewing. Lifts the daily and weekly limits on computer games. It does not unlock opponents.
-- Unlock all opponents: [PRICE], one payment. Every opponent straight away instead of earning them with points. It does not change how many games you can start.
+- Unlimited play: €2.99 per year, auto-renewing. Lifts the daily and weekly limits on computer games. It does not unlock opponents.
+- Unlock all opponents: €4.99, one payment. Every opponent straight away instead of earning them with points. It does not change how many games you can start.
+
+Prices are shown in euros. Outside the euro area the store charges the equivalent in your own currency.
 
 Payment is charged to your Apple Account at confirmation. A subscription renews automatically unless it is turned off at least 24 hours before the period ends, and you can manage or cancel it in your Apple Account settings.
+
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy policy: https://evict.nl/quadrim/quadrim-privacy-policy
 
 PRIVACY
 No accounts, no advertising, no analytics, no tracking, and nothing collected about you. Your games are kept on your device and are included in your device's own iCloud backup, to your own account.
@@ -121,10 +132,15 @@ WAT GRATIS IS
 De eerste maand is onbeperkt. Daarna start je drie partijen per dag en negen per week tegen de computer, gratis, zolang je wilt. Samen op een toestel spelen, de uitleg, en een partij afmaken die je al begonnen bent worden nooit beperkt.
 
 TWEE OPTIONELE AANKOPEN
-- Onbeperkt spelen: [PRIJS] per jaar, met automatische verlenging. Haalt de dag- en weeklimiet voor computerpartijen weg. Het speelt geen tegenstanders vrij.
-- Alle tegenstanders vrijspelen: [PRIJS], eenmalig. Meteen alle tegenstanders in plaats van ze met punten te verdienen. Het verandert niets aan hoeveel partijen je kunt starten.
+- Onbeperkt spelen: € 2,99 per jaar, met automatische verlenging. Haalt de dag- en weeklimiet voor computerpartijen weg. Het speelt geen tegenstanders vrij.
+- Alle tegenstanders vrijspelen: € 4,99, eenmalig. Meteen alle tegenstanders in plaats van ze met punten te verdienen. Het verandert niets aan hoeveel partijen je kunt starten.
+
+De prijzen staan in euro's. Buiten de eurozone rekent de winkel het bedrag in je eigen valuta.
 
 De betaling wordt bij bevestiging van je Apple Account afgeschreven. Een abonnement verlengt automatisch, tenzij het minstens 24 uur voor het einde van de periode wordt uitgezet; je beheert of stopt het in de instellingen van je Apple Account.
+
+Gebruiksvoorwaarden (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacyverklaring: https://evict.nl/quadrim/quadrim-privacy-policy
 
 PRIVACY
 Geen accounts, geen advertenties, geen analytics, geen tracking, en niets wat over jou wordt verzameld. Je partijen staan op je toestel en gaan mee in de iCloud-back-up van je toestel zelf, naar je eigen account.
@@ -261,9 +277,9 @@ rewritten before that version is released, and the date at the top will change.
 
 #### Contact
 
-[CONTACT NAME]
-[CONTACT EMAIL]
-[CONTACT ADDRESS]
+Edwin Vermeer
+info@evict.nl
+De Langer Ring 12, Anna Paulowna, 1761 JG, Netherlands
 
 ---
 
@@ -417,12 +433,19 @@ ticket that adds them, not afterwards.
 
 ## Before this is submitted
 
-**`[PRICE]` / `[PRIJS]` are unfilled on purpose.** Price points per country and
-their tax treatment are spec gate R16 and the longest-standing open item in the
-project (ticket 015). Apple requires the subscription's price, period and what
-it provides to appear in the listing itself and not only in the app (ticket 049
-§3), so these cannot ship empty — but inventing a number would put a wrong one
-in front of buyers.
+**The prices are set: €4.99 to unlock all opponents, €2.99 a year for
+unlimited play, chosen 2026-08-27.** They appear in the description because
+Apple's guideline 3.1.2 requires the price in the metadata, and the euro figures
+are the base from which each store derives its own per-country price. The line
+about local currency is there because the English description is read in
+countries that do not use euros, where a bare euro figure would be wrong rather
+than merely unhelpful.
+
+**Two things about those prices are still open**, and neither blocks a
+submission: per-country tax treatment (both stores act as merchant of record in
+most territories and handle VAT, but that is a fact to confirm rather than to
+assume), and whether the description should carry the price at all on Play,
+which has no equivalent of 3.1.2.
 
 **`qubic` as a keyword needs a decision.** It is the name the game is publicly
 known by and the word people search for, which is exactly why it earns its
@@ -449,6 +472,36 @@ Purchases go through StoreKit and StoreKit is online. The Android build enforces
 the offline claim with the absent `INTERNET` permission (D357); iOS has no
 equivalent mechanism, so there the claim rests on the code both platforms share
 (D306).
+
+**The two link lines at the foot of the description are what a rejection bought,
+and deleting them buys it again.** Apple refused 0.1.2 under guideline 3.1.2:
+*"offers auto-renewable subscriptions but does not include a functional link to
+the Terms of Use (EULA) in the app metadata that appears on the app's App Store
+product page."* The App Description is that metadata — the long description on
+the product page, not the privacy-policy field and nothing in the binary.
+
+The link is to **Apple's standard EULA**, which is the cheaper of the two routes
+Apple offers: link the standard one from the description, or write a custom one
+and paste it into App Store Connect under App Information → License Agreement. A
+custom EULA is a document to keep correct in two languages forever, in exchange
+for terms this game has no need to vary. The URL was checked and returns 200:
+`https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`, titled
+*Licensed Application End User License Agreement*. **Functional** is the word the
+rejection used, so re-check it rather than assume it.
+
+**The same guideline wants the price, and it is now in the description.** 3.1.2
+asks the metadata for the subscription's title, length and price together with
+those links; all three are present, and so is the privacy policy URL. What is
+still a placeholder is the contact block in the privacy policy itself, which
+that guideline does not reach.
+
+**Nothing in the app links to either document, and that is the likely second
+round.** The shop screen shows each product's name, "Yearly, cancel any time",
+and the store's own localised price, which covers title, length and price; it
+has no Terms of Use or privacy link, and `grep -ri privacy app/lib` is still
+empty. Reviewers routinely ask for both on the purchase screen itself. Ticket
+028's settings screen and the shop screen are where they belong, and they need
+l10n strings like everything else (D297).
 
 **The privacy policy's three placeholders are a deliberate stop.** Publishing a
 contact name, address and email is a decision about which identity and which
