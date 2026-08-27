@@ -221,6 +221,61 @@ void main() {
       expect(taps, 0);
     });
 
+    // The regression this file did not have when the pinch shipped broken.
+    // A `TapGestureRecognizer` in the same arena as the scale recogniser
+    // starves it: the zoom delivered one update and stopped, reaching 1.017
+    // where the fingers had asked for 1.5. Nothing here caught it, because
+    // every zoom test measured `CubeProjection` directly and never sent two
+    // fingers at the widget (D369).
+    testWidgets('zooms on a two-finger pinch', (tester) async {
+      Cell? played;
+      await tester.pumpWidget(_host(onCellTap: (c) => played = c));
+      final origin = tester.getTopLeft(find.byType(CubeBoardView));
+      final mid = tester.getCenter(find.byType(CubeBoardView));
+
+      // Forty logical pixels either side of the middle, drawn apart to sixty:
+      // a scale of exactly 1.5, which is [kCubeMaxZoom].
+      final a = await tester.startGesture(mid - const Offset(40, 0));
+      final b = await tester.startGesture(mid + const Offset(40, 0));
+      await tester.pump();
+      for (var i = 1; i <= 10; i++) {
+        await a.moveTo(mid - Offset(40 + i * 2.0, 0));
+        await b.moveTo(mid + Offset(40 + i * 2.0, 0));
+        await tester.pump();
+      }
+      await a.up();
+      await b.up();
+      await tester.pumpAndSettle();
+
+      expect(played, isNull, reason: 'a pinch is not a tap');
+
+      // Observed by playing: a cell is only where the zoomed-in projection
+      // says it is if the widget really is zoomed in.
+      final big = CubeProjection(
+        size: _area,
+        yaw: kCubeRestYaw,
+        pitch: kCubeRestPitch,
+        zoom: kCubeMaxZoom,
+      );
+      // A cell that both stays on screen zoomed in and has moved far enough
+      // that hitting it there could not also have hit it at zoom 1.
+      final target = [
+        for (var i = 0; i < 64; i++) Cell(i),
+      ].firstWhere((c) {
+        final at = big.centreOf(c);
+        return at.dx > 30 &&
+            at.dy > 30 &&
+            at.dx < _area.width - 30 &&
+            at.dy < _area.height - 30 &&
+            (at - _resting().centreOf(c)).distance > 40 &&
+            big.cellAt(at)?.index == c.index;
+      });
+
+      await tester.tapAt(origin + big.centreOf(target));
+      await tester.pump();
+      expect(played?.index, target.index);
+    });
+
     // Observed through the hit test rather than through the private angle,
     // and without restating the drag-to-radians constant here — a test that
     // recomputed the sensitivity would only ever agree with itself.

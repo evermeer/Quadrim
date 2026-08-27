@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
@@ -221,14 +222,45 @@ class _CubeBoardViewState extends State<CubeBoardView>
     });
   }
 
-  void _onTapUp(TapUpDetails details, Size size) {
+  /// How many fingers are on the board, and where a single one went down.
+  ///
+  /// Null once a press stops being a candidate for a tap — because a second
+  /// finger joined it, or because it was cancelled.
+  int _pointers = 0;
+  Offset? _pressedAt;
+
+  void _onPointerDown(PointerDownEvent event) {
+    _pointers++;
+    // A second finger means a pinch. Whatever the first one was doing, it is
+    // not a tap any more.
+    _pressedAt = _pointers == 1 ? event.localPosition : null;
+  }
+
+  void _onPointerUp(PointerUpEvent event, Size size) {
+    _pointers = math.max(0, _pointers - 1);
+    final from = _pressedAt;
+    _pressedAt = null;
+    if (from == null) return;
+    // `kTouchSlop` rather than a number of this file's own: it is what the
+    // framework calls a tap everywhere else in the app, so a press that would
+    // have been a tap on the layered board is one here.
+    if ((event.localPosition - from).distance > kTouchSlop) return;
+    _play(event.localPosition, size);
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    _pointers = math.max(0, _pointers - 1);
+    _pressedAt = null;
+  }
+
+  void _play(Offset at, Size size) {
     if (!widget.enabled) return;
     final cell = CubeProjection(
       size: size,
       yaw: _yaw,
       pitch: _pitch,
       zoom: _zoom,
-    ).cellAt(details.localPosition);
+    ).cellAt(at);
     // Occupied cells are ignored rather than passed over. Playing the empty
     // cell *behind* the ball a player just tapped would be the worst kind of
     // wrong: a legal move, on a board where they never saw the cell.
@@ -245,28 +277,43 @@ class _CubeBoardViewState extends State<CubeBoardView>
         return Semantics(
           label: l10n.cubeBoardSemantics,
           child: ExcludeSemantics(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onScaleStart: _onScaleStart,
-              onScaleUpdate: (d) => _onScaleUpdate(d, size),
-              onTapUp: (d) => _onTapUp(d, size),
-              // At maximum zoom the cube is wider than the space it is given.
-              // That is what zooming in means; clipping is what keeps it off
-              // the turn banner above and the result panel below.
-              child: ClipRect(
-                child: AnimatedBuilder(
-                  animation: flashController,
-                  builder: (_, _) => CustomPaint(
-                    size: size,
-                    painter: _CubePainter(
-                      state: widget.state,
-                      highlight: widget.highlight.toSet(),
-                      flashing: widget.flash.toSet(),
-                      elapsed: flashController.value,
-                      reduceMotion: MediaQuery.disableAnimationsOf(context),
-                      yaw: _yaw,
-                      pitch: _pitch,
-                      zoom: _zoom,
+            // **The tap is a `Listener`, not `onTap` on the detector below**,
+            // and that is not a style choice. A `TapGestureRecognizer` in the
+            // same arena as a `ScaleGestureRecognizer` starves the pinch: with
+            // both on one detector a two-finger zoom delivered exactly one
+            // update and then stopped, reaching a scale of 1.017 where the
+            // fingers had asked for 1.5. Nesting them, either way round, does
+            // the same thing — measured all three ways (D369).
+            //
+            // A `Listener` never enters the arena, so the scale recogniser
+            // keeps the pointers and the press is judged here instead: one
+            // finger, moved less than `kTouchSlop`, is a tap.
+            child: Listener(
+              onPointerDown: _onPointerDown,
+              onPointerUp: (e) => _onPointerUp(e, size),
+              onPointerCancel: _onPointerCancel,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onScaleStart: _onScaleStart,
+                onScaleUpdate: (d) => _onScaleUpdate(d, size),
+                // At maximum zoom the cube is wider than the space it is
+                // given. That is what zooming in means; clipping is what keeps
+                // it off the turn banner above and the result panel below.
+                child: ClipRect(
+                  child: AnimatedBuilder(
+                    animation: flashController,
+                    builder: (_, _) => CustomPaint(
+                      size: size,
+                      painter: _CubePainter(
+                        state: widget.state,
+                        highlight: widget.highlight.toSet(),
+                        flashing: widget.flash.toSet(),
+                        elapsed: flashController.value,
+                        reduceMotion: MediaQuery.disableAnimationsOf(context),
+                        yaw: _yaw,
+                        pitch: _pitch,
+                        zoom: _zoom,
+                      ),
                     ),
                   ),
                 ),
