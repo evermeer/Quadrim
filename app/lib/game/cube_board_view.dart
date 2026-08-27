@@ -15,15 +15,29 @@ import 'board_view.dart';
 /// padding either side, so "screen width" is approximate by about 16dp — the
 /// number a player can act on is the one that grows and stops (D369).
 ///
-/// The fraction is of [kCubeSpan], the width of the cube at the rotation that
-/// makes it widest. So 1.0 is "fits however it is turned", 1.5 is half again
-/// as wide and deliberately clipped at the edges, and 0.8 is comfortably
-/// inside. Fitting the *current* silhouette instead would honour the number
-/// more literally at the cost of the cube changing size as it turned, and a
-/// board that resizes while you look at it is worse than one that is 15%
-/// smaller than advertised at some angles.
+/// The fraction is of [kCubeSpan], the cube's width at the resting angle. So
+/// 1.0 is "as wide as the board area", 0.8 is comfortably inside it, and
+/// anything above 1.0 is deliberately clipped at the edges. Fitting the
+/// *current* silhouette instead would honour the number more literally at the
+/// cost of the cube changing size as it turned, and a board that resizes while
+/// you look at it is worse than one that is 13% wider than advertised at some
+/// angles.
 const double kCubeMinZoom = 0.8;
-const double kCubeMaxZoom = 1.5;
+
+/// **Twice the board's width and a tenth over**, raised from 1.5.
+///
+/// At 1.5 more than half the cube was still on screen, which is a reasonable
+/// place to stop if the point of zooming is to see the whole thing bigger. It
+/// is the wrong place to stop if the point is to work in one corner of a
+/// crowded position — a fifth of the cube filling the screen is what makes a
+/// cell in the middle of it an easy target, and the eight interior cells are
+/// the ones that need the help.
+///
+/// Losing sight of the rest is the trade, and it is the player's to make:
+/// nothing is hidden that a pinch back out does not return, and the rotation
+/// gesture already means the visible part is a choice rather than a fixed
+/// view (D369).
+const double kCubeMaxZoom = 2.1;
 
 /// The gap between neighbouring glass cells, as a fraction of a cell edge.
 ///

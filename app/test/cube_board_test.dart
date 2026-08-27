@@ -233,14 +233,15 @@ void main() {
       final origin = tester.getTopLeft(find.byType(CubeBoardView));
       final mid = tester.getCenter(find.byType(CubeBoardView));
 
-      // Forty logical pixels either side of the middle, drawn apart to sixty:
-      // a scale of exactly 1.5, which is [kCubeMaxZoom].
+      // Forty logical pixels either side of the middle, drawn apart to a
+      // hundred and twenty: a scale of 3, which is well past [kCubeMaxZoom].
+      // Deliberately past it, so this covers the clamp as well as the pinch.
       final a = await tester.startGesture(mid - const Offset(40, 0));
       final b = await tester.startGesture(mid + const Offset(40, 0));
       await tester.pump();
       for (var i = 1; i <= 10; i++) {
-        await a.moveTo(mid - Offset(40 + i * 2.0, 0));
-        await b.moveTo(mid + Offset(40 + i * 2.0, 0));
+        await a.moveTo(mid - Offset(40 + i * 8.0, 0));
+        await b.moveTo(mid + Offset(40 + i * 8.0, 0));
         await tester.pump();
       }
       await a.up();

@@ -1987,7 +1987,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Question:** The four sheared layers answer "where is this cell" well and "is this one object" badly — D366 added a two-second opening turn to the tutorial for exactly that reason. Could a game be played on the cube itself, and if so, does it replace the layered board or sit beside it?
 
-**Decision:** Beside it. A `boardStyle` preference (`layers` or `cube`) on `SettingsDocument`, switched from a two-button control in the game screen's app bar and remembered for the next game. The cube is 64 glass cells with a 20% gap, a grey ball in each, drawn on one canvas; drag turns it, pinch zooms it between 80% and 150% of the board's width, and a tap on a ball plays that cell.
+**Decision:** Beside it. A `boardStyle` preference (`layers` or `cube`) on `SettingsDocument`, switched from a two-button control in the game screen's app bar and remembered for the next game. The cube is 64 glass cells with a 20% gap, a grey ball in each, drawn on one canvas; drag turns it, pinch zooms it between 80% and 210% of the board's width, and a tap on a ball plays that cell.
 
 **Neither board owns anything the other would need, which is what makes two of them cheap.** Everything on screen is a fold over the stored move list (spec 7.2), so the cube is a second *reading* of the same data and switching mid-game costs nothing — the position, the flash and the winning line are identical the instant it redraws. The one thing that had to be shared rather than copied is the flash controller, which is now the `BoardFlash` mixin: the rule about *which* cells flash was already in one place (`flashCells`), and the reduce-motion handling is the half that would have drifted.
 
@@ -2008,6 +2008,8 @@ Sweeping both numbers: **0.3 of a cell at yaw 0.61, pitch 0.35 reaches 55**, and
 **Reviewing always uses the layered board, and the toggle disappears with it.** Scrubbing is a reading task — step back, see what changed — and an instrument that must be turned to be read is the wrong one for it. Leaving the toggle visible while it did nothing was the alternative.
 
 **The cube is not accessible, and says so rather than pretending.** Sixty-four cells drawn on a canvas have no stable rectangle for touch exploration to land on. It carries one label naming the layered board as the way to read the position cell by cell, and excludes everything under it. **This is the one thing the two boards do not do equally**, and it is the reason the layered board stays the default and the fallback for anything unrecognised in storage.
+
+**The zoom ceiling was 150% first, and 150% is the wrong ceiling.** It is a reasonable stopping point if zooming means "see the whole thing bigger", and the wrong one if it means "work in one corner of a crowded position". A fifth of the cube filling the screen is what makes a cell in the middle an easy target, and the middle is exactly where the nine cells that need a rotation to reach live. Losing sight of the rest is the trade, and a pinch back out undoes it.
 
 **Cost:** a second renderer for the same game, which every future change to how a position looks now has to be made twice — the flash, the winning line and the piece colours are shared, but the geometry, the highlight and the hit testing are not. Against that, the cube is where a 4x4x4 game actually lives, and the layered board has needed a two-second animation to explain itself since D366. Whether it earns its keep is what the `3d-board` branch is for.
 
