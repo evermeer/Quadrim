@@ -399,9 +399,10 @@ pagina herschreven vóórdat die versie uitkomt, en verandert de datum bovenaan.
 
 #### Contact
 
-[CONTACTNAAM]
-[CONTACT E-MAIL]
-[CONTACTADRES]
+Edwin Vermeer
+info@evict.nl
+De Langer Ring 12, Anna Paulowna, 1761 JG, Netherlands
+
 
 ---
 
