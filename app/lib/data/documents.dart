@@ -12,6 +12,13 @@ library;
 /// upgraded (spec §8.7).
 const int kSchemaVersion = 1;
 
+/// The four sheared grids stacked in a column — the board this app shipped
+/// with, and what an unset or unrecognised preference means.
+const String kBoardStyleLayers = 'layers';
+
+/// One rotatable 4x4x4 cube of glass cells (D369).
+const String kBoardStyleCube = 'cube';
+
 enum GameMode { vsComputer, passAndPlay }
 
 /// The lifecycle field, stored as `state`. Named [GameStatus] because the
@@ -306,6 +313,7 @@ class SettingsDocument {
   const SettingsDocument({
     this.locale = 'system',
     this.theme = 'system',
+    this.boardStyle = kBoardStyleLayers,
     this.tutorialCompleted = false,
     this.tutorialOffered = false,
     this.freeMonthStartedAt,
@@ -338,6 +346,18 @@ class SettingsDocument {
   /// `light`, `dark` or `system`.
   final String theme;
 
+  /// Which board the game screen draws: [kBoardStyleLayers] or
+  /// [kBoardStyleCube].
+  ///
+  /// A preference rather than a per-game fact, which is why it lives here and
+  /// not on [GameDocument]. The same position is the same position however it
+  /// is drawn — the move list is unchanged, and a game started in one style
+  /// can be finished in the other (D369).
+  ///
+  /// Anything unrecognised reads back as [kBoardStyleLayers]. A stored value
+  /// this build has never heard of must not leave the screen with no board.
+  final String boardStyle;
+
   final bool tutorialCompleted;
 
   /// Whether the first-launch offer has been made. Separate from
@@ -350,6 +370,7 @@ class SettingsDocument {
   SettingsDocument copyWith({
     String? locale,
     String? theme,
+    String? boardStyle,
     bool? tutorialCompleted,
     bool? tutorialOffered,
     DateTime? freeMonthStartedAt,
@@ -357,6 +378,7 @@ class SettingsDocument {
       SettingsDocument(
         locale: locale ?? this.locale,
         theme: theme ?? this.theme,
+        boardStyle: boardStyle ?? this.boardStyle,
         tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
         tutorialOffered: tutorialOffered ?? this.tutorialOffered,
         // Never cleared through here. The free month is consumed once and
@@ -369,6 +391,7 @@ class SettingsDocument {
         'schemaVersion': schemaVersion,
         'locale': locale,
         'theme': theme,
+        'boardStyle': boardStyle,
         'tutorialCompleted': tutorialCompleted,
         'tutorialOffered': tutorialOffered,
         'freeMonthStartedAt': freeMonthStartedAt?.toUtc().toIso8601String(),
@@ -383,6 +406,13 @@ class SettingsDocument {
       schemaVersion: version,
       locale: json['locale'] as String? ?? 'system',
       theme: json['theme'] as String? ?? 'system',
+      // Absent in every document written before the cube existed, and an
+      // unrecognised value is treated the same as an absent one: the layered
+      // board is the one that has always worked, so it is what an unreadable
+      // preference falls back to (D369).
+      boardStyle: json['boardStyle'] == kBoardStyleCube
+          ? kBoardStyleCube
+          : kBoardStyleLayers,
       tutorialCompleted: json['tutorialCompleted'] as bool? ?? false,
       // Absent in documents written before this field existed. Defaulting to
       // false re-offers the tutorial once to an existing player, which is the

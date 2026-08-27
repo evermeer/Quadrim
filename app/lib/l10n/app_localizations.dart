@@ -1184,6 +1184,24 @@ abstract class AppLocalizations {
   /// **'Nothing is threatened yet. {where} sits on more lines than any other free square, so it gives you the most ways to win.'**
   String practiceHintBuild(String where);
 
+  /// Tooltip and screen-reader label for the display toggle's first button, which draws the board as four separate layers. Its icon is four squares in a vertical line (D369).
+  ///
+  /// In en, this message translates to:
+  /// **'Layered board'**
+  String get boardStyleLayers;
+
+  /// Tooltip and screen-reader label for the display toggle's second button, which draws the board as one rotatable cube (D369).
+  ///
+  /// In en, this message translates to:
+  /// **'Cube board'**
+  String get boardStyleCube;
+
+  /// Spoken instead of the cube's sixty-four cells, which are drawn on a canvas and have no stable position for touch exploration to land on. It names the alternative rather than leaving a screen-reader user with a silent rectangle (D369).
+  ///
+  /// In en, this message translates to:
+  /// **'Cube board. Drag to turn it, pinch to zoom. Individual cells cannot be explored by touch here — switch to the layered board to read the position cell by cell.'**
+  String get cubeBoardSemantics;
+
   /// Opens the move-history scrubber. Available on a game in progress as well as a finished one; reviewing never changes the game (ticket 012).
   ///
   /// In en, this message translates to:

@@ -481,6 +481,18 @@
       }
     }
   },
+  "boardStyleLayers": "Layered board",
+  "@boardStyleLayers": {
+    "description": "Tooltip and screen-reader label for the display toggle's first button, which draws the board as four separate layers. Its icon is four squares in a vertical line (D369)."
+  },
+  "boardStyleCube": "Cube board",
+  "@boardStyleCube": {
+    "description": "Tooltip and screen-reader label for the display toggle's second button, which draws the board as one rotatable cube (D369)."
+  },
+  "cubeBoardSemantics": "Cube board. Drag to turn it, pinch to zoom. Individual cells cannot be explored by touch here — switch to the layered board to read the position cell by cell.",
+  "@cubeBoardSemantics": {
+    "description": "Spoken instead of the cube's sixty-four cells, which are drawn on a canvas and have no stable position for touch exploration to land on. It names the alternative rather than leaving a screen-reader user with a silent rectangle (D369)."
+  },
   "review": "Review the moves",
   "@review": {
     "description": "Opens the move-history scrubber. Available on a game in progress as well as a finished one; reviewing never changes the game (ticket 012)."

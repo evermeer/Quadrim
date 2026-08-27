@@ -298,6 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
           random: widget.random,
           now: widget.now,
           unlocks: widget.unlocks,
+          settings: widget.settings,
         ),
       ),
     );

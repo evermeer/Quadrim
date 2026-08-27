@@ -1983,6 +1983,34 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Cost:** the prices are now in four places — both stores' consoles, the description in two languages, and the StoreKit test file — and only the consoles are authoritative. Changing a price later means remembering the other three. The description is the one that matters, because a listing that disagrees with the store's own price display is the kind of thing 3.1.2 exists to catch.
 
+## D369 — A second board: one rotatable cube of glass cells, chosen per player
+
+**Question:** The four sheared layers answer "where is this cell" well and "is this one object" badly — D366 added a two-second opening turn to the tutorial for exactly that reason. Could a game be played on the cube itself, and if so, does it replace the layered board or sit beside it?
+
+**Decision:** Beside it. A `boardStyle` preference (`layers` or `cube`) on `SettingsDocument`, switched from a two-button control in the game screen's app bar and remembered for the next game. The cube is 64 glass cells with a 20% gap, a grey ball in each, drawn on one canvas; drag turns it, pinch zooms it between 80% and 150% of the board's width, and a tap on a ball plays that cell.
+
+**Neither board owns anything the other would need, which is what makes two of them cheap.** Everything on screen is a fold over the stored move list (spec 7.2), so the cube is a second *reading* of the same data and switching mid-game costs nothing — the position, the flash and the winning line are identical the instant it redraws. The one thing that had to be shared rather than copied is the flash controller, which is now the `BoardFlash` mixin: the rule about *which* cells flash was already in one place (`flashCells`), and the reduce-motion handling is the half that would have drifted.
+
+**Hand-rolled projection, no 3D package.** A GPU library would be a plugin, and a plugin is a merged manifest this project reads with a permission gate (D356) for a picture that is 64 boxes and 64 spheres. The whole renderer is a yaw, a pitch, one perspective divide and a sort — under 200 lines, no dependency, and it runs in a widget test, which a shader-backed one would not.
+
+**The eye sits 11 cell-edges out, and that number is a safety property rather than a taste one.** The cube's half body-diagonal is about 3.98, so the perspective divisor stays between 7.0 and 15.0. A hand-rolled divide is the one place this kind of renderer fails catastrophically instead of merely looking wrong, and at this distance it cannot.
+
+**The tap radius was measured, and the first guess was badly wrong.** A near cell's disc covers whatever is behind it, so the radius decides how much of the cube can be *reached*, not just how easy each cell is to hit. At half a cell — the obvious choice, since cells sit 1.2 apart — only **39 of 64** could be tapped without turning the board first, and the opening angle made it worse: at 35 degrees of yaw the horizontal and depth axes projected onto nearly the same screen direction, so cells one step apart in x and one step apart in y landed on each other. That is the 45-degree isometric trap, approached from below.
+
+Sweeping both numbers: **0.3 of a cell at yaw 0.61, pitch 0.35 reaches 55**, and leaves the *farthest* cell a 35dp target, which clears the 32dp floor `kMinCellSize` holds the layered board to. Every further tenth off the radius buys three or four more cells and spends that floor, which is not a trade this project makes. The nine it does not reach are the middle of the cube, and they are what the drag gesture is for — `cube_board_test.dart` checks that **every** cell is reachable from some angle, because a cell no rotation reaches is a cell the rules say can be played and the interface says cannot.
+
+**Frontmost wins, and an occupied cell swallows the tap rather than passing it back.** Playing the empty cell *behind* the ball a player just tapped would be a legal move on a board they never saw, and no game record could tell them afterwards that it had happened.
+
+**A played ball is 50% of a cell, not the 20% asked for.** At 20% for both states a piece was a dot about fifteen logical pixels across, and counting a line of four meant leaning into the phone. Empty stays at 20%: the step between the two is what makes occupancy readable across the cube at any rotation.
+
+**The toggle is in the app bar, which is not where it was asked for either.** A labelled row above the board was: label, two buttons, top left. The game screen has about 6dp of vertical slack at 360x780 (D204) and that row costs 44 of them, which would have put the cells under the audited floor — `game_screen_test.dart` fails on exactly this. The app bar has the room; the word "Display" survives as each button's tooltip, which is also what a screen reader announces, so what is lost is the sighted caption alone.
+
+**Reviewing always uses the layered board, and the toggle disappears with it.** Scrubbing is a reading task — step back, see what changed — and an instrument that must be turned to be read is the wrong one for it. Leaving the toggle visible while it did nothing was the alternative.
+
+**The cube is not accessible, and says so rather than pretending.** Sixty-four cells drawn on a canvas have no stable rectangle for touch exploration to land on. It carries one label naming the layered board as the way to read the position cell by cell, and excludes everything under it. **This is the one thing the two boards do not do equally**, and it is the reason the layered board stays the default and the fallback for anything unrecognised in storage.
+
+**Cost:** a second renderer for the same game, which every future change to how a position looks now has to be made twice — the flash, the winning line and the piece colours are shared, but the geometry, the highlight and the hit testing are not. Against that, the cube is where a 4x4x4 game actually lives, and the layered board has needed a two-second animation to explain itself since D366. Whether it earns its keep is what the `3d-board` branch is for.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

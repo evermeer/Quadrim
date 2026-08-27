@@ -663,6 +663,16 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get boardStyleLayers => 'Bord in lagen';
+
+  @override
+  String get boardStyleCube => 'Bord als kubus';
+
+  @override
+  String get cubeBoardSemantics =>
+      'Bord als kubus. Sleep om te draaien, knijp om te zoomen. Losse vakjes zijn hier niet met aanraakverkenning te vinden — kies het bord in lagen om de stand vakje voor vakje te lezen.';
+
+  @override
   String get review => 'Zetten teruglezen';
 
   @override

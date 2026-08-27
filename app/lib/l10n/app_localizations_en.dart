@@ -663,6 +663,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get boardStyleLayers => 'Layered board';
+
+  @override
+  String get boardStyleCube => 'Cube board';
+
+  @override
+  String get cubeBoardSemantics =>
+      'Cube board. Drag to turn it, pinch to zoom. Individual cells cannot be explored by touch here — switch to the layered board to read the position cell by cell.';
+
+  @override
   String get review => 'Review the moves';
 
   @override

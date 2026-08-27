@@ -157,6 +157,115 @@ double cubeIntroAngle(double t) {
 /// with nothing in it.
 double cubeIntroPerspective(double t) => t >= 1 ? 0 : 0.0011 * (1 - t);
 
+/// A piece's resting radial-gradient stops, light and dark, and the greens
+/// each pulses to while flashing.
+///
+/// Top level rather than private to [_Pebble] because the cube board draws its
+/// balls on a canvas rather than out of widgets, and the two boards have to
+/// agree: a player who switches display mid-game must not find the pieces have
+/// changed colour (D369). What the four palettes are for is [_Pebble]'s
+/// business and documented there.
+const List<Color> kPieceLight = [
+  Color(0xFFFFFFFF),
+  Color(0xFFE4E4E6),
+  Color(0xFFC3C3C8),
+];
+const List<Color> kPieceLightFlash = [
+  Color(0xFFDFF8CF),
+  Color(0xFF8FD870),
+  Color(0xFF5CAF45),
+];
+const List<Color> kPieceDark = [
+  Color(0xFF4A4A52),
+  Color(0xFF1C1C22),
+  Color(0xFF050507),
+];
+const List<Color> kPieceDarkFlash = [
+  Color(0xFF57B05E),
+  Color(0xFF2F8A3A),
+  Color(0xFF0F4A18),
+];
+
+/// Where the highlight sits on a piece, and where its gradient turns over.
+const Alignment kPieceHighlight = Alignment(-0.35, -0.45);
+const List<double> kPieceStops = [0.0, 0.55, 1.0];
+
+/// Drives the green flash for a board — whichever board is drawing it.
+///
+/// Shared rather than copied into the cube. The rule about *which* cells flash
+/// already lives in one place ([flashCells]); this is the other half of the
+/// same promise, and the subtle part is the reduce-motion handling, which is
+/// exactly the kind of thing that drifts once there are two of it (D369).
+///
+/// A user of this mixin says what is flashing and against what position, calls
+/// [syncFlash] from both `didChangeDependencies` and `didUpdateWidget`, and
+/// reads [flashController] when it paints.
+mixin BoardFlash<T extends StatefulWidget> on State<T>, TickerProvider {
+  late final AnimationController flashController = AnimationController(
+    vsync: this,
+    duration: kFlashDuration,
+  );
+
+  /// The cells flashing right now — normally [flashCells] of [flashPosition].
+  List<int> get flashing;
+
+  /// The position those cells belong to, which is what says whether this is a
+  /// played move fading out or a winning line settling into a steady light.
+  GameState get flashPosition;
+
+  /// What [syncFlash] last acted on. Reduce-motion is part of it because the
+  /// setting can change while a finished board is on screen, and it decides
+  /// whether the controller repeats at all.
+  List<int> _lastFlash = const [];
+  bool _lastWinning = false;
+  bool _lastReduceMotion = false;
+
+  /// Starts, restarts or stops the flash to match the board.
+  ///
+  /// The two modes differ in more than duration: a played piece fades out once
+  /// and is done, the winning line repeats until the board leaves the screen.
+  void syncFlash() {
+    final winning = outcome(flashPosition) is Win;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    // Contents, not identity: every rebuild hands over a freshly built list,
+    // so comparing references would restart the flash on every frame.
+    if (listEquals(_lastFlash, flashing) &&
+        winning == _lastWinning &&
+        reduceMotion == _lastReduceMotion) {
+      return;
+    }
+    _lastFlash = flashing;
+    _lastWinning = winning;
+    _lastReduceMotion = reduceMotion;
+
+    if (flashing.isEmpty) {
+      flashController.stop();
+      return;
+    }
+    if (winning) {
+      flashController.duration = kWinPulseDuration;
+      if (reduceMotion) {
+        // Straight to the steady state. `winPulseStrength(1)` is 1, so parking
+        // the controller at the end leaves the line fully lit without a single
+        // scheduled frame — the same place the pulse would have arrived.
+        flashController.stop();
+        flashController.value = 1;
+      } else {
+        flashController.forward(from: 0);
+      }
+    } else {
+      flashController.duration = kFlashDuration;
+      flashController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    flashController.dispose();
+    super.dispose();
+  }
+}
+
 /// The 4x4x4 board as four sheared 4x4 grids stacked in one column, aligned
 /// to the right edge (D137).
 ///
@@ -255,75 +364,24 @@ class BoardView extends StatefulWidget {
 }
 
 class _BoardViewState extends State<BoardView>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _flash = AnimationController(
-    vsync: this,
-    duration: kFlashDuration,
-  );
+    with SingleTickerProviderStateMixin, BoardFlash<BoardView> {
+  @override
+  List<int> get flashing => widget.flash;
 
-  /// What [_syncFlash] last acted on. Reduce-motion is part of it because the
-  /// setting can change while a finished board is on screen, and it decides
-  /// whether the controller repeats at all.
-  List<int> _lastFlash = const [];
-  bool _lastWinning = false;
-  bool _lastReduceMotion = false;
+  @override
+  GameState get flashPosition => widget.state;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Here rather than in `initState`, because it reads `MediaQuery`.
-    _syncFlash();
+    syncFlash();
   }
 
   @override
   void didUpdateWidget(BoardView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _syncFlash();
-  }
-
-  /// Starts, restarts or stops the flash to match the board.
-  ///
-  /// The two modes differ in more than duration: a played piece fades out once
-  /// and is done, the winning line repeats until the board leaves the screen.
-  void _syncFlash() {
-    final winning = outcome(widget.state) is Win;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    // Contents, not identity: every rebuild hands over a freshly built list,
-    // so comparing references would restart the flash on every frame.
-    if (listEquals(_lastFlash, widget.flash) &&
-        winning == _lastWinning &&
-        reduceMotion == _lastReduceMotion) {
-      return;
-    }
-    _lastFlash = widget.flash;
-    _lastWinning = winning;
-    _lastReduceMotion = reduceMotion;
-
-    if (widget.flash.isEmpty) {
-      _flash.stop();
-      return;
-    }
-    if (winning) {
-      _flash.duration = kWinPulseDuration;
-      if (reduceMotion) {
-        // Straight to the steady state. `winPulseStrength(1)` is 1, so parking
-        // the controller at the end leaves the line fully lit without a single
-        // scheduled frame — the same place the pulse would have arrived.
-        _flash.stop();
-        _flash.value = 1;
-      } else {
-        _flash.forward(from: 0);
-      }
-    } else {
-      _flash.duration = kFlashDuration;
-      _flash.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _flash.dispose();
-    super.dispose();
+    syncFlash();
   }
 
   @override
@@ -469,7 +527,7 @@ class _BoardViewState extends State<BoardView>
     onCellTap: widget.onCellTap,
     highlight: widget.highlight,
     flash: widget.flash,
-    flashAnimation: _flash,
+    flashAnimation: flashController,
     cellSize: cellSize,
     captionColour: widget.captionColour,
     captionOpacity: captionOpacity,
@@ -708,11 +766,9 @@ class _Pebble extends StatelessWidget {
   /// strength — [flashStrength] turns one into the other.
   final Animation<double>? flash;
 
-  static const _light = [
-    Color(0xFFFFFFFF),
-    Color(0xFFE4E4E6),
-    Color(0xFFC3C3C8),
-  ];
+  // The four palettes live at the top of this file so the cube board can draw
+  // the same balls (D369). What each is for:
+  //
   // Both flash palettes were widened after the first version was played:
   // the dark one was barely visible and the light one shifted hue without
   // shifting lightness, so neither read as a flash on a phone (D207). Each
@@ -720,24 +776,10 @@ class _Pebble extends StatelessWidget {
   // darker, the dark piece much lighter — because what the eye picks up is
   // the change from the piece's own resting state, not the greenness.
   // Middle-stop relative luminance, which is what the gradient is mostly
-  // made of: light 0.78 at rest to 0.55 flashing, dark 0.012 to 0.19.
-  static const _lightFlash = [
-    Color(0xFFDFF8CF),
-    Color(0xFF8FD870),
-    Color(0xFF5CAF45),
-  ];
-  static const _dark = [
-    Color(0xFF4A4A52),
-    Color(0xFF1C1C22),
-    Color(0xFF050507),
-  ];
-  // Still the darker of the two while lit (0.19 against 0.55), so D124's
-  // lightness distinction survives the flash rather than becoming a hue one.
-  static const _darkFlash = [
-    Color(0xFF57B05E),
-    Color(0xFF2F8A3A),
-    Color(0xFF0F4A18),
-  ];
+  // made of: light 0.78 at rest to 0.55 flashing, dark 0.012 to 0.19. The
+  // flashing dark piece is still the darker of the two (0.19 against 0.55),
+  // so D124's lightness distinction survives the flash rather than becoming
+  // a hue one.
 
   @override
   Widget build(BuildContext context) {
@@ -764,20 +806,20 @@ class _Pebble extends StatelessWidget {
   }
 
   Widget _build(double strength) {
-    final from = light ? _light : _dark;
-    final to = light ? _lightFlash : _darkFlash;
+    final from = light ? kPieceLight : kPieceDark;
+    final to = light ? kPieceLightFlash : kPieceDarkFlash;
     return Container(
       width: diameter,
       height: diameter,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          center: const Alignment(-0.35, -0.45),
+          center: kPieceHighlight,
           colors: [
             for (var i = 0; i < from.length; i++)
               Color.lerp(from[i], to[i], strength)!,
           ],
-          stops: const [0.0, 0.55, 1.0],
+          stops: kPieceStops,
         ),
         boxShadow: [
           BoxShadow(

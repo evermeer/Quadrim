@@ -15,7 +15,9 @@ import '../home/quests_section.dart';
 import '../home/unlock_confirmation.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'board_style_toggle.dart';
 import 'board_view.dart';
+import 'cube_board_view.dart';
 import 'opponent_name.dart';
 
 /// How long a computer opponent visibly takes over its move. Pebble decides
@@ -67,11 +69,21 @@ class GameScreen extends StatefulWidget {
     this.random,
     this.now,
     this.unlocks,
+    this.settings,
     this.opponentMove = chooseMoveInBackground,
   });
 
   final GameRepository repository;
   final String gameId;
+
+  /// Where the board-style preference is read and written (D369).
+  ///
+  /// Optional for the same reason [unlocks] is: a caller with no settings to
+  /// speak of should still get a playable board. Null hides the display toggle
+  /// altogether rather than showing a control whose choice cannot be
+  /// remembered, and leaves the layered board — a screen that cannot store a
+  /// preference must not silently pick the non-default one.
+  final SettingsRepository? settings;
 
   /// Injected so a test can pin what the opponent plays. Null means a fresh
   /// unseeded source, which is what the app uses.
@@ -137,6 +149,18 @@ class _GameScreenState extends State<GameScreen> {
   /// leaving review restores play exactly where it was (D204).
   int? _review;
 
+  /// Which board is drawn: [kBoardStyleLayers] or [kBoardStyleCube] (D369).
+  ///
+  /// Read once at launch rather than watched. It is a preference this screen
+  /// is the only writer of, so a subscription would only ever deliver back
+  /// what this screen just sent — at the cost of a rebuild of every game
+  /// screen each time the setting is touched anywhere in the app.
+  ///
+  /// Starts on the layered board, which is what an unreadable or absent
+  /// preference means, so a slow read shows the board that has always worked
+  /// rather than a blank frame.
+  String _boardStyle = kBoardStyleLayers;
+
   @override
   void initState() {
     super.initState();
@@ -144,6 +168,29 @@ class _GameScreenState extends State<GameScreen> {
     // side effect out of the widget lifecycle, where a rebuild for any reason
     // would trigger a second move.
     _subscription = widget.repository.watchGame(widget.gameId).listen(_onGame);
+    _loadBoardStyle();
+  }
+
+  Future<void> _loadBoardStyle() async {
+    final store = widget.settings;
+    if (store == null) return;
+    final settings = await store.loadSettings();
+    if (!mounted || settings.boardStyle == _boardStyle) return;
+    setState(() => _boardStyle = settings.boardStyle);
+  }
+
+  /// Switches board and remembers the choice for the next game.
+  ///
+  /// The screen changes first and the write follows, rather than waiting for
+  /// the round trip: this is a preference, and a toggle that pauses before it
+  /// moves reads as a broken button. A failed write costs the player the
+  /// setting next launch, not the board they are looking at now.
+  Future<void> _setBoardStyle(String style) async {
+    final store = widget.settings;
+    if (store == null) return;
+    setState(() => _boardStyle = style);
+    final settings = await store.loadSettings();
+    await store.saveSettings(settings.copyWith(boardStyle: style));
   }
 
   @override
@@ -363,6 +410,7 @@ class _GameScreenState extends State<GameScreen> {
           repository: widget.repository,
           gameId: next.id,
           random: widget.random,
+          settings: widget.settings,
           opponentMove: widget.opponentMove,
         ),
       ),
@@ -379,6 +427,18 @@ class _GameScreenState extends State<GameScreen> {
             ? botName(l10n, game.opponent)
             : l10n.passAndPlay),
         actions: [
+          // Hidden while reviewing, like Resign below and for a related
+          // reason: a reviewed position is drawn on the layered board whatever
+          // this says (see `_GameBody`), so a toggle here would be a control
+          // that visibly does nothing.
+          if (game != null && _review == null && widget.settings != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: BoardStyleToggle(
+                style: _boardStyle,
+                onChanged: _setBoardStyle,
+              ),
+            ),
           if (game != null && game.moves.isNotEmpty)
             IconButton(
               icon: Icon(_review == null ? Icons.history : Icons.close),
@@ -415,6 +475,7 @@ class _GameScreenState extends State<GameScreen> {
                 // Taps are the human's alone: a game against the computer
                 // must not let the player move for it while it thinks.
                 enabled: !_isOpponentsTurn(game),
+                boardStyle: _boardStyle,
                 onCellTap: _play,
                 onRematch: () => _rematch(game),
                 review: _review,
@@ -434,6 +495,7 @@ class _GameBody extends StatelessWidget {
     required this.offer,
     required this.onUnlock,
     required this.enabled,
+    required this.boardStyle,
     required this.onCellTap,
     required this.onRematch,
     required this.review,
@@ -451,6 +513,10 @@ class _GameBody extends StatelessWidget {
   final VoidCallback? onUnlock;
 
   final bool enabled;
+
+  /// [kBoardStyleLayers] or [kBoardStyleCube] (D369).
+  final String boardStyle;
+
   final void Function(Cell cell) onCellTap;
   final VoidCallback onRematch;
 
@@ -538,25 +604,38 @@ class _GameBody extends StatelessWidget {
           // ever hide a layout bug.
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-            child: Align(
-              // Centred rather than against the right edge (D300, reversing
-              // D137's one-handed-reach argument).
-              alignment: Alignment.center,
-              child: BoardView(
-                state: state,
-                // Never while reviewing: the criterion is that no move can be
-                // made from a past position, and a tap that landed would be
-                // played into the present anyway.
-                enabled: enabled && !over && !reviewing,
-                onCellTap: onCellTap,
-                highlight: highlight,
-                // The move just played, or the whole line once one is
-                // completed. Against a computer opponent its reply otherwise
-                // simply appears somewhere in sixty-four cells, and finding it
-                // is the player's problem (D203).
-                flash: flashCells(state),
-              ),
-            ),
+            // Never while reviewing, whatever the preference says. Scrubbing
+            // is a reading task — step back, see what changed — and a board
+            // that also has to be turned to be read is the wrong instrument
+            // for it. The layered board shows all sixty-four cells at once
+            // and never moves, which is what a scrubber needs (D369).
+            child: boardStyle == kBoardStyleCube && !reviewing
+                ? CubeBoardView(
+                    state: state,
+                    enabled: enabled && !over,
+                    onCellTap: onCellTap,
+                    highlight: highlight,
+                    flash: flashCells(state),
+                  )
+                : Align(
+                    // Centred rather than against the right edge (D300,
+                    // reversing D137's one-handed-reach argument).
+                    alignment: Alignment.center,
+                    child: BoardView(
+                      state: state,
+                      // Never while reviewing: the criterion is that no move
+                      // can be made from a past position, and a tap that
+                      // landed would be played into the present anyway.
+                      enabled: enabled && !over && !reviewing,
+                      onCellTap: onCellTap,
+                      highlight: highlight,
+                      // The move just played, or the whole line once one is
+                      // completed. Against a computer opponent its reply
+                      // otherwise simply appears somewhere in sixty-four
+                      // cells, and finding it is the player's problem (D203).
+                      flash: flashCells(state),
+                    ),
+                  ),
           ),
         ),
         // The result sits below the board rather than over it, so the four
