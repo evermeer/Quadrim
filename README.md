@@ -397,4 +397,23 @@ Then open the new app in the simulator.
 
 2 small bug fixes for point count and quest calculation. Also made some minor UI tweaks
 
+Asked to add the true 3d view.
+
+**Prompt**
+```
+Ì created a new branche named 3d-board which is now active.
+Here I would like to test an alternative game board interface during play.
+At the top left of the screen i would like a label with the text 'display' and below that 2 switch buttons.
+The first switch button will have 4 small squares in a vertical line and the 2nd button will have a small 3d cube
+The first button will be initially on for the current layout.
+When the 2nd button is pressed the screen will switch to a new 3d cube layout.
+The user selection will be saved so that the selected default will also show in any next game that is started.
+The 3d cube layout will have the following specs:
+Every cell of the 4 by 4 by 4 cube will be a small glass looking cube on its own with a beige non transparent ball at a 20% sice in the center of that cube. That beige ball will act like a button to select that specific cell.
+The cells will have a 20% space in between them so that it's clearly a 4 by 4 by 4 cells cube.
+The entire cube can be rotated by swiping across the screen.
+The cube can be zoomed in with a maximum of 200% of the screen width and zoomed out to a minimum of 80% of the screen width.
+The white and black chips for each move will now be white and black balls at 50% of the cell size.
+Ask clarifying questions if anything is unclear
+```
 
