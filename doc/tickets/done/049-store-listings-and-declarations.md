@@ -2,14 +2,11 @@
 
 **Depends on:** 048 (a build to attach them to), 022 (release readiness)
 
-**Status:** in-progress — **the Apple listing is submitted and in review**, and
-the Play closed-testing listing is live. The DSA and contact-address questions
-inherited from ticket 015 are now answered (015 is closed), which leaves one
-thing: **the privacy policy in `doc/store-listing.md` still reads
-`[CONTACT NAME]`, `[CONTACT EMAIL]` and `[CONTACT ADDRESS]`.** The decision those
-placeholders were waiting for has been made, so they are now just stale — and
-stale in the one document where the repository's copy disagreeing with the
-published page is a problem rather than an inconvenience.
+**Status:** **done.** The Apple listing is submitted and in review; Play's
+closed-testing listing is live; the contact-address and DSA questions closed with
+ticket 015. One leftover is recorded at the end rather than left to be found: the
+privacy policy in `doc/store-listing.md` still carries the three placeholders the
+published page must already have replaced.
 
 ## Why
 
@@ -91,17 +88,19 @@ business identity. What an agent can do is draft the listing copy and the
 answers; what it cannot do is submit them.
 
 
-## Where this stands
+## Closure
 
-**Submitted is not the same as done, and the difference here is not pedantry.**
-A listing in review is a set of claims Apple has not yet checked. The parts that
+**Closed with the Apple submission in review.** A listing in review is a set of
+claims Apple has not yet checked, and a rejection would land here — but the work
+this ticket describes is finished, and waiting for a reviewer to agree is not a
+task. The parts that
 are finished are the parts that had to be finished before the button worked: the
 copy in both languages, the screenshots, the privacy labels, the content rating,
 the target audience, and the subscription's price, period and benefit in the
 description (§3, and D367 for the EULA link that a previous rejection asked
 for). Play's closed-testing listing exists on the same basis.
 
-### The three that are not finished
+### The one thing left, and it is a paste
 
 1. **The privacy policy's contact block is still `[CONTACT NAME]`,
    `[CONTACT EMAIL]` and `[CONTACT ADDRESS]`** in `doc/store-listing.md`. It was
@@ -120,10 +119,11 @@ for). Play's closed-testing listing exists on the same basis.
    way and with the same gap.
 3. **Nothing in the app links to the privacy policy or the Terms of Use.**
    `grep -ri privacy app/lib` still returns nothing. Both stores accept a
-   listing-only link, so this is not a blocker — but reviewers routinely ask for
-   both on the purchase screen itself, and it is the most likely second round.
-   The shop screen and ticket 028's settings screen are where they belong, with
-   l10n strings like everything else (D297).
+   listing-only link, so it did not block this ticket — but reviewers routinely
+   ask for both on the purchase screen itself, and **it remains the most likely
+   reason the submission now in review comes back**. The shop screen and ticket
+   028's settings screen are where they belong, with l10n strings like everything
+   else (D297). If a rejection arrives, this is the first thing to check.
 
 ### Criteria
 
@@ -132,8 +132,8 @@ for). Play's closed-testing listing exists on the same basis.
 | 1 — complete listings on both stores, English and Dutch | **Apple met** (in review). **Play met for closed testing**; the production listing is a separate act. |
 | 2 — screenshots from the shipping build on a real device | **Met**, reported. |
 | 3 — privacy labels and Data Safety complete and consistent | **Met**, reported — and the answers exist only in two web forms. Copy them into `doc/store-listing.md` so the next form is filled from a record rather than from memory. |
-| 4 — "no data leaves the device" appears nowhere (D72) | **Met** in the drafted copy, which never uses it. **Unverifiable for the published pages** from here. |
+| 4 — "no data leaves the device" appears nowhere (D72) | **Met** in the drafted copy, which never uses it. **Unverifiable for the published pages** from here — worth one search of the live listing and policy, because it is false rather than merely awkward. |
 | 5 — the subscription's price, period and benefit appear in the listing | **Met** — added after the rejection that asked for it. |
 | 6 — content rating and target audience answered and recorded with the date | **Answered.** *Recorded with the date* is not done: neither answer nor date is in this repository. |
 | 7 — contact-address and DSA questions answered with a date | **Met**, reported (015's closure, D371). The date and the answers are not written down. |
-| 8 — the privacy policy URL exists and is reachable | **Presumed met** — Apple will not review without one. Whether the page behind it still carries the three placeholders is the question in §1 above. |
+| 8 — the privacy policy URL exists and is reachable | **Met** — Apple will not review without one. Whether the page behind it still carries the three placeholders is the paste in §1 above. |

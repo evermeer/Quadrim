@@ -2096,6 +2096,64 @@ says "1.0". **Cost of changing it:** one upload, and a public first version
 number that skips 0.x entirely on a product whose testers have been running 0.x
 builds all week.
 
+## D373 — 1.0's test closes as an informal one, and the ladder is never anchored to a human
+
+**Question:** Tickets 016 and 024 specified a measured test: a cohort and a
+duration written down before the first install, a survey instrument in two
+languages, pass thresholds with pre-committed consequences, statistics
+screenshots at day 3 and day 10, and part of the cohort running unmetered so the
+ladder and the cap could be told apart. What actually happened is that twelve
+testers were invited on Play, the survey was conducted face to face with the
+active ones, and feedback is informal and ongoing. Do those tickets stay open
+until the instrument exists, or close on what happened?
+
+**Decision:** They close, on 2026-08-29, at the developer's direction. So does
+049. The two things that could still have been gathered while the test was live —
+the invite-graph question and the statistics screenshots — were offered and
+declined, so nothing here is left half-open pending a message to the testers.
+
+**The reasoning for closing is sound and worth stating properly**, because
+"we skipped the measurement" is not what happened. Twelve people the developer
+knows, interviewed in person, will surface confusion better than a form will;
+they will say what made them hesitate, and a written survey mostly collects what
+people are willing to type. For *"what is wrong with this build"*, the informal
+route is the stronger instrument, not the weaker one.
+
+**What it gives up is a different question**, and it is the one ticket 024
+existed to ask. An in-person conversation is very good at finding what confused
+someone and very bad at finding who quietly stopped playing on day two. That
+second question is 1.0's whole reason to exist as a measured release: 2.0 and 3.0
+are both built on the assumption that people come back and that they will invite
+someone, and neither assumption has now been tested before the releases that
+depend on them.
+
+Four consequences were pre-committed in 024 and are now unenforceable. The one
+worth naming is *"day-10 screenshots show most testers stopped after day 2 → do
+not ship the meter into that"*, because it was the only thing standing between a
+retention problem and a revenue feature layered on top of one.
+
+**And the ladder is now permanently self-anchored.** The statistics screenshots
+were the sole planned source of human-versus-opponent results, and 022's
+calibration line is waived rather than deferred. Every one of the thirty-one
+published ratings is measured by bots playing bots — internally consistent,
+reproducible, and never once checked against a person. That is not a defect;
+`calibrate.dart` measures exactly what it claims to and D144 keeps the
+configurations honest against it. But **it means "Pebble is 800" is a statement
+about this ladder's own scale, not about human Elo**, and nothing in 1.0 will
+tell us whether the two coincide. If a rung ever feels wrong to real players,
+that is the explanation to reach for first.
+
+**Cost:** 1.0 ships as a release that cannot fail its own test, which is
+precisely what ticket 024's opening line warned against. The compensating
+position is that the test's *qualitative* half genuinely ran, and that a release
+with twelve engaged testers who were spoken to in person is a long way from an
+unvalidated one. What is lost is the ability to be surprised by a number.
+
+**What survives, and should be treated as load-bearing:** tester feedback is now
+the only tester-derived input to the release, it is informal, and it is not
+written down anywhere. Recalling it deliberately before 022's sweep is the whole
+of what remains of ticket 024.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -2107,22 +2165,25 @@ a TestFlight distribution and a submission in review (D371); ~~whether to strip
 `INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the
 merged manifest (D357).
 
-**Still open, and reordered by the 2026-08-29 status pass (D371).** Both stores
-now have a build on a testing track, so nothing here is waiting on an account any
-more. What is left is measurement and decisions:
+**Still open after the 2026-08-29 status pass (D371, D373).** Every 1.0 ticket
+is closed except 021 and 022, and nothing is waiting on a store account. What
+remains:
 
-- **The tester cohort has no size, no duration and no instrument** (ticket 024).
-  Twelve testers are invited on Play because twelve was Google's old number, not
-  because anyone chose it; no threshold or consequence is written down; and the
-  metered/unmetered split cannot be applied to anyone already playing. The test
-  is running, so this is the one open item that gets worse rather than staying
-  still.
+- **Ticket 021's screen-reader pass**, on a real device, with TalkBack and with
+  VoiceOver. It is the only thing blocking 022 and the only 1.0 item that cannot
+  be done from here. Twelve testers have devices in hand.
+- ~~The tester cohort has no instrument~~ — **closed informally and deliberately
+  (D373)**, with what that gives up recorded there. Not an open item any more; a
+  property of the release.
+- **The ladder is anchored to itself and never to a human** (D373). Not
+  actionable at 1.0, and the first explanation to reach for if a rung feels wrong
+  to real players.
 - **Whether Play Billing completes a purchase with `INTERNET` stripped** is still
-  empirical and still unsettled, unless the purchase that was tested was an
-  Android one. The closed test settles it.
-- **The public contact identity is decided** and ticket 015 is closed, but the
-  privacy policy in `doc/store-listing.md` still carries the three placeholders it
-  replaced. Paste the real values in and read them against the published page.
+  empirical, unless the purchase that was tested was an Android one. The closed
+  test settles it and the answer belongs in 046's closure.
+- **The privacy policy's contact block** is still three placeholders in
+  `doc/store-listing.md` while the published page must already carry real values.
+  A paste, and a read of the two side by side.
 - **The version name** the public release carries (D372).
 - ~~Tax treatment of the two prices; the app name's availability against
   trademark registers~~ — both answered with 015, though only reported, not

@@ -426,5 +426,11 @@ with testflight and the last version is now waiting for review to release to the
 store.  For android the closed test has started and 12 testers are invited. 
 I will probably invite more this week. The webshop inside the app is working 
 and tested. I think the store listing is also ready.
+
+for ticket 16. The test group of 12 for google is good enough. I asked more because 
+more is better. I did the test survey in person with all testers that are now active. 
+Feedback gathering is informal and active. target audience is set and for now okay. 
+Closed test is going okay. You can set this ticket to done because it's now just 
+noice here. The same goes for ticket 24 and 49. Ask me when in doubt.
 ```
 

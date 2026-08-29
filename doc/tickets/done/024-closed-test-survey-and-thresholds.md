@@ -25,17 +25,11 @@ The app has no analytics and no network, by design, and that must not change. So
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent — **and now late.** The test it measures has
-started: twelve testers are invited on Play and a TestFlight build has been in
-hands for longer. Every instrument here is specified to reach a tester **at
-install**, and installs are happening now. Each day this waits, part of the
-cohort permanently cannot be measured — a survey handed out at the end asks
-people to remember what confused them, which is the one thing they will have
-forgotten.
-
-**The unmetered/metered split is the item that expires first.** It cannot be
-applied retroactively to anyone already playing, and without it the ladder and
-the cap can never be told apart in the results (D302).
+**Status:** **closed as an informal test.** The survey was run face to face with
+every active tester rather than built as an instrument, and the thresholds and
+their pre-committed consequences were never written. **That is a decision, not an
+oversight** (D373) — but it means this ticket did not do the one job it was
+written for, so read the closure before treating 1.0's test as a measurement.
 
 - [ ] A short survey exists in English and Dutch, written to be answerable in a few minutes
 - [ ] It asks what the tester found confusing, where they hesitated, and which opponent felt like the right match
@@ -56,3 +50,39 @@ the cap can never be told apart in the results (D302).
 - [ ] Part of the cohort runs **unmetered** and part **metered**, so the ladder and the cap can be told apart. Without this split, a retention number after 1.0 means nothing (D302)
 - [ ] Results are recorded somewhere durable alongside the decision each one triggered
 - [ ] No analytics, no network call, and no change to any store declaration is introduced by any of this
+
+
+## Closure
+
+**Closed without doing what it was written to do, deliberately.** This ticket's
+first line is *"an instrument that lets the test actually fail"*, and no such
+instrument exists. The survey happened — in person, with every active tester,
+which for twelve people the developer knows is a better conversation than a form
+would have been. What did not happen is everything that made it a *measurement*:
+
+- no thresholds written before the test, so nothing can be missed;
+- no pre-committed consequences, so nothing follows from missing them;
+- no day-3 and day-10 statistics screenshots, so nothing distinguishes a tester
+  who played once from one who came back;
+- **no split between a metered and an unmetered part of the cohort**, which is
+  the one that cannot be recovered afterwards.
+
+**What that costs is specific, and it is not "we learned nothing".** An in-person
+conversation is very good at finding what confused someone and quite bad at
+finding who quietly stopped playing on day two — and the second is the question
+1.0 exists to answer, because 2.0 and 3.0 are both built on the assumption that
+people come back. The five pre-committed consequences in the list above are now
+unenforceable: in particular *"day-10 screenshots show most testers stopped after
+day 2 → do not ship the meter into that"*, which was the only thing standing
+between a retention problem and a revenue feature layered on top of it.
+
+**The invite-graph question is the one worth asking anyway, and it costs one
+sentence.** *"Name someone you would actually play a game against over several
+days."* It is the only cheap test of the demand for online play at 2.0 and the
+tier-3 subscription at 3.0, and it can still be asked of twelve people in a
+message this week. Nothing else here can be recovered retroactively; that one
+can.
+
+**Recorded in D373 with the rest of the reasoning.** The self-play calibration
+chain (ticket 014) is unaffected — it never depended on tester data, and the
+published ratings remain measured against each other rather than against humans.
