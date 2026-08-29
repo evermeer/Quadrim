@@ -4,9 +4,10 @@
 
 Every previous ticket carried its own accessibility criteria, so this is a verification pass rather than a build — but it is kept as a separate ticket because cross-screen flows are exactly what per-ticket checks miss.
 
-**Blocked by:** 032, 033, 035 (all done); **047** — the paywall and purchase
-screens, which are the newest surfaces in the release and the ones no audit has
-seen.
+**Blocked by:** nothing any more. 032, 033 and 035 are done, and **047 closed**
+once the shop was verified against a real store — so the paywall and purchase
+screens are no longer a moving target. What remains needs a physical device with
+TalkBack and with VoiceOver, and no agent can do it.
 
 **Now a two-platform audit (D302).** Everything below was written against
 TalkBack and it all applies unchanged to VoiceOver. Ticket 043 does the
@@ -17,8 +18,11 @@ every criterion here**, and where they differ, both results are recorded.
 
 **Blockers changed (D269).** This ticket previously blocked on 017 and 023. Ticket 017 is cancelled unbuilt and 023 is absorbed into 033, so neither will ever complete. The progression tickets replace them, and they bring the two hardest accessibility surfaces in the release with them: a three-tile row with an avatar, a name, a rating, a record, stars and a price in each tile, and a trend graph whose meaning must not rest on the red/green pair.
 
-**Status:** in-progress — the automatable half is done and green; the rest
-needs a real device with TalkBack and VoiceOver, which no agent can do.
+**Status:** in-progress, and **now unblocked and on the critical path**. The
+automatable half is done and green; the rest needs a real device with TalkBack
+and with VoiceOver. There are twelve of them in testers' hands and a build in
+App Store review, which makes the device pass available and overdue rather than
+theoretical.
 
 **What an automated sweep can and cannot settle.** `test/accessibility_test.dart`
 runs the platform guideline matchers over the shop and the main screen, plus

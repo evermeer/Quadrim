@@ -2,7 +2,14 @@
 
 **Depends on:** 048 (a build to attach them to), 022 (release readiness)
 
-**Status:** blocked on the accounts
+**Status:** in-progress — **the Apple listing is submitted and in review**, and
+the Play closed-testing listing is live. The DSA and contact-address questions
+inherited from ticket 015 are now answered (015 is closed), which leaves one
+thing: **the privacy policy in `doc/store-listing.md` still reads
+`[CONTACT NAME]`, `[CONTACT EMAIL]` and `[CONTACT ADDRESS]`.** The decision those
+placeholders were waiting for has been made, so they are now just stale — and
+stale in the one document where the repository's copy disagreeing with the
+published page is a problem rather than an inconvenience.
 
 ## Why
 
@@ -82,3 +89,51 @@ research with a date attached, not code.
 accounts and several need the owner's own decisions about a home address and a
 business identity. What an agent can do is draft the listing copy and the
 answers; what it cannot do is submit them.
+
+
+## Where this stands
+
+**Submitted is not the same as done, and the difference here is not pedantry.**
+A listing in review is a set of claims Apple has not yet checked. The parts that
+are finished are the parts that had to be finished before the button worked: the
+copy in both languages, the screenshots, the privacy labels, the content rating,
+the target audience, and the subscription's price, period and benefit in the
+description (§3, and D367 for the EULA link that a previous rejection asked
+for). Play's closed-testing listing exists on the same basis.
+
+### The three that are not finished
+
+1. **The privacy policy's contact block is still `[CONTACT NAME]`,
+   `[CONTACT EMAIL]` and `[CONTACT ADDRESS]`** in `doc/store-listing.md`. It was
+   a deliberate stop — which identity and which address becomes permanently
+   public is a decision, not a field — and **the decision has now been made**
+   (015). So the placeholders are simply out of date, and the live policy at the
+   URL both stores were given must already carry real values or Apple would not
+   be reviewing. **Paste them back into `doc/store-listing.md`, in both
+   languages**, and read the two side by side once: the repository's copy of a
+   published legal document disagreeing with the published one is the failure
+   mode this file exists to prevent.
+2. ~~**The DSA trader-verification and contact-address questions are open** in
+   ticket 015.~~ **Answered**, and 015 is closed — though its own closure notes
+   that the answers were reported rather than written down. Criterion 7 is met on
+   that basis (D371); criterion 6's *"recorded with the date"* is met the same
+   way and with the same gap.
+3. **Nothing in the app links to the privacy policy or the Terms of Use.**
+   `grep -ri privacy app/lib` still returns nothing. Both stores accept a
+   listing-only link, so this is not a blocker — but reviewers routinely ask for
+   both on the purchase screen itself, and it is the most likely second round.
+   The shop screen and ticket 028's settings screen are where they belong, with
+   l10n strings like everything else (D297).
+
+### Criteria
+
+| AC | Status |
+|----|--------|
+| 1 — complete listings on both stores, English and Dutch | **Apple met** (in review). **Play met for closed testing**; the production listing is a separate act. |
+| 2 — screenshots from the shipping build on a real device | **Met**, reported. |
+| 3 — privacy labels and Data Safety complete and consistent | **Met**, reported — and the answers exist only in two web forms. Copy them into `doc/store-listing.md` so the next form is filled from a record rather than from memory. |
+| 4 — "no data leaves the device" appears nowhere (D72) | **Met** in the drafted copy, which never uses it. **Unverifiable for the published pages** from here. |
+| 5 — the subscription's price, period and benefit appear in the listing | **Met** — added after the rejection that asked for it. |
+| 6 — content rating and target audience answered and recorded with the date | **Answered.** *Recorded with the date* is not done: neither answer nor date is in this repository. |
+| 7 — contact-address and DSA questions answered with a date | **Met**, reported (015's closure, D371). The date and the answers are not written down. |
+| 8 — the privacy policy URL exists and is reachable | **Presumed met** — Apple will not review without one. Whether the page behind it still carries the three placeholders is the question in §1 above. |

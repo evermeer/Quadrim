@@ -2,7 +2,10 @@
 
 **Depends on:** 041, 042, 043. **Blocked on** Apple Developer enrolment.
 
-**Status:** blocked on the account, on a Mac
+**Status:** **done.** Enrolment completed, the pipeline was proven by hand, a
+build was tested from TestFlight, and a later build is in App Store review
+awaiting release. See the closure for the one acceptance criterion that changed
+rather than passed.
 
 ## Why
 
@@ -94,3 +97,56 @@ guidelines.** The likely friction points for this app are the subscription
 metadata (a subscription must state its price, period and what it unlocks in
 the listing itself) and the restore action being findable. Both are cheaper to
 fix before submission than after a rejection.
+
+
+## Closure
+
+**Done, on the developer's own report of what happened on the Mac.** Nothing in
+this ticket can be observed from the repository — an upload, a TestFlight
+install and a review queue all live in App Store Connect — so the ticks below
+record what the developer states, and the closure says so rather than implying a
+test ran here (D371).
+
+### What was proven
+
+The whole path ran by hand, once, in the order the ticket asks for: a signed
+release build, an upload App Store Connect accepted, an internal TestFlight
+build installed and played, and a submission now sitting in review waiting to be
+released to the store. That is the gate this ticket exists to open, and it is
+open.
+
+### AC 1 changed rather than passed, and it is the one thing to look at
+
+The ticket says `pubspec.yaml` reads **`1.0.0+1`**. It reads **`0.1.3+9`**, and
+that is what is in review.
+
+The build-*number* half of the criterion is met and is working as designed: one
+`+N` counter serves both stores, raised on every upload to either, so each store
+sees gaps rather than a sequence of its own (D359). `+9` shipped the cube board
+to both.
+
+The version *name* is the open question. `0.1.3` is what the public App Store
+listing will show if the current submission is released, so **"1.0" is now a
+plan the shipped artefact does not carry**. Nothing is broken by that — neither
+store cares what the name says, only that the code increases — but it is a
+decision rather than an oversight, and it belongs to the developer. Renaming to
+`1.0.0` costs one line and one upload if it happens before the public release,
+and costs a confusing version history if it happens after.
+
+### Acceptance criteria
+
+| AC | Status |
+|----|--------|
+| 1 — `1.0.0+1`, scheme recorded | **Changed.** The scheme is recorded and working (D359); the version *name* shipped as `0.1.3`. See above. |
+| 2 — one command produces a signed `.ipa` | **Met**, reported. |
+| 3 — uploads with no validation warning | **Met**, reported — the build reached TestFlight and then review, which it could not do otherwise. |
+| 4 — an internal TestFlight build installs and a full game plays | **Met**, reported. |
+| 5 — a purchase and a restore complete from the TestFlight build | **Purchase met, reported** (ticket 046). **Restore is not separately recorded** and stays open in 022, where it is already listed. |
+| 6 — no signing credential in version control | **Met**, verified here: `git ls-files` matches no `key.properties`, keystore, `.p12`, `.cer` or `.mobileprovision`. `ExportOptions.plist` is committed and holds no secret. |
+| 7 — `bash tool/check.sh` passes | **Met** on the commit that produced the shipped bundle. |
+
+### No review section
+
+`codereview-main.md` has no entry for this ticket and does not need one: 048
+changed no application code. Its only repository artefact is the version line,
+which is reviewed wherever it is bumped.

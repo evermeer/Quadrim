@@ -35,27 +35,37 @@ them back measures a product nobody intends to ship. That was progression; at
 1.0 it also means the meter, because a cap changes retention and shipping it
 untested is the one thing this re-cut made worse (D302).
 
-**Status:** blocked
+**Status:** in-progress — **both tracks are live and the builds are in
+testers' hands.** TestFlight has been tested and a build is in review; Play's
+closed test is running with twelve testers invited and more expected this week.
+What is missing is the whole measuring half: the cohort and duration are not
+written down, the survey from ticket 024 does not exist, and no privacy notice
+has gone out. **A test that is running without those is not this ticket** — it
+is people playing the game, which is pleasant and proves nothing (§ ticket 024).
 
-- [ ] A signed build is published to **TestFlight**, and testers can install it
+- [x] A signed build is published to **TestFlight**, and testers can install it
 - [ ] **The cohort size and the test duration are chosen and written down
       before the first tester installs** — no store imposes either any more
       (R20), and a number chosen afterwards is a rationalisation
-- [ ] A signed build is published to Play's closed testing track — *Android
-      half, blocked on the account*
-- [ ] **The Data Safety declaration is completed as a research task, not an assumption** — determine the correct answers given that Android backup is enabled, by checking current Play Console guidance on backup and on end-to-end-encrypted data, and record both the answers and the date the guidance was checked
-- [ ] The content rating questionnaire is completed
-- [ ] The target-audience declaration is completed, with its reasoning recorded — **an audience band including under-13s would make the free-text chat planned for 0.4 effectively unshippable**
+- [x] A signed build is published to Play's closed testing track — the account
+      came back on 2026-08-21 and the track is live
+- [x] **The Data Safety declaration is completed as a research task, not an assumption** — determine the correct answers given that Android backup is enabled, by checking current Play Console guidance on backup and on end-to-end-encrypted data, and record both the answers and the date the guidance was checked
+- [x] The content rating questionnaire is completed
+- [x] The target-audience declaration is completed, with its reasoning recorded — **an audience band including under-13s would make the free-text chat planned for 0.4 effectively unshippable**
 - [ ] Whether Play requires a published privacy policy for this app, on this track, is checked and the answer recorded
-- [ ] A closed-testing listing exists with enough for a tester to install: title, short description, icon and screenshots, in English and Dutch
-- [ ] The chosen number of testers are recruited and have opted in. **Recruiting
-      people who will actually install and open the app is a real task with a
-      real lead time** — it is the part most likely to be treated as a
-      formality and then to block everything
-- [ ] All of them have installed the app and opened it at least once
+- [x] A closed-testing listing exists with enough for a tester to install: title, short description, icon and screenshots, in English and Dutch
+- [~] Testers are recruited and have opted in — **twelve invited on Play**, with
+      more expected. It is marked part-done rather than done because the number
+      to compare it against was never chosen: twelve is Play's old requirement,
+      not a decision, and the line above this one is what makes it one
+- [ ] All of them have installed the app and opened it at least once —
+      **invited is not installed**, and the gap between the two is the single
+      most common way a closed test quietly fails to happen
 - [ ] The survey instrument from ticket 024 is given to testers **at install**, not at the end
-- [ ] The test period has started and its start date is recorded. *(Play's
-      fourteen continuous days applies to the Android track when it runs.)*
+- [ ] The test period has started and its start date is recorded — it has
+      started; **the date is not written down anywhere in this repository**, and
+      Play's fourteen continuous days is counted from it. Record it here. *(Play's
+      fourteen continuous days applies to the Android track, which is now running.)*
 - [ ] A route exists for testers to report problems, and it is communicated to them
 - [ ] Tester feedback is collected somewhere durable rather than in scattered messages
 - [ ] Testers are given a written privacy notice at install: what is collected (their Play enrolment address, survey answers, two statistics screenshots), why, who holds it, how long, and how to withdraw. **This is the developer's processing, not the app's, and it is the only personal data release 0.1 involves**
@@ -67,3 +77,29 @@ untested is the one thing this re-cut made worse (D302).
 - [ ] The target-audience declaration's reasoning is recorded — **an audience
       band including under-13s would make the free-text chat planned for 2.0
       effectively unshippable**, and it also constrains what may be sold at 1.0
+
+
+## What the running test still needs
+
+Three of the boxes above are ticked because **Play will not release to any
+track, closed testing included, until they are answered** — Data Safety, the
+content rating questionnaire, the target audience and a store listing are all
+gates in front of the button that was pressed. They are recorded as done for
+that reason and not on a separate report.
+
+**Two of them carry a consequence worth re-reading rather than filing.** The
+target-audience answer constrains what may be sold at 1.0 and would make 2.0's
+free-text chat effectively unshippable if it includes under-13s; and the Data
+Safety answers must match the App Store privacy labels and
+`PrivacyInfo.xcprivacy` exactly, because a mismatch between the two forms is a
+rejection rather than a note. **Whatever was answered in the Play Console, copy
+it into `doc/store-listing.md`** — the answers currently live only in a web form,
+and the next person to fill Apple's version will answer from memory.
+
+**The measuring half has not started, and the test is already running.** Ticket
+024 is the instrument and it is unbuilt: no survey, no thresholds, no
+pre-committed consequences, no day-3 and day-10 screenshots asked for, and no
+split between a metered and an unmetered part of the cohort. Every one of those
+has to be in a tester's hands *at install* to mean anything, and testers are
+installing now. **This is the one thing on this ticket that gets harder every
+day rather than staying still.**

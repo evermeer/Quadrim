@@ -9,11 +9,16 @@ that would never be promoted.** 1.0 goes public, so the same sweep now has to
 clear a higher bar: everything below still applies, and the things a public,
 paid, two-platform release adds are appended.
 
-**Blocked by:** everything else in 1.0 — 015, 016, 021, 024, and 041–049.
-Tickets 017 and 023 are closed unbuilt (cancelled and absorbed respectively,
-D269) and do not gate this one.
+**Blocked by:** what is left of 1.0 — **016, 021, 024 and 049**. Tickets 015 and
+041–048 are all done. Tickets 017 and 023 are closed unbuilt (cancelled and
+absorbed respectively, D269) and do not gate this one.
 
-**Status:** blocked
+**Status:** blocked, and the shape of the blockage has changed completely. It
+used to be blocked on building things and on waiting for accounts. Nothing is
+waiting for an account any more and nothing substantial is left to build. **It is
+now blocked on one measurement and one device.** The measurement is ticket 024,
+whose test is already running without it. The device is ticket 021's screen-reader
+pass, which needs a phone in a hand and has twelve of them available.
 
 - [ ] Every engine acceptance criterion in the specification passes
 - [ ] Every game-flow acceptance criterion passes
@@ -40,10 +45,11 @@ D269) and do not gate this one.
 **Added by the 1.0 re-cut:**
 
 - [ ] The app runs, and every criterion above passes, **on both Android and iOS**
-- [ ] A purchase and a restore have been verified from a **TestFlight** build, not only from a development build (048)
+- [~] A purchase and a restore have been verified from a **TestFlight** build, not only from a development build (048) — **the purchase half is reported done; the restore half is not recorded.** Restore is the one a reinstalling player needs and the one Apple asks to see, so do it deliberately rather than assuming it came along with the purchase
 - [ ] The **meter's limitation is stated accurately** wherever it is mentioned: at 1.0 it is device-local and a reinstall clears it (S19, D303). No copy claims otherwise
 - [ ] The iOS privacy manifest and the App Store privacy labels are consistent with each other and with what the app actually does (043, 049)
 - [ ] Unlock records survive a backup-and-restore **on both platforms** (D11)
 - [ ] The Casual-tier inversion is fixed and measurement confirms it (044) — this must be true **before the first sale**, not before the first upload
 - [ ] The iOS "no network call during computer play" claim is recorded at its real strength — reviewed, not enforced (S20, D306)
-- [ ] Whether Play Billing's manifest merge injects `INTERNET` has been established empirically, and `check.sh` is correct either way (D306)
+- [x] Whether Play Billing's manifest merge injects `INTERNET` has been established empirically, and `check.sh` is correct either way (D306) — **it does**: `transport-backend-cct` declares it, and a bundle shipped with the permission while the old source-manifest check passed. It is now stripped from the merge with `tools:node="remove"` and the check reads the *merged* manifest (D356, D357)
+- [ ] **Whether a Play Billing purchase completes with `INTERNET` stripped is confirmed on a real Android install** — the other half of the same question, and the closed test is what settles it. Billing talks to the Play Store app over IPC rather than over a socket, so it is expected to work; expected is what D357 declined to accept

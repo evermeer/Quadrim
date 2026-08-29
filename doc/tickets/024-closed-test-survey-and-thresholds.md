@@ -25,7 +25,17 @@ The app has no analytics and no network, by design, and that must not change. So
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** ready-for-agent — **and now late.** The test it measures has
+started: twelve testers are invited on Play and a TestFlight build has been in
+hands for longer. Every instrument here is specified to reach a tester **at
+install**, and installs are happening now. Each day this waits, part of the
+cohort permanently cannot be measured — a survey handed out at the end asks
+people to remember what confused them, which is the one thing they will have
+forgotten.
+
+**The unmetered/metered split is the item that expires first.** It cannot be
+applied retroactively to anyone already playing, and without it the ladder and
+the cap can never be told apart in the results (D302).
 
 - [ ] A short survey exists in English and Dutch, written to be answerable in a few minutes
 - [ ] It asks what the tester found confusing, where they hesitated, and which opponent felt like the right match

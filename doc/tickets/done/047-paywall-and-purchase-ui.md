@@ -2,12 +2,11 @@
 
 **Depends on:** 045 (the meter), 046 (products and entitlement)
 
-**Status:** **code complete; the end-of-game remaining-games line is deferred
-and named in the closure.** All ten acceptance criteria are met and tested.
-Nothing here has been exercised against a real store, because 046's products do
-not exist yet — the shop screen therefore renders its unavailable state on this
-build. **Stays in `doc/tickets/` until it has been seen against real
-products.**
+**Status:** **done.** All ten acceptance criteria were already met and tested;
+the one thing holding this ticket in `doc/tickets/` was that no one had seen the
+shop screen against real products. The products now exist and the shop works, so
+that condition is met and the ticket moves to `done/`. The end-of-game
+remaining-games line is still deferred and still named in the closure.
 
 ## Why
 
@@ -182,9 +181,15 @@ for exactly this purpose.
 
 ### What is still unverified
 
-Nothing in this ticket has been exercised against a real store, because 046's
-products do not exist yet — the bundle identifier is held by a personal team and
-Apple Support has been asked to release it. The shop screen renders prices from
-whatever `queryProductDetails` returns, so **on this build it shows the
-unavailable state**, which is itself worth seeing and is what the store-less
-tests cover.
+**Resolved.** This section said the shop screen shows its unavailable state
+because 046's products did not exist. They exist, the shop resolves them, and it
+has been tested against a real store (046's closure amendment). The prices on
+screen are now the store's own formatted strings for real products rather than a
+fake's, which is the one thing the store-less tests could never cover.
+
+**Two things are still not verified, and neither is an acceptance criterion
+here.** The end-of-game remaining-games line is still not built, for the reason
+above. And the paywall's own copy has never been read by a store reviewer — the
+submission in review is what settles that, and a rejection over subscription
+metadata or a missing Terms of Use link would land on this screen and on ticket
+049, not on the meter underneath it.

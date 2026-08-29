@@ -417,3 +417,14 @@ The white and black chips for each move will now be white and black balls at 50%
 Ask clarifying questions if anything is unclear
 ```
 
+After manual steps in the stores i asked to update the tickets:
+
+**Prompt**
+```
+can you update all tickets to the new status? (move to done if so) iOS was tested 
+with testflight and the last version is now waiting for review to release to the 
+store.  For android the closed test has started and 12 testers are invited. 
+I will probably invite more this week. The webshop inside the app is working 
+and tested. I think the store listing is also ready.
+```
+

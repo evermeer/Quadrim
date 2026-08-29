@@ -2027,10 +2027,104 @@ Sweeping both numbers: **0.3 of a cell at yaw 0.61, pitch 0.35 reaches 55**, and
 
 **Cost:** the layered board and the cube board now draw an empty cell differently — the layers show an empty parchment *tile*, the cube a parchment *dot* — which is a consistency the two views never had anyway, since one is tiles and the other is glass boxes. What must not drift is the *pieces*, and those still come from the shared `kPieceLight`/`kPieceDark` lists for exactly the reason D369 gives: a player who switches display mid-game must not find the stones have changed colour.
 
+## D371 — A ticket may be closed on the developer's report, and the closure says so
+
+**Question:** Tickets 046, 047, 048 and 049 all end at a boundary this repository
+cannot see across: an upload, a TestFlight install, a sandbox purchase, a review
+queue, two web consoles. Every acceptance criterion in them is real and none of
+them can be checked by `check.sh` or by a test. On 2026-08-29 the developer
+reported that iOS had been tested through TestFlight and a build was in review,
+that the Play closed test was running with twelve testers invited, that the
+in-app shop worked and had been tested, and that the store listing was ready.
+What may be ticked on that basis?
+
+**Decision:** Tick it, and mark in the closure that it was a report rather than a
+test. Where the report does not reach a criterion, say that too, by name.
+
+The alternative was to hold those tickets open until an agent could verify them,
+which is never. A ticket that cannot be closed by the only person able to close
+it is not a record, it is a ratchet that only turns one way. The repository has
+always distinguished *verified by test*, *verified by reading* and *needs a
+device* rather than collapsing them into one tick — ticket 021 does it line by
+line — so the third category already existed and this only names who supplied it.
+
+**What that discipline actually caught, which is the argument for it.** Working
+through the four tickets against a four-sentence report, three things the report
+does not cover turned out to be things somebody would otherwise have assumed:
+
+- **Restore was not mentioned, only purchase.** They are different code paths,
+  Apple asks to see the second one, and a reinstalling player needs it. It stays
+  open in 022.
+- **Which store the tested purchase happened on decides an open empirical
+  question.** `INTERNET` is stripped from the merged Android manifest (D357) and
+  whether Play Billing completes without it was explicitly left to the first real
+  install. An iOS purchase says nothing about it.
+- **"The store listing is ready" cannot cover criteria 4, 7 and 8 of ticket
+  049**, because those are about a privacy policy whose contact block is still
+  three placeholders in `doc/store-listing.md`, and about DSA questions open in
+  015. A listing can be submitted, and reviewed, and still leave them unanswered.
+
+**Cost:** the repository now contains ticks nobody here can re-derive, and a
+later reader cannot tell a reported one from a tested one except by reading the
+closure that says so. That is why each of the four closures carries the sentence
+rather than relying on this entry to carry it for all of them.
+
+## D372 — The public release is going out as 0.1.3, and 1.0 is now a plan the artefact does not carry
+
+**Question:** Ticket 048 says `pubspec.yaml` becomes `1.0.0+1` for the public
+release. It reads `0.1.3+9`, and `0.1.3` is the version now sitting in App Store
+review. Is that a defect to fix or a change to record?
+
+**Decision:** Record it, and leave the choice with the developer. Nothing is
+broken: neither store reads the version *name* for anything but display, and the
+build *number* half is working exactly as designed — one `+N` counter serving
+both stores, raised on every upload to either, so each store sees gaps rather
+than a sequence of its own (D358, D359).
+
+What changed is only what the App Store product page will say when the current
+submission is released. "1.0" has been the name of this release throughout
+D302's re-cut and throughout tickets 015 through 049; the artefact says `0.1.3`.
+
+**The window is now.** Renaming to `1.0.0` costs one line and one upload while
+the app is unreleased. After the first public release it costs a version history
+that goes 0.1.3, 1.0.0 with nothing between them to explain the jump — survivable,
+but it is the kind of thing that gets explained in a support email forever.
+
+**Cost of leaving it:** the documentation and the shipped app disagree about what
+this release is called, which is a small confusion repeated in every ticket that
+says "1.0". **Cost of changing it:** one upload, and a public first version
+number that skips 0.x entirely on a product whose testers have been running 0.x
+builds all week.
+
 ## Open items
 
-Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
+Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
 
 **Closed since:** the two Casual-tier rating inversions, which had been owned by a 1.0 roster revision that no longer exists and are now fixed before 1.0 ships (D305).
 
-**Opened by the re-cut:** Apple Developer enrolment, which is the critical path for 1.0 and is not yet started (D302); ~~whether to strip `INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the merged manifest (D357). What remains is empirical: whether purchases still work without it, which the first internal-track install settles; and how the 1.0 tester cohort is structured now that no store imposes a size or a duration (D302).
+**Opened by the re-cut:** ~~Apple Developer enrolment~~ — complete, and proven by
+a TestFlight distribution and a submission in review (D371); ~~whether to strip
+`INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the
+merged manifest (D357).
+
+**Still open, and reordered by the 2026-08-29 status pass (D371).** Both stores
+now have a build on a testing track, so nothing here is waiting on an account any
+more. What is left is measurement and decisions:
+
+- **The tester cohort has no size, no duration and no instrument** (ticket 024).
+  Twelve testers are invited on Play because twelve was Google's old number, not
+  because anyone chose it; no threshold or consequence is written down; and the
+  metered/unmetered split cannot be applied to anyone already playing. The test
+  is running, so this is the one open item that gets worse rather than staying
+  still.
+- **Whether Play Billing completes a purchase with `INTERNET` stripped** is still
+  empirical and still unsettled, unless the purchase that was tested was an
+  Android one. The closed test settles it.
+- **The public contact identity is decided** and ticket 015 is closed, but the
+  privacy policy in `doc/store-listing.md` still carries the three placeholders it
+  replaced. Paste the real values in and read them against the published page.
+- **The version name** the public release carries (D372).
+- ~~Tax treatment of the two prices; the app name's availability against
+  trademark registers~~ — both answered with 015, though only reported, not
+  written down. What remains from the original list: the reference device for the
+  twenty-second ceiling, and the progression numbers pending measurement (D239).

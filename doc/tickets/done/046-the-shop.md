@@ -3,12 +3,12 @@
 **Depends on:** 041 (an iOS project to test on), 015 (store accounts and the
 products created in each console)
 
-**Status:** **code complete, unverified against a store.** The whole shop is
-written and under test against a fake; nothing has been bought anywhere, so AC 2
-through 6 are open and AC 1 needs the App Store Connect console. **Stays in
-`doc/tickets/` rather than moving to `done/` for that reason** — see the closure
-notes for what is left and who has to do it. The Android half remains blocked on
-the Play account.
+**Status:** **done.** The products exist, the shop is working, and purchases
+have been tested against a real store — the condition this ticket was held open
+for. AC 4, 5 and 6 describe events that cannot be made to happen on demand (an
+interruption, a lapse, a refund); they are covered by test here and carried into
+022 as things to watch in the wild rather than pretended into a tick. See the
+amendment at the end.
 
 ## Why
 
@@ -221,3 +221,36 @@ no server of ours, nothing about a purchase is collected or transmitted, so
    to test a lapse.
 5. **The Android half is written but entirely unverified** and stays that way
    until the Play account returns.
+
+
+## Closure amendment — verified against a real store
+
+**The condition this ticket was held open for has been met.** The earlier
+closure said "nothing has been bought — not in sandbox, not against a StoreKit
+configuration", and that is no longer true: both products exist, the shop
+resolves them, and purchasing works and has been tested. The ticket moves to
+`done/`.
+
+Everything below is the developer's report of what happened on a device and in
+two web consoles. None of it is observable from this repository, so it is
+recorded as a report rather than as a test result (D371).
+
+| AC | Was | Now |
+|----|-----|-----|
+| 1 — both products exist, subscription in a group with one base plan | Not met | **Met.** Created in App Store Connect; the shop screen resolves both, which is the only way it leaves its unavailable state. |
+| 2 — a sandbox purchase of each completes, entitlement readable after | Not met | **Met**, reported. |
+| 3 — a reinstall restores both, via the explicit action, without re-paying | Covered by test | **Not separately recorded.** The restore action exists and is tested against the fake; whether it was exercised against the store is not stated. Listed in 022, which already asks for it. |
+| 4 — an interrupted purchase completes on next launch | Covered by test | **Unchanged.** An interruption cannot be arranged to order; the code path is tested and the stream is subscribed before any await (D351). |
+| 5 — a lapsed subscription leaves unlocks intact | Covered by test | **Unchanged.** A lapse is a year away in production and minutes away only in sandbox; if the sandbox duration mapping was observed, record it above. |
+| 6 — refunds revoke precisely | Covered by test | **Unchanged.** Needs a real refund. |
+| 7, 8, 9 | Met | Met. |
+
+**The Android half is where the remaining doubt is, and it is one specific
+question.** The merged release manifest has `INTERNET` stripped with
+`tools:node="remove"` (D357), and whether Play Billing still completes a purchase
+without it was left as an empirical question for the first real install. Play
+Billing talks to the Play Store app over IPC rather than over a socket, so it is
+*expected* to work — but expected is exactly what D357 refused to accept. **If
+the purchase that was tested was an iOS one, that question is still open**, and
+the closed test now running is what settles it. Whichever it was, write the
+answer here.
