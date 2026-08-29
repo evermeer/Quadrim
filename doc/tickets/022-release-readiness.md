@@ -13,19 +13,22 @@ paid, two-platform release adds are appended.
 021, 024 and 041–049. Tickets 017 and 023 were closed unbuilt (cancelled and
 absorbed respectively, D269) and never gated this one.
 
-**Status:** **swept on 2026-08-29, and it is not clean.** Most criteria pass and
-are ticked with the evidence beside them. Three do not, and they are the point of
-the ticket:
+**Status:** **swept on 2026-08-29.** Most criteria pass and are ticked with the
+evidence beside them. Two things came out of the sweep, and they are the point of
+having done it:
 
 1. **Three layout defects were found today and fixed — and they are in the build
    currently in App Store review** (ticket 021's closure). Nothing crashes; at
    200% font scale content is clipped, and on the new-game sheet that means the
    second of the two ways to start a game is partly off the bottom.
-2. **The ladder has not been measured since `bot.dart` changed by 573 lines**
-   after ticket 044, and `calibrate.dart` itself was rewritten in the same
-   stretch (D339, D341). A run is recorded below.
+2. ~~The ladder has not been measured since `bot.dart` changed by 573 lines.~~
+   **Re-measured — 140 pairs, 274 minutes — and it holds.** Every rung is inside
+   tolerance and there are no configuration defects; all three of the run's flags
+   were 10%-budget artefacts, two already settled by D342 and the third settled
+   here (D375). Recorded below.
 3. **The release is not tagged**, deliberately: a tag should mark what shipped,
-   and what shipped is not what HEAD now says.
+   and what shipped is not what HEAD now says. Everything still open needs a
+   device, a store, or a decision — the list is at the end.
 
 - [x] Every engine acceptance criterion in the specification passes — 125 engine tests, 117 progression, 35 rating, all green
 - [x] Every game-flow acceptance criterion passes — inside the 422-test app suite
@@ -58,7 +61,7 @@ the ticket:
 - [ ] The **meter's limitation is stated accurately** wherever it is mentioned: at 1.0 it is device-local and a reinstall clears it (S19, D303). No copy claims otherwise
 - [x] The iOS privacy manifest and the App Store privacy labels are consistent with each other and with what the app actually does (043, 049) — the manifest parses in `check.sh` and declares no tracking and an empty collected-data list; the labels were filled to match and are reported so. **Neither is written down here**, which 049's closure already flags
 - [ ] Unlock records survive a backup-and-restore **on both platforms** (D11) — *needs two devices and a restore; not attempted*
-- [~] The Casual-tier inversion is fixed and measurement confirms it (044) — **044's measurement no longer covers the shipped catalogue.** `bot.dart` has changed by 573 lines since that run and `calibrate.dart` was itself rewritten in the same stretch (D339, D341). A fresh full run was made today; see the closure
+- [x] The Casual-tier inversion is fixed and measurement confirms it (044) — **re-measured against the shipped catalogue on 2026-08-29**, because 044's run no longer covered it: `bot.dart` had changed by 573 lines since, and `calibrate.dart` was itself rewritten in the same stretch (D339, D341). 140 pairs. Willow, Vireo and Finch measure **1108, 1213, 1224** against published 1100, 1220, 1260 — ascending, which is the whole of 044's criterion 1. See the calibration section below
 - [x] The iOS "no network call during computer play" claim is recorded at its real strength — reviewed, not enforced (S20, D306). Android's is enforced by the absent permission; iOS has no equivalent lever and the claim there rests on reading the code
 - [x] Whether Play Billing's manifest merge injects `INTERNET` has been established empirically, and `check.sh` is correct either way (D306) — **it does**: `transport-backend-cct` declares it, and a bundle shipped with the permission while the old source-manifest check passed. It is now stripped from the merge with `tools:node="remove"` and the check reads the *merged* manifest (D356, D357)
 - [ ] **Whether a Play Billing purchase completes with `INTERNET` stripped is confirmed on a real Android install** — the other half of the same question, and the closed test is what settles it. Billing talks to the Play Store app over IPC rather than over a socket, so it is expected to work; expected is what D357 declined to accept
@@ -85,13 +88,12 @@ with them and the fixes ride the next build, or it is pulled and resubmitted.
 Nobody at 200% font scale is blocked from playing, so letting it ride is
 defensible — but it should be chosen rather than discovered.
 
-**The ladder's calibration predates the catalogue.** Ticket 044 pasted a measured
-run into its closure and that run is no longer evidence about what ships:
-`bot.dart` has changed by 573 lines since, and `calibrate.dart` was rewritten in
-the same stretch to measure every opponent against the five rungs above it
-(D339) and to take the median rather than the mean of the per-pair estimates
-(D341). A fresh full run was made as part of this sweep; its result is recorded
-below.
+**The ladder's calibration predated the catalogue, so it was re-run.** Ticket
+044 pasted a measured run into its closure and that run was no longer evidence
+about what ships: `bot.dart` had changed by 573 lines since, and `calibrate.dart`
+was rewritten in the same stretch to measure every opponent against the five
+rungs above it (D339) and to take the median rather than the mean of the per-pair
+estimates (D341). The fresh run is below, and **the ladder holds**.
 
 ### Known limitations of 1.0
 
@@ -137,3 +139,76 @@ Everything below needs a device, a store, or a decision:
 7. **Settle the version name** — the public release currently carries `0.1.3`,
    not the `1.0.0` every ticket calls it (D372).
 8. **Tag the release**, once 1 and 7 are answered.
+
+## Calibration, 2026-08-29
+
+`dart run tool/calibrate.dart --games 50`. **140 pairs, 274 minutes.** Budgets at
+10%, which is what that instrument does and which is the reason two of its three
+flags are not defects.
+
+### Every one of the thirty-one rungs is inside tolerance
+
+Tolerance is 150 points; sampling noise is about 49 points at 50 games and 25 at
+the 200 every pair below Lynx plays (D344). The largest deviations are
+**Quadrim Prime −146, Titan −135, Marlin +135, Heron +119**, and the three
+negative ones all sit on node-budgeted opponents, which is exactly where a 10%
+run under-reads (D342).
+
+The Casual tier — 044's subject and the one this ticket names — is the tightest
+part of the ladder: Pebble −62, Twig +5, Mote +4, Hazel +9, Clover +16,
+Sorrel −15, Bramble −13. **044's fix holds:** Willow, Vireo and Finch measure
+1108, 1213 and 1224, ascending, which is that ticket's criterion 1 re-proven
+against code it was not measured on.
+
+### Two of the three flags are not defects, and the run cannot know that
+
+`calibrate.dart` reported:
+
+```
+configuration defects — fix the opponent, never the rating (D144):
+  inversion: quartz (2100) beats titan (2200) — 27-17-6
+  inversion: flint (2000) beats titan (2200) — 29-20-1
+not readable at this budget — re-run these at --budget 1 before believing them:
+  corvus (1700) beats basalt (1800) — 28-22-0
+```
+
+**The first two are the precise pairings D342 already settled**, and it settled
+them by measuring both ways:
+
+| pairing | published | at 10% | at full budget |
+|---|---|---|---|
+| Quartz → Titan | −100 | +83 | **−115** |
+| Flint → Titan | −200 | +95 | **−241** |
+
+Today's run reproduces the 10% column. At full budget Titan wins both, which is
+the published order. **No configuration changes**, and the run's own header —
+*"Any 10% result involving a node-budgeted opponent is evidence of nothing"* — is
+why. The tool flags them because it cannot see D342; a reader who acts on the
+flag without reading D342 would tune a correct ladder into a wrong one.
+
+**The third flag was open, and is now settled the way D342 says to settle one** —
+with `duel.dart`, which never scales:
+
+```
+corvus 14 - 36 basalt  (draws 0, games 50)
+  implied difference: corvus -164 against basalt
+  corvus: worst  46 ms, median 0 ms, mean  5 ms, moves 573
+  basalt: worst 395 ms, median 0 ms, mean 73 ms, moves 584
+```
+
+Basalt wins better than two to one. The published gap is −100 and the measured
+one is −164, which is the same direction and inside tolerance. **The published
+order is right and nothing needs changing.**
+
+### So: no configuration defects anywhere in the ladder
+
+All three flags were artefacts of the 10% budget, and the third one extends
+D342's rule past the tier it was written about (D375). Thirty-one rungs, every
+one inside tolerance, ordering correct top to bottom.
+
+### The half-hour budget in CLAUDE.md is wrong by an order of magnitude
+
+That file says *"Budget half an hour"* for a full calibration. This run took
+**274 minutes** — four and a half hours. The number matters because a wrong one
+gets runs killed halfway on the assumption that they have hung, which is a
+failure mode this repository has already paid for once (D178). Corrected there.

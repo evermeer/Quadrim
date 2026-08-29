@@ -1,0 +1,185 @@
+calibrating 140 pairs, 50 games each, budgets at 10%
+
+pebble vs twig                    71-129-0  measured  -104  published  -100
+twig vs mote                      71-129-0  measured  -104  published  -100
+mote vs hazel                     86-114-0  measured   -49  published   -50
+hazel vs clover                   88-112-0  measured   -42  published   -50
+clover vs sorrel                  93-107-0  measured   -24  published   -40
+sorrel vs bramble                 91-109-0  measured   -31  published   -40
+bramble vs juniper                82-117-1  measured   -61  published   -40
+juniper vs bracken                91-109-0  measured   -31  published   -40
+bracken vs willow                 88-112-0  measured   -42  published   -40
+willow vs rowan                   98-102-0  measured    -7  published   -40
+rowan vs aspen                    92-108-0  measured   -28  published   -40
+aspen vs vireo                    91-109-0  measured   -31  published   -40
+vireo vs finch                    87-113-0  measured   -45  published   -40
+finch vs kestrel                  77-123-0  measured   -81  published   -40
+kestrel vs osprey                 84-116-0  measured   -56  published   -40
+osprey vs heron                   74-123-3  measured   -87  published   -40
+heron vs marlin                   84-114-2  measured   -53  published   -40
+marlin vs lynx                     24-26-0  measured   -14  published   -40  (one side is ply-limited: the budget cut hits only the other)
+lynx vs sable                      21-29-0  measured   -56  published   -40
+sable vs ember                     19-31-0  measured   -85  published   -40
+ember vs lyra                      23-27-0  measured   -28  published   -40
+lyra vs onyx                       20-30-0  measured   -70  published   -60
+onyx vs corvus                     11-39-0  measured  -220  published   -60
+corvus vs basalt                   28-22-0  measured   +42  published  -100  (one side is ply-limited: the budget cut hits only the other)
+basalt vs cairn                    14-36-0  measured  -164  published  -100
+cairn vs flint                     24-26-0  measured   -14  published  -100
+flint vs quartz                    22-24-4  measured   -14  published  -100
+quartz vs titan                    27-17-6  measured   +70  published  -100
+titan vs oracle                     5-40-5  measured  -301  published  -100
+oracle vs quadrim_prime            25-25-0  measured     0  published  -100  (both play the book: this measures the seat, not the strength)
+pebble vs mote                    39-161-0  measured  -246  published  -200
+twig vs hazel                     61-139-0  measured  -143  published  -150
+mote vs clover                    63-137-0  measured  -135  published  -100
+hazel vs sorrel                   81-119-0  measured   -67  published   -90
+clover vs bramble                 87-113-0  measured   -45  published   -80
+sorrel vs juniper                 78-122-0  measured   -78  published   -80
+bramble vs bracken                79-121-0  measured   -74  published   -80
+juniper vs willow                 69-131-0  measured  -111  published   -80
+bracken vs rowan                  82-118-0  measured   -63  published   -80
+willow vs aspen                   84-115-1  measured   -54  published   -80
+rowan vs vireo                    74-126-0  measured   -92  published   -80
+aspen vs finch                    63-136-1  measured  -133  published   -80
+vireo vs kestrel                  68-132-0  measured  -115  published   -80
+finch vs osprey                   55-144-1  measured  -166  published   -80
+kestrel vs heron                  54-143-3  measured  -166  published   -80
+osprey vs marlin                  43-156-1  measured  -222  published   -80
+heron vs lynx                      18-32-0  measured  -100  published   -80  (one side is ply-limited: the budget cut hits only the other)
+marlin vs sable                    13-36-1  measured  -173  published   -80  (one side is ply-limited: the budget cut hits only the other)
+lynx vs ember                      19-31-0  measured   -85  published   -80
+sable vs lyra                      18-32-0  measured  -100  published   -80
+ember vs onyx                      15-35-0  measured  -147  published  -100
+lyra vs corvus                     11-39-0  measured  -220  published  -120
+onyx vs basalt                      9-41-0  measured  -263  published  -160  (one side is ply-limited: the budget cut hits only the other)
+corvus vs cairn                    14-36-0  measured  -164  published  -200  (one side is ply-limited: the budget cut hits only the other)
+basalt vs flint                     8-42-0  measured  -288  published  -200
+cairn vs quartz                    15-35-0  measured  -147  published  -200
+flint vs titan                     29-20-1  measured   +63  published  -200
+quartz vs oracle                    9-36-5  measured  -210  published  -200
+titan vs quadrim_prime              9-36-5  measured  -210  published  -200
+pebble vs hazel                   24-176-0  measured  -346  published  -250
+twig vs clover                    46-154-0  measured  -210  published  -200
+mote vs sorrel                    58-142-0  measured  -156  published  -140
+hazel vs bramble                  67-133-0  measured  -119  published  -130
+clover vs juniper                 72-128-0  measured  -100  published  -120
+sorrel vs bracken                 63-137-0  measured  -135  published  -120
+bramble vs willow                 65-135-0  measured  -127  published  -120
+juniper vs rowan                  61-139-0  measured  -143  published  -120
+bracken vs aspen                  66-134-0  measured  -123  published  -120
+willow vs vireo                   59-141-0  measured  -151  published  -120
+rowan vs finch                    60-139-1  measured  -145  published  -120
+aspen vs kestrel                  56-144-0  measured  -164  published  -120
+vireo vs osprey                   34-165-1  measured  -272  published  -120
+finch vs heron                    32-168-0  measured  -288  published  -120
+kestrel vs marlin                 38-160-2  measured  -246  published  -120
+osprey vs lynx                     11-39-0  measured  -220  published  -120  (one side is ply-limited: the budget cut hits only the other)
+heron vs sable                     11-38-1  measured  -210  published  -120  (one side is ply-limited: the budget cut hits only the other)
+marlin vs ember                     8-42-0  measured  -288  published  -120  (one side is ply-limited: the budget cut hits only the other)
+lynx vs lyra                        9-41-0  measured  -263  published  -120
+sable vs onyx                      12-38-0  measured  -200  published  -140
+ember vs corvus                    16-34-0  measured  -131  published  -160
+lyra vs basalt                      9-41-0  measured  -263  published  -220  (one side is ply-limited: the budget cut hits only the other)
+onyx vs cairn                       5-45-0  measured  -382  published  -260  (one side is ply-limited: the budget cut hits only the other)
+corvus vs flint                     8-42-0  measured  -288  published  -300  (one side is ply-limited: the budget cut hits only the other)
+basalt vs quartz                    4-46-0  measured  -424  published  -300
+cairn vs titan                     12-38-0  measured  -200  published  -300
+flint vs oracle                    11-37-2  measured  -200  published  -300
+quartz vs quadrim_prime             8-36-6  measured  -220  published  -300
+pebble vs clover                  22-178-0  measured  -363  published  -300
+twig vs sorrel                    50-150-0  measured  -191  published  -240
+mote vs bramble                   56-144-0  measured  -164  published  -180
+hazel vs juniper                  64-136-0  measured  -131  published  -170
+clover vs bracken                 58-142-0  measured  -156  published  -160
+sorrel vs willow                  52-148-0  measured  -182  published  -160
+bramble vs rowan                  53-147-0  measured  -177  published  -160
+juniper vs aspen                  54-146-0  measured  -173  published  -160
+bracken vs vireo                  55-145-0  measured  -168  published  -160
+willow vs finch                   58-142-0  measured  -156  published  -160
+rowan vs kestrel                  50-150-0  measured  -191  published  -160
+aspen vs osprey                   37-163-0  measured  -258  published  -160
+vireo vs heron                    28-171-1  measured  -312  published  -160
+finch vs marlin                   30-168-2  measured  -295  published  -160
+kestrel vs lynx                     9-41-0  measured  -263  published  -160  (one side is ply-limited: the budget cut hits only the other)
+osprey vs sable                     8-42-0  measured  -288  published  -160  (one side is ply-limited: the budget cut hits only the other)
+heron vs ember                     11-39-0  measured  -220  published  -160  (one side is ply-limited: the budget cut hits only the other)
+marlin vs lyra                      9-41-0  measured  -263  published  -160  (one side is ply-limited: the budget cut hits only the other)
+lynx vs onyx                       13-37-0  measured  -182  published  -180
+sable vs corvus                    17-33-0  measured  -115  published  -200
+ember vs basalt                    14-36-0  measured  -164  published  -260  (one side is ply-limited: the budget cut hits only the other)
+lyra vs cairn                       5-45-0  measured  -382  published  -320  (one side is ply-limited: the budget cut hits only the other)
+onyx vs flint                       3-47-0  measured  -478  published  -360  (one side is ply-limited: the budget cut hits only the other)
+corvus vs quartz                    4-46-0  measured  -424  published  -400  (one side is ply-limited: the budget cut hits only the other)
+basalt vs titan                     2-48-0  measured  -552  published  -400
+cairn vs oracle                    25-25-0  measured     0  published  -400
+flint vs quadrim_prime             14-36-0  measured  -164  published  -400
+pebble vs sorrel                  18-182-0  measured  -402  published  -340
+twig vs bramble                   44-156-0  measured  -220  published  -280
+mote vs juniper                   54-145-1  measured  -171  published  -220
+hazel vs bracken                  45-155-0  measured  -215  published  -210
+clover vs willow                  46-154-0  measured  -210  published  -200
+sorrel vs rowan                   38-162-0  measured  -252  published  -200
+bramble vs aspen                  48-152-0  measured  -200  published  -200
+juniper vs vireo                  49-151-0  measured  -196  published  -200
+bracken vs finch                  56-144-0  measured  -164  published  -200
+willow vs kestrel                 36-164-0  measured  -263  published  -200
+rowan vs osprey                   31-169-0  measured  -295  published  -200
+aspen vs heron                    22-178-0  measured  -363  published  -200
+vireo vs marlin                   18-182-0  measured  -402  published  -200
+finch vs lynx                       5-45-0  measured  -382  published  -200  (one side is ply-limited: the budget cut hits only the other)
+kestrel vs sable                    2-47-1  measured  -512  published  -200  (one side is ply-limited: the budget cut hits only the other)
+osprey vs ember                     6-44-0  measured  -346  published  -200  (one side is ply-limited: the budget cut hits only the other)
+heron vs lyra                       8-42-0  measured  -288  published  -200  (one side is ply-limited: the budget cut hits only the other)
+marlin vs onyx                      5-45-0  measured  -382  published  -220  (one side is ply-limited: the budget cut hits only the other)
+lynx vs corvus                      7-43-0  measured  -315  published  -240
+sable vs basalt                    14-36-0  measured  -164  published  -300  (one side is ply-limited: the budget cut hits only the other)
+ember vs cairn                      5-45-0  measured  -382  published  -360  (one side is ply-limited: the budget cut hits only the other)
+lyra vs flint                       3-47-0  measured  -478  published  -420  (one side is ply-limited: the budget cut hits only the other)
+onyx vs quartz                      3-47-0  measured  -478  published  -460  (one side is ply-limited: the budget cut hits only the other)
+corvus vs titan                     3-47-0  measured  -478  published  -500  (one side is ply-limited: the budget cut hits only the other)
+basalt vs oracle                    4-46-0  measured  -424  published  -500
+cairn vs quadrim_prime              8-42-0  measured  -288  published  -500
+
+measured against published, 50 games per pair
+  pebble           published   600   measured    538     -62   from 5 pairs
+  twig             published   700   measured    705      +5   from 6 pairs
+  mote             published   800   measured    804      +4   from 7 pairs
+  hazel            published   850   measured    859      +9   from 8 pairs
+  clover           published   900   measured    916     +16   from 9 pairs
+  sorrel           published   940   measured    925     -15   from 10 pairs
+  bramble          published   980   measured    967     -13   from 10 pairs
+  juniper          published  1020   measured   1004     -16   from 10 pairs
+  bracken          published  1060   measured   1058      -2   from 10 pairs
+  willow           published  1100   measured   1108      +8   from 10 pairs
+  rowan            published  1140   measured   1125     -15   from 10 pairs
+  aspen            published  1180   measured   1161     -19   from 10 pairs
+  vireo            published  1220   measured   1213      -7   from 10 pairs
+  finch            published  1260   measured   1224     -36   from 9 pairs
+  kestrel          published  1300   measured   1333     +33   from 8 pairs
+  osprey           published  1340   measured   1426     +86   from 7 pairs
+  heron            published  1380   measured   1499    +119   from 6 pairs
+  marlin           published  1420   measured   1555    +135   from 5 pairs
+  lynx             published  1460   measured   1444     -16   from 5 pairs
+  sable            published  1500   measured   1480     -20   from 5 pairs
+  ember            published  1540   measured   1552     +12   from 5 pairs
+  lyra             published  1580   measured   1570     -10   from 5 pairs
+  onyx             published  1640   measured   1650     +10   from 5 pairs
+  corvus           published  1700   measured   1775     +75   from 5 pairs
+  basalt           published  1800   measured   1712     -88   from 5 pairs
+  cairn            published  1900   measured   1993     +93   from 6 pairs
+  flint            published  2000   measured   2094     +94   from 6 pairs
+  quartz           published  2100   measured   2135     +35   from 6 pairs
+  titan            published  2200   measured   2065    -135   from 6 pairs
+  oracle           published  2300   measured   2224     -76   from 5 pairs
+  quadrim_prime    published  2400   measured   2254    -146   from 4 pairs
+  > floor, < ceiling: some contributing pair was swept, so the gap it reports is a bound.
+
+configuration defects — fix the opponent, never the rating (D144):
+  inversion: quartz (2100) beats titan (2200) — 27-17-6
+  inversion: flint (2000) beats titan (2200) — 29-20-1
+not readable at this budget — re-run these at --budget 1 before believing them:
+  corvus (1700) beats basalt (1800) — 28-22-0
+tolerance 150 points; sampling noise is roughly 49 points at 50 games and 25 at 200, which is what every pair below Lynx plays (D344).
+
+ran 140 pairs in 274m 27s

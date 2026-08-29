@@ -2205,6 +2205,196 @@ recency, not risk**, which is the normal shape of a test suite and the reason a
 whole-app sweep finds things a per-ticket criterion does not — which is what
 ticket 021 said about itself when it was written.
 
+## D375 — The reduced budget is unsafe wherever the two sides are budgeted differently, not just at the top
+
+**Question:** [D342](#d342) recorded that `calibrate.dart`'s 10% budget inverts
+Master-tier pairings and told the reader to settle those with `duel.dart`. The
+full run of 2026-08-29 flagged three problems. Two were the exact pairings D342
+had already measured both ways. The third — **Corvus (1700) against Basalt
+(1800), reported 28-22 to Corvus** — sits well below the Master tier, where
+D342's stated reason does not obviously apply. Is it a real inversion?
+
+**Decision:** No. Measured at full budget with `duel.dart`, which never scales:
+
+```
+corvus 14 - 36 basalt   implied difference: corvus -164 against basalt
+```
+
+Basalt wins better than two to one, against a published gap of −100. **The
+ordering is right, the spacing is a little loose, and no configuration changes**
+— which is the third time in one run that a flag turned out to be the instrument
+rather than the ladder.
+
+**The rule generalises, and it is worth stating in the form that catches this
+case.** D342's explanation was about the Master tier's cost profile: a median
+move of 0 ms with a mean near 900, so cutting the budget removes exactly the deep
+search that separates one rung from the next. That framing suggests the problem
+lives at the top. It does not. What actually matters is whether the reduction
+**lands symmetrically**, and it does not whenever one side is ply-limited and the
+other is node-budgeted: the cut passes straight through the ply-limited opponent
+and takes a tenth of the other's thinking. Corvus and Basalt are that shape.
+`calibrate.dart` already knows it — it prints *"one side is ply-limited: the
+budget cut hits only the other"* on exactly these pairs — and that annotation,
+not the tier, is the thing to read.
+
+**So the operational rule is:** a 10% result is evidence only when neither side
+spends a node or forcing budget, or when both spend one and the cut is
+proportionate. Every pair the tool annotates is a bound, not a measurement.
+
+**What this says about the flags themselves.** `calibrate.dart` labels its
+inversion list *"configuration defects — fix the opponent, never the rating
+(D144)"*, which is the right instruction for a real inversion and the wrong one
+here. **A reader who acted on that heading without reading D342 would have tuned
+a correct ladder into a wrong one**, three times, and the ladder would then have
+measured worse at full budget while looking better at 10%. The header is not
+wrong so much as unqualified; what protects against it is that the tool prints
+the ply-limited annotation on the same line.
+
+**Cost:** the honest one is that a full-ladder run cannot, by itself, tell you the
+ladder is sound. It clears the twenty-odd rungs below Lynx exactly, and above that
+it produces a list of candidates each of which costs a `duel.dart` run to confirm
+or dismiss. That is the price of the reduction, and the reduction is what makes
+the run four hours rather than an overnight job.
+
+## D375 — The offline guarantee loses its enforcement and keeps its claim
+
+**Question:** Google Play Games Services cannot run without
+`android.permission.INTERNET`. That permission is the mechanism which has enforced
+"computer play makes no network call" since D93 — stripped from the merged
+manifest with `tools:node="remove"`, checked three ways by `check.sh`, and
+described there as the thing a spec change would be needed to undo. Adding a
+leaderboard needs the permission. What goes?
+
+**Decision:** The enforcement goes. The claim stays, because it is still true.
+
+**The two were easier to confuse than they should have been, and the ticket got
+it wrong first.** Read literally, the criteria were always narrow:
+
+> **F13** — Any game against a computer opponent | it is played from first move
+> to result | no network call is made at any point
+> **S1** — No network call is made at any point in a game against a computer
+> opponent
+
+Neither says "the app never reaches the network". They say *a game against a
+computer opponent* does not. Nothing in ticket 050 makes a call during a game:
+the rating is submitted after a game is scored, achievements are reported at the
+same moment, and the engine still has no network dependency and still declares no
+runtime dependencies at all. **The criteria survive the feature untouched.**
+
+What cannot survive is the *lever*. Android grants `INTERNET` to an application,
+not to a screen, so there is no way to hold the permission for a leaderboard and
+withhold it from a search. S1 and F13 therefore drop from **enforced** to
+**reviewed** on Android — which is exactly the status they have carried on iOS
+since S20 and D306, where no equivalent lever ever existed.
+
+**What is actually lost is worth naming rather than waving past.** D356 exists
+because a bundle once shipped with `INTERNET` while the old source-manifest check
+passed, and it was the merged-manifest check that caught it. That check is the
+only reason anyone knows Play Billing drags in `transport-backend-cct`. Deleting
+it means the next library to want the network arrives silently, and the honest
+description of the new state is "nobody is watching" rather than "we reviewed it".
+
+**So the check is replaced rather than deleted.** What it can still do is assert
+that the *engine* has no network dependency and that `INTERNET` appears in the
+manifest **deliberately** — as an explicit declaration with a comment naming this
+decision, rather than as something a dependency merged in unnoticed. That is
+weaker than a ban and much stronger than nothing: it turns "the permission is
+absent" into "the permission is present on purpose", and a diff that adds a
+second network-using library still has to say so out loud.
+
+**The alternative was iOS-only**, which keeps the Android ban intact and delivers
+half the feature. It was offered and declined, and the reasoning holds: a
+leaderboard that exists on one platform is a leaderboard two players cannot share.
+
+**Cost:** the project's oldest mechanical guarantee becomes a reviewed one, and
+the telemetry transport Play Billing carries is now free to use the network it
+always wanted. Quadrim can no longer say "it cannot reach the network"; it can
+only say "it does not, during a game, and here is the code". Everything in the
+privacy story that rested on the permission's absence now rests on reading.
+
+## D376 — The app transmits an identifier it neither generates nor stores
+
+**Question:** D2 and S2 say "no device identifier is generated, stored or
+transmitted anywhere", and D90 is the decision behind them. Play Games issues a
+Player ID and Game Center a per-developer `gamePlayerID`. A leaderboard entry is
+by definition attributable to a player. Can the criterion stand?
+
+**Decision:** No, and it is amended rather than reinterpreted. The new form is:
+
+> **The app generates no identifier and stores none.** Where a platform service
+> identifies the player, that identifier is the platform's, is never persisted by
+> this app, and never enters a Quadrim document.
+
+**Reinterpreting was available and is the worse option.** One could argue a Play
+Games Player ID is not a *device* identifier — it follows the person, not the
+handset, and is the thing D90 was least worried about. That reading is defensible
+and it is still a dodge: the criterion's plain purpose is that nothing leaves this
+app which can be used to follow somebody, and a leaderboard entry can. A rule kept
+alive by a careful reading is worse than an amended one, because the next person
+reads the rule and not the argument.
+
+**What the amendment buys, and why it is narrow.** "The app causes an identifier
+the platform issued to be transmitted" is a much smaller claim than "the app holds
+an identity". The second would reach the backup allowlist (S3), the document
+schema (D1, D3), and 2.0's account model all at once. Holding the line at *store
+nothing* keeps every one of those untouched: no player id in any document, nothing
+new that is backup-eligible, and no migration when 2.0 arrives with real accounts
+and has to decide what an identity is.
+
+**It also keeps a promise this project has twice refused to break.** D72 forbids
+"no data leaves the device" because backup makes it false. The same standard
+applies here: with a leaderboard, data leaves the device *and is attributed*, and
+the privacy declarations on both stores have to say so in the same release rather
+than the one after.
+
+**Cost:** the strongest privacy claim in the specification is now conditional on a
+feature the player opts into. A signed-out player is in exactly the old position
+and the app must keep working identically for them — which is why ticket 050 makes
+the signed-out path a first-class state rather than an error, and why sign-in is
+offered once and never again if declined.
+
+## D377 — Forty-four achievements, and the two per-opponent quests merge into one
+
+**Question:** The app has 75 quests. Each store achievement needs an id, a name
+and a description in English and Dutch, and a 512x512 icon, entered by hand in two
+consoles — around 300 text fields and 75 pieces of art. Game Center allows 100
+achievements per app. Which quests cross over?
+
+**Decision:** Forty-four. The 8 streak rungs, the 5 volume rungs, and one per
+opponent — with `firstWin` and `firstWinSecond` collapsed into a single "you have
+beaten this opponent".
+
+**The merge is a correctness argument before it is an economy.**
+`firstWinSecond` is a strict subset of `firstWin`: a win from the second seat is a
+win, so the harder quest cannot be achieved without the easier one already being
+achieved. As two achievements they would unlock in the same instant, on the same
+game, for every player who ever earns the harder one — which reads as a bug and is
+indistinguishable from one. In the app they are worth separating because they
+*pay* separately and the difference is a real difficulty gap. On a list of
+unlocked badges there is one event and it should be one badge.
+
+**Which leaves the interesting number: 44 of 100.** Sixteen spare, and the roster
+is 31 opponents. **A roster past about forty-seven breaks Game Center's cap**, and
+achievements cannot be deleted after publication on either store, any more than a
+product id can (D213, D365). This is now a hard ceiling on the opponent ladder that
+did not exist before, and it is the reason ticket 051 is told not to add
+achievements.
+
+**What the 31 dropped per-opponent entries cost:** a player who beats an opponent
+from the second seat gets no separate recognition outside the app. The quest still
+exists, still pays, and still shows on the quest tile — this is a decision about
+what the *store* displays, not about what the game rewards.
+
+**Nothing is incremental**, either. Both stores support partial progress and this
+uses none of it: forty-four achievements that are unlocked or not. Incremental
+reporting means a number sent on every game rather than an event sent when
+something becomes true, which is more traffic and more attributable data for
+progress the player can already see on the quest tile.
+
+**Cost:** 44 icons and roughly 176 localised text fields, entered twice, by hand.
+It is the largest single cost in ticket 050 and it is art and data entry rather
+than code, which means it cannot be parallelised by writing more of it.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -2215,6 +2405,13 @@ Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set
 a TestFlight distribution and a submission in review (D371); ~~whether to strip
 `INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the
 merged manifest (D357).
+
+**Opened by game services (D375, D376, D377):** the Play Games console project,
+its OAuth2 client and the SHA-1 of **Google's** app-signing certificate rather
+than the local upload key; 44 achievement icons at 512x512; the achievement ids,
+which are permanent from publication; and both stores' privacy declarations, which
+become false the moment a leaderboard ships and must be updated in the same
+release.
 
 **Still open after the 2026-08-29 status pass (D371, D373).** Every 1.0 ticket
 is closed except 021 and 022, and nothing is waiting on a store account. What
@@ -2233,7 +2430,9 @@ remains:
   property of the release.
 - **The ladder is anchored to itself and never to a human** (D373). Not
   actionable at 1.0, and the first explanation to reach for if a rung feels wrong
-  to real players.
+  to real players. *Its internal consistency, at least, is now measured against
+  the shipped catalogue: 140 pairs on 2026-08-29, every rung inside tolerance and
+  no configuration defects (D375).*
 - **Whether Play Billing completes a purchase with `INTERNET` stripped** is still
   empirical, unless the purchase that was tested was an Android one. The closed
   test settles it and the answer belongs in 046's closure.
