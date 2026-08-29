@@ -98,6 +98,14 @@ class _OpponentScreenState extends State<OpponentScreen> {
 
     return ForestScaffold(
       appBar: AppBar(
+        // **The toolbar scales with the text for the same reason the strip
+        // below it does (D188), and it was missed the first time.** The strip
+        // was fixed at 28 and the toolbar left at the platform's 56, so at the
+        // 200% the Android font slider reaches, "Choose an opponent" wants more
+        // than 56 and the app bar's own column overflows by 16. It is a smaller
+        // number than D188's failure and the same mistake: a constant height
+        // holding text that is not a constant size.
+        toolbarHeight: MediaQuery.textScalerOf(context).scale(kToolbarHeight),
         title: Text(l10n.chooseOpponent),
         bottom: PreferredSize(
           // Scaled with the text rather than fixed: at the 200% the Android
@@ -356,9 +364,17 @@ class _BalanceChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: colour),
         const SizedBox(width: 4),
-        Text(
-          _balanceLabel(l10n, balance),
-          style: theme.textTheme.labelMedium?.copyWith(color: colour),
+        // **`Flexible`, as `_LockedRow` beside it already does.** The label is
+        // a sentence rather than a number -- "Evenly matched", "Stronger than
+        // you" -- and at the largest system font scale it wants 212dp more than
+        // a 320dp phone has left after the tile's art and padding (U20, ticket
+        // 021). Wrapping is the right failure here: the row is subtitle text,
+        // not a control, so a second line costs nothing.
+        Flexible(
+          child: Text(
+            _balanceLabel(l10n, balance),
+            style: theme.textTheme.labelMedium?.copyWith(color: colour),
+          ),
         ),
       ],
     );

@@ -314,34 +314,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final mode = await showModalBottomSheet<GameMode>(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.computer_outlined),
-              title: Text(l10n.playTheComputer),
-              onTap: () => Navigator.of(context).pop(GameMode.vsComputer),
-            ),
-            ListTile(
-              leading: const Icon(Icons.people_outline),
-              title: Text(l10n.passAndPlay),
-              onTap: () => Navigator.of(context).pop(GameMode.passAndPlay),
-            ),
-          ],
+        // **Scrollable, though two rows never need to scroll at text scale 1.**
+        // A modal sheet that is not `isScrollControlled` is capped at 9/16 of
+        // the screen, and two `ListTile`s at the largest system font scale want
+        // more than that: 368.5 into 319.5 on a 320x568 phone, which is a 49dp
+        // overflow and two half-visible rows (U20, ticket 021).
+        //
+        // The scroll view rather than `isScrollControlled: true` because the
+        // fix has to hold for whatever the accessibility settings say next; a
+        // taller cap is a bigger number that can still be exceeded, and this is
+        // a sheet whose whole content is a list.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.computer_outlined),
+                title: Text(l10n.playTheComputer),
+                onTap: () => Navigator.of(context).pop(GameMode.vsComputer),
+              ),
+              ListTile(
+                leading: const Icon(Icons.people_outline),
+                title: Text(l10n.passAndPlay),
+                onTap: () => Navigator.of(context).pop(GameMode.passAndPlay),
+              ),
+            ],
+          ),
         ),
       ),
     );
     if (mode == null || !mounted) return;
-
-    // **Refused before the player is made to choose an opponent.** `_start`
-    // guards too, and that is the guard that counts — it is the single place a
-    // game is created, so the challenge and rematch buttons cannot slip past
-    // it. This one exists so the wall does not arrive after a choice, which
-    // reads as the app changing its mind.
-    if (mode == GameMode.vsComputer && !_meter.canStart) {
-      await showPaywall(context, limit: _meter.blocked, shop: widget.shop);
-      return;
-    }
 
     // **Refused before the player is made to choose an opponent.** `_start`
     // guards too, and that is the guard that counts — it is the single place a

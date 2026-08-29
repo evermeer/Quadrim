@@ -2154,6 +2154,57 @@ the only tester-derived input to the release, it is informal, and it is not
 written down anywhere. Recalling it deliberately before 022's sweep is the whole
 of what remains of ticket 024.
 
+## D374 — Font-scale overflows are fixed by removing the constant, not by raising it
+
+**Question:** Ticket 021's font-scale sweep, extended from two screens to the
+whole app, found three overflows at the 200% the Android font slider reaches, on
+a 320pt phone: the new-game sheet by 49dp, the opponent list by 212dp across, and
+the opponent screen's app bar by 16dp. Each has a cheap fix that makes the number
+bigger and a slightly less cheap one that removes the number. Which?
+
+**Decision:** Remove the constant wherever the thing it bounds is text.
+
+- **The new-game sheet** got a `SingleChildScrollView`, not
+  `isScrollControlled: true`. The sheet is capped at 9/16 of the screen — 319.5
+  of 568 — holding 368.5dp of two `ListTile`s. A taller cap is a bigger number
+  that the next accessibility setting can exceed again; a scroll view cannot be
+  exceeded. At text scale 1 the two rows still never scroll, so nothing changes
+  for anyone who has not turned the slider up.
+- **`_BalanceChip`** got a `Flexible`, which is what `_LockedRow` directly beside
+  it already had. Its label is a sentence — "Evenly matched", "Stronger than you"
+  — and wrapping is the correct failure for subtitle text.
+- **The opponent screen's app bar** got `toolbarHeight` scaled by
+  `MediaQuery.textScalerOf(context)`, exactly as **D188** already scaled the
+  rating strip immediately below it.
+
+**The third one is the interesting one, because it is D188 repeated.** D188 found
+that a constant 28dp strip under the title breaks at 200%, scaled it, and stopped
+— leaving the platform's constant 56dp toolbar above it holding "Choose an
+opponent", which breaks at 200% for the identical reason. The fix that was
+written down did not generalise to the widget one level up, and the reason it
+survived a further release is that the strip failed *visibly* (the title slid off
+the screen) while the toolbar merely overflowed by 16dp into a clip. **A partial
+fix to a class of bug is more durable than no fix, because it removes the symptom
+that would have found the rest.**
+
+**Why 2x on a 320pt phone is the right fixture** rather than a gentler one: it is
+the corner of the supported space, and every one of these three defects is
+invisible at 1.5x. A sweep calibrated to what looks plausible would have found
+none of them.
+
+**Cost:** the app bar doubles in height at 200%, to 112dp on a 568dp screen, which
+is a fifth of the display spent on a title. That is the trade the platform's own
+scaling makes everywhere else, and the alternative — capping the title's text
+scale — takes the accessibility setting away from the person who set it.
+
+**What this says about the sweep that found them:** all three shipped. They are in
+the bundle on twelve testers' phones and in the build in App Store review, and
+they were found the first time anyone pumped those screens at 2x. The two screens
+that had been swept were the two most recently built. **Coverage followed
+recency, not risk**, which is the normal shape of a test suite and the reason a
+whole-app sweep finds things a per-ticket criterion does not — which is what
+ticket 021 said about itself when it was written.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -2169,9 +2220,14 @@ merged manifest (D357).
 is closed except 021 and 022, and nothing is waiting on a store account. What
 remains:
 
-- **Ticket 021's screen-reader pass**, on a real device, with TalkBack and with
-  VoiceOver. It is the only thing blocking 022 and the only 1.0 item that cannot
-  be done from here. Twelve testers have devices in hand.
+- ~~Ticket 021's screen-reader pass~~ — done on a device and reported (D371);
+  ticket 021 is closed, and the rest of it was finished here (D374).
+- **What happens to the build in App Store review**, which contains the three
+  layout defects D374 fixed. Let it ride, or pull and resubmit — a decision
+  rather than a defect.
+- **Ticket 022's remaining criteria all need a device, a store or a decision**:
+  a fresh install walked end to end, a backup-and-restore on both platforms,
+  restore-purchases from TestFlight, and the tag.
 - ~~The tester cohort has no instrument~~ — **closed informally and deliberately
   (D373)**, with what that gives up recorded there. Not an open item any more; a
   property of the release.

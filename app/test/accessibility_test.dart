@@ -199,4 +199,98 @@ void main() {
       handle.dispose();
     });
   });
+
+  /// **The rest of the app at the largest system font scale.**
+  ///
+  /// Ticket 021 carried this forward as a known gap: the shop and the main
+  /// screen were swept at 2x and nothing else was. The gap mattered because U20
+  /// is a per-*screen* promise and the two screens that had been checked are the
+  /// two that were built most recently — the tutorial, the opponent list, the
+  /// board and settings all predate the font-scale rule being tested at all.
+  ///
+  /// Each case drives the real app rather than pumping a screen in isolation,
+  /// because the failure this is looking for is a `RenderFlex` overflow, and an
+  /// overflow only happens against real constraints. `takeException()` is the
+  /// assertion: Flutter reports an overflow as a thrown exception in a test, so
+  /// a screen that fits leaves it null and a screen that does not names itself.
+  group('every remaining screen at the largest font scale', () {
+    Future<void> pumpAppAt2x(WidgetTester tester,
+        {Size size = const Size(320, 568)}) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+      addTearDown(tester.view.reset);
+      final r = await LocalGameRepository.open(MemoryDocumentStore());
+      final settings = await r.loadSettings();
+      await r.saveSettings(settings.copyWith(tutorialOffered: true));
+      await tester.pumpWidget(QuadrimApp(
+          repository: r, settings: r, unlocks: r, random: Random(1)));
+      await tester.pumpAndSettle();
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpAndSettle();
+    }
+
+    /// Taps the first widget carrying [label] and settles.
+    ///
+    /// By text rather than by key: the label is what a player reads and what a
+    /// screen reader announces, so a test that can no longer find it is telling
+    /// us something either way.
+    Future<void> tapText(WidgetTester tester, String label) async {
+      final target = find.text(label);
+      expect(target, findsWidgets, reason: 'no "$label" to tap');
+      await tester.tap(target.first);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the tutorial, every step of it', (tester) async {
+      await pumpAppAt2x(tester);
+      await tapText(tester, 'Tutorial');
+      expect(tester.takeException(), isNull, reason: 'tutorial step 1');
+
+      // Walk to the end rather than sampling: the steps have different shapes
+      // -- prose, a board, an interactive practice game -- and the tallest one
+      // is the one that overflows.
+      for (var step = 2;; step++) {
+        final next = find.text('Next');
+        if (next.evaluate().isEmpty) break;
+        await tester.tap(next.first);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'tutorial step $step');
+      }
+    });
+
+    testWidgets('settings', (tester) async {
+      await pumpAppAt2x(tester);
+      // Settings is the app bar's icon button, not a labelled row.
+      await tester.tap(find.byType(IconButton).first);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'settings');
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -800));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'settings, scrolled');
+    });
+
+    testWidgets('the new-game sheet, the opponent list and the board',
+        (tester) async {
+      await pumpAppAt2x(tester);
+      await tapText(tester, 'New game');
+      expect(tester.takeException(), isNull, reason: 'the new-game sheet');
+
+      await tapText(tester, 'Play the computer');
+      expect(tester.takeException(), isNull, reason: 'the opponent list');
+
+      // Pebble is the only opponent unlocked on a fresh install, and the first
+      // in the list -- which is what a new player is looking at here.
+      await tester.tap(find.text('Pebble').first);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'the board');
+    });
+
+    testWidgets('pass and play', (tester) async {
+      await pumpAppAt2x(tester);
+      await tapText(tester, 'New game');
+      await tapText(tester, 'Pass and play');
+      expect(tester.takeException(), isNull, reason: 'the pass-and-play board');
+    });
+  });
 }
