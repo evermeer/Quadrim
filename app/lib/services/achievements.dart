@@ -1,7 +1,7 @@
 /// The forty-four achievements, and what each one is called on each store.
 ///
 /// **Forty-four of seventy-five quests, and the narrowing is deliberate**
-/// (D377). Eight streak rungs, five volume rungs, and one per opponent — with
+/// (D378). Eight streak rungs, five volume rungs, and one per opponent — with
 /// [QuestFamily.firstWin] and [QuestFamily.firstWinSecond] collapsed into a
 /// single "you have beaten this opponent", because the second is a strict
 /// subset of the first: a win from the second seat is a win, so the two would
@@ -33,7 +33,7 @@ class Achievement {
 
   /// The quest whose achievement fires this, by [Quest.id].
   ///
-  /// One quest, never a set: the merge in D377 works because the *harder* of
+  /// One quest, never a set: the merge in D378 works because the *harder* of
   /// the two per-opponent quests is dropped rather than or-ed in, so there is
   /// no rule here about which of several sources counts.
   final String questId;
@@ -110,7 +110,7 @@ const List<int> kStreakAchievementTargets = [5, 10, 30, 90, 180, 360, 720, 1440]
 /// The achievement a quest maps to, or null if that quest has none.
 ///
 /// Null is the normal answer for `first_win_second:*` — all thirty-one of them
-/// — and that is D377 working rather than a gap.
+/// — and that is D378 working rather than a gap.
 Achievement? achievementForQuest(String questId) {
   for (final a in achievementCatalogue) {
     if (a.questId == questId) return a;

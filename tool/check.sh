@@ -31,7 +31,7 @@ for pkg in packages/quadrim_engine packages/quadrim_rating packages/quadrim_prog
   # `package:http` and `games_services` joined the list at ticket 050. The app
   # layer may now talk to Play Games and Game Center; the pure packages may not,
   # and that is the half of the old offline guarantee which is still absolute
-  # (D375). F13 and S1 stay reviewable because a network call during computer
+  # (D376). F13 and S1 stay reviewable because a network call during computer
   # play would have to be added to the app layer, in a diff, on purpose.
   if grep -rnE "import [\"']dart:(io|html)[\"']|package:(flutter|firebase|http)|games_services" "$pkg/lib" 2>/dev/null; then
     echo "FAIL: $pkg imports a forbidden library (above)"; fail=1
@@ -57,7 +57,7 @@ if grep -rnE "Text\(\s*['\"][^'\"]*[A-Za-z]" app/lib --include='*.dart' | grep -
 fi
 
 echo "== the network permission is declared on purpose =="
-# **This check changed shape at ticket 050, and D375 is why.**
+# **This check changed shape at ticket 050, and D376 is why.**
 #
 # From D93 until then it asserted that the shipped bundle could not reach the
 # network at all: INTERNET was stripped from the merge with tools:node="remove"
@@ -76,12 +76,12 @@ echo "== the network permission is declared on purpose =="
 # passed. The permission arriving *unnoticed* was the defect; the permission
 # existing is now a decision. So this asserts it is declared deliberately, in
 # our own manifest, without the removal directive -- which means a diff that
-# introduces network use has to touch a line with D375 written next to it.
+# introduces network use has to touch a line with D376 written next to it.
 MAIN=app/android/app/src/main/AndroidManifest.xml
 
 if ! grep -qE 'uses-permission[^>]*android\.permission\.INTERNET' "$MAIN"; then
   echo "FAIL: $MAIN no longer declares INTERNET."
-  echo "      Play Games Services needs it (D375). If network use is being"
+  echo "      Play Games Services needs it (D376). If network use is being"
   echo "      removed again, that is a spec change and this check should go"
   echo "      back to the ban it replaced, not be deleted."
   fail=1

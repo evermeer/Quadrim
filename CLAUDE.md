@@ -125,12 +125,12 @@ Move selection order in `chooseMove`: book → forced win → strategic rules �
 
 These are not style preferences. Several are enforced by `check.sh`; all of them come from the spec or the decision log.
 
-- **The app generates no identifier and stores none** (D376, spec D2/S2). Amended at
+- **The app generates no identifier and stores none** (D377, spec D2/S2). Amended at
   ticket 050: Play Games and Game Center identify the player, so "transmitted" could
   not stand. What holds is narrower and checkable — no player id, name or avatar is
   persisted, and none enters a Quadrim document.
 - **Computer play makes no network call** (spec F13/S1) — **still true, no longer
-  enforced** (D375). Play Games Services needs `INTERNET` and Android grants it per
+  enforced** (D376). Play Games Services needs `INTERNET` and Android grants it per
   application, so the permission is now declared deliberately in the main manifest.
   What is still mechanical is the engine: `check.sh` rejects `dart:io`, `dart:html`,
   `package:http`, Flutter, Firebase and `games_services` in any pure package. Game
@@ -166,9 +166,9 @@ The standing instruction for this repo:
 - **Do not space a tier by which squares an opponent prefers** (D315, D336). Corners-first and centre-first beat each other in a ring, so alternating them up the ladder builds a cycle rather than an order — twice now. D314 removed `aggression` from the Casual tier for the same reason; D336 removed corner ranking from everything between Bramble and Marlin. What orders that stretch is how many of the sixteen seven-line cells it prefers, then `lineBias`, then the blunder rate, all monotone by construction. An inversion among those three is a real defect; check it with `calibrate.dart --only <id>`.
 - Calibration puts Oracle at 2323 against a published 2300 — the earlier ~2100 estimate does not survive a measured run. Quadrim Prime measures 2176 from a single readable pair, and it is the opponent the reduced budget hits hardest, so that number is a floor rather than a verdict; re-run `--only quadrim_prime --budget 1` before believing it.
 - `canonicalPlies` is 0 on every shipped bot; canonical transposition entries carry an orientation-dependent `bestMove`. Both deferred from the ticket 025 review.
-- **`check.sh` now asserts `INTERNET` is declared *on purpose*** (D375, replacing D212/D356/D357). Until ticket 050 it asserted the opposite — the permission was stripped from the merge with `tools:node="remove"` and the merged release manifest was read to prove the bundle could not reach the network at all. Play Games Services needs the permission, and Android grants it per application rather than per screen, so that guarantee could not survive a leaderboard. Three things to keep in mind:
+- **`check.sh` now asserts `INTERNET` is declared *on purpose*** (D376, replacing D212/D356/D357). Until ticket 050 it asserted the opposite — the permission was stripped from the merge with `tools:node="remove"` and the merged release manifest was read to prove the bundle could not reach the network at all. Play Games Services needs the permission, and Android grants it per application rather than per screen, so that guarantee could not survive a leaderboard. Three things to keep in mind:
   - **The defect D356 caught was the permission arriving *unnoticed*.** Play Billing pulls in `transport-backend-cct`, a telemetry transport that declares `INTERNET`, and a bundle shipped with it while a source-manifest grep passed. That library is now free to use the network it always wanted.
-  - **The check is therefore a declaration check, not a ban.** It fails if the main manifest stops declaring `INTERNET`, and it fails if the removal directive comes back — so a diff that changes the app's network posture has to touch a line with D375 written beside it.
+  - **The check is therefore a declaration check, not a ban.** It fails if the main manifest stops declaring `INTERNET`, and it fails if the removal directive comes back — so a diff that changes the app's network posture has to touch a line with D376 written beside it.
   - **The engine half is still absolute.** `check.sh` rejects `dart:io`, `dart:html`, `package:http`, Flutter, Firebase and `games_services` in `quadrim_engine`, `quadrim_rating` and `quadrim_progression`. That is what keeps F13 and S1 reviewable: a network call during computer play would have to be added to the app layer, deliberately.
 - **Game services live in `app/lib/services/`** and are ticket 050's. `GameServicesPlatform` is an interface this app owns over the `games_services` plugin, for the same reason `PurchasePlatform` exists — the part that talks to a store must be testable without one. Everything there is best-effort and silent (§7): nothing may be awaited on a path that renders, and a store outage must be invisible. The 44 achievement ids and the leaderboard id are **permanent once published**, like a product id (D213, D365), and the **Play Console ids are unset until the developer pastes them in** — `playGamesConfigured` is what keeps Android quiet until then.
 - Tickets that need the user's Google account or decisions and cannot be done by an agent: 015, 016, 024, parts of 022.

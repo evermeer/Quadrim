@@ -39,14 +39,14 @@ of any kind and still declares no runtime dependencies at all.
 
 What changes is that S1 and F13 become **reviewed rather than enforced** on
 Android — which is precisely the status iOS has carried since S20 and D306.
-Recorded as D375.
+Recorded as D376.
 
 **What genuinely must be amended is D2 and S2**, "no device identifier is
 generated, stored or transmitted anywhere". Both services identify the player:
 Play Games issues a Player ID, Game Center a `gamePlayerID` scoped per developer.
 The app neither generates nor stores either one — but it does cause one to be
 transmitted, and pretending otherwise would be the kind of privacy claim this
-project has twice refused to make (D72). Recorded as D376.
+project has twice refused to make (D72). Recorded as D377.
 
 **Two declarations become false the moment this ships** and must be updated in
 the same release, not after it: Play's Data Safety form and the App Store privacy
@@ -80,7 +80,7 @@ scored game against a computer opponent.
 ## 4. The achievements
 
 **Forty-four, not seventy-five**, and the mapping is a deliberate narrowing
-rather than an omission (D377):
+rather than an omission (D378):
 
 | Source | Count | Achievement |
 |---|---|---|
@@ -117,7 +117,7 @@ is more traffic and more surface for no gain the player can see.
 Game Center `gamePlayerID`, not a display name, not an avatar URL. Everything the
 services need is asked for at the moment it is used and thrown away.
 
-This is not squeamishness; it is what keeps D376's amendment narrow. "The app
+This is not squeamishness; it is what keeps D377's amendment narrow. "The app
 transmits an identifier the platform issues" is a much smaller claim than "the app
 holds an identity", and the second one would reach the backup allowlist, the
 document schema and 2.0's account design all at once.
@@ -267,7 +267,7 @@ gives a build that launches and then fails at sign-in.
 | 8 — sign-in offered once | **Partly.** `offerSignIn` returns what to persist and `SignInOffer` exists; **no UI offers it yet and nothing stores the answer**, so a player is never asked. Named here rather than left to be found. |
 | 9 — no package outside `app/` gains a dependency | **Met.** Purity scan passes, and it now also rejects `package:http` and `games_services`. |
 | 10 — privacy declarations updated in the same release | **Not met**, and it is a release gate rather than a code task. |
-| 11 — `check.sh` passes with the offline check replaced | **Met** (D375). |
+| 11 — `check.sh` passes with the offline check replaced | **Met** (D376). |
 
 ### What has to happen next, and by whom
 

@@ -1,13 +1,13 @@
 /// Play Games Services and Game Center: the leaderboard and the achievements.
 ///
-/// **The offline guarantee changed shape to let this exist** (D375). Spec F13
+/// **The offline guarantee changed shape to let this exist** (D376). Spec F13
 /// and S1 — no network call during a game against a computer opponent — are
 /// still true and still in the specification; nothing here runs during a game.
 /// What they lost is their enforcement, because `INTERNET` is granted to an
 /// application rather than to a screen and Play Games Services cannot work
 /// without it.
 ///
-/// **The app stores no player identifier** (D376). Not the Play Games Player ID,
+/// **The app stores no player identifier** (D377). Not the Play Games Player ID,
 /// not Game Center's `gamePlayerID`, not a name and not an avatar. Everything
 /// these services need is asked for at the moment it is used and thrown away,
 /// which is what keeps the amendment to D2/S2 narrow enough not to reach the
@@ -66,7 +66,7 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
       gs.GamesServices.unlock(
         // `percentComplete: 100` is the default and is what makes this an
         // unlock rather than a progress report: nothing in Quadrim is
-        // incremental (D377), so an achievement is true or it is absent.
+        // incremental (D378), so an achievement is true or it is absent.
         achievement: gs.Achievement(androidID: androidId, iOSID: iosId),
       );
 }
@@ -93,7 +93,6 @@ class GameServices {
     this._androidConfigured = false,
     this._isAndroid = false,
   });
-
 
   final GameServicesPlatform _platform;
 
@@ -174,7 +173,7 @@ class GameServices {
   /// one on screen.
   ///
   /// A quest with no achievement is skipped in silence — that is every
-  /// `first_win_second:*`, all thirty-one of them, and it is D377 working
+  /// `first_win_second:*`, all thirty-one of them, and it is D378 working
   /// rather than a gap.
   Future<void> reportQuests(Iterable<String> questIds) async {
     if (!_available || !_configured) return;

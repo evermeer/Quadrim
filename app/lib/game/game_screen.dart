@@ -92,7 +92,7 @@ class GameScreen extends StatefulWidget {
   /// Optional for the same reason [unlocks] and [settings] are: a widget test
   /// that only cares about the board should not have to construct a platform
   /// service to get one. Null means the leaderboard and the achievements are
-  /// simply not reported, which is also what a signed-out player gets (D375).
+  /// simply not reported, which is also what a signed-out player gets (D376).
   final GameServices? services;
 
   /// Injected so a test can pin what the opponent plays. Null means a fresh

@@ -2256,7 +2256,7 @@ it produces a list of candidates each of which costs a `duel.dart` run to confir
 or dismiss. That is the price of the reduction, and the reduction is what makes
 the run four hours rather than an overnight job.
 
-## D375 — The offline guarantee loses its enforcement and keeps its claim
+## D376 — The offline guarantee loses its enforcement and keeps its claim
 
 **Question:** Google Play Games Services cannot run without
 `android.permission.INTERNET`. That permission is the mechanism which has enforced
@@ -2312,7 +2312,7 @@ always wanted. Quadrim can no longer say "it cannot reach the network"; it can
 only say "it does not, during a game, and here is the code". Everything in the
 privacy story that rested on the permission's absence now rests on reading.
 
-## D376 — The app transmits an identifier it neither generates nor stores
+## D377 — The app transmits an identifier it neither generates nor stores
 
 **Question:** D2 and S2 say "no device identifier is generated, stored or
 transmitted anywhere", and D90 is the decision behind them. Play Games issues a
@@ -2353,7 +2353,7 @@ and the app must keep working identically for them — which is why ticket 050 m
 the signed-out path a first-class state rather than an error, and why sign-in is
 offered once and never again if declined.
 
-## D377 — Forty-four achievements, and the two per-opponent quests merge into one
+## D378 — Forty-four achievements, and the two per-opponent quests merge into one
 
 **Question:** The app has 75 quests. Each store achievement needs an id, a name
 and a description in English and Dutch, and a 512x512 icon, entered by hand in two
@@ -2406,7 +2406,7 @@ a TestFlight distribution and a submission in review (D371); ~~whether to strip
 `INTERNET` or narrow the check~~ — stripped, and the check rebuilt around the
 merged manifest (D357).
 
-**Opened by game services (D375, D376, D377):** the Play Games console project,
+**Opened by game services (D376, D377, D378):** the Play Games console project,
 its OAuth2 client and the SHA-1 of **Google's** app-signing certificate rather
 than the local upload key; 44 achievement icons at 512x512; the achievement ids,
 which are permanent from publication; and both stores' privacy declarations, which
@@ -2432,7 +2432,7 @@ remains:
   actionable at 1.0, and the first explanation to reach for if a rung feels wrong
   to real players. *Its internal consistency, at least, is now measured against
   the shipped catalogue: 140 pairs on 2026-08-29, every rung inside tolerance and
-  no configuration defects (D375).*
+  no configuration defects (D376).*
 - **Whether Play Billing completes a purchase with `INTERNET` stripped** is still
   empirical, unless the purchase that was tested was an Android one. The closed
   test settles it and the answer belongs in 046's closure.

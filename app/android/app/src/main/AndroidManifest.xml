@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- **Declared on purpose, and this line is the whole of D375.**
+    <!-- **Declared on purpose, and this line is the whole of D376.**
 
          From D93 until ticket 050 this read `tools:node="remove"`, which
          stripped INTERNET from the merged manifest and made offline play a

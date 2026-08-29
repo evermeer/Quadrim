@@ -490,7 +490,7 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | F10 | A completed game against a computer opponent | the computer rating is recomputed | it moves by the Elo update against that opponent's fixed anchor, K=32 for the first 20 such games and K=16 after |
 | F11 | The same set of completed games | the rating is computed twice | both results are identical, because it is a fold and not a stored counter |
 | F12 | A pass-and-play game completing | any rating is read | nothing has changed |
-| F13 △ | Any game against a computer opponent | it is played from first move to result | no network call is made at any point. **Unchanged and still true** — the rating and the achievements are reported after a game is scored, never during one (D375) |
+| F13 △ | Any game against a computer opponent | it is played from first move to result | no network call is made at any point. **Unchanged and still true** — the rating and the achievements are reported after a game is scored, never during one (D376) |
 | F14 ＋ | A move by the strongest opponent | it is chosen on a reference device | it completes within twenty seconds, and a moving indication of thinking is on screen throughout |
 | F15 ＋ | A subscription that lapses mid-series *(3.0)* | games in progress finish | they rate normally for both players, one rematch is permitted, and the lapsed player is exempt from the inactivity forfeit |
 | F16 ＋ | A player at the daily or weekly cap *(1.0)* | a new computer game is started | it is refused, and the message names **the limit that actually bit** |
@@ -552,7 +552,7 @@ E8 and E9 named Ember in the v1 spec, and E10 named Basalt. Those slots are now 
 | # | Criterion |
 |---|---|
 | D1 | Every persisted document carries a `schemaVersion` |
-| D2 ▲ | **The app generates no identifier and stores none.** Where a platform service identifies the player — Play Games, Game Center — that identifier is the platform's, is never persisted by this app, and never enters a Quadrim document (D376) |
+| D2 ▲ | **The app generates no identifier and stores none.** Where a platform service identifies the player — Play Games, Game Center — that identifier is the platform's, is never persisted by this app, and never enters a Quadrim document (D377) |
 | D3 | Game documents match §8.3 exactly |
 | D4 | A kill during a write leaves no corrupted record |
 | D5 | A `schemaVersion` greater than the reader understands causes that record to be skipped; equal or lower is read and upgraded |
@@ -635,8 +635,8 @@ New section, new prefix.
 
 | # | Criterion |
 |---|---|
-| S1 △ | No network call is made at any point in a game against a computer opponent — cross-references F13. **Still true; no longer enforced** (D375). Until ticket 050 the Android build stripped `INTERNET` from the merged manifest, which made this a guarantee the platform kept. Play Games Services needs the permission and Android grants it per application, so this is now reviewed rather than enforced — the status it has always had on iOS (S20, D306). The engine's purity is still mechanical: `check.sh` rejects a network import in any pure package |
-| S2 ▲ | No identifier is generated or stored by the app, and none enters a document — cross-references D2. **Amended at ticket 050** (D376): a leaderboard entry is attributable by definition, so "transmitted" could no longer stand. What replaces it is narrower and checkable — nothing is *kept* |
+| S1 △ | No network call is made at any point in a game against a computer opponent — cross-references F13. **Still true; no longer enforced** (D376). Until ticket 050 the Android build stripped `INTERNET` from the merged manifest, which made this a guarantee the platform kept. Play Games Services needs the permission and Android grants it per application, so this is now reviewed rather than enforced — the status it has always had on iOS (S20, D306). The engine's purity is still mechanical: `check.sh` rejects a network import in any pure package |
+| S2 ▲ | No identifier is generated or stored by the app, and none enters a document — cross-references D2. **Amended at ticket 050** (D377): a leaderboard entry is attributable by definition, so "transmitted" could no longer stand. What replaces it is narrower and checkable — nothing is *kept* |
 | S3 ▲ | Only games, settings and unlocks are backup-eligible, by explicit allowlist — cross-references D9 |
 | S4 | The repository is the only reader and writer of stored data; no screen touches storage directly |
 | S5 | The twelve closed testers have been given a written privacy notice covering what is collected, why, who holds it, how long, and how to withdraw. **This is the only personal-data processing release 0.1 has, and it is the developer's, not the app's** |
