@@ -1,9 +1,3 @@
-import 'dart:async';
-
-import 'package:games_services/games_services.dart' as gs;
-
-import 'achievements.dart';
-
 /// Play Games Services and Game Center: the leaderboard and the achievements.
 ///
 /// **The offline guarantee changed shape to let this exist** (D375). Spec F13
@@ -19,6 +13,12 @@ import 'achievements.dart';
 /// which is what keeps the amendment to D2/S2 narrow enough not to reach the
 /// backup allowlist, the document schema, or 2.0's account model.
 library;
+
+import 'dart:async';
+
+import 'package:games_services/games_services.dart' as gs;
+
+import 'achievements.dart';
 
 /// The interface this app owns over the plugin.
 ///
@@ -85,13 +85,15 @@ enum SignInOffer { notYetOffered, accepted, declined }
 /// this class may be awaited on a path that renders; the precedent is
 /// `Shop.start()`, which is called and deliberately not awaited (D351).
 class GameServices {
+  /// Private initializing formals. A private named parameter takes its *public*
+  /// name at the call site, so callers still write `platform:`,
+  /// `androidConfigured:` and `isAndroid:` while the fields stay private.
   GameServices({
-    required GameServicesPlatform platform,
-    bool androidConfigured = false,
-    bool isAndroid = false,
-  })  : _platform = platform,
-        _androidConfigured = androidConfigured,
-        _isAndroid = isAndroid;
+    required this._platform,
+    this._androidConfigured = false,
+    this._isAndroid = false,
+  });
+
 
   final GameServicesPlatform _platform;
 

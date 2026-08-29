@@ -2,7 +2,11 @@
 
 **Depends on:** 022 (1.0 is out). **Blocks:** 051.
 
-**Status:** ready-for-agent
+**Status:** **code complete, unverified against either store.** Everything that
+can be built and tested without a console is done and under test; nothing has
+been reported to Play Games or Game Center, so AC 1 through 3 are proven only
+against a fake and AC 10 needs both consoles. **Stays in `doc/tickets/`** for the
+same reason ticket 046 did. See the closure.
 
 ## Why
 
@@ -193,3 +197,87 @@ on for their first session and the one no simulator puts you in by accident.
 **Achievements cannot be deleted after publication**, on either store, any more
 than a product id can (D213, D365). The forty-four ids are permanent from the day
 they go live.
+
+## Closure
+
+`bash tool/check.sh`: **ALL CHECKS PASSED**, 446 app tests (was 422).
+
+### What exists
+
+`app/lib/services/`, and nothing outside `app/` gained a dependency — the purity
+scan still passes, so AC 9 is met.
+
+- **`achievements.dart`** — the forty-four, **derived from the same catalogues
+  the quests are built from** rather than typed out, so the roster and the rungs
+  cannot drift from the quests they mirror. Only the store ids are hand-written.
+- **`games.dart`** — `GameServicesPlatform`, the interface this app owns over the
+  plugin, its adapter, and `GameServices`.
+- Wired through `main.dart` → `HomeScreen` → `GameScreen`, optional at every
+  step, so every existing widget test builds the app without one.
+
+`GameServices.start()` is called and **not awaited** at launch, like
+`Shop.start()` and for the same reason (D351). `_report` in `game_screen.dart`
+is called from `_loadOutcome` and awaits nothing.
+
+### What is tested
+
+`game_services_test.dart`, 19 tests against a fake, and
+`game_services_wiring_test.dart`, 5 more that drive the real game screen over the
+real repository. **The second file exists because the first cannot fail if the
+wiring is missing** — it proves `GameServices` behaves, not that anything calls
+it.
+
+The ones that matter: the catalogue is complete in **both** directions (a table
+entry naming a dead quest, and a quest family growing unmapped, fail differently
+and only one is visible); `first_win_second` reports nothing; a failing platform
+leaves the result panel rendering and throws nothing; and Android does nothing at
+all while the Play ids are unset.
+
+### Verified on a device, and what it did not prove
+
+The debug APK was installed on an emulator carrying **Google Play services
+25.26.35 and the Play Store**, and the app launched and rendered normally. That
+matters because `PlayGamesInitProvider` is a `ContentProvider` with `initOrder=99`
+which the SDK merges into the manifest — it runs before anything of ours.
+
+**It does not prove the Play Games path works**, and the reason is worth keeping:
+the app never called in, because `playGamesConfigured` is false and `_configured`
+therefore gates every method. The launch proves the SDK's presence is harmless,
+not that sign-in succeeds.
+
+### The trap waiting for whoever fills in the console ids
+
+**Play Games v2 needs `com.google.android.gms.games.APP_ID` meta-data in the
+application element**, valued at the Play Games project number. It is **not**
+present in the merged manifest today, and it must be added in the same change
+that fills in the ids in `achievements.dart`. Filling in one without the other
+gives a build that launches and then fails at sign-in.
+
+### Acceptance criteria
+
+| AC | Status |
+|----|--------|
+| 1 — a scored computer game submits the rating | **Covered by test, not by a store.** |
+| 2 — pass and play submits nothing | **Met**, tested through the real game screen. |
+| 3 — a newly achieved quest reports its one achievement, once | **Covered by test.** |
+| 4 — `first_win_second` reports nothing | **Met**, tested both in the catalogue and end to end. |
+| 5 — the table is complete in both directions | **Met**, asserted by test. |
+| 6 — a failing or signed-out platform changes nothing | **Met**, tested three ways. |
+| 7 — no identifier stored, allowlist unchanged | **Met.** Nothing here writes a document; `backup_rules.xml` and `data_extraction_rules.xml` are untouched and still include-only. |
+| 8 — sign-in offered once | **Partly.** `offerSignIn` returns what to persist and `SignInOffer` exists; **no UI offers it yet and nothing stores the answer**, so a player is never asked. Named here rather than left to be found. |
+| 9 — no package outside `app/` gains a dependency | **Met.** Purity scan passes, and it now also rejects `package:http` and `games_services`. |
+| 10 — privacy declarations updated in the same release | **Not met**, and it is a release gate rather than a code task. |
+| 11 — `check.sh` passes with the offline check replaced | **Met** (D375). |
+
+### What has to happen next, and by whom
+
+1. **The Play Games console**: a project, an OAuth2 client, the app linked, and
+   the SHA-1 of **Google's** app-signing certificate rather than the local upload
+   key. Then the 44 achievements and the leaderboard, and their ids pasted into
+   `achievements.dart` — **with the `APP_ID` meta-data**, per the trap above.
+2. **App Store Connect**: Game Center enabled, the leaderboard and the 44
+   achievements created with the ids already in `achievements.dart`.
+3. **44 icons at 512x512.** The opponent avatars cover 31; the 13 volume and
+   streak rungs need drawing.
+4. **Both privacy declarations**, in the same release (AC 10).
+5. **The sign-in offer UI**, which is AC 8's missing half.

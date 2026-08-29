@@ -1,18 +1,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- **Removed from the merge, not merely absent from this file** (D357).
-         Play Billing pulls in com.google.android.datatransport:transport-backend-cct
-         transitively, and that library - a telemetry transport, not a billing
-         component - declares INTERNET and ACCESS_NETWORK_STATE. Without this
-         directive the shipped bundle carries INTERNET, which is what D93 and
-         spec S1/F13 forbid, and check.sh could not see it because it greps
-         this file rather than the merged manifest (D356).
+    <!-- **Declared on purpose, and this line is the whole of D375.**
 
-         ACCESS_NETWORK_STATE is left alone deliberately: it grants no access,
-         only the ability to ask whether a network exists, and removing a
-         permission a library declares is a thing to do for a reason rather
-         than for tidiness. This is the reason; that is not. -->
-    <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
+         From D93 until ticket 050 this read `tools:node="remove"`, which
+         stripped INTERNET from the merged manifest and made offline play a
+         thing Android enforced rather than a thing the code promised. Play
+         Games Services cannot work without the permission, and Android grants
+         it to an application rather than to a screen, so there is no version of
+         a leaderboard that keeps the old guarantee.
+
+         **What did not change: spec F13 and S1.** Both are scoped to a game
+         against a computer opponent, and both are still true - the rating is
+         submitted after a game is scored, never during one, and the engine
+         still has no network dependency and declares no runtime dependencies at
+         all. They drop from enforced to reviewed on Android, which is the
+         status they have carried on iOS since S20 and D306.
+
+         **Why this is an explicit declaration rather than a deletion.** The
+         directive that used to be here is what caught D356: Play Billing pulls
+         in com.google.android.datatransport:transport-backend-cct, a telemetry
+         transport that declares INTERNET, and a bundle shipped with it while
+         the old source-manifest check passed. Deleting the line entirely would
+         let the next such library arrive in silence. Declaring the permission
+         here means check.sh can assert it is present *deliberately*, and a diff
+         that adds a second network-using dependency still has to say so.
+
+         ACCESS_NETWORK_STATE is still left to the libraries that ask for it. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Quadrim"
         android:name="${applicationName}"

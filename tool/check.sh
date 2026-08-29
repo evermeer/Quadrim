@@ -28,7 +28,12 @@ for pkg in packages/quadrim_engine packages/quadrim_rating packages/quadrim_prog
   if [ -n "$deps" ]; then
     echo "FAIL: $pkg declares runtime dependencies:"; echo "$deps"; fail=1
   fi
-  if grep -rnE "import [\"']dart:(io|html)[\"']|package:flutter|package:firebase" "$pkg/lib" 2>/dev/null; then
+  # `package:http` and `games_services` joined the list at ticket 050. The app
+  # layer may now talk to Play Games and Game Center; the pure packages may not,
+  # and that is the half of the old offline guarantee which is still absolute
+  # (D375). F13 and S1 stay reviewable because a network call during computer
+  # play would have to be added to the app layer, in a diff, on purpose.
+  if grep -rnE "import [\"']dart:(io|html)[\"']|package:(flutter|firebase|http)|games_services" "$pkg/lib" 2>/dev/null; then
     echo "FAIL: $pkg imports a forbidden library (above)"; fail=1
   fi
 done
@@ -51,56 +56,41 @@ if grep -rnE "Text\(\s*['\"][^'\"]*[A-Za-z]" app/lib --include='*.dart' | grep -
   echo "FAIL: hardcoded user-facing string(s) above - route them through l10n"; fail=1
 fi
 
-echo "== the shipped app cannot reach the network =="
-# D93 and spec S1/F13: computer play makes no network call, in any release.
-# The guarantee is the permission itself: without INTERNET, Android refuses the
-# call whatever the code asks for.
+echo "== the network permission is declared on purpose =="
+# **This check changed shape at ticket 050, and D375 is why.**
 #
-# **This used to grep the source manifest, which is not what decides the
-# permission** (D356). Play Billing pulls in a telemetry transport that
-# declares INTERNET, so a bundle shipped with it while this check passed. What
-# follows tests three things instead of one, in increasing order of authority.
+# From D93 until then it asserted that the shipped bundle could not reach the
+# network at all: INTERNET was stripped from the merge with tools:node="remove"
+# and the merged release manifest was read to prove it. Play Games Services
+# cannot work without the permission, and Android grants it per application
+# rather than per screen, so that guarantee could not survive a leaderboard.
+#
+# **Spec F13 and S1 did survive**, because both are scoped to a game against a
+# computer opponent and both are still true: nothing reports a score during a
+# game, and the engine still has no network dependency. They are now reviewed
+# rather than enforced on Android -- the status iOS has carried since S20/D306.
+#
+# What is still worth checking is the thing that actually went wrong once. D356
+# happened because transport-backend-cct, a telemetry library Play Billing pulls
+# in transitively, declared INTERNET and shipped it while a source-manifest grep
+# passed. The permission arriving *unnoticed* was the defect; the permission
+# existing is now a decision. So this asserts it is declared deliberately, in
+# our own manifest, without the removal directive -- which means a diff that
+# introduces network use has to touch a line with D375 written next to it.
 MAIN=app/android/app/src/main/AndroidManifest.xml
 
-# 1. Nothing in our own manifest may declare it. A line carrying the removal
-#    directive is the fix, not a violation, so it is excluded by name.
-if grep -E 'uses-permission[^>]*android\.permission\.INTERNET' "$MAIN"      | grep -qv 'tools:node="remove"'; then
-  echo "FAIL: $MAIN declares INTERNET."
-  echo "      Computer play is offline in every release (D93). If a later"
-  echo "      release genuinely needs the network, that is a spec change,"
-  echo "      not a manifest edit."
+if ! grep -qE 'uses-permission[^>]*android\.permission\.INTERNET' "$MAIN"; then
+  echo "FAIL: $MAIN no longer declares INTERNET."
+  echo "      Play Games Services needs it (D375). If network use is being"
+  echo "      removed again, that is a spec change and this check should go"
+  echo "      back to the ban it replaced, not be deleted."
   fail=1
 fi
 
-# 2. It must actively strip what dependencies merge in. Absence is not enough:
-#    the permission arrives from a library nobody chose (D357).
-if ! grep -q 'android.permission.INTERNET" tools:node="remove"' "$MAIN"; then
-  echo "FAIL: $MAIN no longer removes INTERNET from the merge."
-  echo "      Play Billing brings com.google.android.datatransport, which"
-  echo "      declares it. Deleting the directive ships the permission."
+if grep -E 'uses-permission[^>]*android\.permission\.INTERNET' "$MAIN" | grep -q 'tools:node="remove"'; then
+  echo "FAIL: $MAIN still strips INTERNET from the merge."
+  echo "      That directive and Play Games Services cannot both be right."
   fail=1
-fi
-
-# 3. The merged manifest is the authority, and it only exists after a release
-#    build. Checked when present rather than skipped silently — a check whose
-#    limits are invisible is how D356 stayed hidden for as long as it did.
-# `|| true` is load-bearing under `set -euo pipefail`: `find` exits non-zero
-# when its starting point does not exist, `pipefail` carries that through
-# `head`, and a failing command substitution in an assignment kills the script.
-# CI has never built a release, so `app/build` is absent there and this check
-# took the whole run down with it while printing nothing at all.
-MERGED=$(find app/build -path '*merged_manifest/release*'   -name AndroidManifest.xml 2>/dev/null | head -1 || true)
-if [ -n "$MERGED" ]; then
-  if grep -q 'android.permission.INTERNET' "$MERGED"; then
-    echo "FAIL: the MERGED release manifest declares INTERNET: $MERGED"
-    echo "      A dependency is contributing it past the removal directive."
-    fail=1
-  else
-    echo "   (verified against the merged release manifest)"
-  fi
-else
-  echo "   (no release build on disk - steps 1 and 2 only; run"
-  echo "    'flutter build appbundle --release' to verify the real artifact)"
 fi
 
 echo "== keystore credentials are not in version control =="

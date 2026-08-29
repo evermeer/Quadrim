@@ -14,6 +14,7 @@ import '../design/forest.dart';
 import '../home/quests_section.dart';
 import '../home/unlock_confirmation.dart';
 import '../l10n/app_localizations.dart';
+import '../services/games.dart';
 import '../theme.dart';
 import 'board_style_toggle.dart';
 import 'board_view.dart';
@@ -70,6 +71,7 @@ class GameScreen extends StatefulWidget {
     this.now,
     this.unlocks,
     this.settings,
+    this.services,
     this.opponentMove = chooseMoveInBackground,
   });
 
@@ -84,6 +86,14 @@ class GameScreen extends StatefulWidget {
   /// remembered, and leaves the layered board — a screen that cannot store a
   /// preference must not silently pick the non-default one.
   final SettingsRepository? settings;
+
+  /// Play Games Services and Game Center, or null.
+  ///
+  /// Optional for the same reason [unlocks] and [settings] are: a widget test
+  /// that only cares about the board should not have to construct a platform
+  /// service to get one. Null means the leaderboard and the achievements are
+  /// simply not reported, which is also what a signed-out player gets (D375).
+  final GameServices? services;
 
   /// Injected so a test can pin what the opponent plays. Null means a fresh
   /// unseeded source, which is what the app uses.
@@ -254,15 +264,44 @@ class _GameScreenState extends State<GameScreen> {
         points_fold.pointsFrom(upTo) - points_fold.pointsFrom(before);
     final offer = await _offerFor(before, completed, isLatest: index == 0);
     if (!mounted) return;
+    final achieved = newlyAchieved(
+      points_fold.questsFrom(before, today),
+      points_fold.questsFrom(upTo, today),
+    );
     setState(() {
       _rating = computerRatingAround(completed, widget.gameId);
       _points = earned;
       _offer = offer;
-      _achieved = newlyAchieved(
-        points_fold.questsFrom(before, today),
-        points_fold.questsFrom(upTo, today),
-      );
+      _achieved = achieved;
     });
+    _report(completed, achieved, isLatest: index == 0);
+  }
+
+  /// Tells Play Games and Game Center what just happened, and waits for
+  /// nothing.
+  ///
+  /// **Not awaited, by design** (ticket 050 §7). This runs on the path that
+  /// renders the result panel, and a store outage must not hold that panel back
+  /// or raise anything the player has to dismiss. `GameServices` swallows its
+  /// own failures; this only has to not block.
+  ///
+  /// **Only for the most recent game**, the same `isLatest` the unlock offer
+  /// uses. Opening a finished game from the history list re-derives the same
+  /// diff, and reporting it again would submit a rating the player has since
+  /// moved past.
+  void _report(
+    List<GameDocument> completed,
+    List<QuestStatus> achieved, {
+    required bool isLatest,
+  }) {
+    final services = widget.services;
+    if (services == null || !isLatest) return;
+    // Pass and play never moves the rating (F12), so there is nothing to send
+    // and nothing that would be true to send.
+    if (_game?.mode == GameMode.vsComputer) {
+      unawaited(services.submitRating(computerRating(completed)));
+    }
+    unawaited(services.reportQuests([for (final q in achieved) q.quest.id]));
   }
 
   /// The next opponent, if this game's points are what made it affordable.
@@ -411,6 +450,7 @@ class _GameScreenState extends State<GameScreen> {
           gameId: next.id,
           random: widget.random,
           settings: widget.settings,
+          services: widget.services,
           opponentMove: widget.opponentMove,
         ),
       ),

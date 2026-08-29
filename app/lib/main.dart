@@ -13,6 +13,8 @@ import 'data/game_repository.dart';
 import 'data/local_game_repository.dart';
 import 'home/home_screen.dart';
 import 'l10n/app_localizations.dart';
+import 'services/achievements.dart';
+import 'services/games.dart';
 import 'shop/shop.dart';
 import 'theme.dart';
 
@@ -46,11 +48,23 @@ Future<void> main() async {
   );
   unawaited(shop.start());
 
+  // **Started, not awaited** -- the same shape as `Shop.start()` above and for
+  // the same reason (D351). `start()` only asks whether a player is already
+  // signed in; it never offers sign-in, which belongs to a moment the player
+  // chose rather than to the splash screen (ticket 050 §5).
+  final services = GameServices(
+    platform: const GamesServicesPlatformAdapter(),
+    isAndroid: Platform.isAndroid,
+    androidConfigured: playGamesConfigured,
+  );
+  unawaited(services.start());
+
   runApp(QuadrimApp(
     repository: repository,
     settings: repository,
     unlocks: repository,
     shop: shop,
+    services: services,
   ));
 }
 
@@ -63,6 +77,7 @@ class QuadrimApp extends StatefulWidget {
     this.locale,
     this.random,
     this.shop,
+    this.services,
     this.now,
   });
 
@@ -77,6 +92,13 @@ class QuadrimApp extends StatefulWidget {
   /// shop is the one dependency here that reaches off the device, so it is
   /// optional by construction rather than faked into existence (ticket 046).
   final Shop? shop;
+
+  /// Play Games Services and Game Center, or null in a test.
+  ///
+  /// Optional like [shop]: every widget test in this repository builds the app
+  /// without one, and a leaderboard that a test had to stub in order to open
+  /// the board would be a leaderboard that had escaped its own layer.
+  final GameServices? services;
 
   /// Injected in tests, like [random]. The meter and the streak are both
   /// day-shaped, so a test that cannot move the clock cannot reach either.
@@ -149,6 +171,7 @@ class _QuadrimAppState extends State<QuadrimApp> {
         unlocks: widget.unlocks,
         random: widget.random,
         shop: widget.shop,
+        services: widget.services,
         now: widget.now,
       ),
     );

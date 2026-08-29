@@ -1,6 +1,3 @@
-import 'package:quadrim_engine/quadrim_engine.dart';
-import 'package:quadrim_progression/quadrim_progression.dart';
-
 /// The forty-four achievements, and what each one is called on each store.
 ///
 /// **Forty-four of seventy-five quests, and the narrowing is deliberate**
@@ -15,6 +12,9 @@ import 'package:quadrim_progression/quadrim_progression.dart';
 /// cannot be deleted after publication on either store any more than a product
 /// id can (D213, D365).
 library;
+
+import 'package:quadrim_engine/quadrim_engine.dart';
+import 'package:quadrim_progression/quadrim_progression.dart';
 
 /// One achievement, and the two ids the stores know it by.
 class Achievement {
