@@ -458,3 +458,9 @@ prompts in a similar style for all volume/streak rungs
 for both stores i would like a description of what to do, including a list of id's and names. 
 I just added the images in the folder doc/designs
 ```
+
+**Prompt**
+```
+I would like 1 source for the achievement data and let check.sh generate whatever is needed.
+Also include a audit script that will check what's configured in the store to see if there is any drift that needs to be updated.
+```

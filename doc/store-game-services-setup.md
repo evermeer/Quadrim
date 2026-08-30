@@ -3,10 +3,27 @@
 Everything a person with the two consoles open needs: what to create, what to
 call it, which image to attach, and what to paste back into the code afterwards.
 
-The ids here are generated from `app/lib/services/achievements.dart` rather than
-typed, so they match what the app will actually report. **They are permanent once
-published** on either store, exactly like a product id (D213, D365) — there is no
-rename and no delete after the first release.
+**`doc/store/achievements.json` is the source of truth.** Names, descriptions,
+points and the icon each achievement uses are edited there and nowhere else; the
+ids and the ordering are *derived* in `app/lib/services/achievements.dart` from
+the opponent roster and the rung lists (D378, D379). The two are bound together
+by `app/test/store_catalogue_test.dart`, which fails if they drift.
+
+**Everything below the two marker comments is generated.** Regenerate after any
+edit to the JSON:
+
+```bash
+python tools/storegen/storegen.py --icons
+```
+
+That rewrites the tables in this file, writes `doc/store/play-achievements.csv`
+and `doc/store/gamecenter-achievements.csv` to work from, and resizes the source
+art to the 512×512 the consoles want, into `doc/store/icons/`. The prose in this
+file is hand-written and survives a regeneration.
+
+**They are permanent once published** on either store, exactly like a product id
+(D213, D365) — there is no rename and no delete after the first release. That is
+what `store_audit.py` is for; see the end of this document.
 
 ---
 
@@ -27,10 +44,16 @@ three years — was added at D379: two years to four was the longest gap on the
 ladder and the only one a player could sit inside for two whole years with
 nothing ahead of them.
 
-**Both stores want 512×512; the files are 1254×1254.** Both consoles accept
-larger and downscale, but 1254 to 512 is not an integer ratio — check a couple at
-final size and re-export at exactly 512 if any look soft. The forest art is
-detailed and this is where that shows.
+**Upload from `doc/store/icons/`, not from `doc/designs/`.** The sources are
+1254×1254; `storegen.py --icons` resamples them to the 512×512 both consoles ask
+for and names each one after its Quadrim key. Both consoles would accept the
+larger file and downscale it themselves, but 1254 to 512 is not an integer ratio
+and the forest art is detailed enough to show it — doing the resample once, on
+purpose, is the difference.
+
+They are **square, not circle-cut**: `artgen` masks the avatars to a disc for the
+app, and a store icon must not be, because Game Center renders a rounded square
+and a pre-cut circle inside one reads as a mistake.
 
 ---
 
@@ -162,6 +185,8 @@ one row.
 Points total **980**. Order: 31 opponents in roster order, then the five volume
 rungs, then the nine streak rungs.
 
+<!-- storegen:begin table -->
+
 | # | Quadrim key | Game Center ID | Image | Points | Name (EN) | Name (NL) |
 |---|---|---|---|---|---|---|
 | 1 | `beat:pebble` | `nl.evict.quadrim2.beat.pebble` | `pebble.png` | 5 | Pebble defeated | Pebble verslagen |
@@ -210,10 +235,14 @@ rungs, then the nine streak rungs.
 | 44 | `days_in_row:1080` | `nl.evict.quadrim2.days_in_row.1080` | `days_in_row_1080.png` | 85 | Three years | Drie jaar |
 | 45 | `days_in_row:1440` | `nl.evict.quadrim2.days_in_row.1440` | `days_in_row_1440.png` | 100 | Four years | Vier jaar |
 
+<!-- storegen:end table -->
+
 ## Descriptions
 
 Play takes one description per language; Game Center takes two, before and after
 earning. Both are given so neither console needs invention.
+
+<!-- storegen:begin descriptions -->
 
 | Quadrim key | Pre-earned (EN) | Earned (EN) | Pre-earned (NL) | Earned (NL) |
 |---|---|---|---|---|
@@ -263,6 +292,8 @@ earning. Both are given so neither console needs invention.
 | `days_in_row:1080` | Play on 1080 consecutive days. | You played 1080 days in a row. | Speel 1080 dagen achter elkaar. | Je hebt 1080 dagen op rij gespeeld. |
 | `days_in_row:1440` | Play on 1440 consecutive days. | You played 1440 days in a row. | Speel 1440 dagen achter elkaar. | Je hebt 1440 dagen op rij gespeeld. |
 
+<!-- storegen:end descriptions -->
+
 ---
 
 ## Afterwards: paste the ids back
@@ -286,3 +317,41 @@ In `app/lib/services/achievements.dart`:
 Then update the two privacy declarations in the same release (ticket 050 AC 10).
 Play **Data Safety** and the App Store **privacy labels** both currently say the
 app collects nothing, and a leaderboard entry makes that false.
+
+---
+
+## Checking the stores afterwards — the part that keeps paying
+
+Creating forty-five achievements is one afternoon and you can see the result.
+What nobody notices is the **drift**: a Dutch string edited in a console and not
+here, a points value nudged, an id that never matched in the first place. That
+last one cannot be repaired — achievements are permanent on both stores.
+
+```bash
+python tools/storegen/store_audit.py --export doc/store/exported.json
+```
+
+Diffs a saved export against the catalogue and exits non-zero on any
+disagreement, so it can gate a release. It reports three kinds of problem, and
+the distinction matters: **DIFFERS** can be fixed by editing the console;
+**MISSING** and **UNKNOWN** usually cannot, so the question becomes whether the
+catalogue is what should change.
+
+**Start with `--export` rather than the live flags.** The diff engine is pure and
+tested (`tools/storegen/test_store_audit.py`, run by `check.sh`); the two network
+adapters are not, and could not be verified when written:
+
+- **Google** — `games/v1configuration` is alive and `achievementConfigurations.list`
+  is documented, but the scope and response shape were never exercised against a
+  real project. *(Its sibling `imageConfigurations.upload` is explicitly
+  deprecated and errors, which is why the icons above are a manual step.)*
+- **Apple** — the App Store Connect API has a Game Center section, but its pages
+  render client-side and the endpoint list could not be read. The path in the
+  adapter is a best guess.
+
+Paste what a console shows into the export shape, diff that, and wire the live
+calls only once you have seen them work. The diff is the valuable half and it
+needs neither API.
+
+**`--google` is a no-op until the Play ids are filled in**, and says so rather
+than reporting forty-five missing achievements.

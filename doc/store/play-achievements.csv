@@ -1,0 +1,46 @@
+quadrim_key,name_en,description_en,name_nl,description_nl,xp,icon,type,initial_state
+beat:pebble,Pebble defeated,Win a game against Pebble.,Pebble verslagen,Win een partij tegen Pebble.,5,pebble.png,standard,revealed
+beat:twig,Twig defeated,Win a game against Twig.,Twig verslagen,Win een partij tegen Twig.,5,twig.png,standard,revealed
+beat:mote,Mote defeated,Win a game against Mote.,Mote verslagen,Win een partij tegen Mote.,5,mote.png,standard,revealed
+beat:hazel,Hazel defeated,Win a game against Hazel.,Hazel verslagen,Win een partij tegen Hazel.,5,hazel.png,standard,revealed
+beat:clover,Clover defeated,Win a game against Clover.,Clover verslagen,Win een partij tegen Clover.,5,clover.png,standard,revealed
+beat:sorrel,Sorrel defeated,Win a game against Sorrel.,Sorrel verslagen,Win een partij tegen Sorrel.,5,sorrel.png,standard,revealed
+beat:bramble,Bramble defeated,Win a game against Bramble.,Bramble verslagen,Win een partij tegen Bramble.,10,bramble.png,standard,revealed
+beat:juniper,Juniper defeated,Win a game against Juniper.,Juniper verslagen,Win een partij tegen Juniper.,10,juniper.png,standard,revealed
+beat:bracken,Bracken defeated,Win a game against Bracken.,Bracken verslagen,Win een partij tegen Bracken.,10,bracken.png,standard,revealed
+beat:willow,Willow defeated,Win a game against Willow.,Willow verslagen,Win een partij tegen Willow.,10,willow.png,standard,revealed
+beat:rowan,Rowan defeated,Win a game against Rowan.,Rowan verslagen,Win een partij tegen Rowan.,10,rowan.png,standard,revealed
+beat:aspen,Aspen defeated,Win a game against Aspen.,Aspen verslagen,Win een partij tegen Aspen.,10,aspen.png,standard,revealed
+beat:vireo,Vireo defeated,Win a game against Vireo.,Vireo verslagen,Win een partij tegen Vireo.,15,vireo.png,standard,revealed
+beat:finch,Finch defeated,Win a game against Finch.,Finch verslagen,Win een partij tegen Finch.,15,finch.png,standard,revealed
+beat:kestrel,Kestrel defeated,Win a game against Kestrel.,Kestrel verslagen,Win een partij tegen Kestrel.,15,kestrel.png,standard,revealed
+beat:osprey,Osprey defeated,Win a game against Osprey.,Osprey verslagen,Win een partij tegen Osprey.,15,osprey.png,standard,revealed
+beat:heron,Heron defeated,Win a game against Heron.,Heron verslagen,Win een partij tegen Heron.,15,heron.png,standard,revealed
+beat:marlin,Marlin defeated,Win a game against Marlin.,Marlin verslagen,Win een partij tegen Marlin.,15,marlin.png,standard,revealed
+beat:lynx,Lynx defeated,Win a game against Lynx.,Lynx verslagen,Win een partij tegen Lynx.,20,lynx.png,standard,revealed
+beat:sable,Sable defeated,Win a game against Sable.,Sable verslagen,Win een partij tegen Sable.,20,sable.png,standard,revealed
+beat:ember,Ember defeated,Win a game against Ember.,Ember verslagen,Win een partij tegen Ember.,20,ember.png,standard,revealed
+beat:lyra,Lyra defeated,Win a game against Lyra.,Lyra verslagen,Win een partij tegen Lyra.,20,lyra.png,standard,revealed
+beat:onyx,Onyx defeated,Win a game against Onyx.,Onyx verslagen,Win een partij tegen Onyx.,20,onyx.png,standard,revealed
+beat:corvus,Corvus defeated,Win a game against Corvus.,Corvus verslagen,Win een partij tegen Corvus.,20,corvus.png,standard,revealed
+beat:basalt,Basalt defeated,Win a game against Basalt.,Basalt verslagen,Win een partij tegen Basalt.,30,basalt.png,standard,revealed
+beat:cairn,Cairn defeated,Win a game against Cairn.,Cairn verslagen,Win een partij tegen Cairn.,30,cairn.png,standard,revealed
+beat:flint,Flint defeated,Win a game against Flint.,Flint verslagen,Win een partij tegen Flint.,30,flint.png,standard,revealed
+beat:quartz,Quartz defeated,Win a game against Quartz.,Quartz verslagen,Win een partij tegen Quartz.,30,quartz.png,standard,revealed
+beat:titan,Titan defeated,Win a game against Titan.,Titan verslagen,Win een partij tegen Titan.,30,titan.png,standard,revealed
+beat:oracle,Oracle defeated,Win a game against Oracle.,Oracle verslagen,Win een partij tegen Oracle.,30,oracle.png,standard,revealed
+beat:quadrim_prime,Quadrim Prime defeated,Win a game against Quadrim Prime.,Quadrim Prime verslagen,Win een partij tegen Quadrim Prime.,30,quadrim_prime.png,standard,revealed
+games_in_day:5,Five in a day,Finish 5 games in a single day.,Vijf op één dag,Speel 5 partijen op één dag uit.,5,games_in_day_5.png,standard,revealed
+games_in_day:10,Ten in a day,Finish 10 games in a single day.,Tien op één dag,Speel 10 partijen op één dag uit.,10,games_in_day_10.png,standard,revealed
+games_in_day:20,Twenty in a day,Finish 20 games in a single day.,Twintig op één dag,Speel 20 partijen op één dag uit.,15,games_in_day_20.png,standard,revealed
+games_in_day:50,Fifty in a day,Finish 50 games in a single day.,Vijftig op één dag,Speel 50 partijen op één dag uit.,25,games_in_day_50.png,standard,revealed
+games_in_day:100,A hundred in a day,Finish 100 games in a single day.,Honderd op één dag,Speel 100 partijen op één dag uit.,40,games_in_day_100.png,standard,revealed
+days_in_row:5,Five days running,Play on 5 consecutive days.,Vijf dagen op rij,Speel 5 dagen achter elkaar.,5,days_in_row_5.png,standard,revealed
+days_in_row:10,Ten days running,Play on 10 consecutive days.,Tien dagen op rij,Speel 10 dagen achter elkaar.,10,days_in_row_10.png,standard,revealed
+days_in_row:30,Thirty days running,Play on 30 consecutive days.,Dertig dagen op rij,Speel 30 dagen achter elkaar.,15,days_in_row_30.png,standard,revealed
+days_in_row:90,Ninety days running,Play on 90 consecutive days.,Negentig dagen op rij,Speel 90 dagen achter elkaar.,20,days_in_row_90.png,standard,revealed
+days_in_row:180,Half a year,Play on 180 consecutive days.,Een half jaar,Speel 180 dagen achter elkaar.,30,days_in_row_180.png,standard,revealed
+days_in_row:360,A full year,Play on 360 consecutive days.,Een heel jaar,Speel 360 dagen achter elkaar.,45,days_in_row_360.png,standard,revealed
+days_in_row:720,Two years,Play on 720 consecutive days.,Twee jaar,Speel 720 dagen achter elkaar.,65,days_in_row_720.png,standard,revealed
+days_in_row:1080,Three years,Play on 1080 consecutive days.,Drie jaar,Speel 1080 dagen achter elkaar.,85,days_in_row_1080.png,standard,revealed
+days_in_row:1440,Four years,Play on 1440 consecutive days.,Vier jaar,Speel 1440 dagen achter elkaar.,100,days_in_row_1440.png,standard,revealed

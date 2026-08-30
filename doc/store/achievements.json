@@ -1,0 +1,792 @@
+{
+  "comment": [
+    "The hand-authored half of the store catalogue: names, descriptions,",
+    "points and the icon each achievement uses. The ids and the ordering are",
+    "DERIVED in app/lib/services/achievements.dart from the opponent roster",
+    "and the rung lists (D378) -- this file must agree with that derivation,",
+    "and app/test/store_catalogue_test.dart is what proves it does.",
+    "",
+    "playGamesId is null until the Play Console issues one. See",
+    "doc/store-game-services-setup.md."
+  ],
+  "leaderboard": {
+    "key": "rating",
+    "gameCenterId": "nl.evict.quadrim2.rating",
+    "playGamesId": null,
+    "en": {
+      "name": "Computer rating",
+      "description": "Your rating against the computer opponents."
+    },
+    "nl": {
+      "name": "Computerrating",
+      "description": "Je rating tegen de computertegenstanders."
+    }
+  },
+  "achievements": [
+    {
+      "key": "beat:pebble",
+      "gameCenterId": "nl.evict.quadrim2.beat.pebble",
+      "playGamesId": null,
+      "icon": "pebble.png",
+      "points": 5,
+      "en": {
+        "name": "Pebble defeated",
+        "locked": "Win a game against Pebble.",
+        "earned": "You beat Pebble."
+      },
+      "nl": {
+        "name": "Pebble verslagen",
+        "locked": "Win een partij tegen Pebble.",
+        "earned": "Je hebt Pebble verslagen."
+      }
+    },
+    {
+      "key": "beat:twig",
+      "gameCenterId": "nl.evict.quadrim2.beat.twig",
+      "playGamesId": null,
+      "icon": "twig.png",
+      "points": 5,
+      "en": {
+        "name": "Twig defeated",
+        "locked": "Win a game against Twig.",
+        "earned": "You beat Twig."
+      },
+      "nl": {
+        "name": "Twig verslagen",
+        "locked": "Win een partij tegen Twig.",
+        "earned": "Je hebt Twig verslagen."
+      }
+    },
+    {
+      "key": "beat:mote",
+      "gameCenterId": "nl.evict.quadrim2.beat.mote",
+      "playGamesId": null,
+      "icon": "mote.png",
+      "points": 5,
+      "en": {
+        "name": "Mote defeated",
+        "locked": "Win a game against Mote.",
+        "earned": "You beat Mote."
+      },
+      "nl": {
+        "name": "Mote verslagen",
+        "locked": "Win een partij tegen Mote.",
+        "earned": "Je hebt Mote verslagen."
+      }
+    },
+    {
+      "key": "beat:hazel",
+      "gameCenterId": "nl.evict.quadrim2.beat.hazel",
+      "playGamesId": null,
+      "icon": "hazel.png",
+      "points": 5,
+      "en": {
+        "name": "Hazel defeated",
+        "locked": "Win a game against Hazel.",
+        "earned": "You beat Hazel."
+      },
+      "nl": {
+        "name": "Hazel verslagen",
+        "locked": "Win een partij tegen Hazel.",
+        "earned": "Je hebt Hazel verslagen."
+      }
+    },
+    {
+      "key": "beat:clover",
+      "gameCenterId": "nl.evict.quadrim2.beat.clover",
+      "playGamesId": null,
+      "icon": "clover.png",
+      "points": 5,
+      "en": {
+        "name": "Clover defeated",
+        "locked": "Win a game against Clover.",
+        "earned": "You beat Clover."
+      },
+      "nl": {
+        "name": "Clover verslagen",
+        "locked": "Win een partij tegen Clover.",
+        "earned": "Je hebt Clover verslagen."
+      }
+    },
+    {
+      "key": "beat:sorrel",
+      "gameCenterId": "nl.evict.quadrim2.beat.sorrel",
+      "playGamesId": null,
+      "icon": "sorrel.png",
+      "points": 5,
+      "en": {
+        "name": "Sorrel defeated",
+        "locked": "Win a game against Sorrel.",
+        "earned": "You beat Sorrel."
+      },
+      "nl": {
+        "name": "Sorrel verslagen",
+        "locked": "Win een partij tegen Sorrel.",
+        "earned": "Je hebt Sorrel verslagen."
+      }
+    },
+    {
+      "key": "beat:bramble",
+      "gameCenterId": "nl.evict.quadrim2.beat.bramble",
+      "playGamesId": null,
+      "icon": "bramble.png",
+      "points": 10,
+      "en": {
+        "name": "Bramble defeated",
+        "locked": "Win a game against Bramble.",
+        "earned": "You beat Bramble."
+      },
+      "nl": {
+        "name": "Bramble verslagen",
+        "locked": "Win een partij tegen Bramble.",
+        "earned": "Je hebt Bramble verslagen."
+      }
+    },
+    {
+      "key": "beat:juniper",
+      "gameCenterId": "nl.evict.quadrim2.beat.juniper",
+      "playGamesId": null,
+      "icon": "juniper.png",
+      "points": 10,
+      "en": {
+        "name": "Juniper defeated",
+        "locked": "Win a game against Juniper.",
+        "earned": "You beat Juniper."
+      },
+      "nl": {
+        "name": "Juniper verslagen",
+        "locked": "Win een partij tegen Juniper.",
+        "earned": "Je hebt Juniper verslagen."
+      }
+    },
+    {
+      "key": "beat:bracken",
+      "gameCenterId": "nl.evict.quadrim2.beat.bracken",
+      "playGamesId": null,
+      "icon": "bracken.png",
+      "points": 10,
+      "en": {
+        "name": "Bracken defeated",
+        "locked": "Win a game against Bracken.",
+        "earned": "You beat Bracken."
+      },
+      "nl": {
+        "name": "Bracken verslagen",
+        "locked": "Win een partij tegen Bracken.",
+        "earned": "Je hebt Bracken verslagen."
+      }
+    },
+    {
+      "key": "beat:willow",
+      "gameCenterId": "nl.evict.quadrim2.beat.willow",
+      "playGamesId": null,
+      "icon": "willow.png",
+      "points": 10,
+      "en": {
+        "name": "Willow defeated",
+        "locked": "Win a game against Willow.",
+        "earned": "You beat Willow."
+      },
+      "nl": {
+        "name": "Willow verslagen",
+        "locked": "Win een partij tegen Willow.",
+        "earned": "Je hebt Willow verslagen."
+      }
+    },
+    {
+      "key": "beat:rowan",
+      "gameCenterId": "nl.evict.quadrim2.beat.rowan",
+      "playGamesId": null,
+      "icon": "rowan.png",
+      "points": 10,
+      "en": {
+        "name": "Rowan defeated",
+        "locked": "Win a game against Rowan.",
+        "earned": "You beat Rowan."
+      },
+      "nl": {
+        "name": "Rowan verslagen",
+        "locked": "Win een partij tegen Rowan.",
+        "earned": "Je hebt Rowan verslagen."
+      }
+    },
+    {
+      "key": "beat:aspen",
+      "gameCenterId": "nl.evict.quadrim2.beat.aspen",
+      "playGamesId": null,
+      "icon": "aspen.png",
+      "points": 10,
+      "en": {
+        "name": "Aspen defeated",
+        "locked": "Win a game against Aspen.",
+        "earned": "You beat Aspen."
+      },
+      "nl": {
+        "name": "Aspen verslagen",
+        "locked": "Win een partij tegen Aspen.",
+        "earned": "Je hebt Aspen verslagen."
+      }
+    },
+    {
+      "key": "beat:vireo",
+      "gameCenterId": "nl.evict.quadrim2.beat.vireo",
+      "playGamesId": null,
+      "icon": "vireo.png",
+      "points": 15,
+      "en": {
+        "name": "Vireo defeated",
+        "locked": "Win a game against Vireo.",
+        "earned": "You beat Vireo."
+      },
+      "nl": {
+        "name": "Vireo verslagen",
+        "locked": "Win een partij tegen Vireo.",
+        "earned": "Je hebt Vireo verslagen."
+      }
+    },
+    {
+      "key": "beat:finch",
+      "gameCenterId": "nl.evict.quadrim2.beat.finch",
+      "playGamesId": null,
+      "icon": "finch.png",
+      "points": 15,
+      "en": {
+        "name": "Finch defeated",
+        "locked": "Win a game against Finch.",
+        "earned": "You beat Finch."
+      },
+      "nl": {
+        "name": "Finch verslagen",
+        "locked": "Win een partij tegen Finch.",
+        "earned": "Je hebt Finch verslagen."
+      }
+    },
+    {
+      "key": "beat:kestrel",
+      "gameCenterId": "nl.evict.quadrim2.beat.kestrel",
+      "playGamesId": null,
+      "icon": "kestrel.png",
+      "points": 15,
+      "en": {
+        "name": "Kestrel defeated",
+        "locked": "Win a game against Kestrel.",
+        "earned": "You beat Kestrel."
+      },
+      "nl": {
+        "name": "Kestrel verslagen",
+        "locked": "Win een partij tegen Kestrel.",
+        "earned": "Je hebt Kestrel verslagen."
+      }
+    },
+    {
+      "key": "beat:osprey",
+      "gameCenterId": "nl.evict.quadrim2.beat.osprey",
+      "playGamesId": null,
+      "icon": "osprey.png",
+      "points": 15,
+      "en": {
+        "name": "Osprey defeated",
+        "locked": "Win a game against Osprey.",
+        "earned": "You beat Osprey."
+      },
+      "nl": {
+        "name": "Osprey verslagen",
+        "locked": "Win een partij tegen Osprey.",
+        "earned": "Je hebt Osprey verslagen."
+      }
+    },
+    {
+      "key": "beat:heron",
+      "gameCenterId": "nl.evict.quadrim2.beat.heron",
+      "playGamesId": null,
+      "icon": "heron.png",
+      "points": 15,
+      "en": {
+        "name": "Heron defeated",
+        "locked": "Win a game against Heron.",
+        "earned": "You beat Heron."
+      },
+      "nl": {
+        "name": "Heron verslagen",
+        "locked": "Win een partij tegen Heron.",
+        "earned": "Je hebt Heron verslagen."
+      }
+    },
+    {
+      "key": "beat:marlin",
+      "gameCenterId": "nl.evict.quadrim2.beat.marlin",
+      "playGamesId": null,
+      "icon": "marlin.png",
+      "points": 15,
+      "en": {
+        "name": "Marlin defeated",
+        "locked": "Win a game against Marlin.",
+        "earned": "You beat Marlin."
+      },
+      "nl": {
+        "name": "Marlin verslagen",
+        "locked": "Win een partij tegen Marlin.",
+        "earned": "Je hebt Marlin verslagen."
+      }
+    },
+    {
+      "key": "beat:lynx",
+      "gameCenterId": "nl.evict.quadrim2.beat.lynx",
+      "playGamesId": null,
+      "icon": "lynx.png",
+      "points": 20,
+      "en": {
+        "name": "Lynx defeated",
+        "locked": "Win a game against Lynx.",
+        "earned": "You beat Lynx."
+      },
+      "nl": {
+        "name": "Lynx verslagen",
+        "locked": "Win een partij tegen Lynx.",
+        "earned": "Je hebt Lynx verslagen."
+      }
+    },
+    {
+      "key": "beat:sable",
+      "gameCenterId": "nl.evict.quadrim2.beat.sable",
+      "playGamesId": null,
+      "icon": "sable.png",
+      "points": 20,
+      "en": {
+        "name": "Sable defeated",
+        "locked": "Win a game against Sable.",
+        "earned": "You beat Sable."
+      },
+      "nl": {
+        "name": "Sable verslagen",
+        "locked": "Win een partij tegen Sable.",
+        "earned": "Je hebt Sable verslagen."
+      }
+    },
+    {
+      "key": "beat:ember",
+      "gameCenterId": "nl.evict.quadrim2.beat.ember",
+      "playGamesId": null,
+      "icon": "ember.png",
+      "points": 20,
+      "en": {
+        "name": "Ember defeated",
+        "locked": "Win a game against Ember.",
+        "earned": "You beat Ember."
+      },
+      "nl": {
+        "name": "Ember verslagen",
+        "locked": "Win een partij tegen Ember.",
+        "earned": "Je hebt Ember verslagen."
+      }
+    },
+    {
+      "key": "beat:lyra",
+      "gameCenterId": "nl.evict.quadrim2.beat.lyra",
+      "playGamesId": null,
+      "icon": "lyra.png",
+      "points": 20,
+      "en": {
+        "name": "Lyra defeated",
+        "locked": "Win a game against Lyra.",
+        "earned": "You beat Lyra."
+      },
+      "nl": {
+        "name": "Lyra verslagen",
+        "locked": "Win een partij tegen Lyra.",
+        "earned": "Je hebt Lyra verslagen."
+      }
+    },
+    {
+      "key": "beat:onyx",
+      "gameCenterId": "nl.evict.quadrim2.beat.onyx",
+      "playGamesId": null,
+      "icon": "onyx.png",
+      "points": 20,
+      "en": {
+        "name": "Onyx defeated",
+        "locked": "Win a game against Onyx.",
+        "earned": "You beat Onyx."
+      },
+      "nl": {
+        "name": "Onyx verslagen",
+        "locked": "Win een partij tegen Onyx.",
+        "earned": "Je hebt Onyx verslagen."
+      }
+    },
+    {
+      "key": "beat:corvus",
+      "gameCenterId": "nl.evict.quadrim2.beat.corvus",
+      "playGamesId": null,
+      "icon": "corvus.png",
+      "points": 20,
+      "en": {
+        "name": "Corvus defeated",
+        "locked": "Win a game against Corvus.",
+        "earned": "You beat Corvus."
+      },
+      "nl": {
+        "name": "Corvus verslagen",
+        "locked": "Win een partij tegen Corvus.",
+        "earned": "Je hebt Corvus verslagen."
+      }
+    },
+    {
+      "key": "beat:basalt",
+      "gameCenterId": "nl.evict.quadrim2.beat.basalt",
+      "playGamesId": null,
+      "icon": "basalt.png",
+      "points": 30,
+      "en": {
+        "name": "Basalt defeated",
+        "locked": "Win a game against Basalt.",
+        "earned": "You beat Basalt."
+      },
+      "nl": {
+        "name": "Basalt verslagen",
+        "locked": "Win een partij tegen Basalt.",
+        "earned": "Je hebt Basalt verslagen."
+      }
+    },
+    {
+      "key": "beat:cairn",
+      "gameCenterId": "nl.evict.quadrim2.beat.cairn",
+      "playGamesId": null,
+      "icon": "cairn.png",
+      "points": 30,
+      "en": {
+        "name": "Cairn defeated",
+        "locked": "Win a game against Cairn.",
+        "earned": "You beat Cairn."
+      },
+      "nl": {
+        "name": "Cairn verslagen",
+        "locked": "Win een partij tegen Cairn.",
+        "earned": "Je hebt Cairn verslagen."
+      }
+    },
+    {
+      "key": "beat:flint",
+      "gameCenterId": "nl.evict.quadrim2.beat.flint",
+      "playGamesId": null,
+      "icon": "flint.png",
+      "points": 30,
+      "en": {
+        "name": "Flint defeated",
+        "locked": "Win a game against Flint.",
+        "earned": "You beat Flint."
+      },
+      "nl": {
+        "name": "Flint verslagen",
+        "locked": "Win een partij tegen Flint.",
+        "earned": "Je hebt Flint verslagen."
+      }
+    },
+    {
+      "key": "beat:quartz",
+      "gameCenterId": "nl.evict.quadrim2.beat.quartz",
+      "playGamesId": null,
+      "icon": "quartz.png",
+      "points": 30,
+      "en": {
+        "name": "Quartz defeated",
+        "locked": "Win a game against Quartz.",
+        "earned": "You beat Quartz."
+      },
+      "nl": {
+        "name": "Quartz verslagen",
+        "locked": "Win een partij tegen Quartz.",
+        "earned": "Je hebt Quartz verslagen."
+      }
+    },
+    {
+      "key": "beat:titan",
+      "gameCenterId": "nl.evict.quadrim2.beat.titan",
+      "playGamesId": null,
+      "icon": "titan.png",
+      "points": 30,
+      "en": {
+        "name": "Titan defeated",
+        "locked": "Win a game against Titan.",
+        "earned": "You beat Titan."
+      },
+      "nl": {
+        "name": "Titan verslagen",
+        "locked": "Win een partij tegen Titan.",
+        "earned": "Je hebt Titan verslagen."
+      }
+    },
+    {
+      "key": "beat:oracle",
+      "gameCenterId": "nl.evict.quadrim2.beat.oracle",
+      "playGamesId": null,
+      "icon": "oracle.png",
+      "points": 30,
+      "en": {
+        "name": "Oracle defeated",
+        "locked": "Win a game against Oracle.",
+        "earned": "You beat Oracle."
+      },
+      "nl": {
+        "name": "Oracle verslagen",
+        "locked": "Win een partij tegen Oracle.",
+        "earned": "Je hebt Oracle verslagen."
+      }
+    },
+    {
+      "key": "beat:quadrim_prime",
+      "gameCenterId": "nl.evict.quadrim2.beat.quadrim_prime",
+      "playGamesId": null,
+      "icon": "quadrim_prime.png",
+      "points": 30,
+      "en": {
+        "name": "Quadrim Prime defeated",
+        "locked": "Win a game against Quadrim Prime.",
+        "earned": "You beat Quadrim Prime."
+      },
+      "nl": {
+        "name": "Quadrim Prime verslagen",
+        "locked": "Win een partij tegen Quadrim Prime.",
+        "earned": "Je hebt Quadrim Prime verslagen."
+      }
+    },
+    {
+      "key": "games_in_day:5",
+      "gameCenterId": "nl.evict.quadrim2.games_in_day.5",
+      "playGamesId": null,
+      "icon": "games_in_day_5.png",
+      "points": 5,
+      "en": {
+        "name": "Five in a day",
+        "locked": "Finish 5 games in a single day.",
+        "earned": "You finished 5 games in a day."
+      },
+      "nl": {
+        "name": "Vijf op één dag",
+        "locked": "Speel 5 partijen op één dag uit.",
+        "earned": "Je hebt 5 partijen op één dag gespeeld."
+      }
+    },
+    {
+      "key": "games_in_day:10",
+      "gameCenterId": "nl.evict.quadrim2.games_in_day.10",
+      "playGamesId": null,
+      "icon": "games_in_day_10.png",
+      "points": 10,
+      "en": {
+        "name": "Ten in a day",
+        "locked": "Finish 10 games in a single day.",
+        "earned": "You finished 10 games in a day."
+      },
+      "nl": {
+        "name": "Tien op één dag",
+        "locked": "Speel 10 partijen op één dag uit.",
+        "earned": "Je hebt 10 partijen op één dag gespeeld."
+      }
+    },
+    {
+      "key": "games_in_day:20",
+      "gameCenterId": "nl.evict.quadrim2.games_in_day.20",
+      "playGamesId": null,
+      "icon": "games_in_day_20.png",
+      "points": 15,
+      "en": {
+        "name": "Twenty in a day",
+        "locked": "Finish 20 games in a single day.",
+        "earned": "You finished 20 games in a day."
+      },
+      "nl": {
+        "name": "Twintig op één dag",
+        "locked": "Speel 20 partijen op één dag uit.",
+        "earned": "Je hebt 20 partijen op één dag gespeeld."
+      }
+    },
+    {
+      "key": "games_in_day:50",
+      "gameCenterId": "nl.evict.quadrim2.games_in_day.50",
+      "playGamesId": null,
+      "icon": "games_in_day_50.png",
+      "points": 25,
+      "en": {
+        "name": "Fifty in a day",
+        "locked": "Finish 50 games in a single day.",
+        "earned": "You finished 50 games in a day."
+      },
+      "nl": {
+        "name": "Vijftig op één dag",
+        "locked": "Speel 50 partijen op één dag uit.",
+        "earned": "Je hebt 50 partijen op één dag gespeeld."
+      }
+    },
+    {
+      "key": "games_in_day:100",
+      "gameCenterId": "nl.evict.quadrim2.games_in_day.100",
+      "playGamesId": null,
+      "icon": "games_in_day_100.png",
+      "points": 40,
+      "en": {
+        "name": "A hundred in a day",
+        "locked": "Finish 100 games in a single day.",
+        "earned": "You finished 100 games in a day."
+      },
+      "nl": {
+        "name": "Honderd op één dag",
+        "locked": "Speel 100 partijen op één dag uit.",
+        "earned": "Je hebt 100 partijen op één dag gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:5",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.5",
+      "playGamesId": null,
+      "icon": "days_in_row_5.png",
+      "points": 5,
+      "en": {
+        "name": "Five days running",
+        "locked": "Play on 5 consecutive days.",
+        "earned": "You played 5 days in a row."
+      },
+      "nl": {
+        "name": "Vijf dagen op rij",
+        "locked": "Speel 5 dagen achter elkaar.",
+        "earned": "Je hebt 5 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:10",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.10",
+      "playGamesId": null,
+      "icon": "days_in_row_10.png",
+      "points": 10,
+      "en": {
+        "name": "Ten days running",
+        "locked": "Play on 10 consecutive days.",
+        "earned": "You played 10 days in a row."
+      },
+      "nl": {
+        "name": "Tien dagen op rij",
+        "locked": "Speel 10 dagen achter elkaar.",
+        "earned": "Je hebt 10 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:30",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.30",
+      "playGamesId": null,
+      "icon": "days_in_row_30.png",
+      "points": 15,
+      "en": {
+        "name": "Thirty days running",
+        "locked": "Play on 30 consecutive days.",
+        "earned": "You played 30 days in a row."
+      },
+      "nl": {
+        "name": "Dertig dagen op rij",
+        "locked": "Speel 30 dagen achter elkaar.",
+        "earned": "Je hebt 30 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:90",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.90",
+      "playGamesId": null,
+      "icon": "days_in_row_90.png",
+      "points": 20,
+      "en": {
+        "name": "Ninety days running",
+        "locked": "Play on 90 consecutive days.",
+        "earned": "You played 90 days in a row."
+      },
+      "nl": {
+        "name": "Negentig dagen op rij",
+        "locked": "Speel 90 dagen achter elkaar.",
+        "earned": "Je hebt 90 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:180",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.180",
+      "playGamesId": null,
+      "icon": "days_in_row_180.png",
+      "points": 30,
+      "en": {
+        "name": "Half a year",
+        "locked": "Play on 180 consecutive days.",
+        "earned": "You played 180 days in a row."
+      },
+      "nl": {
+        "name": "Een half jaar",
+        "locked": "Speel 180 dagen achter elkaar.",
+        "earned": "Je hebt 180 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:360",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.360",
+      "playGamesId": null,
+      "icon": "days_in_row_360.png",
+      "points": 45,
+      "en": {
+        "name": "A full year",
+        "locked": "Play on 360 consecutive days.",
+        "earned": "You played 360 days in a row."
+      },
+      "nl": {
+        "name": "Een heel jaar",
+        "locked": "Speel 360 dagen achter elkaar.",
+        "earned": "Je hebt 360 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:720",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.720",
+      "playGamesId": null,
+      "icon": "days_in_row_720.png",
+      "points": 65,
+      "en": {
+        "name": "Two years",
+        "locked": "Play on 720 consecutive days.",
+        "earned": "You played 720 days in a row."
+      },
+      "nl": {
+        "name": "Twee jaar",
+        "locked": "Speel 720 dagen achter elkaar.",
+        "earned": "Je hebt 720 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:1080",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.1080",
+      "playGamesId": null,
+      "icon": "days_in_row_1080.png",
+      "points": 85,
+      "en": {
+        "name": "Three years",
+        "locked": "Play on 1080 consecutive days.",
+        "earned": "You played 1080 days in a row."
+      },
+      "nl": {
+        "name": "Drie jaar",
+        "locked": "Speel 1080 dagen achter elkaar.",
+        "earned": "Je hebt 1080 dagen op rij gespeeld."
+      }
+    },
+    {
+      "key": "days_in_row:1440",
+      "gameCenterId": "nl.evict.quadrim2.days_in_row.1440",
+      "playGamesId": null,
+      "icon": "days_in_row_1440.png",
+      "points": 100,
+      "en": {
+        "name": "Four years",
+        "locked": "Play on 1440 consecutive days.",
+        "earned": "You played 1440 days in a row."
+      },
+      "nl": {
+        "name": "Vier jaar",
+        "locked": "Speel 1440 dagen achter elkaar.",
+        "earned": "Je hebt 1440 dagen op rij gespeeld."
+      }
+    }
+  ]
+}

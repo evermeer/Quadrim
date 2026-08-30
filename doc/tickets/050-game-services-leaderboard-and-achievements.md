@@ -276,6 +276,13 @@ gives a build that launches and then fails at sign-in.
 
 ### What has to happen next, and by whom
 
+**Tooling for the console work exists** (`tools/storegen/`):
+`doc/store/achievements.json` is the source of truth for names, descriptions,
+points and icons; `storegen.py` regenerates the setup guide's tables, two CSVs
+and the 512x512 icons; `store_catalogue_test.dart` binds the JSON to the derived
+catalogue; and `store_audit.py` diffs a store back against it. `check.sh` runs
+both test halves.
+
 1. **The Play Games console**: a project, an OAuth2 client, the app linked, and
    the SHA-1 of **Google's** app-signing certificate rather than the local upload
    key. Then the 44 achievements and the leaderboard, and their ids pasted into

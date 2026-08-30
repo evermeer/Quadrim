@@ -132,6 +132,26 @@ else
   echo "   (python3 absent - the privacy manifest was NOT parsed)"
 fi
 
+echo "== the store catalogue's diff engine =="
+# Ticket 050's audit (tools/storegen/store_audit.py) is what catches a store and
+# doc/store/achievements.json drifting apart, and an id typed wrong is permanent
+# (D213, D365). Its two network adapters cannot be tested here and are not; the
+# diff itself is pure and is, because a report nobody trusts is a report nobody
+# reads.
+#
+# Guarded on python3 like the privacy manifest above, and it says so when it
+# skips rather than passing silently -- the whole lesson of D363.
+#
+# The Dart half of the same seam is app/test/store_catalogue_test.dart, which
+# runs in the app suite below and needs no guard.
+if command -v python3 >/dev/null 2>&1; then
+  if ! (cd tools/storegen && python3 test_store_audit.py); then
+    echo "FAIL: the store audit's diff engine is broken (above)"; fail=1
+  fi
+else
+  echo "   (python3 absent - the store audit's tests did NOT run)"
+fi
+
 echo "== the strategy dictionary's attribution is still in the app =="
 # Its terms permit use only "as long as its source is credited", and it is the
 # built app that reaches people. A grep, because the alternative is trusting
