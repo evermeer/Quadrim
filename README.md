@@ -434,3 +434,27 @@ Closed test is going okay. You can set this ticket to done because it's now just
 noice here. The same goes for ticket 24 and 49. Ask me when in doubt.
 ```
 
+Ask for game center and play game support
+
+**Prompt**
+```
+I would like to implement the platform specific game support for leaderboards and achievement.
+The leaderboards will be for the users Elo Rating and the acchievements will be the same as the ones that are already in the app
+If there are any other services that could aply to Quadrim then i would like to know the details and getting asked if i would like to implement it.
+For Google see https://play.google.com/console/about/levelup/#case-studies and https://developer.android.com/games/pgs/start for documentation
+For Apple Game Center see https://developer.apple.com/games-app/ for information and https://developer.apple.com/documentation/gamekit for documentation
+Ask clarifying questions if anything is unclear
+```
+
+
+**Prompt**
+```
+look at avatars-overview.md to see what prompt i made for creating the avatars. Can you give me 
+prompts in a similar style for all volume/streak rungs
+```
+
+**Prompt**
+```
+for both stores i would like a description of what to do, including a list of id's and names. 
+I just added the images in the folder doc/designs
+```
