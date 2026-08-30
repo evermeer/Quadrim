@@ -1,6 +1,6 @@
-# Achievement icons — the thirteen volume and streak rungs
+# Achievement icons — the fourteen volume and streak rungs
 
-Prompts for the thirteen achievement icons ticket 050 needs and the opponent
+Prompts for the fourteen achievement icons ticket 050 needs and the opponent
 avatars do not cover. Written in the style of
 [avatars-overview.md](avatars-overview.md): one comma-separated phrase, subject
 first, then physical detail, a named palette, the setting, the role, and the
@@ -10,7 +10,7 @@ The other thirty-one achievements are the per-opponent "you have beaten this
 opponent" rungs, and those reuse the avatar in `designs/<id>.png` — thirty-one
 portraits that already exist and already say exactly what the achievement means.
 
-## Three constraints these prompts are built around
+## Four constraints these prompts are built around
 
 **No numerals and no words in the art** (D297). The rule that keeps the wooden
 signs blank and lets the app letter them applies here for the same reason and one
@@ -22,15 +22,23 @@ carried by the picture.
 and 10; so does the streak. "Five" and "five" are the same word and must not be
 the same picture, so the families are drawn from different worlds:
 
-| Family | Motif | Reads as |
-|---|---|---|
-| Games in one day | **Glowing carved game cubes**, stacked | geometric, gold, hot, piled up |
-| Consecutive days | **A growing tree**, seed to world-tree | organic, green, vertical, slow |
+| Family | Motif | Files | Reads as |
+|---|---|---|---|
+| Games in one day | **Glowing carved game cubes**, stacked | `games_in_day_<n>.png` | geometric, gold, hot, piled up |
+| Consecutive days | **A growing tree**, seed to world-tree | `days_in_row_<n>.png` | organic, green, vertical, slow |
+
+**The filename is the quest id with its colon replaced by an underscore** (D379).
+Both families start at 5 and 10, so two files called "five" was two chances to
+attach the wrong art to an id that can never be renamed once published.
 
 The cube is Quadrim's own object and already appears on the rating card, so a
 pile of them says "games" without a caption. A tree says "time" the same way, and
-the eight streak rungs land almost exactly on seasons: 30 a month, 90 a season,
-360 a year, 720 two, 1440 four.
+the nine streak rungs land almost exactly on seasons: 30 a month, 90 a season,
+360 a year, 720 two, 1080 three, 1440 four.
+
+**Fourteen, not thirteen.** A ninth streak rung at 1080 days — three years — was
+added at D379, because two years to four was the longest gap on the ladder and
+the only one a player could sit inside for two whole years with nothing ahead.
 
 **512×512, centred, and safe under a circular crop.** Play Games wants 512×512
 and renders some surfaces round; Game Center wants 512×512 in a rounded square.
@@ -117,6 +125,12 @@ A mature tree carrying all four seasons at once around its crown, blossom then s
 
 ```
 An ancient broad-trunked tree with two luminous growth rings burning through the bark, roots gripping moss-covered stone, warm lantern-light glow from within the hollow, deep green gold and stone grey palette, old forest at dusk, majestic painterly fantasy achievement icon, centred composition, highly detailed, 512x512 icon
+```
+
+### 1080 days in a row
+
+```
+An ancient tree with three luminous growth rings burning through its bark, roots gripping moss-covered stone and lifting it clear of the ground, lantern-light glow deep in the hollow, deep green old gold and stone grey palette, old forest under the first stars, majestic painterly fantasy achievement icon, centred composition, highly detailed, 512x512 icon
 ```
 
 ### 1440 days in a row

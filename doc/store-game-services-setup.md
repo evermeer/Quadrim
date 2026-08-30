@@ -10,26 +10,24 @@ rename and no delete after the first release.
 
 ---
 
-## Before you start: three things about the images
+## Before you start
 
-**1. The 1440-day icon is missing.** `doc/designs/` has twelve of the thirteen:
-five `streak-*.png` and seven `consecutive-*.png`. `consecutive-1440.png` is not
-there. Its prompt is the last one in
-[achievement-icons.md](achievement-icons.md) — the world-tree with four glowing
-rings. Everything else can be set up without it; that one achievement cannot.
+**Every icon filename is its quest id with the colon replaced by an underscore**
+(D379). `games_in_day:20` is `games_in_day_20.png`; `days_in_row:1080` is
+`days_in_row_1080.png`; the thirty-one opponent rows reuse the avatar, which is
+`<opponent id>.png`. There is nothing to look up and nothing to get backwards.
 
-**2. The filenames are the reverse of the code's naming, and this will bite.**
+They were `streak-*.png` and `consecutive-*.png`, which were the two families the
+wrong way round — and since both start at 5 and 10, that was two chances to
+attach the wrong art to an id that can never be renamed once published. They are
+renamed rather than remapped for exactly that reason.
 
-| Image file | Code family | What it means |
-|---|---|---|
-| `streak-5,10,20,50,100.png` | **`games_in_day`** | games finished in one day |
-| `consecutive-5,10,30,90,180,360,720.png` | **`days_in_row`** | days played in a row |
+**There are forty-five, not forty-four.** A ninth streak rung at 1080 days —
+three years — was added at D379: two years to four was the longest gap on the
+ladder and the only one a player could sit inside for two whole years with
+nothing ahead of them.
 
-Both families start at 5 and 10, so `streak-5.png` and `consecutive-5.png` are
-both "five" and are **not** interchangeable. The table below names the file for
-every row; go by the table, not by the number in the filename.
-
-**3. Both stores want 512×512; the files are 1254×1254.** Both consoles accept
+**Both stores want 512×512; the files are 1254×1254.** Both consoles accept
 larger and downscale, but 1254 to 512 is not an integer ratio — check a couple at
 final size and re-export at exactly 512 if any look soft. The forest art is
 detailed and this is where that shows.
@@ -85,7 +83,7 @@ manifest is read as an integer and truncated.
 | Ordering | **Larger is better** |
 | Limits | leave unset |
 
-### 4. Create the 44 achievements
+### 4. Create the 45 achievements
 
 **Setup and management → Achievements → Create achievement**, once per row of the
 table below. For each one:
@@ -132,7 +130,7 @@ it GameKit fails at sign-in on a device while still working in the simulator.
 **Best Score, not Most Recent.** The rating goes down as well as up, and a
 leaderboard showing your worst afternoon is one nobody opens twice.
 
-### 3. Create the 44 achievements
+### 3. Create the 45 achievements
 
 **Game Center → Achievements → +**, once per row. For each:
 
@@ -145,18 +143,24 @@ leaderboard showing your worst afternoon is one nobody opens twice.
   description, and the 512×512 image.
 
 **Point values must total no more than 1000 across the app.** The column below
-sums to **980**, leaving 20 spare. That limit, and the 100-achievement ceiling
-D378 treats as the roster's hard cap, are what the code comments assume —
-**confirm both in the console before entering all 44**. Apple's documentation is
-rendered client-side and could not be read directly to verify them, and a
-different cap means redoing the column rather than one row.
+sums to **980**, leaving 20 spare. **The cap is on the sum, so every rung's value
+is coupled to every other** — adding the 1080 rung is what forced the streak
+column down from 5/10/15/25/40/60/90/130 to 5/10/15/20/30/45/65/85/100, because
+the old curve with a ninth rung reached 1090 and would have been rejected (D379).
+Anything added later moves these numbers again.
+
+That limit, and the 100-achievement ceiling D378 treats as the roster's hard cap,
+are what the code comments assume — **confirm both in the console before entering
+all 45**. Apple's documentation is rendered client-side and could not be read
+directly to verify them, and a different cap means redoing the column rather than
+one row.
 
 ---
 
-## The 44 achievements
+## The 45 achievements
 
 Points total **980**. Order: 31 opponents in roster order, then the five volume
-rungs, then the eight streak rungs.
+rungs, then the nine streak rungs.
 
 | # | Quadrim key | Game Center ID | Image | Points | Name (EN) | Name (NL) |
 |---|---|---|---|---|---|---|
@@ -191,19 +195,20 @@ rungs, then the eight streak rungs.
 | 29 | `beat:titan` | `nl.evict.quadrim2.beat.titan` | `titan.png` | 30 | Titan defeated | Titan verslagen |
 | 30 | `beat:oracle` | `nl.evict.quadrim2.beat.oracle` | `oracle.png` | 30 | Oracle defeated | Oracle verslagen |
 | 31 | `beat:quadrim_prime` | `nl.evict.quadrim2.beat.quadrim_prime` | `quadrim_prime.png` | 30 | Quadrim Prime defeated | Quadrim Prime verslagen |
-| 32 | `games_in_day:5` | `nl.evict.quadrim2.games_in_day.5` | `streak-5.png` | 5 | Five in a day | Vijf op één dag |
-| 33 | `games_in_day:10` | `nl.evict.quadrim2.games_in_day.10` | `streak-10.png` | 10 | Ten in a day | Tien op één dag |
-| 34 | `games_in_day:20` | `nl.evict.quadrim2.games_in_day.20` | `streak-20.png` | 15 | Twenty in a day | Twintig op één dag |
-| 35 | `games_in_day:50` | `nl.evict.quadrim2.games_in_day.50` | `streak-50.png` | 25 | Fifty in a day | Vijftig op één dag |
-| 36 | `games_in_day:100` | `nl.evict.quadrim2.games_in_day.100` | `streak-100.png` | 40 | A hundred in a day | Honderd op één dag |
-| 37 | `days_in_row:5` | `nl.evict.quadrim2.days_in_row.5` | `consecutive-5.png` | 5 | Five days running | Vijf dagen op rij |
-| 38 | `days_in_row:10` | `nl.evict.quadrim2.days_in_row.10` | `consecutive-10.png` | 10 | Ten days running | Tien dagen op rij |
-| 39 | `days_in_row:30` | `nl.evict.quadrim2.days_in_row.30` | `consecutive-30.png` | 15 | Thirty days running | Dertig dagen op rij |
-| 40 | `days_in_row:90` | `nl.evict.quadrim2.days_in_row.90` | `consecutive-90.png` | 25 | Ninety days running | Negentig dagen op rij |
-| 41 | `days_in_row:180` | `nl.evict.quadrim2.days_in_row.180` | `consecutive-180.png` | 40 | Half a year | Een half jaar |
-| 42 | `days_in_row:360` | `nl.evict.quadrim2.days_in_row.360` | `consecutive-360.png` | 60 | A full year | Een heel jaar |
-| 43 | `days_in_row:720` | `nl.evict.quadrim2.days_in_row.720` | `consecutive-720.png` | 90 | Two years | Twee jaar |
-| 44 | `days_in_row:1440` | `nl.evict.quadrim2.days_in_row.1440` | `consecutive-1440.png  **MISSING**` | 130 | Four years | Vier jaar |
+| 32 | `games_in_day:5` | `nl.evict.quadrim2.games_in_day.5` | `games_in_day_5.png` | 5 | Five in a day | Vijf op één dag |
+| 33 | `games_in_day:10` | `nl.evict.quadrim2.games_in_day.10` | `games_in_day_10.png` | 10 | Ten in a day | Tien op één dag |
+| 34 | `games_in_day:20` | `nl.evict.quadrim2.games_in_day.20` | `games_in_day_20.png` | 15 | Twenty in a day | Twintig op één dag |
+| 35 | `games_in_day:50` | `nl.evict.quadrim2.games_in_day.50` | `games_in_day_50.png` | 25 | Fifty in a day | Vijftig op één dag |
+| 36 | `games_in_day:100` | `nl.evict.quadrim2.games_in_day.100` | `games_in_day_100.png` | 40 | A hundred in a day | Honderd op één dag |
+| 37 | `days_in_row:5` | `nl.evict.quadrim2.days_in_row.5` | `days_in_row_5.png` | 5 | Five days running | Vijf dagen op rij |
+| 38 | `days_in_row:10` | `nl.evict.quadrim2.days_in_row.10` | `days_in_row_10.png` | 10 | Ten days running | Tien dagen op rij |
+| 39 | `days_in_row:30` | `nl.evict.quadrim2.days_in_row.30` | `days_in_row_30.png` | 15 | Thirty days running | Dertig dagen op rij |
+| 40 | `days_in_row:90` | `nl.evict.quadrim2.days_in_row.90` | `days_in_row_90.png` | 20 | Ninety days running | Negentig dagen op rij |
+| 41 | `days_in_row:180` | `nl.evict.quadrim2.days_in_row.180` | `days_in_row_180.png` | 30 | Half a year | Een half jaar |
+| 42 | `days_in_row:360` | `nl.evict.quadrim2.days_in_row.360` | `days_in_row_360.png` | 45 | A full year | Een heel jaar |
+| 43 | `days_in_row:720` | `nl.evict.quadrim2.days_in_row.720` | `days_in_row_720.png` | 65 | Two years | Twee jaar |
+| 44 | `days_in_row:1080` | `nl.evict.quadrim2.days_in_row.1080` | `days_in_row_1080.png` | 85 | Three years | Drie jaar |
+| 45 | `days_in_row:1440` | `nl.evict.quadrim2.days_in_row.1440` | `days_in_row_1440.png` | 100 | Four years | Vier jaar |
 
 ## Descriptions
 
@@ -255,6 +260,7 @@ earning. Both are given so neither console needs invention.
 | `days_in_row:180` | Play on 180 consecutive days. | You played 180 days in a row. | Speel 180 dagen achter elkaar. | Je hebt 180 dagen op rij gespeeld. |
 | `days_in_row:360` | Play on 360 consecutive days. | You played 360 days in a row. | Speel 360 dagen achter elkaar. | Je hebt 360 dagen op rij gespeeld. |
 | `days_in_row:720` | Play on 720 consecutive days. | You played 720 days in a row. | Speel 720 dagen achter elkaar. | Je hebt 720 dagen op rij gespeeld. |
+| `days_in_row:1080` | Play on 1080 consecutive days. | You played 1080 days in a row. | Speel 1080 dagen achter elkaar. | Je hebt 1080 dagen op rij gespeeld. |
 | `days_in_row:1440` | Play on 1440 consecutive days. | You played 1440 days in a row. | Speel 1440 dagen achter elkaar. | Je hebt 1440 dagen op rij gespeeld. |
 
 ---

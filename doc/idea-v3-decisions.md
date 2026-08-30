@@ -2395,6 +2395,62 @@ progress the player can already see on the quest tile.
 It is the largest single cost in ticket 050 and it is art and data entry rather
 than code, which means it cannot be parallelised by writing more of it.
 
+**Amended by D379:** a ninth streak rung makes it forty-five, not forty-four, and
+the spare headroom fifteen opponents rather than sixteen. The reasoning above is
+unchanged — the merge, the non-incremental reporting and the cap are all the same
+argument at one higher count.
+
+## D379 — A ninth streak rung at three years, and the achievement icons take the code's names
+
+**Question:** Two things arrived together while the store setup guide was being
+written: an icon for a 1080-day rung that does not exist in the game, and the
+observation that the icon filenames (`streak-*`, `consecutive-*`) are the reverse
+of the code's families (`games_in_day`, `days_in_row`). Add the rung, or drop the
+icon?
+
+**Decision:** Add it. The rungs are 5, 10, 30, 90, 180, 360, 720, **1080**, 1440,
+and the icons are renamed to the quest ids they belong to.
+
+**Two years to four was the longest gap on the ladder**, and the only one a
+player could sit inside for two whole years with nothing ahead of them. Every
+other step is a doubling or less: 5→10, 10→30, 30→90, 90→180, 180→360, 360→720.
+Then 720→1440 doubles again but does it across the two longest years in the
+product. Three years splits that, and it is the one place on the ladder where
+adding a rung costs nothing anyone can feel.
+
+**It pays 112 quarters — 28 wins — which is the linear interpolation between 96
+and 128.** Deliberately not a round number of its own: the rung should neither
+reward better nor worse than the trend it sits on, and picking 120 or 100 because
+they look tidier would make three years pay differently from the curve every
+other rung is priced on.
+
+**Nothing migrates, and that is a property of the design rather than luck.**
+Quest progress is a fold over the games and nothing is stored (§7.6), so a player
+who already has a 1080-day streak gets the rung the moment they update. There is
+no backfill, no version check, and no way for the new rung to be wrong for an
+existing history.
+
+**The window for this closes at publication.** An achievement cannot be deleted
+or renamed on either store once published (D213, D365), so a rung inserted after
+the first release would sit at the end of the console's list forever, out of
+order with the ladder it belongs to. Now is the only free moment, and that is the
+strongest argument for doing it rather than deferring it.
+
+**The rename is the same argument in a smaller frame.** `streak-5.png` was a
+`games_in_day` rung and `consecutive-5.png` was a `days_in_row` rung — both
+families start at 5 and 10, so two files called "five" meant two chances to
+attach the wrong art to a permanent id. The files are now
+`games_in_day_5.png` and `days_in_row_5.png`: the quest id with its colon
+replaced by an underscore, which makes the mapping mechanical instead of a lookup
+in a table someone has to read correctly forty-five times.
+
+**Cost:** the Game Center point budget had to be rebalanced rather than extended.
+The nine streak rungs were 5, 10, 15, 25, 40, 60, 90, 130 for eight; they are now
+5, 10, 15, 20, 30, 45, 65, 85, 100, which keeps the total at 980 of the 1000 the
+console allows. A ninth rung at the old curve would have reached 1090 and been
+rejected — the cap is on the sum, so every rung's value is coupled to every
+other, and the next achievement added anywhere will move these numbers again.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

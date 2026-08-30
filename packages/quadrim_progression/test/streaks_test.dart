@@ -148,7 +148,7 @@ void main() {
     });
   });
 
-  group('the eight rungs', () {
+  group('the nine rungs', () {
     final today = DateTime(2026, 12, 31);
 
     test('pay the multiples the table gives', () {

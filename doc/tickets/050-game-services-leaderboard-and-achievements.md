@@ -79,7 +79,7 @@ scored game against a computer opponent.
 
 ## 4. The achievements
 
-**Forty-four, not seventy-five**, and the mapping is a deliberate narrowing
+**Forty-five, not seventy-six**, and the mapping is a deliberate narrowing
 rather than an omission (D378):
 
 | Source | Count | Achievement |
@@ -87,7 +87,7 @@ rather than an omission (D378):
 | `first_win:<opponent>` | 31 | One per opponent — "you have beaten this opponent" |
 | `first_win_second:<opponent>` | 0 | **Merged into the row above** |
 | `games_in_day:<n>` | 5 | 5, 10, 20, 50, 100 games in a day |
-| `days_in_row:<n>` | 8 | 5, 10, 30, 90, 180, 360, 720, 1440 consecutive days |
+| `days_in_row:<n>` | 9 | 5, 10, 30, 90, 180, 360, 720, 1080, 1440 consecutive days |
 
 **Why the two per-opponent families merge into one.** `firstWinSecond` is a
 strict subset of `firstWin` — a win from the second seat is a win — so a player
@@ -97,17 +97,22 @@ because they pay separately. On a store achievement list they are one thing said
 twice.
 
 **The cap matters and is close.** Game Center allows 100 achievements per app.
-Forty-four leaves room for sixteen more opponents and no more; a roster past
-about forty-seven breaks it, and there is no migration once achievements are
-live. Ticket 051 must not spend the headroom casually.
+Forty-five leaves room for fifteen more opponents and no more; a roster past
+about forty-six breaks it, and there is no migration once achievements are live.
+Ticket 051 must not spend the headroom casually. **The 1000-point budget is the
+tighter of the two**: the forty-five sum to 980, and the cap is on the sum, so
+every new achievement re-prices every existing one (D379).
 
-**Every achievement needs an icon**, 512×512, in both consoles. Forty-four icons
-is the largest single cost in this ticket and it is art, not code. The opponent
-avatars in `doc/designs/` already exist and cover thirty-one of them; the thirteen
-volume and streak rungs need something drawn.
+**Every achievement needs an icon**, 512×512, in both consoles. The opponent
+avatars in `doc/designs/` cover thirty-one of them; the fourteen volume and streak
+rungs are drawn and in place, named `games_in_day_<n>.png` and
+`days_in_row_<n>.png` — the quest id with its colon replaced by an underscore, so
+the mapping is mechanical rather than a lookup (D379). Prompts are in
+[achievement-icons.md](../achievement-icons.md); the console steps and the full
+id table are in [store-game-services-setup.md](../store-game-services-setup.md).
 
 **Nothing is incremental.** Both stores support partial progress on an
-achievement, and this ticket does not use it: every one of the forty-four is
+achievement, and this ticket does not use it: every one of the forty-five is
 unlocked or not. Incremental reporting means sending a number on every game, which
 is more traffic and more surface for no gain the player can see.
 
@@ -136,7 +141,7 @@ and `check.sh` still enforces it.
   plugin, and its real adapter. The interface exists for the same reason
   `PurchasePlatform` does: the part that talks to a store has to be testable
   without a store in the room.
-- **`achievements.dart`** — the forty-four, as a table from a stable Quadrim key
+- **`achievements.dart`** — the forty-five, as a table from a stable Quadrim key
   to a Game Center id and a Play Games id. **The Play ids are issued by the
   console and are not knowable here**, so they are placeholders until the
   developer fills them in, and a test asserts the table is complete rather than
@@ -146,7 +151,7 @@ and `check.sh` still enforces it.
 
 **It reports a diff, not a state.** The app already computes `newlyAchieved`,
 which is what the end-of-game panel uses. Reporting only what just became true is
-the difference between one call a game and forty-four.
+the difference between one call a game and forty-five.
 
 ## 7. Failure is silent
 
@@ -195,7 +200,7 @@ the store build, which is the worst place to find it.
 on for their first session and the one no simulator puts you in by accident.
 
 **Achievements cannot be deleted after publication**, on either store, any more
-than a product id can (D213, D365). The forty-four ids are permanent from the day
+than a product id can (D213, D365). The forty-five ids are permanent from the day
 they go live.
 
 ## Closure
@@ -207,7 +212,7 @@ they go live.
 `app/lib/services/`, and nothing outside `app/` gained a dependency — the purity
 scan still passes, so AC 9 is met.
 
-- **`achievements.dart`** — the forty-four, **derived from the same catalogues
+- **`achievements.dart`** — the forty-five, **derived from the same catalogues
   the quests are built from** rather than typed out, so the roster and the rungs
   cannot drift from the quests they mirror. Only the store ids are hand-written.
 - **`games.dart`** — `GameServicesPlatform`, the interface this app owns over the

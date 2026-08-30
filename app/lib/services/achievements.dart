@@ -1,14 +1,14 @@
-/// The forty-four achievements, and what each one is called on each store.
+/// The forty-five achievements, and what each one is called on each store.
 ///
-/// **Forty-four of seventy-five quests, and the narrowing is deliberate**
-/// (D378). Eight streak rungs, five volume rungs, and one per opponent — with
+/// **Forty-five of seventy-six quests, and the narrowing is deliberate**
+/// (D378). Nine streak rungs, five volume rungs, and one per opponent — with
 /// [QuestFamily.firstWin] and [QuestFamily.firstWinSecond] collapsed into a
 /// single "you have beaten this opponent", because the second is a strict
 /// subset of the first: a win from the second seat is a win, so the two would
 /// unlock in the same instant on the same game and read as a bug.
 ///
-/// Game Center allows 100 achievements per app, so 44 leaves sixteen spare.
-/// **A roster past about forty-seven breaks that cap**, and an achievement
+/// Game Center allows 100 achievements per app, so 45 leaves fifteen spare.
+/// **A roster past about forty-six breaks that cap**, and an achievement
 /// cannot be deleted after publication on either store any more than a product
 /// id can (D213, D365).
 library;
@@ -104,8 +104,10 @@ final List<Achievement> achievementCatalogue = [
 /// by trust — every entry above must name a quest that exists.
 const List<int> kVolumeAchievementTargets = [5, 10, 20, 50, 100];
 
-/// The streak rungs, as ticket 034 set them.
-const List<int> kStreakAchievementTargets = [5, 10, 30, 90, 180, 360, 720, 1440];
+/// The streak rungs, as ticket 034 set them and D379 extended them.
+const List<int> kStreakAchievementTargets = [
+  5, 10, 30, 90, 180, 360, 720, 1080, 1440,
+];
 
 /// The achievement a quest maps to, or null if that quest has none.
 ///

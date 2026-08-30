@@ -32,20 +32,20 @@ QuestStatus _status(List<ScoredGame> games, String id) =>
 
 void main() {
   group('the catalogue', () {
-    test('is seventy-five quests across four families', () {
-      expect(questCatalogue, hasLength(75));
+    test('is seventy-six quests across four families', () {
+      expect(questCatalogue, hasLength(76));
       int count(QuestFamily f) =>
           questCatalogue.where((q) => q.family == f).length;
       expect(count(QuestFamily.firstWin), 31);
       expect(count(QuestFamily.firstWinSecond), 31);
       expect(count(QuestFamily.gamesInDay), 5);
-      expect(count(QuestFamily.consecutiveDays), 8);
+      expect(count(QuestFamily.consecutiveDays), 9);
     });
 
     test(
       'every id is distinct, because progress is ranked and diffed by it',
       () {
-        expect(questCatalogue.map((q) => q.id).toSet(), hasLength(75));
+        expect(questCatalogue.map((q) => q.id).toSet(), hasLength(76));
       },
     );
 
@@ -73,6 +73,7 @@ void main() {
         180,
         360,
         720,
+        1080,
         1440,
       ]);
     });
@@ -292,7 +293,7 @@ void main() {
           [],
           today: _today,
         ).where((s) => s.quest.family == QuestFamily.consecutiveDays);
-        expect(streaks, hasLength(8));
+        expect(streaks, hasLength(9));
         expect(streaks.every((s) => !s.achieved), isTrue);
       },
     );
@@ -380,7 +381,7 @@ void main() {
       // Carried by the types: the only inputs are a quest, a list of games and
       // a day boundary. There is nowhere to pass the player's height even by
       // mistake, which is the point of D261 and D270.
-      expect(questStatuses(const [], today: _today), hasLength(75));
+      expect(questStatuses(const [], today: _today), hasLength(76));
       expect(closestQuests(const []), isEmpty);
       expect(newlyAchieved(const [], const []), isEmpty);
     });

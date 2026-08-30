@@ -573,7 +573,7 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 | First win against an opponent | 20 | one per opponent |
 | First win **as the second player to move** | 20 | a genuinely harder rung — the first player has a real advantage — and free to detect, since which seat started is already on every game |
 | Games played in one day | 5 | 5, 10, 20, 50, 100 |
-| Consecutive days played | 8 | 5, 10, 30, 90, 180, 360, 720, 1440 |
+| Consecutive days played | 9 | 5, 10, 30, 90, 180, 360, 720, 1080, 1440 |
 
 **Every quest is priced by the opponents it was earned against, never by how high the player has climbed.** That is one rule for all four families, and it is the rule §7.2 already applies to a plain win: points measure the strength of what you played, not who you are.
 
@@ -592,9 +592,9 @@ Four properties fall out of this shape rather than being ruled in, and they are 
 |---|---|---|---|---|---|
 | Pays, in wins-worth | ¼ | ½ | 1 | 2 | 4 |
 
-| Consecutive days | 5 | 10 | 30 | 90 | 180 | 360 | 720 | 1440 |
-|---|---|---|---|---|---|---|---|---|
-| Pays, in wins-worth | 1 | 2 | 4 | 8 | 12 | 16 | 24 | 32 |
+| Consecutive days | 5 | 10 | 30 | 90 | 180 | 360 | 720 | 1080 | 1440 |
+|---|---|---|---|---|---|---|---|---|---|
+| Pays, in wins-worth | 1 | 2 | 4 | 8 | 12 | 16 | 24 | 28 | 32 |
 
 Four wins is one unlock, so a 30-day streak of real games, or a 100-game day against opponents near the player's own level, is worth roughly one free opponent. The same streak kept alive with one Pebble game a day is worth four points, and that is the intended answer rather than a shortcoming: showing up is what the streak measures, but *what you showed up to* is what the points measure. A per-opponent quest pays one win against the opponent it names, so the sixty-two of them are worth about two extra wins against each opponent the player actually works through.
 
@@ -613,7 +613,7 @@ Four wins is one unlock, so a 30-day streak of real games, or a 100-game day aga
 Two consequences to handle honestly rather than hide:
 
 - **A player who crosses time zones can gain or lose a day.** Evaluating against local time means an eastward flight can shorten a day below the point where they played. Accept it, and evaluate generously where the rule is ambiguous — never break a streak that any reasonable reading would have kept.
-- **The 1440-day rung is just under four years.** It exists as a horizon, not as a target, and nothing in the design depends on anyone reaching it.
+- **The 1440-day rung is just under four years.** It exists as a horizon, not as a target, and nothing in the design depends on anyone reaching it. **1080 — three years — was added at ticket 050** (D379): two years to four was the longest gap on the ladder and the only one a player could sit inside for two whole years with nothing to reach.
 
 ### 7.6 What must be stored — and the rule it breaks
 

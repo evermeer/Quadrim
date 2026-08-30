@@ -61,8 +61,8 @@ class FakeGameServices implements GameServicesPlatform {
 
 void main() {
   group('the catalogue', () {
-    test('is forty-four: one per opponent, five volume rungs, eight streak', () {
-      expect(achievementCatalogue, hasLength(44));
+    test('is forty-five: one per opponent, five volume rungs, nine streak', () {
+      expect(achievementCatalogue, hasLength(45));
       expect(
         achievementCatalogue.where((a) => a.key.startsWith('beat:')),
         hasLength(opponentCatalogue.length),
@@ -73,7 +73,7 @@ void main() {
       );
       expect(
         achievementCatalogue.where((a) => a.key.startsWith('days_in_row:')),
-        hasLength(8),
+        hasLength(9),
       );
     });
 
@@ -106,10 +106,10 @@ void main() {
     });
 
     test('keys and store ids are unique', () {
-      expect(achievementCatalogue.map((a) => a.key).toSet(), hasLength(44));
+      expect(achievementCatalogue.map((a) => a.key).toSet(), hasLength(45));
       expect(
         achievementCatalogue.map((a) => a.gameCenterId).toSet(),
-        hasLength(44),
+        hasLength(45),
       );
     });
 

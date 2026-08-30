@@ -33,7 +33,7 @@ enum QuestFamily {
   /// Games finished on one local day: 5, 10, 20, 50, 100.
   gamesInDay,
 
-  /// Consecutive local days played: 5, 10, 30, 90, 180, 360, 720, 1440.
+  /// Consecutive local days played: 5, 10, 30, 90, 180, 360, 720, 1080, 1440.
   consecutiveDays,
 }
 
@@ -73,15 +73,21 @@ class Quest {
 const _volumeTargets = [5, 10, 20, 50, 100];
 const _volumeQuarters = [1, 2, 4, 8, 16];
 
-/// Consecutive days, paying 1, 2, 4, 8, 12, 16, 24 and 32 wins-worth.
+/// Consecutive days, paying 1, 2, 4, 8, 12, 16, 24, 28 and 32 wins-worth.
 ///
 /// The calendar arithmetic is in `streaks.dart` (ticket 034). 1440 days is
 /// just under four years; it exists as a horizon rather than as a target, and
 /// nothing depends on anyone reaching it.
-const _streakTargets = [5, 10, 30, 90, 180, 360, 720, 1440];
-const _streakQuarters = [4, 8, 16, 32, 48, 64, 96, 128];
+///
+/// **1080 was added at ticket 050** (D379). Two years to four was the longest
+/// gap on the ladder and the only one a player could sit inside for two whole
+/// years without anything happening; three years splits it. Its 112 quarters
+/// are the linear interpolation between 96 and 128, so the rung neither pays
+/// better nor worse than the trend it sits on.
+const _streakTargets = [5, 10, 30, 90, 180, 360, 720, 1080, 1440];
+const _streakQuarters = [4, 8, 16, 32, 48, 64, 96, 112, 128];
 
-/// All seventy-five: thirty-one, thirty-one, five and eight.
+/// All seventy-six: thirty-one, thirty-one, five and nine.
 final List<Quest> questCatalogue = List.unmodifiable([
   for (var i = 0; i < opponentCatalogue.length; i++)
     Quest(
