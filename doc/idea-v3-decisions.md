@@ -2027,6 +2027,53 @@ Sweeping both numbers: **0.3 of a cell at yaw 0.61, pitch 0.35 reaches 55**, and
 
 **Cost:** the layered board and the cube board now draw an empty cell differently — the layers show an empty parchment *tile*, the cube a parchment *dot* — which is a consistency the two views never had anyway, since one is tiles and the other is glass boxes. What must not drift is the *pieces*, and those still come from the shared `kPieceLight`/`kPieceDark` lists for exactly the reason D369 gives: a player who switches display mid-game must not find the stones have changed colour.
 
+## D380 — Store copy that lives only in a console is copy nobody can review
+
+**Question:** Apple rejected 0.1.3 under guideline 2.3.2 on 2026-08-30: the two
+in-app purchases had display names and descriptions too alike to tell apart.
+Both had been typed straight into App Store Connect and existed nowhere else.
+What is the fix, and what stops it recurring?
+
+**Decision:** New copy that shares no word between the products, and the copy
+recorded in `doc/store-listing.md` rather than only in the web form.
+
+**Nothing in the app was wrong, which is the interesting part.**
+`shopUnlockAllName` is "Unlock all opponents" and `shopUnlimitedName` is
+"Unlimited play"; the bodies are different sentences; the StoreKit configuration
+matched. Every string this repository has ever checked was fine. The two that
+collided were in a form on a website, and the project had no opinion about them
+because it had never seen them.
+
+That is the actual defect. This repo enforces that no user-facing string lives
+outside l10n (D297) and that both languages exist for every one of them — and
+then let the two most commercially important strings in the product live in a
+place with no review, no diff and no test.
+
+**The new copy is held to a stronger standard than the guideline asks.** Apple
+requires the products to be distinguishable; these share **no word at all**, in
+either language, in either field, and they describe different *kinds* of thing —
+one is about which opponents you may play, the other about how often you may
+play. "Not identical" would have passed and would have left the next reviewer
+making the same judgement call.
+
+**Numbered D380 on `release/0.1.3`, deliberately.** That branch was cut from
+D370 and `main` has since reached D379; taking the next number on the branch
+would have produced two D371s and a collision on merge. Choosing the next number
+free on *main* costs nothing and makes the merge clean — a mistake already made
+once in this project and not worth making twice.
+
+**Cost:** a fourth place the two product names appear — l10n, the StoreKit
+configuration, App Store Connect, and now this document — with nothing
+mechanical keeping them in step. The app's copy and the store's copy are
+genuinely allowed to differ (the store has 30 and 45 character ceilings the app
+does not), so a check would have to encode which differences are legitimate.
+Recording them beside each other, where a human reads both at once, is the
+cheaper half of that and the half that was missing.
+
+**No new build is needed.** These are App Store Connect metadata fields, editable
+after publication and reviewed with the next submission; the binary Apple already
+has is unaffected. `0.1.3+9` stands.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

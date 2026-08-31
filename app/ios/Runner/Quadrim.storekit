@@ -8,8 +8,8 @@
       "internalID" : "1000000001",
       "localizations" : [
         {
-          "description" : "Play every opponent on the ladder, straight away.",
-          "displayName" : "Unlock all opponents",
+          "description" : "The whole ladder, unlocked right away.",
+          "displayName" : "Unlock every opponent",
           "locale" : "en_US"
         }
       ],
@@ -38,8 +38,8 @@
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Play as much as you like, all year.",
-              "displayName" : "Unlimited play",
+              "description" : "Play more than three games a day, all year.",
+              "displayName" : "Unlimited daily games",
               "locale" : "en_US"
             }
           ],

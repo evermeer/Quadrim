@@ -16,6 +16,53 @@ listing is a set of claims, and a wrong one is a rejection at best.
 
 ---
 
+## In-app purchase metadata — App Store Connect
+
+**This section exists because its absence caused a rejection.** Guideline 2.3.2,
+2026-08-30: *"the display names and descriptions for your promoted In-App
+Purchase products … are the same, which makes it hard for users to identify what
+they are purchasing."* The two products had been named directly in App Store
+Connect, nowhere else, and both ended in "computer opponents".
+
+Nothing in the app was wrong: `shopUnlockAllName` and `shopUnlimitedName` have
+always read "Unlock all opponents" and "Unlimited play", and the StoreKit
+configuration matched. **The colliding strings existed only in a web form**,
+which is exactly why they are written down here now — copy that lives in one
+console and nowhere else is copy nobody can review.
+
+**Apple's limits: display name 30 characters, description 45.** Both are per
+locale, and both are editable after publication (unlike the product id, D213,
+D365). Paste these into App Store Connect → Monetization → In-App Purchases →
+each product → the English and Dutch localisations.
+
+### `nl.evict.quadrim2.unlock_all` — one-time, €4.99
+
+| | Display name | Description |
+|---|---|---|
+| English | `Unlock every opponent` | `The whole ladder, unlocked right away.` |
+| Dutch | `Elke tegenstander vrij` | `De hele ladder, meteen vrijgespeeld.` |
+
+### `nl.evict.quadrim2.unlimited` — subscription, €2.99/year
+
+| | Display name | Description |
+|---|---|---|
+| English | `Unlimited daily games` | `Play more than three games a day, all year.` |
+| Dutch | `Onbeperkt per dag` | `Speel meer dan drie partijen per dag.` |
+
+**The two products now share no word at all**, in either language, in either
+field — which is a stronger property than "not identical" and is the one worth
+keeping. They also say different *kinds* of thing, which is what the guideline is
+actually about: one is about **which opponents** you may play, the other about
+**how often** you may play. A reviewer scanning the two should not have to read
+carefully to tell them apart.
+
+**Do not describe the unlock as lifting the cap.** It does not (§4.1) — a buyer
+still plays three a day unless they also subscribe, and `shopUnlockAllCaveat`
+says so in the app. A description that blurred the two would be a worse failure
+of the same guideline.
+
+---
+
 ## Listing copy — English
 
 ### Promotional text
