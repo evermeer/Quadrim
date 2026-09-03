@@ -267,7 +267,7 @@ void main() {
       // And it reaches the shop rather than merely mentioning it.
       await tester.tap(find.widgetWithText(FilledButton, 'See options'));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock all opponents'), findsWidgets);
+      expect(find.text('Unlock every opponent'), findsWidgets);
       expect(await repo.loadUnlocks(), isEmpty, reason: 'still nothing bought');
     });
 

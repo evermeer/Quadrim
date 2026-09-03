@@ -760,22 +760,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shopTitle => 'Winkel';
 
   @override
-  String get shopUnlimitedName => 'Onbeperkt spelen';
+  String get shopUnlimitedName => 'Onbeperkt per dag';
 
   @override
   String get shopUnlimitedBody =>
-      'Begin zoveel partijen tegen de computer als je wilt. Per jaar, elk moment op te zeggen.';
+      'Speel meer dan drie partijen per dag, het hele jaar. Elk moment op te zeggen.';
 
   @override
-  String get shopUnlockAllName => 'Alle tegenstanders vrijspelen';
+  String get shopUnlockAllName => 'Elke tegenstander vrij';
 
   @override
   String get shopUnlockAllBody =>
-      'Meteen alle tegenstanders op de ladder, in plaats van ze met punten te verdienen.';
+      'De hele ladder, meteen vrijgespeeld, in plaats van tegenstanders met punten te verdienen.';
 
   @override
   String get shopUnlockAllCaveat =>
-      'Dit verandert niet hoeveel partijen je kunt beginnen. Je speelt er nog steeds drie per dag, tenzij je ook onbeperkt spelen hebt.';
+      'Dit verandert niet hoeveel partijen je kunt beginnen. Je speelt er nog steeds drie per dag, tenzij je ook onbeperkt per dag hebt.';
 
   @override
   String get shopOwned => 'In bezit';

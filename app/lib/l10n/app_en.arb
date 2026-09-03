@@ -558,11 +558,11 @@
   "paywallSeeOptions": "See options",
   "paywallNotNow": "Not now",
   "shopTitle": "Shop",
-  "shopUnlimitedName": "Unlimited play",
-  "shopUnlimitedBody": "Start as many games against the computer as you like. Yearly, cancel any time.",
-  "shopUnlockAllName": "Unlock all opponents",
-  "shopUnlockAllBody": "Every opponent on the ladder, straight away, instead of earning them with points.",
-  "shopUnlockAllCaveat": "This does not change how many games you can start. You still play three a day unless you also have unlimited play.",
+  "shopUnlimitedName": "Unlimited daily games",
+  "shopUnlimitedBody": "Play more than three games a day, all year. Cancel any time.",
+  "shopUnlockAllName": "Unlock every opponent",
+  "shopUnlockAllBody": "The whole ladder, unlocked right away, instead of earning opponents with points.",
+  "shopUnlockAllCaveat": "This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.",
   "@shopUnlockAllCaveat": {
     "description": "Deliberately prominent. The unlock sells impatience, not capability -- a buyer who finds this out afterwards has been misled."
   },

@@ -2074,6 +2074,50 @@ cheaper half of that and the half that was missing.
 after publication and reviewed with the next submission; the binary Apple already
 has is unaffected. `0.1.3+9` stands.
 
+## D381 — The app's shop copy is the store's copy, and promotion is optional
+
+**Question:** Apple rejected 0.1.3 under guideline 2.3.2 a second time, on
+2026-09-02, naming a single product: *"Unlock all computer opponents"*. That
+string is in neither the app nor this repository — it is whatever App Store
+Connect currently holds. What changes?
+
+**Decision:** The shop screen's own strings become the store's strings, and
+promotion is treated as something to drop rather than something to defend.
+
+**D380 fixed the wrong half.** It made the two products distinguishable *from
+each other* and wrote the copy down, which was right and insufficient: the copy
+still lived only in App Store Connect on one side and only in `.arb` files on
+the other, saying different things. `shopUnlockAllName` said "Unlock all
+opponents" while the store said something else again. A reviewer tapping a
+promoted purchase sees the store's sentence and then the app's, and it is that
+pair the guideline is about. They now match: the names are identical, the
+bodies open with the store description.
+
+**The second notice names one product, not two**, which does not fit "these two
+are alike". It fits either a collision *within* one product — its display name
+and its description being the same string — or a reviewer reading metadata that
+was never updated. The quoted name settles nothing except that App Store
+Connect holds a third set of words, so the first move is to read what is
+actually in the form rather than to write a fourth set.
+
+**The cheaper move is to stop promoting.** Guideline 2.3.2 governs *promoted*
+in-app purchases, and Apple's notice says plainly that deleting the promotional
+image ends the matter. App Store promotion earns a listing on the product page;
+a first release with no traffic gains nothing measurable from it, so it is a
+feature to add later from a position of strength rather than one to keep
+arguing about now.
+
+**Cost:** the shop screen loses the copy written for it. "Start as many games
+against the computer as you like" was a better sentence in the app than "Play
+more than three games a day, all year", which exists to fit forty-five
+characters. Both languages take the same hit. That is the price of one wording
+per product rather than one per surface, and it is worth paying while a review
+is what stands between the app and its users.
+
+**Still no new build for the metadata itself.** The App Store Connect fields
+are editable in place. This change ships with the next binary because the app's
+own strings moved; the fix to the rejection does not wait for it.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

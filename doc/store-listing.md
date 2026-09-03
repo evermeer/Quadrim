@@ -56,6 +56,24 @@ actually about: one is about **which opponents** you may play, the other about
 **how often** you may play. A reviewer scanning the two should not have to read
 carefully to tell them apart.
 
+### The app's shop screen says the same words
+
+`shopUnlockAllName` and `shopUnlimitedName` now read exactly as the display
+names above, and the bodies open with the store descriptions. A buyer who taps
+a promoted purchase on the App Store lands on a shop screen carrying the
+sentence they just tapped — which is what guideline 2.3.2 is protecting, and it
+cannot be checked from inside App Store Connect alone.
+
+### If it is rejected again: unpromote the products
+
+The guideline applies to **promoted** in-app purchases — the ones with a
+promotional image, shown on the App Store product page. Apple's own second
+notice offers the exit: *"If you have no future plans on promoting this In-App
+Purchase product, you can delete the associated promotional image."* Deleting
+the two promotional images removes the products from App Store promotion, and
+the whole check stops applying. Promotion is a growth feature for an app that
+already has traffic; 0.1.3 has none, so it costs nothing.
+
 **Do not describe the unlock as lifting the cap.** It does not (§4.1) — a buyer
 still plays three a day unless they also subscribe, and `shopUnlockAllCaveat`
 says so in the app. A description that blurred the two would be a worse failure
