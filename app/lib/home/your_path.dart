@@ -10,6 +10,7 @@ import '../design/art.dart';
 import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// Where the player is on the ladder, and who is next.
 ///
@@ -709,13 +710,20 @@ class _LockedFooter extends StatelessWidget {
             // It still *reads* as out of reach — muted lettering rather than a
             // dead control — because losing that signal would trade one
             // confusion for another.
+            //
+            // **Muted has to mean a dimmer light, not a darker one.** This read
+            // `onSurfaceVariant`, which is `inkSoft` — text sized for
+            // parchment, printed on the bark brown this button is filled with.
+            // That measured 1.31:1 and was simply unreadable. Parchment is the
+            // panel's own beige at 4.30:1, still visibly softer than the cream
+            // an affordable button gets at 5.08:1, so the signal survives at a
+            // legible contrast (D383).
             onPressed: onUnlock,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor:
-                  affordable ? null : theme.colorScheme.onSurfaceVariant,
+              foregroundColor: affordable ? null : QuadrimPalette.parchment,
             ),
             child: Text(l10n.unlockAction,
                 maxLines: 1, overflow: TextOverflow.ellipsis),

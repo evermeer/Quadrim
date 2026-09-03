@@ -2191,6 +2191,37 @@ display, so a future change to `HomeSummary.byOpponent` can silently change who
 can play what — `home_screen` is the single place the stored and derived sets are
 joined, and it is commented as such.
 
+## D383 — Muted means a dimmer light, not a darker one
+
+**Question:** The unlock button on a Your Path tile was reported as black text
+on brown and unreadable. It is a filled button, so the theme paints it `bark`;
+the label was `onSurfaceVariant`, which resolves to `inkSoft`. What replaces it?
+
+**Decision:** `parchment` — the panel's own beige — for the unaffordable state,
+leaving the affordable one on the theme's `cream`.
+
+**The defect is a token used outside the surface it was defined for.**
+`onSurfaceVariant` is the muted ink for text *on parchment*, and it is the right
+colour there. This button is filled with `bark`, so the same token arrived as
+dark brown on brown: **1.31:1**, which is not low contrast but no contrast.
+Nothing caught it because both colours are correct tokens and the pairing is
+made at the call site, where no check looks.
+
+**The two states still differ, and both are legible.** Affordable is `cream` at
+**5.08:1**; unaffordable is `parchment` at **4.30:1** — visibly softer and
+warmer, which is the signal the button was given from tester feedback: it reads
+as out of reach without being a dead control that answers nothing.
+
+**Cost, stated plainly: 4.30:1 misses WCAG AA.** The threshold for this text is
+4.5:1 — the label is 15px bold, which is under the 14pt-bold large-text
+exemption. Every lighter beige in the palette is worse (`parchmentDeep` 3.65,
+`creamSoft` 3.33), so keeping a visible distinction at full AA would mean
+`cream` on both and no distinction at all. The judgement is that 4.30 against
+1.31 is the change that matters, and that the affordability signal is anyway
+carried in numbers directly above the button — the progress bar and "0 of 42" —
+rather than by the lettering alone. If the distinction is ever judged not worth
+0.2 of a contrast point, the fix is to delete the override entirely.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
