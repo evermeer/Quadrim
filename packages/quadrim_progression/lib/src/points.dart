@@ -76,7 +76,42 @@ int unlockCost(int rosterIndex) {
 /// Six is the Novice tier exactly, which is what makes it a number worth
 /// naming: what is free is *the tier a new player starts in*, and Bramble at
 /// 980 is the first thing they buy.
+///
+/// **It is a boundary rather than a count now** (D382). Six is still the first
+/// index that must be bought, but the first [kMercyCount] rungs below it are
+/// held back rather than given, so the number actually free on a first launch
+/// is three. The name is kept because it is what the points ladder is keyed
+/// on, and every test that reads it reads it as the ladder's first rung.
 const int kFreeCount = 6;
+
+/// How many opponents at the bottom of the roster are **held back** from a new
+/// player and handed to them only if they need them.
+///
+/// Pebble, Twig and Mote. Player reviews of 0.1.3 said the ladder opens too
+/// gently: the first three rungs are beaten by an average adult on the first
+/// try, so the game's opening impression is three games it cannot lose. The
+/// roster now starts at Hazel, and each of these three arrives only when the
+/// rung above it has actually beaten the player (D382).
+///
+/// **These are never bought.** They are outside the points ladder entirely —
+/// [nextUnlockIndex] never names one, [fullRosterCost] does not price them, and
+/// no path here writes an unlock record for them. What opens them is a loss,
+/// which is a fold over the game list, so nothing is stored and nothing can be
+/// spent. The one exception is the "unlock every opponent" purchase, which
+/// grants the whole catalogue and does not consult this at all.
+const int kMercyCount = 3;
+
+/// Whether [bot] is one of the rungs held back until the player needs it.
+bool isMercy(BotConfig bot) {
+  final index = rosterIndexOf(bot.id);
+  return index != null && index < kMercyCount;
+}
+
+/// Whether [bot] can be bought with points at all.
+///
+/// Free opponents have nothing to buy; mercy opponents are not for sale at any
+/// price. Everything else is the ladder.
+bool isPurchasable(BotConfig bot) => !isFree(bot) && !isMercy(bot);
 
 /// Whether [bot] is playable without being earned.
 ///
@@ -84,7 +119,7 @@ const int kFreeCount = 6;
 /// [rosterIndexOf] gives it everywhere else, and the safe one.
 bool isFree(BotConfig bot) {
   final index = rosterIndexOf(bot.id);
-  return index != null && index < kFreeCount;
+  return index != null && index >= kMercyCount && index < kFreeCount;
 }
 
 /// The roster index of [botId], or null if this build has no such opponent.
@@ -106,7 +141,7 @@ int? rosterIndexOf(String botId) {
 /// a phone (D335).
 int get fullRosterCost => [
   for (var i = 0; i < opponentCatalogue.length; i++)
-    if (!isFree(opponentCatalogue[i])) unlockCost(i),
+    if (isPurchasable(opponentCatalogue[i])) unlockCost(i),
 ].fold(0, (a, b) => a + b);
 
 /// One completed game, reduced to what progression cares about.

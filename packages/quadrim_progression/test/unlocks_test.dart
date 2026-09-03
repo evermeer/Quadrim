@@ -77,6 +77,96 @@ void main() {
     });
   });
 
+  group('the mercy rungs', () {
+    // Index 3 is the first free opponent, so it is the rung that hands back
+    // index 2, and so on down. Named by index rather than by id so that recutting
+    // the roster moves this test with it.
+    String above(int i) => _idAt(i + 1);
+
+    test('are locked on a first launch, and are not free', () {
+      for (var i = 0; i < kMercyCount; i++) {
+        expect(isUnlocked(_idAt(i), const {}), isFalse, reason: _idAt(i));
+        expect(isFree(opponentCatalogue[i]), isFalse, reason: _idAt(i));
+      }
+      expect(mercyUnlocks(played: const {}, lostTo: const {}), isEmpty);
+    });
+
+    test('a loss to the rung above hands back exactly one opponent', () {
+      for (var i = 0; i < kMercyCount; i++) {
+        expect(
+          mercyUnlocks(played: const {}, lostTo: {above(i)}),
+          {_idAt(i)},
+          reason: 'losing to ${above(i)} should hand back ${_idAt(i)}',
+        );
+      }
+    });
+
+    test('do not cascade: losing to the top of the chain opens one step only',
+        () {
+      // Losing to Hazel gives Mote back and nothing else. Twig arrives only
+      // once Mote has actually beaten the player, which is the whole point —
+      // each step down is earned by a fresh loss, not implied by the first.
+      final afterHazel = mercyUnlocks(played: const {}, lostTo: {_idAt(3)});
+      expect(afterHazel, {_idAt(2)});
+      expect(afterHazel, isNot(contains(_idAt(1))));
+      expect(afterHazel, isNot(contains(_idAt(0))));
+    });
+
+    test('open all three once every rung in the chain has won once', () {
+      expect(
+        mercyUnlocks(played: const {}, lostTo: {_idAt(3), _idAt(2), _idAt(1)}),
+        {_idAt(0), _idAt(1), _idAt(2)},
+      );
+    });
+
+    test('a loss to an opponent outside the chain hands back nothing', () {
+      // Clover is free and Bramble is bought; neither sits directly above a
+      // mercy rung, so neither opens one.
+      expect(mercyUnlocks(played: const {}, lostTo: {_idAt(4)}), isEmpty);
+      expect(mercyUnlocks(played: const {}, lostTo: {_idAt(6)}), isEmpty);
+    });
+
+    test('playing the rung above without losing to it hands back nothing', () {
+      // The distinction the rule rests on: a draw is not a loss, and neither is
+      // a win. There is nowhere in this signature to pass a draw, which is the
+      // proof rather than the comment.
+      expect(mercyUnlocks(played: {_idAt(3)}, lostTo: const {}), isEmpty);
+    });
+
+    test('grandfather anyone who has already played them', () {
+      // The reviews asked for a gentler opening, not for an opponent to be
+      // taken away from somebody already using it (D382).
+      expect(mercyUnlocks(played: {_idAt(0)}, lostTo: const {}), {_idAt(0)});
+      expect(
+        mercyUnlocks(
+            played: {_idAt(0), _idAt(1), _idAt(2)}, lostTo: const {}),
+        {_idAt(0), _idAt(1), _idAt(2)},
+      );
+    });
+
+    test('never name anything outside the first rungs, whatever is passed', () {
+      final everything = {for (final bot in opponentCatalogue) bot.id};
+      final earned = mercyUnlocks(played: everything, lostTo: everything);
+      expect(earned.length, kMercyCount);
+      for (final id in earned) {
+        expect(rosterIndexOf(id)! < kMercyCount, isTrue, reason: id);
+      }
+    });
+
+    test('are never what the points ladder offers next, at any state', () {
+      // The economy must never point at an opponent no amount of points can
+      // buy. Checked over every prefix of the roster rather than at the start
+      // only, because a hand-edited document can produce any of them.
+      for (var highest = -1; highest < opponentCatalogue.length; highest++) {
+        final owned =
+            highest < 0 ? <String>{} : _unlockedUpTo(highest);
+        final next = nextUnlockIndex(owned);
+        if (next == null) continue;
+        expect(next >= kMercyCount, isTrue, reason: 'owned up to $highest');
+      }
+    });
+  });
+
   group('the Your Path window', () {
     test('is always three tiles wide, at every position', () {
       for (var next = kFreeCount; next < opponentCatalogue.length; next++) {

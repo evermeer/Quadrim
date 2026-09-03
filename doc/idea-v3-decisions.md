@@ -2118,6 +2118,69 @@ is what stands between the app and its users.
 are editable in place. This change ships with the next binary because the app's
 own strings moved; the fix to the rejection does not wait for it.
 
+## D382 — The three easiest opponents are held back, and losing hands them over
+
+**Question:** Player reviews of 0.1.3 say the ladder opens too gently: Pebble,
+Twig and Mote are beaten by an average adult first try, so the game's opening
+impression is three matches it cannot lose. Removing them would strand the
+players who *do* need them. What replaces "free from the start"?
+
+**Decision:** The roster starts at Hazel. Each of the three below it opens when
+the rung immediately above has beaten the player at least once — a loss to Hazel
+hands back Mote, a loss to Mote hands back Twig, a loss to Twig hands back
+Pebble. Nobody is offered an easier opponent until the game has shown them they
+might want one.
+
+**Derived, not stored.** There is no new document, no new `UnlockSource`, and no
+write path on the completion of a game: `mercyUnlocks` is a fold over the game
+list, exactly like the points total, the streak and the computer rating. That
+buys three properties for nothing. It is idempotent. It cannot half-apply if the
+app is killed between finishing a game and writing a record. And a refund of the
+"unlock every opponent" purchase cannot revoke it, because a game that was lost
+stays lost — which the stored alternative would have got wrong by default, since
+`revokePurchasedUnlocks` deletes every record written at `UnlockSource.purchase`.
+
+**They are outside the points economy entirely**, and that is the part most
+likely to be broken by a later change. `nextUnlockIndex` now walks up from
+`kMercyCount` rather than from zero; without that, the shop would offer Pebble as
+"the next opponent to buy" to every new player, at a price, for an opponent no
+amount of points can reach. `fullRosterCost` and `priceOf` skip them for the same
+reason, through a single `isPurchasable` predicate rather than three copies of
+the same condition. `unlocks_test.dart` asserts over every prefix of the roster
+that the ladder never names one.
+
+**`kFreeCount` is a boundary now, not a count.** Six is still the first index
+that must be bought — Bramble, unchanged — but the number of opponents actually
+free on a first launch is three. The name is kept because it is what the points
+ladder is keyed on and what every test reads it as; renaming it would be churn
+across two packages for a word.
+
+**Existing players keep what they have.** `mercyUnlocks` also grants any of the
+three the player has already finished a game against. The reviews asked for a
+gentler *opening*; taking an opponent away from somebody already using it would
+be a different and worse change, and it is one line in the same fold.
+
+**Locked mercy rungs are hidden, not greyed out.** A locked row shows its price,
+and these have none — so the row could say nothing about how to open it. The
+true answer, *lose to the rung above*, is not something to advertise: it invites
+deliberate losing to farm the easy opponents, and reads as condescension to a
+player who is already struggling. The tier heading counts the filtered list, so
+the Novice section says three and then four as they arrive.
+
+**A draw is not a loss.** The rule is about being beaten, and the signature is
+the proof rather than a comment: `mercyUnlocks` takes the opponents lost to,
+and there is nowhere to pass a draw.
+
+**Cost:** a new player's first screen offers three opponents where it offered
+six, and the weakest thing they can play is rated 850 rather than 600. If the
+reviews were wrong about the average player, this is worse for the people the
+mercy rungs exist for, and they only find out by losing. The counter-argument is
+that losing to Hazel is one game, and the ladder repairs itself immediately.
+Also, the fold now reads the per-opponent record for a reason unrelated to
+display, so a future change to `HomeSummary.byOpponent` can silently change who
+can play what — `home_screen` is the single place the stored and derived sets are
+joined, and it is commented as such.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), leaving only their tax treatment; store accounts and signing, app-name availability, the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

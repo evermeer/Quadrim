@@ -128,8 +128,20 @@ void main() {
 
     test('a free opponent cannot be bought at all', () async {
       final repo = await _repository();
-      expect(() => repo.purchase('pebble', pricePaid: 1),
+      expect(() => repo.purchase('hazel', pricePaid: 1),
           throwsA(isA<StateError>()));
+    });
+
+    test('a mercy rung cannot be bought either, at any price', () async {
+      // Locked, but not for sale: what opens Pebble is a loss to Twig, and the
+      // ladder never names it (D382). Rejected for being out of roster order
+      // rather than for being already unlocked, which is the honest reason.
+      final repo = await _repository();
+      for (final id in ['pebble', 'twig', 'mote']) {
+        expect(() => repo.purchase(id, pricePaid: 1),
+            throwsA(isA<ArgumentError>()), reason: id);
+      }
+      expect(await repo.loadUnlocks(), isEmpty);
     });
 
     test('buying the same opponent twice is refused', () async {
@@ -169,11 +181,124 @@ void main() {
     });
   });
 
+  group('the mercy rungs', () {
+    /// One finished game against [botId], won or lost by the player.
+    ///
+    /// `_lightWinsMoves` is a win for seat 0, so the seat the player holds is
+    /// what decides the result.
+    Future<void> play(LocalGameRepository repo, String botId,
+        {required bool won}) async {
+      final game = await repo.createGame(
+        mode: GameMode.vsComputer,
+        opponent: botOpponent(botId),
+        opponentRating: botById(botId)!.rating,
+        startingSeat: 0,
+        playerSeat: won ? 0 : 1,
+      );
+      for (final move in _lightWinsMoves) {
+        await repo.appendMove(game.id, move);
+      }
+    }
+
+    Future<void> open(WidgetTester tester, LocalGameRepository repo) async {
+      await tester.pumpWidget(QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, random: Random(1)));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('are not offered to a new player at all', (tester) async {
+      // The reviews that caused D382: an average adult beats all three first
+      // try, so the game opened on three matches it could not lose.
+      _phone(tester);
+      final repo = await _repository();
+      await open(tester, repo);
+
+      for (final name in ['Pebble', 'Twig', 'Mote']) {
+        expect(tileFor(name), findsNothing, reason: name);
+      }
+      expect(tileFor('Hazel'), findsOneWidget,
+          reason: 'the roster starts at Hazel now');
+    });
+
+    testWidgets('a loss to Hazel hands back Mote, and only Mote',
+        (tester) async {
+      _phone(tester);
+      final repo = await _repository();
+      await play(repo, 'hazel', won: false);
+      await open(tester, repo);
+
+      expect(tileFor('Mote'), findsOneWidget);
+      // No cascade: Twig is earned by losing to Mote, not implied by the loss
+      // that opened Mote.
+      expect(tileFor('Twig'), findsNothing);
+      expect(tileFor('Pebble'), findsNothing);
+    });
+
+    testWidgets('beating Hazel hands back nothing', (tester) async {
+      _phone(tester);
+      final repo = await _repository();
+      await play(repo, 'hazel', won: true);
+      await open(tester, repo);
+
+      expect(tileFor('Mote'), findsNothing,
+          reason: 'a player who is winning does not need an easier opponent');
+    });
+
+    testWidgets('the chain runs all the way down, one loss at a time',
+        (tester) async {
+      _phone(tester);
+      final repo = await _repository();
+      await play(repo, 'hazel', won: false);
+      await play(repo, 'mote', won: false);
+      await play(repo, 'twig', won: false);
+      await open(tester, repo);
+
+      for (final name in ['Pebble', 'Twig', 'Mote']) {
+        expect(tileFor(name), findsOneWidget, reason: name);
+      }
+    });
+
+    testWidgets('buying the whole roster hands back all three', (tester) async {
+      // The one path that does not go through a loss: §4.1's one-time product
+      // grants the catalogue, and these are part of it.
+      _phone(tester);
+      final repo = await _repository();
+      await repo.grantAllPurchased();
+      await open(tester, repo);
+
+      for (final name in ['Pebble', 'Twig', 'Mote']) {
+        expect(tileFor(name), findsOneWidget, reason: name);
+      }
+    });
+
+    testWidgets('a refund cannot take back what a loss opened', (tester) async {
+      // Derived rather than stored, which is what makes this hold: the record
+      // `revokePurchasedUnlocks` deletes was never written, and a game that was
+      // lost stays lost (D382).
+      _phone(tester);
+      final repo = await _repository();
+      await repo.grantAllPurchased();
+      await play(repo, 'hazel', won: false);
+      await repo.revokePurchasedUnlocks();
+      await open(tester, repo);
+
+      expect(tileFor('Mote'), findsOneWidget,
+          reason: 'earned by losing, not bought');
+      expect(tileFor('Twig'), findsNothing, reason: 'that one was only bought');
+    });
+  });
+
   group('Your Path', () {
     testWidgets('rests on the first opponent rated above the player',
         (tester) async {
       _phone(tester);
       final repo = await _repository();
+      // The whole roster, so the row has tiles on both sides of the resting one
+      // and this test measures the resting rule rather than the left edge. The
+      // rating is untouched by it: no game has been played, so the player is
+      // still on the seed of 800. What a *fresh* player's row does at its left
+      // end is the test below (D382).
+      await repo.grantAllPurchased();
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
@@ -338,6 +463,31 @@ void main() {
       expect((await repo.loadUnlocks()).length, before);
     });
 
+    testWidgets('starts flush at Hazel for a new player, with nowhere left '
+        'to go', (tester) async {
+      // The other side of D382: with the three mercy rungs hidden, the opponent
+      // a seeded player rests on is also the weakest one the row holds, so the
+      // row opens against its left edge and the left arrow is already spent.
+      _phone(tester);
+      final repo = await _repository();
+      await tester.pumpWidget(QuadrimApp(
+          repository: repo, settings: repo, unlocks: repo, random: Random(1)));
+      await tester.pumpAndSettle();
+
+      final viewport = tester.getRect(find.descendant(
+          of: find.byType(YourPath), matching: find.byType(Scrollable)));
+      expect(tester.getRect(tileFor('Hazel')).left,
+          greaterThanOrEqualTo(viewport.left - 0.5),
+          reason: 'the weakest tile the row holds, and it is on screen');
+
+      final arrows = find.descendant(
+          of: find.byType(YourPath), matching: find.byType(AnimatedOpacity));
+      expect(tester.widget<AnimatedOpacity>(arrows.first).opacity, 0,
+          reason: 'nothing weaker exists to scroll to');
+      expect(tester.widget<AnimatedOpacity>(arrows.last).opacity,
+          greaterThan(0));
+    });
+
     testWidgets('the arrows step the row one tile and fade at the ends',
         (tester) async {
       // The row fits exactly three tiles, so nothing on screen says there are
@@ -345,6 +495,10 @@ void main() {
       // (D318).
       _phone(tester);
       final repo = await _repository();
+      // The whole roster, so there is something to the left of the resting tile
+      // to step onto. Without it a new player's row starts flush against its
+      // left edge and this test would measure that instead of the step (D382).
+      await repo.grantAllPurchased();
       await tester.pumpWidget(QuadrimApp(
           repository: repo, settings: repo, unlocks: repo, random: Random(1)));
       await tester.pumpAndSettle();
@@ -443,10 +597,12 @@ void main() {
       // The three resting tiles are all unlocked and unplayed: each says so
       // rather than drawing three empty stars, because unearned and failed
       // must not look the same.
-      // Six: the free set, all unlocked and none played. The row builds
-      // every tile, so this counts the roster rather than what is on screen
-      // (D335).
-      expect(find.text('Not played yet'), findsNWidgets(6));
+      // Three: what a first launch actually offers. The row builds every tile
+      // it shows, so this counts the visible roster rather than what fits on
+      // the screen — and since D382 the three mercy rungs below Hazel are not
+      // in it, which is why this is three rather than the six the free set
+      // used to be (D335).
+      expect(find.text('Not played yet'), findsNWidgets(3));
       expect(find.byIcon(Icons.star_border), findsNothing);
     });
 
