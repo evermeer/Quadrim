@@ -416,7 +416,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbHazel =>
-      'Sees wins and blocks a little more often than Mote does.';
+      'Sees wins and blocks, and looks away about a third of the time.';
 
   @override
   String get blurbSorrel =>

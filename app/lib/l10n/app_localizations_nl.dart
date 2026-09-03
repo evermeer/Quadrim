@@ -416,7 +416,8 @@ class AppLocalizationsNl extends AppLocalizations {
       'De diepste berekening op de ladder die uit geen enkel boek speelt.';
 
   @override
-  String get blurbHazel => 'Ziet winst en blokkades iets vaker dan Mote.';
+  String get blurbHazel =>
+      'Ziet winst en blokkades, maar kijkt ongeveer een derde van de tijd weg.';
 
   @override
   String get blurbSorrel =>

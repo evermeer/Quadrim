@@ -785,7 +785,7 @@ abstract class AppLocalizations {
   /// No description provided for @blurbHazel.
   ///
   /// In en, this message translates to:
-  /// **'Sees wins and blocks a little more often than Mote does.'**
+  /// **'Sees wins and blocks, and looks away about a third of the time.'**
   String get blurbHazel;
 
   /// No description provided for @blurbSorrel.

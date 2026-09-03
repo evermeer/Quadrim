@@ -2171,6 +2171,16 @@ the Novice section says three and then four as they arrive.
 the proof rather than a comment: `mercyUnlocks` takes the opponents lost to,
 and there is nowhere to pass a draw.
 
+**Hazel's description had to be rewritten, and only running the build found
+it.** It read "Sees wins and blocks a little more often than Mote does" — a
+comparison to an opponent a new player can no longer see, in the first row of
+the first screen they open. No test could have caught it: every string was
+present, in both languages, and the check that greps for that has nothing to
+say about whether a sentence still makes sense. It now describes Hazel on its
+own terms, at the blunder rate the configuration actually carries. The general
+lesson is that hiding a catalogue entry breaks prose that names it, and prose
+is the part the compiler does not hold.
+
 **Cost:** a new player's first screen offers three opponents where it offered
 six, and the weakest thing they can play is rated 850 rather than 600. If the
 reviews were wrong about the average player, this is worse for the people the

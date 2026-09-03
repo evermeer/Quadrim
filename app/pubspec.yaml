@@ -22,7 +22,7 @@ publish_to: 'none'
 # The name moves to 0.1.3 because the cube board is a whole second way to look
 # at a game (D369), and a build that cannot be told apart from the one already
 # installed is a support question waiting to happen.
-version: 0.1.3+9
+version: 0.1.3+10
 
 environment:
   sdk: ^3.12.2

@@ -28,3 +28,4 @@ app/untranslated.json
 # dwarf the repository, and it is reproducible from a tag.
 dist/
 __pycache__/
+/doc/store/icons
