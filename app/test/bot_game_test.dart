@@ -67,10 +67,14 @@ void main() {
 
     // The list is an accordion opened on the tier nearest the player, and a
     // player with no games sits on the seed of 800 — which is Mote's rating,
-    // so Novice is the tier already open and Pebble is reachable directly.
-    // It used to need a tap: at the old seed of 1200 the list opened on
-    // Casual instead (D226).
-    await tester.tap(find.text('Pebble'));
+    // so Novice is the tier already open and its weakest entry is reachable
+    // directly. It used to need a tap: at the old seed of 1200 the list opened
+    // on Casual instead (D226).
+    //
+    // Hazel rather than Pebble since D382: the three rungs below it are held
+    // back from a new player until one is needed, so they are not on this
+    // screen at all and Hazel is what a first launch offers.
+    await tester.tap(find.text('Hazel'));
     // Bounded pumps rather than pumpAndSettle: when the opponent opens, the
     // thinking indicator animates indefinitely and the frame scheduler never
     // goes idle (D166). Long enough to clear the opponent's visible pause.
@@ -79,8 +83,8 @@ void main() {
 
     final games = await repo.watchActiveGames().first;
     expect(games.single.mode, GameMode.vsComputer);
-    expect(games.single.opponent, 'bot:pebble');
-    expect(games.single.opponentRating, 600,
+    expect(games.single.opponent, 'bot:hazel');
+    expect(games.single.opponentRating, 850,
         reason: 'the anchor played against is recorded on the game');
   });
 
@@ -320,8 +324,10 @@ void main() {
     final repo = await _repository();
     final open = await repo.createGame(
       mode: GameMode.vsComputer,
-      opponent: botOpponent(pebble.id),
-      opponentRating: pebble.rating,
+      // Hazel, because it is what the opponent list offers a new player since
+      // D382 — this test has to be able to tap the same opponent twice.
+      opponent: botOpponent(hazel.id),
+      opponentRating: hazel.rating,
       // Seat 1 opens, so the player did not get the first move — the draw
       // this rule exists to stop anyone re-rolling.
       startingSeat: 1,
@@ -338,7 +344,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Play the computer'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pebble'));
+    await tester.tap(find.text('Hazel'));
     await tester.pump();
     await tester.pump(kBotMoveDelay + const Duration(milliseconds: 50));
 

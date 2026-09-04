@@ -10,6 +10,7 @@ import '../design/art.dart';
 import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// Where the player is on the ladder, and who is next.
 ///
@@ -137,6 +138,20 @@ class _YourPathState extends State<YourPath> {
   /// back to the resting tile every time a game finished elsewhere on the
   /// screen, undoing whatever the player had scrolled to.
   int _restedOn = -1;
+
+  /// How many tiles the row held when it last settled. A mercy rung arriving
+  /// (D382) shifts every tile right, and the resting position must follow it.
+  int _restedCount = -1;
+
+  /// The roster as this row shows it: everything except the mercy rungs the
+  /// player has not earned back (D382).
+  ///
+  /// They are hidden rather than shown locked because a locked tile announces
+  /// its price, and these have none — no amount of points buys one, so the
+  /// figure would be one the player can never spend. Set at the top of build,
+  /// because both the scroll extent and the resting position are counted in
+  /// tiles rather than in roster indices.
+  List<BotConfig> _visible = const [];
   double _step = 0;
 
   double _offsetFor(int index) {
@@ -173,10 +188,25 @@ class _YourPathState extends State<YourPath> {
         curve: Curves.easeOut);
   }
 
+  /// Where the row comes to rest, as a position in [_visible] rather than a
+  /// roster index — the two differ by however many mercy rungs are hidden.
+  int _restingPosition() {
+    final bot = opponentCatalogue[restingIndex(widget.summary.computerRating)];
+    final at = _visible.indexWhere((other) => other.id == bot.id);
+    // Hidden: the player is rated below everything they can currently play, so
+    // the row rests at its left end.
+    return at < 0 ? 0 : at;
+  }
+
   void _settle() {
-    final resting = restingIndex(widget.summary.computerRating);
-    if (_controller != null && resting == _restedOn) return;
+    final resting = _restingPosition();
+    if (_controller != null &&
+        resting == _restedOn &&
+        _visible.length == _restedCount) {
+      return;
+    }
     _restedOn = resting;
+    _restedCount = _visible.length;
     final offset = _offsetFor(resting);
     _atStart = offset <= 0.5;
     _atEnd = offset >= _maxOffset - 0.5;
@@ -210,7 +240,11 @@ class _YourPathState extends State<YourPath> {
     final width = MediaQuery.sizeOf(context).width - _kSectionInset * 2;
     final tile = (width - _kGap * (_kVisibleTiles - 1)) / _kVisibleTiles;
     _step = tile + _kGap;
-    _maxOffset = math.max(0, _step * opponentCatalogue.length - width);
+    _visible = [
+      for (final bot in opponentCatalogue)
+        if (!isMercy(bot) || isUnlocked(bot.id, widget.unlocked)) bot,
+    ];
+    _maxOffset = math.max(0, _step * _visible.length - width);
     _settle();
     // A rotation changes the width and therefore both of these, and no scroll
     // happens to report it — so they are refreshed here as well as by the
@@ -260,29 +294,29 @@ class _YourPathState extends State<YourPath> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (var index = 0;
-                        index < opponentCatalogue.length;
-                        index++)
-                      SizedBox(
-                        width: _step,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: _kGap),
-                          child: _PathTile(
-                            bot: opponentCatalogue[index],
-                            record: widget.summary
-                                .recordFor(opponentCatalogue[index].id),
-                            locked: !isUnlocked(
-                                opponentCatalogue[index].id, widget.unlocked),
-                            isNext: index == next,
-                            balance: widget.balance,
-                            price: unlockCost(index),
-                            onUnlock: widget.onUnlock,
-                            avatarSize: tile - _kCardPadding * 2,
-                            onOpen: () =>
-                                widget.onOpen(opponentCatalogue[index]),
+                    for (final bot in _visible)
+                      Builder(builder: (context) {
+                        // The roster index, not the position in the row: it is
+                        // what prices the tile and what `next` is counted in.
+                        final index = rosterIndexOf(bot.id)!;
+                        return SizedBox(
+                          width: _step,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: _kGap),
+                            child: _PathTile(
+                              bot: bot,
+                              record: widget.summary.recordFor(bot.id),
+                              locked: !isUnlocked(bot.id, widget.unlocked),
+                              isNext: index == next,
+                              balance: widget.balance,
+                              price: unlockCost(index),
+                              onUnlock: widget.onUnlock,
+                              avatarSize: tile - _kCardPadding * 2,
+                              onOpen: () => widget.onOpen(bot),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                   ],
                 ),
               ),
@@ -676,13 +710,20 @@ class _LockedFooter extends StatelessWidget {
             // It still *reads* as out of reach — muted lettering rather than a
             // dead control — because losing that signal would trade one
             // confusion for another.
+            //
+            // **Muted has to mean a dimmer light, not a darker one.** This read
+            // `onSurfaceVariant`, which is `inkSoft` — text sized for
+            // parchment, printed on the bark brown this button is filled with.
+            // That measured 1.31:1 and was simply unreadable. Parchment is the
+            // panel's own beige at 4.30:1, still visibly softer than the cream
+            // an affordable button gets at 5.08:1, so the signal survives at a
+            // legible contrast (D383).
             onPressed: onUnlock,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor:
-                  affordable ? null : theme.colorScheme.onSurfaceVariant,
+              foregroundColor: affordable ? null : QuadrimPalette.parchment,
             ),
             child: Text(l10n.unlockAction,
                 maxLines: 1, overflow: TextOverflow.ellipsis),

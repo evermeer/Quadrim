@@ -416,7 +416,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blurbHazel =>
-      'Sees wins and blocks a little more often than Mote does.';
+      'Sees wins and blocks, and looks away about a third of the time.';
 
   @override
   String get blurbSorrel =>
@@ -761,22 +761,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shopTitle => 'Shop';
 
   @override
-  String get shopUnlimitedName => 'Unlimited play';
+  String get shopUnlimitedName => 'Unlimited daily games';
 
   @override
   String get shopUnlimitedBody =>
-      'Start as many games against the computer as you like. Yearly, cancel any time.';
+      'Play more than three games a day, all year. Cancel any time.';
 
   @override
-  String get shopUnlockAllName => 'Unlock all opponents';
+  String get shopUnlockAllName => 'Unlock every opponent';
 
   @override
   String get shopUnlockAllBody =>
-      'Every opponent on the ladder, straight away, instead of earning them with points.';
+      'The whole ladder, unlocked right away, instead of earning opponents with points.';
 
   @override
   String get shopUnlockAllCaveat =>
-      'This does not change how many games you can start. You still play three a day unless you also have unlimited play.';
+      'This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.';
 
   @override
   String get shopOwned => 'Owned';

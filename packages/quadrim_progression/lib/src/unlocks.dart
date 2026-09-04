@@ -51,10 +51,50 @@ bool isUnlocked(String botId, Set<String> unlockedIds) {
 /// produce but a hand-edited document could — resolves to the lowest locked
 /// index regardless, so the ladder repairs itself rather than jamming.
 int? nextUnlockIndex(Set<String> unlockedIds) {
-  for (var i = 0; i < opponentCatalogue.length; i++) {
+  // From the first rung that is *for sale*. The mercy opponents below it are
+  // locked on a first launch but are not on the ladder: naming one here would
+  // point the whole points economy at an opponent no amount of points can buy
+  // (D382).
+  for (var i = kMercyCount; i < opponentCatalogue.length; i++) {
     if (!isUnlocked(opponentCatalogue[i].id, unlockedIds)) return i;
   }
   return null;
+}
+
+/// The mercy opponents this player has earned back, by id.
+///
+/// Pebble, Twig and Mote are locked on a first launch (D382). Each opens when
+/// the rung immediately above it has beaten the player at least once: a loss to
+/// Hazel hands back Mote, a loss to Mote hands back Twig, a loss to Twig hands
+/// back Pebble. Nobody is ever offered an easier opponent until the game has
+/// shown them they might want one.
+///
+/// **Derived, never stored.** There is no unlock record and no new document
+/// type — this is a fold over the game list, exactly like the points total, the
+/// streak and the computer rating. That buys three properties for free: it is
+/// idempotent, it needs no write path on the completion of a game, and a refund
+/// of the "unlock every opponent" purchase cannot revoke it, because a game
+/// that was lost stays lost.
+///
+/// [played] grandfathers the change. Anyone with a finished game against one of
+/// the three keeps it: the reviews asked for a gentler *opening*, and taking an
+/// opponent away from a player who has already used it would be a different and
+/// worse change.
+///
+/// A draw is not a loss. The rule is about being beaten, and a player who draws
+/// Hazel twenty times has not been beaten by it.
+Set<String> mercyUnlocks({
+  required Set<String> played,
+  required Set<String> lostTo,
+}) {
+  assert(kMercyCount < opponentCatalogue.length,
+      'every mercy rung needs the rung above it to exist');
+  return {
+    for (var i = 0; i < kMercyCount; i++)
+      if (played.contains(opponentCatalogue[i].id) ||
+          lostTo.contains(opponentCatalogue[i + 1].id))
+        opponentCatalogue[i].id,
+  };
 }
 
 /// The three roster indices Your Path shows, weakest first.

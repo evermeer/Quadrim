@@ -87,36 +87,52 @@ void main() {
         // sentence and on no phone (D335).
         var locked = 0;
         for (var i = 0; i < opponentCatalogue.length; i++) {
-          if (!isFree(opponentCatalogue[i])) locked++;
+          if (isPurchasable(opponentCatalogue[i])) locked++;
         }
         expect(locked, 25);
+        // The mercy rungs are locked too and are *not* in that total: they are
+        // handed back by losing, never bought, so pricing them would put three
+        // opponents in the shop window that no amount of points can reach
+        // (D382).
+        expect(opponentCatalogue.where(isMercy).length, kMercyCount);
+        for (final bot in opponentCatalogue.where(isMercy)) {
+          expect(isPurchasable(bot), isFalse, reason: bot.id);
+        }
       },
     );
   });
 
   group('the free set', () {
-    test('is exactly the first six', () {
+    test('is the Novice tier above the mercy rungs', () {
       // A count, not a rating threshold. D228 made it a threshold so nothing
       // would have to be kept in step with a number written in words; D335
       // reversed that, because the threshold silently handed out seven of
-      // thirty-one when the roster was recut.
+      // thirty-one when the roster was recut. D382 then took three back off the
+      // bottom: six is still where the *ladder* starts, but the first three
+      // rungs are held back rather than given.
       expect(kFreeCount, 6);
+      expect(kMercyCount, 3);
       for (var i = 0; i < opponentCatalogue.length; i++) {
-        expect(isFree(opponentCatalogue[i]), i < kFreeCount,
+        expect(isFree(opponentCatalogue[i]), i >= kMercyCount && i < kFreeCount,
             reason: opponentCatalogue[i].id);
       }
     });
 
-    test('is the Novice tier exactly, which is why six is the number', () {
+    test('is three opponents on a first launch, and the ladder still starts at '
+        'Bramble', () {
       expect(opponentCatalogue.where(isFree).map((b) => b.id), [
-        'pebble',
-        'twig',
-        'mote',
         'hazel',
         'clover',
         'sorrel',
       ]);
-      for (final bot in opponentCatalogue.where(isFree)) {
+      expect(opponentCatalogue.where(isMercy).map((b) => b.id), [
+        'pebble',
+        'twig',
+        'mote',
+      ]);
+      // All six are still Novice: what D382 changed is when they arrive, not
+      // where they sit.
+      for (final bot in opponentCatalogue.where((b) => isFree(b) || isMercy(b))) {
         expect(bot.tier, BotTier.novice, reason: bot.id);
       }
       // And Bramble, one rung up, is the first thing anybody buys.
@@ -128,10 +144,19 @@ void main() {
       expect(isFree(stranger), isFalse);
     });
 
-    test('is contiguous from the bottom, so "the next locked opponent" is '
-        'always well defined', () {
+    test('is contiguous, so "the next locked opponent" is always well defined',
+        () {
+      // Free and mercy together must still run from the bottom without a hole:
+      // `nextUnlockIndex` walks up from `kMercyCount` and stops at the first
+      // thing that is not free, so a gap anywhere below would put an opponent
+      // permanently out of reach.
+      final given = [
+        for (final bot in opponentCatalogue) isFree(bot) || isMercy(bot),
+      ];
+      expect(given.indexOf(false), given.lastIndexOf(true) + 1);
       final free = [for (final bot in opponentCatalogue) isFree(bot)];
-      expect(free.indexOf(false), free.lastIndexOf(true) + 1);
+      expect(free.indexOf(true), kMercyCount);
+      expect(free.lastIndexOf(true), kFreeCount - 1);
     });
   });
 

@@ -37,4 +37,3 @@ __pycache__/
 # derived in seconds from doc/designs/ by a committed script, and are 20 MB of
 # binary that would churn on every regeneration.
 doc/store/icons/
-

@@ -785,7 +785,7 @@ abstract class AppLocalizations {
   /// No description provided for @blurbHazel.
   ///
   /// In en, this message translates to:
-  /// **'Sees wins and blocks a little more often than Mote does.'**
+  /// **'Sees wins and blocks, and looks away about a third of the time.'**
   String get blurbHazel;
 
   /// No description provided for @blurbSorrel.
@@ -1367,31 +1367,31 @@ abstract class AppLocalizations {
   /// No description provided for @shopUnlimitedName.
   ///
   /// In en, this message translates to:
-  /// **'Unlimited play'**
+  /// **'Unlimited daily games'**
   String get shopUnlimitedName;
 
   /// No description provided for @shopUnlimitedBody.
   ///
   /// In en, this message translates to:
-  /// **'Start as many games against the computer as you like. Yearly, cancel any time.'**
+  /// **'Play more than three games a day, all year. Cancel any time.'**
   String get shopUnlimitedBody;
 
   /// No description provided for @shopUnlockAllName.
   ///
   /// In en, this message translates to:
-  /// **'Unlock all opponents'**
+  /// **'Unlock every opponent'**
   String get shopUnlockAllName;
 
   /// No description provided for @shopUnlockAllBody.
   ///
   /// In en, this message translates to:
-  /// **'Every opponent on the ladder, straight away, instead of earning them with points.'**
+  /// **'The whole ladder, unlocked right away, instead of earning opponents with points.'**
   String get shopUnlockAllBody;
 
   /// Deliberately prominent. The unlock sells impatience, not capability -- a buyer who finds this out afterwards has been misled.
   ///
   /// In en, this message translates to:
-  /// **'This does not change how many games you can start. You still play three a day unless you also have unlimited play.'**
+  /// **'This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.'**
   String get shopUnlockAllCaveat;
 
   /// No description provided for @shopOwned.

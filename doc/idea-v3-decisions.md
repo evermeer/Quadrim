@@ -2450,6 +2450,200 @@ The nine streak rungs were 5, 10, 15, 25, 40, 60, 90, 130 for eight; they are no
 console allows. A ninth rung at the old curve would have reached 1090 and been
 rejected — the cap is on the sum, so every rung's value is coupled to every
 other, and the next achievement added anywhere will move these numbers again.
+## D380 — Store copy that lives only in a console is copy nobody can review
+
+**Question:** Apple rejected 0.1.3 under guideline 2.3.2 on 2026-08-30: the two
+in-app purchases had display names and descriptions too alike to tell apart.
+Both had been typed straight into App Store Connect and existed nowhere else.
+What is the fix, and what stops it recurring?
+
+**Decision:** New copy that shares no word between the products, and the copy
+recorded in `doc/store-listing.md` rather than only in the web form.
+
+**Nothing in the app was wrong, which is the interesting part.**
+`shopUnlockAllName` is "Unlock all opponents" and `shopUnlimitedName` is
+"Unlimited play"; the bodies are different sentences; the StoreKit configuration
+matched. Every string this repository has ever checked was fine. The two that
+collided were in a form on a website, and the project had no opinion about them
+because it had never seen them.
+
+That is the actual defect. This repo enforces that no user-facing string lives
+outside l10n (D297) and that both languages exist for every one of them — and
+then let the two most commercially important strings in the product live in a
+place with no review, no diff and no test.
+
+**The new copy is held to a stronger standard than the guideline asks.** Apple
+requires the products to be distinguishable; these share **no word at all**, in
+either language, in either field, and they describe different *kinds* of thing —
+one is about which opponents you may play, the other about how often you may
+play. "Not identical" would have passed and would have left the next reviewer
+making the same judgement call.
+
+**Numbered D380 on `release/0.1.3`, deliberately.** That branch was cut from
+D370 and `main` has since reached D379; taking the next number on the branch
+would have produced two D371s and a collision on merge. Choosing the next number
+free on *main* costs nothing and makes the merge clean — a mistake already made
+once in this project and not worth making twice.
+
+**Cost:** a fourth place the two product names appear — l10n, the StoreKit
+configuration, App Store Connect, and now this document — with nothing
+mechanical keeping them in step. The app's copy and the store's copy are
+genuinely allowed to differ (the store has 30 and 45 character ceilings the app
+does not), so a check would have to encode which differences are legitimate.
+Recording them beside each other, where a human reads both at once, is the
+cheaper half of that and the half that was missing.
+
+**No new build is needed.** These are App Store Connect metadata fields, editable
+after publication and reviewed with the next submission; the binary Apple already
+has is unaffected. `0.1.3+9` stands.
+
+## D381 — The app's shop copy is the store's copy, and promotion is optional
+
+**Question:** Apple rejected 0.1.3 under guideline 2.3.2 a second time, on
+2026-09-02, naming a single product: *"Unlock all computer opponents"*. That
+string is in neither the app nor this repository — it is whatever App Store
+Connect currently holds. What changes?
+
+**Decision:** The shop screen's own strings become the store's strings, and
+promotion is treated as something to drop rather than something to defend.
+
+**D380 fixed the wrong half.** It made the two products distinguishable *from
+each other* and wrote the copy down, which was right and insufficient: the copy
+still lived only in App Store Connect on one side and only in `.arb` files on
+the other, saying different things. `shopUnlockAllName` said "Unlock all
+opponents" while the store said something else again. A reviewer tapping a
+promoted purchase sees the store's sentence and then the app's, and it is that
+pair the guideline is about. They now match: the names are identical, the
+bodies open with the store description.
+
+**The second notice names one product, not two**, which does not fit "these two
+are alike". It fits either a collision *within* one product — its display name
+and its description being the same string — or a reviewer reading metadata that
+was never updated. The quoted name settles nothing except that App Store
+Connect holds a third set of words, so the first move is to read what is
+actually in the form rather than to write a fourth set.
+
+**The cheaper move is to stop promoting.** Guideline 2.3.2 governs *promoted*
+in-app purchases, and Apple's notice says plainly that deleting the promotional
+image ends the matter. App Store promotion earns a listing on the product page;
+a first release with no traffic gains nothing measurable from it, so it is a
+feature to add later from a position of strength rather than one to keep
+arguing about now.
+
+**Cost:** the shop screen loses the copy written for it. "Start as many games
+against the computer as you like" was a better sentence in the app than "Play
+more than three games a day, all year", which exists to fit forty-five
+characters. Both languages take the same hit. That is the price of one wording
+per product rather than one per surface, and it is worth paying while a review
+is what stands between the app and its users.
+
+**Still no new build for the metadata itself.** The App Store Connect fields
+are editable in place. This change ships with the next binary because the app's
+own strings moved; the fix to the rejection does not wait for it.
+
+## D382 — The three easiest opponents are held back, and losing hands them over
+
+**Question:** Player reviews of 0.1.3 say the ladder opens too gently: Pebble,
+Twig and Mote are beaten by an average adult first try, so the game's opening
+impression is three matches it cannot lose. Removing them would strand the
+players who *do* need them. What replaces "free from the start"?
+
+**Decision:** The roster starts at Hazel. Each of the three below it opens when
+the rung immediately above has beaten the player at least once — a loss to Hazel
+hands back Mote, a loss to Mote hands back Twig, a loss to Twig hands back
+Pebble. Nobody is offered an easier opponent until the game has shown them they
+might want one.
+
+**Derived, not stored.** There is no new document, no new `UnlockSource`, and no
+write path on the completion of a game: `mercyUnlocks` is a fold over the game
+list, exactly like the points total, the streak and the computer rating. That
+buys three properties for nothing. It is idempotent. It cannot half-apply if the
+app is killed between finishing a game and writing a record. And a refund of the
+"unlock every opponent" purchase cannot revoke it, because a game that was lost
+stays lost — which the stored alternative would have got wrong by default, since
+`revokePurchasedUnlocks` deletes every record written at `UnlockSource.purchase`.
+
+**They are outside the points economy entirely**, and that is the part most
+likely to be broken by a later change. `nextUnlockIndex` now walks up from
+`kMercyCount` rather than from zero; without that, the shop would offer Pebble as
+"the next opponent to buy" to every new player, at a price, for an opponent no
+amount of points can reach. `fullRosterCost` and `priceOf` skip them for the same
+reason, through a single `isPurchasable` predicate rather than three copies of
+the same condition. `unlocks_test.dart` asserts over every prefix of the roster
+that the ladder never names one.
+
+**`kFreeCount` is a boundary now, not a count.** Six is still the first index
+that must be bought — Bramble, unchanged — but the number of opponents actually
+free on a first launch is three. The name is kept because it is what the points
+ladder is keyed on and what every test reads it as; renaming it would be churn
+across two packages for a word.
+
+**Existing players keep what they have.** `mercyUnlocks` also grants any of the
+three the player has already finished a game against. The reviews asked for a
+gentler *opening*; taking an opponent away from somebody already using it would
+be a different and worse change, and it is one line in the same fold.
+
+**Locked mercy rungs are hidden, not greyed out.** A locked row shows its price,
+and these have none — so the row could say nothing about how to open it. The
+true answer, *lose to the rung above*, is not something to advertise: it invites
+deliberate losing to farm the easy opponents, and reads as condescension to a
+player who is already struggling. The tier heading counts the filtered list, so
+the Novice section says three and then four as they arrive.
+
+**A draw is not a loss.** The rule is about being beaten, and the signature is
+the proof rather than a comment: `mercyUnlocks` takes the opponents lost to,
+and there is nowhere to pass a draw.
+
+**Hazel's description had to be rewritten, and only running the build found
+it.** It read "Sees wins and blocks a little more often than Mote does" — a
+comparison to an opponent a new player can no longer see, in the first row of
+the first screen they open. No test could have caught it: every string was
+present, in both languages, and the check that greps for that has nothing to
+say about whether a sentence still makes sense. It now describes Hazel on its
+own terms, at the blunder rate the configuration actually carries. The general
+lesson is that hiding a catalogue entry breaks prose that names it, and prose
+is the part the compiler does not hold.
+
+**Cost:** a new player's first screen offers three opponents where it offered
+six, and the weakest thing they can play is rated 850 rather than 600. If the
+reviews were wrong about the average player, this is worse for the people the
+mercy rungs exist for, and they only find out by losing. The counter-argument is
+that losing to Hazel is one game, and the ladder repairs itself immediately.
+Also, the fold now reads the per-opponent record for a reason unrelated to
+display, so a future change to `HomeSummary.byOpponent` can silently change who
+can play what — `home_screen` is the single place the stored and derived sets are
+joined, and it is commented as such.
+
+## D383 — Muted means a dimmer light, not a darker one
+
+**Question:** The unlock button on a Your Path tile was reported as black text
+on brown and unreadable. It is a filled button, so the theme paints it `bark`;
+the label was `onSurfaceVariant`, which resolves to `inkSoft`. What replaces it?
+
+**Decision:** `parchment` — the panel's own beige — for the unaffordable state,
+leaving the affordable one on the theme's `cream`.
+
+**The defect is a token used outside the surface it was defined for.**
+`onSurfaceVariant` is the muted ink for text *on parchment*, and it is the right
+colour there. This button is filled with `bark`, so the same token arrived as
+dark brown on brown: **1.31:1**, which is not low contrast but no contrast.
+Nothing caught it because both colours are correct tokens and the pairing is
+made at the call site, where no check looks.
+
+**The two states still differ, and both are legible.** Affordable is `cream` at
+**5.08:1**; unaffordable is `parchment` at **4.30:1** — visibly softer and
+warmer, which is the signal the button was given from tester feedback: it reads
+as out of reach without being a dead control that answers nothing.
+
+**Cost, stated plainly: 4.30:1 misses WCAG AA.** The threshold for this text is
+4.5:1 — the label is 15px bold, which is under the 14pt-bold large-text
+exemption. Every lighter beige in the palette is worse (`parchmentDeep` 3.65,
+`creamSoft` 3.33), so keeping a visible distinction at full AA would mean
+`cream` on both and no distinction at all. The judgement is that 4.30 against
+1.31 is the change that matters, and that the affordability signal is anyway
+carried in numbers directly above the button — the progress bar and "0 of 42" —
+rather than by the lettering alone. If the distinction is ever judged not worth
+0.2 of a contrast point, the fix is to delete the override entirely.
 
 ## Open items
 

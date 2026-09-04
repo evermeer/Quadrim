@@ -133,9 +133,12 @@ Future<bool> runUnlock(
   return true;
 }
 
-/// The price of an opponent, or null if it is free and has none.
+/// The price of an opponent, or null if it is not for sale.
+///
+/// Free opponents have no price; so do the mercy rungs, which are handed back
+/// by losing rather than bought at any figure (D382).
 int? priceOf(String botId) {
   final index = rosterIndexOf(botId);
-  if (index == null || isFree(opponentCatalogue[index])) return null;
+  if (index == null || !isPurchasable(opponentCatalogue[index])) return null;
   return unlockCost(index);
 }

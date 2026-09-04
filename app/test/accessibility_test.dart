@@ -279,9 +279,11 @@ void main() {
       await tapText(tester, 'Play the computer');
       expect(tester.takeException(), isNull, reason: 'the opponent list');
 
-      // Pebble is the only opponent unlocked on a fresh install, and the first
-      // in the list -- which is what a new player is looking at here.
-      await tester.tap(find.text('Pebble').first);
+      // Hazel is the weakest opponent a fresh install offers and the first in
+      // the list -- which is what a new player is looking at here. It was
+      // Pebble until D382 held the three rungs below Hazel back until a loss
+      // asks for one, so they are not on this screen at all.
+      await tester.tap(find.text('Hazel').first);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: 'the board');
     });

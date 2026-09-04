@@ -263,8 +263,30 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Set<String> get _unlockedIds =>
-      {for (final unlock in _unlockList) unlock.opponentId};
+  /// Everything the player may play: what they bought, plus what losing handed
+  /// back.
+  ///
+  /// **The one place the two are joined.** Every screen that asks whether an
+  /// opponent is playable is handed this set rather than computing its own, so
+  /// a caller cannot see the stored unlocks and miss the derived ones (D382).
+  Set<String> get _unlockedIds => {
+        for (final unlock in _unlockList) unlock.opponentId,
+        ..._mercyIds,
+      };
+
+  /// The mercy rungs earned back, folded from the same summary the rest of this
+  /// screen reads (D382). Nothing about them is stored.
+  Set<String> get _mercyIds {
+    final played = <String>{};
+    final lostTo = <String>{};
+    for (final record in _summary.byOpponent) {
+      final id = botIdOf(record.opponent);
+      if (id == null) continue;
+      played.add(id);
+      if (record.losses > 0) lostTo.add(id);
+    }
+    return mercyUnlocks(played: played, lostTo: lostTo);
+  }
 
   /// The balance: earned minus the prices **actually paid**, clamped at zero.
   ///

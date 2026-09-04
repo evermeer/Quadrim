@@ -93,6 +93,13 @@ class _OpponentScreenState extends State<OpponentScreen> {
     // touching it.
     final sections = <BotTier, List<BotConfig>>{};
     for (final bot in opponentCatalogue) {
+      // A mercy rung that has not been earned back is not shown at all (D382).
+      // It has no price, so a locked row could say nothing about how to open
+      // it, and the true answer — lose to the rung above — is not something to
+      // advertise: it invites deliberate losing, and reads as condescension to
+      // a player who is already struggling. The tier's count follows this
+      // filter rather than the catalogue, so the header stays honest.
+      if (isMercy(bot) && !isUnlocked(bot.id, widget.unlocked)) continue;
       sections.putIfAbsent(bot.tier, () => <BotConfig>[]).add(bot);
     }
 

@@ -124,12 +124,16 @@ void main() {
       await tester.pumpWidget(_home(repo));
       await tester.pumpAndSettle();
 
-      for (final name in ['Mote', 'Clover', 'Bramble']) {
+      // Hazel rather than Mote at the weak end: the row does not show the mercy
+      // rungs to a player who has not earned them back (D382).
+      for (final name in ['Hazel', 'Clover', 'Bramble']) {
         expect(find.text(name), findsOneWidget, reason: name);
       }
-      // Left, to the weakest.
-      await _scrollTo(tester, 'Pebble');
-      expect(find.text('Pebble'), findsOneWidget);
+      // Left, to the weakest the row shows. Since D382 that is Hazel: Pebble,
+      // Twig and Mote are held back from a new player, and a row that showed
+      // them locked would print a price no amount of points can pay.
+      await _scrollTo(tester, 'Hazel');
+      expect(tileFor('Hazel'), findsOneWidget);
       // And right, all the way to the top of the ladder. The tile writes the
       // strongest opponent short — "Quadrim Prime" ellipsises to nonsense at a
       // third of a phone's width — while still announcing the whole name
@@ -193,12 +197,12 @@ void main() {
     testWidgets('starting a game from it opens that game', (tester) async {
       _phone(tester);
       final repo = await _repository();
-      await open(tester, repo, 'Mote');
+      await open(tester, repo, 'Hazel');
       await tester.tap(find.widgetWithText(FilledButton, 'Start a game'));
       await tester.pumpAndSettle();
 
       final active = await repo.watchActiveGames().first;
-      expect(active.single.opponent, botOpponent('mote'));
+      expect(active.single.opponent, botOpponent('hazel'));
       // And the page is gone, so backing out of the game lands on the main
       // screen rather than on the page that started it.
       expect(find.byType(OpponentDetail), findsNothing);
@@ -259,6 +263,10 @@ void main() {
     testWidgets('says how the pairing sits against the player', (tester) async {
       _phone(tester);
       final repo = await _repository();
+      // Bought outright, which is the only way to reach Pebble without first
+      // playing a game — and a game would move the rating this test names
+      // (D382). It is also the path the store purchase takes.
+      await repo.grantAllPurchased();
       await open(tester, repo, 'Pebble');
       // Pebble is 600 against a seeded 800.
       expect(find.text('Below your level'), findsOneWidget);
@@ -307,14 +315,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Play the computer'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Pebble'));
+      await tester.tap(find.text('Hazel'));
       await tester.pumpAndSettle();
 
       expect(find.byType(OpponentDetail), findsNothing,
           reason: 'this screen is behind the new-game button, so the player '
               'has already decided (D288)');
       final active = await repo.watchActiveGames().first;
-      expect(active.single.opponent, botOpponent('pebble'));
+      expect(active.single.opponent, botOpponent('hazel'));
     });
   });
 }
