@@ -544,7 +544,16 @@ and deleting them buys it again.** Apple refused 0.1.2 under guideline 3.1.2:
 *"offers auto-renewable subscriptions but does not include a functional link to
 the Terms of Use (EULA) in the app metadata that appears on the app's App Store
 product page."* The App Description is that metadata — the long description on
-the product page, not the privacy-policy field and nothing in the binary.
+the product page, not the privacy-policy field.
+
+**"And nothing in the binary" stood here, and it was wrong.** Apple refused
+0.1.3 (10) under the same guideline on 2026-09-07, this time for the app itself:
+*"The following information needs to be included within the app: a functional
+link to the Terms of Use (EULA) and a functional link to the privacy policy."*
+Both halves are required — the metadata **and** the binary — and satisfying one
+says nothing about the other. The app now carries both links in settings and at
+the foot of the shop screen, with the subscription's term and yearly price
+beside its name (D384).
 
 The link is to **Apple's standard EULA**, which is the cheaper of the two routes
 Apple offers: link the standard one from the description, or write a custom one

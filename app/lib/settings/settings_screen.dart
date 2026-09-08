@@ -6,17 +6,23 @@ import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
+import '../links.dart';
 import '../shop/shop.dart';
 import '../shop/shop_screen.dart';
-import '../tutorial/tutorial_screen.dart';
 
-/// The two things a player can change: language, and another look at the
-/// tutorial.
+/// Language, purchases, and the links Apple requires to be reachable from
+/// inside the app.
 ///
 /// Small, and a blocker of the first upload for a reason that is easy to miss:
 /// half the closed testers are Dutch, and without a language override a Dutch
 /// tester whose phone is set to English cannot see the Dutch build at all
 /// (ticket 028).
+///
+/// **The tutorial row is gone and the legal links took its place** (D384). The
+/// main screen carries a Tutorial sign of its own, so that row was a second
+/// route to a screen already one tap away; the privacy policy and the EULA had
+/// no route at all, and guideline 3.1.2(c) requires both to be reachable inside
+/// the app when it sells an auto-renewing subscription.
 ///
 /// It also carries the strategy-dictionary attribution. That is not decoration
 /// — the dictionary's terms permit its use only if its source is credited in
@@ -81,17 +87,6 @@ class SettingsScreen extends StatelessWidget {
                   // now select the same screen, and a control that does nothing
                   // is worse than no control (D293). The stored field survives
                   // untouched for the day there is a second design to pick.
-                  const Divider(),
-                  _Heading(l10n.tutorial),
-                  ListTile(
-                    leading: const Icon(Icons.school_outlined),
-                    title: Text(l10n.settingsShowTutorial),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => TutorialScreen(settings: settings),
-                      ),
-                    ),
-                  ),
                   if (shop != null) ...[
                     const Divider(),
                     _Heading(l10n.settingsPurchases),
@@ -107,9 +102,31 @@ class SettingsScreen extends StatelessWidget {
                     _RestoreRow(shop: shop!),
                   ],
                   const Divider(),
+                  // **Not gated on `shop`.** The links are required whenever
+                  // the app can sell a subscription, and a build assembled
+                  // without a store attached is still that app; hiding them
+                  // behind a nullable field would make the requirement depend
+                  // on how the widget happened to be constructed (D384).
+                  _Heading(l10n.settingsLegal),
+                  LinkTile(
+                    icon: Icons.privacy_tip_outlined,
+                    title: l10n.settingsPrivacyPolicy,
+                    url: kPrivacyPolicyUrl,
+                  ),
+                  LinkTile(
+                    icon: Icons.description_outlined,
+                    title: l10n.settingsTerms,
+                    url: kTermsUrl,
+                  ),
+                  const Divider(),
                   _Heading(l10n.settingsAbout),
+                  LinkTile(
+                    icon: Icons.help_outline,
+                    title: l10n.settingsSupport,
+                    url: kSupportUrl,
+                  ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     child: Text(
                       l10n.strategyCredit,
                       style: theme.textTheme.bodySmall,
