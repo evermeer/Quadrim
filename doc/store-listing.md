@@ -150,6 +150,19 @@ Perfect play at the top of the ladder comes from Oren Patashnik's Qubic strategy
 Available in English and Dutch.
 ```
 
+Web page adds:
+
+```
+EULA
+
+The standard Apple Licensed Application End User License Agreement applies https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+For support or any other question about Quadrim, You can contact us:
+
+## A contact form
+```
+
+
 ---
 
 ## Listing copy — Nederlands

@@ -464,3 +464,5 @@ I just added the images in the folder doc/designs
 I would like 1 source for the achievement data and let check.sh generate whatever is needed.
 Also include a audit script that will check what's configured in the store to see if there is any drift that needs to be updated.
 ```
+
+small app store texts and ui fixes...
