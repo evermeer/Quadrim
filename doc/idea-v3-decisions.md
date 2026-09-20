@@ -2819,6 +2819,91 @@ points at all, so what is here mirrors what was set in App Store Connect rather
 than generating it. The tests check internal consistency; they cannot check
 that the console agrees.
 
+## D387 — 0.2.0, because game services are a capability rather than an improvement
+
+**Question:** The next build adds Play Games Services and Game Center — sign-in,
+one leaderboard, forty-six achievements. Every release so far has moved the last
+number: 0.1.0 through 0.1.3. Does this one become 0.1.4?
+
+**Decision:** No. **0.2.0.** The middle number moves for the first time.
+
+**0.1.x has meant "the game, being finished".** The cube board (D369), the
+meter, the shop, the privacy policy in the app (D384) — each was a better
+version of something the release already had, or a thing that release could not
+ship without. Game services are neither. They are a capability the build in the
+App Store does not have *at all*: a player who updates gets a sign-in, a
+leaderboard position and a shelf of achievements that did not exist the day
+before.
+
+**The version name is for people** (D358) — it is the half of `<name>+<code>`
+that may say anything, precisely so it can say something true about what
+changed. `0.1.4` is what "some fixes" looks like, and a player who reads it and
+then finds a leaderboard has been told the wrong thing by the one string that
+exists to tell them.
+
+**It is also the first release where the two stores diverge in substance rather
+than in timing.** Android has had no store functionality working at all — the
+shop reads as unavailable there (D388) — so on Play this is closer to a first
+working release of the paid half than to an upgrade. One version name has to
+cover both, and 0.2.0 is the one that is not misleading on either.
+
+**Cost:** 1.0 is now further away by one number than the ticket set implied.
+Tickets 015 through 049 all call the public release "1.0", and D372 already
+recorded that the artefact says 0.1.3 while the documents say 1.0 — this widens
+that gap rather than closing it. The gap is cosmetic and the alternative was to
+make the version name lie about a leaderboard, which is not cosmetic.
+
+## D388 — Play Billing does not work without INTERNET, and three uploads shipped without it
+
+**Question:** The Android closed test's shop screen reads "unavailable". Is that
+a missing console step, or something in the build?
+
+**Decision:** Neither a missing step nor a mystery: **the shipped bundles have no
+`INTERNET` permission**, so `queryProductDetails` returns nothing and the shop
+falls back to the state its store-less tests already cover.
+
+**Measured, not reasoned about.** Two release bundles were built at the same
+`versionCode` 11 and their merged manifests compared:
+
+| built from | permissions in the merged manifest |
+|---|---|
+| `release/0.1.3` — what was uploaded | `BILLING` only |
+| `main` — after D376 | `BILLING`, `INTERNET`, `ACCESS_NETWORK_STATE` |
+
+`release/0.1.3` still carries
+`<uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>`.
+D376 removed that directive on `main` when ticket 050 needed the network for
+Play Games Services. **+9, +10 and +11 were all built from the release branch
+and none of them got the fix.**
+
+**This answers a question that had been open since D357, and answers it the
+other way.** D357 stripped the permission and left as empirical "whether
+purchases still work without it, which the first internal-track install
+settles". The plausible-sounding argument for *yes* was that Play Billing talks
+to the Play Store app over IPC rather than over a socket, so the calling app's
+own network permission should not matter. **It does matter.** The product query
+fails and the shop is empty. Recorded because the wrong answer here was the
+intuitive one, and because it went unnoticed through three uploads.
+
+**Why nothing caught it.** `check.sh` reads the *source* manifest for this,
+deliberately: D376 turned the check from a ban into a declaration check, so it
+asserts our own manifest declares `INTERNET` without the removal directive. On
+`main` that passes, because on `main` it is true. The gate has no opinion about
+which branch a bundle was built from, and it is not obvious that it should —
+what went wrong is not the check but the release branch being a long-lived fork
+that missed a fix.
+
+**The narrower lesson is about the shape of the evidence.** Ticket 046's closure
+says in its own words that a half-tested purchase flow described as done is how
+money goes missing, and it recorded the Android half as unverified. It stayed
+unverified through three uploads while the iOS half was being exercised, and the
+symptom — a screen saying "unavailable" — is indistinguishable from the products
+not existing in the console, which they may also not.
+
+**Cost:** `+11` now names two different artefacts, one per store, built from two
+branches with different network posture. It must never name a third, which is
+part of why the next build is `+12` (D387).
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -2857,9 +2942,13 @@ remains:
   to real players. *Its internal consistency, at least, is now measured against
   the shipped catalogue: 140 pairs on 2026-08-29, every rung inside tolerance and
   no configuration defects (D376).*
-- **Whether Play Billing completes a purchase with `INTERNET` stripped** is still
-  empirical, unless the purchase that was tested was an Android one. The closed
-  test settles it and the answer belongs in 046's closure.
+- ~~Whether Play Billing completes a purchase with `INTERNET` stripped~~ —
+  **answered: it does not** (D388). It cannot even list the products. Three
+  uploads shipped without the permission, which is why the Android shop has
+  never worked.
+- **Whether the two products exist in Play Console** is still unverified and
+  would produce the identical "unavailable" screen. Ticket 046's AC 1 was only
+  ever met in App Store Connect.
 - **The privacy policy's contact block** is still three placeholders in
   `doc/store-listing.md` while the published page must already carry real values.
   A paste, and a read of the two side by side.
