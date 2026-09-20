@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
+import 'package:quadrim/links.dart';
 import 'package:quadrim/main.dart';
 import 'plaques.dart';
 
@@ -181,18 +182,66 @@ void main() {
     expect(plaqueLabelled('Nieuwe partij'), findsOneWidget);
   });
 
-  testWidgets('the tutorial can be restarted from here', (tester) async {
+  testWidgets('links to the privacy policy, the EULA and support, and each '
+      'one actually opens', (tester) async {
+    // **Guideline 3.1.2(c), twice.** Apple refused 0.1.3 for not carrying the
+    // first two inside the app; "functional link" is the phrase the rejection
+    // used, so this taps them rather than merely finding the rows (D384).
     _phone(tester);
+    final opened = <String>[];
+    final real = launchExternalUrl;
+    launchExternalUrl = (url) async {
+      opened.add(url.toString());
+      return true;
+    };
+    addTearDown(() => launchExternalUrl = real);
+
     await _open(tester);
     await _openSettings(tester);
 
-    await tester.tap(find.text('Show the tutorial again'));
-    await tester.pumpAndSettle();
-    expect(find.text('Step 1 of 12'), findsOneWidget);
+    for (final (title, url) in [
+      ('Privacy policy', kPrivacyPolicyUrl),
+      ('Terms of Use (EULA)', kTermsUrl),
+      ('Support', kSupportUrl),
+    ]) {
+      await tester.ensureVisible(find.text(title));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(title));
+      await tester.pumpAndSettle();
+      expect(opened.last, url, reason: title);
+    }
+    expect(opened, hasLength(3));
+  });
 
-    await tester.tap(find.byIcon(Icons.close));
+  testWidgets('a link that opens nothing says so out loud', (tester) async {
+    // A link that fails silently is exactly what the guideline means by one
+    // that is not functional, and it fails that way on a device with no
+    // browser or with the VIEW query intent missing from the manifest.
+    _phone(tester);
+    final real = launchExternalUrl;
+    launchExternalUrl = (url) async => false;
+    addTearDown(() => launchExternalUrl = real);
+
+    await _open(tester);
+    await _openSettings(tester);
+    await tester.ensureVisible(find.text('Privacy policy'));
     await tester.pumpAndSettle();
-    expect(find.text('Language'), findsOneWidget, reason: 'back on settings');
+    await tester.tap(find.text('Privacy policy'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Could not open the link. No browser is available.'),
+        findsOneWidget);
+  });
+
+  testWidgets('no longer offers the tutorial, which the main screen already '
+      'reaches', (tester) async {
+    // The row was a second route to a screen one tap away on the main screen,
+    // and the space it held is where the required links now are (D384).
+    _phone(tester);
+    await _open(tester);
+    await _openSettings(tester);
+    expect(find.text('Show the tutorial again'), findsNothing);
+    expect(find.text('Tutorial'), findsNothing);
   });
 
   testWidgets('carries the strategy-dictionary attribution', (tester) async {
@@ -226,7 +275,7 @@ void main() {
     expect(nodes['Nederlands']!.isInMutuallyExclusiveGroup, isTrue);
     expect(nodes['Nederlands']!.isChecked, CheckedState.isFalse);
 
-    for (final heading in ['Language', 'Tutorial', 'About']) {
+    for (final heading in ['Language', 'Legal', 'About']) {
       expect(nodes[heading]?.isHeader, isTrue, reason: heading);
     }
     handle.dispose();
@@ -258,8 +307,11 @@ void main() {
     for (final text in [
       'Taal',
       'Volg het toestel',
-      'Uitleg opnieuw bekijken',
+      'Juridisch',
+      'Privacyverklaring',
+      'Gebruiksvoorwaarden (EULA)',
       'Over',
+      'Ondersteuning',
     ]) {
       expect(find.text(text), findsWidgets, reason: text);
     }

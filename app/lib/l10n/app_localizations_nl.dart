@@ -715,6 +715,22 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsShowTutorial => 'Uitleg opnieuw bekijken';
 
   @override
+  String get settingsLegal => 'Juridisch';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacyverklaring';
+
+  @override
+  String get settingsTerms => 'Gebruiksvoorwaarden (EULA)';
+
+  @override
+  String get settingsSupport => 'Ondersteuning';
+
+  @override
+  String get linkFailed =>
+      'Kan de link niet openen. Er is geen browser beschikbaar.';
+
+  @override
   String get settingsPurchases => 'Aankopen';
 
   @override
@@ -777,6 +793,21 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get shopUnlockAllCaveat =>
       'Dit verandert niet hoeveel partijen je kunt beginnen. Je speelt er nog steeds drie per dag, tenzij je ook onbeperkt per dag hebt.';
+
+  @override
+  String get shopUnlimitedTerm => 'Automatisch verlengend abonnement · 1 jaar';
+
+  @override
+  String get shopUnlockAllTerm => 'Eenmalige aankoop';
+
+  @override
+  String shopPricePerYear(String price) {
+    return '$price per jaar';
+  }
+
+  @override
+  String get shopSubscriptionNote =>
+      'Het abonnement verlengt automatisch totdat je het opzegt. Beheren of stoppen doe je in je accountinstellingen.';
 
   @override
   String get shopOwned => 'In bezit';

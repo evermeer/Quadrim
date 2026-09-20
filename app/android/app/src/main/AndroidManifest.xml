@@ -74,5 +74,17 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- So a browser can be found for the privacy policy, the EULA and the
+             support page (D384). Android 11 hides other packages by default,
+             and without this url_launcher reports that nothing can open an
+             https address - a link that silently does nothing, which is
+             precisely the "functional link" the rejection asked for.
+
+             It grants no network access of its own: the intent hands the
+             address to whichever app already owns browsing. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

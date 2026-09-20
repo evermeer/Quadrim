@@ -714,6 +714,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShowTutorial => 'Show the tutorial again';
 
   @override
+  String get settingsLegal => 'Legal';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacy policy';
+
+  @override
+  String get settingsTerms => 'Terms of Use (EULA)';
+
+  @override
+  String get settingsSupport => 'Support';
+
+  @override
+  String get linkFailed => 'Could not open the link. No browser is available.';
+
+  @override
   String get settingsPurchases => 'Purchases';
 
   @override
@@ -777,6 +792,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shopUnlockAllCaveat =>
       'This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.';
+
+  @override
+  String get shopUnlimitedTerm => 'Auto-renewing subscription · 1 year';
+
+  @override
+  String get shopUnlockAllTerm => 'One-time purchase';
+
+  @override
+  String shopPricePerYear(String price) {
+    return '$price per year';
+  }
+
+  @override
+  String get shopSubscriptionNote =>
+      'The subscription renews automatically until you cancel it. Manage or cancel it in your account settings.';
 
   @override
   String get shopOwned => 'Owned';

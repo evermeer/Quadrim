@@ -529,6 +529,23 @@
   },
   "languageDutch": "Nederlands",
   "settingsShowTutorial": "Show the tutorial again",
+  "@settingsShowTutorial": {
+    "description": "Unused since D384 took the row out of settings -- the main screen's own Tutorial sign reaches it, and the space went to the links guideline 3.1.2(c) requires. Kept because deleting a translated string to re-add it later is the expensive order."
+  },
+  "settingsLegal": "Legal",
+  "@settingsLegal": {
+    "description": "Settings heading over the privacy policy and the EULA. Apple refused 0.1.3 twice under 3.1.2(c) for wanting both inside the app rather than only in the store listing (D384)."
+  },
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsTerms": "Terms of Use (EULA)",
+  "@settingsTerms": {
+    "description": "Apple's standard End User License Agreement, linked rather than written: a custom one is a document to keep correct in two languages forever, for terms this game has no need to vary."
+  },
+  "settingsSupport": "Support",
+  "linkFailed": "Could not open the link. No browser is available.",
+  "@linkFailed": {
+    "description": "Shown when a link tap opens nothing. A link that fails silently is exactly the defect 3.1.2(c) calls not functional, so the failure is said out loud."
+  },
   "settingsPurchases": "Purchases",
   "@settingsPurchases": {
     "description": "Settings heading for the restore action. Apple requires a visible restore, and a player who reinstalls needs one."
@@ -565,6 +582,28 @@
   "shopUnlockAllCaveat": "This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.",
   "@shopUnlockAllCaveat": {
     "description": "Deliberately prominent. The unlock sells impatience, not capability -- a buyer who finds this out afterwards has been misled."
+  },
+  "shopUnlimitedTerm": "Auto-renewing subscription \u00b7 1 year",
+  "@shopUnlimitedTerm": {
+    "description": "Guideline 3.1.2(c) asks the app itself for the subscription's title, length and price. This is the length, beside the name and the price."
+  },
+  "shopUnlockAllTerm": "One-time purchase",
+  "@shopUnlockAllTerm": {
+    "description": "The other half of the same requirement: a buyer must be able to tell at a glance which product recurs and which does not."
+  },
+  "shopPricePerYear": "{price} per year",
+  "@shopPricePerYear": {
+    "description": "3.1.2(c) wants the price per unit where one applies. The price itself is formatted by the store in the player's own currency and is never built here.",
+    "placeholders": {
+      "price": {
+        "type": "String",
+        "example": "\u20ac2.99"
+      }
+    }
+  },
+  "shopSubscriptionNote": "The subscription renews automatically until you cancel it. Manage or cancel it in your account settings.",
+  "@shopSubscriptionNote": {
+    "description": "Auto-renewal, said before the money rather than after. Cancelling happens in the platform's own account settings and cannot be done from inside the app."
   },
   "shopOwned": "Owned",
   "shopBuy": "Buy",

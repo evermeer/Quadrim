@@ -2645,6 +2645,66 @@ carried in numbers directly above the button — the progress bar and "0 of 42" 
 rather than by the lettering alone. If the distinction is ever judged not worth
 0.2 of a contrast point, the fix is to delete the override entirely.
 
+## D384 — The subscription's terms and links belong in the binary, not only in the listing
+
+**Question:** Apple refused 0.1.3 (10) under guideline 3.1.2(c) on 2026-09-07:
+an app selling an auto-renewing subscription must carry a functional link to the
+privacy policy and to the Terms of Use *within the app*. 0.1.2 had already been
+refused under 3.1.2 and fixed — in the App Store description. What was missed?
+
+**Decision:** Both links go in settings and at the foot of the shop screen, the
+tutorial row leaves settings to make room, and each product states whether it
+recurs.
+
+**The requirement has two halves and this project read it as one.**
+`doc/store-listing.md` recorded the first rejection's lesson as being about *"the
+long description on the product page, not the privacy-policy field and nothing
+in the binary"* — a sentence written while looking at a rejection that happened
+to be about metadata. The guideline asks for both, and a fix that satisfies one
+half says nothing about the other. That sentence is now corrected in place rather
+than deleted, because the wrong reading is the interesting part of the record.
+
+**The links are on the shop screen as well as in settings**, and that is the
+half that answers the rejection rather than merely satisfying it. 3.1.2(c) asks
+for the information in the *purchase flow*; Apple's own suggested remedy is
+`SubscriptionStoreView`, which renders the terms beside the buy button. A
+reviewer who opens the paywall must not have to go looking in settings for them.
+
+**Each product now says what kind of thing it is.** The subscription reads
+"Auto-renewing subscription · 1 year" with its price shown as "€2.99 per year",
+and the one-time unlock reads "One-time purchase". The guideline asks for title,
+length and price together; the price string is still whatever the store formats
+in the player's own currency and is never assembled here.
+
+**The tutorial row was removed rather than the screen made longer.** The main
+screen carries a Tutorial sign of its own, so settings held a second route to a
+screen already one tap away, while the two required links had no route at all.
+The `settingsShowTutorial` string stays in both `.arb` files: deleting a
+translated string to re-add it later is the expensive order to do it in.
+
+**Opening a link needs no `INTERNET` permission**, and this matters here more
+than it would in most apps: the release bundle still strips that permission from
+the merge (D357). A VIEW intent hands the address to whichever app already owns
+browsing. The Android manifest does need a `<queries>` entry for `https`, or
+Android 11's package visibility rules make `url_launcher` report that nothing can
+open the address — a link that silently does nothing, which is exactly what the
+rejection calls not functional. `check.sh` reads the *merged* manifest, so if
+`url_launcher_android` ever declared the permission transitively the gate would
+fail rather than the bundle ship.
+
+**A link that fails is spoken.** `LinkTile` shows a message when the launcher
+returns false or throws, because the failure mode this guideline is about is
+invisible at the call site and on screen: a row that looks like a link and does
+nothing.
+
+**Cost:** a plugin dependency in a release candidate, and a third place the
+privacy-policy URL is written — `app/lib/links.dart`, App Store Connect, and
+`doc/store-listing.md` — with nothing mechanical keeping them in step. That is
+the same shape of gap D381 closed for the product names, and it is not closed
+here; the constants carry a comment saying so. The widget tests replace
+`launchExternalUrl` rather than the plugin, so what is proven is that the row
+asks for the right address, not that a browser exists.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

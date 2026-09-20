@@ -1274,11 +1274,41 @@ abstract class AppLocalizations {
   /// **'Nederlands'**
   String get languageDutch;
 
-  /// No description provided for @settingsShowTutorial.
+  /// Unused since D384 took the row out of settings -- the main screen's own Tutorial sign reaches it, and the space went to the links guideline 3.1.2(c) requires. Kept because deleting a translated string to re-add it later is the expensive order.
   ///
   /// In en, this message translates to:
   /// **'Show the tutorial again'**
   String get settingsShowTutorial;
+
+  /// Settings heading over the privacy policy and the EULA. Apple refused 0.1.3 twice under 3.1.2(c) for wanting both inside the app rather than only in the store listing (D384).
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get settingsLegal;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get settingsPrivacyPolicy;
+
+  /// Apple's standard End User License Agreement, linked rather than written: a custom one is a document to keep correct in two languages forever, for terms this game has no need to vary.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use (EULA)'**
+  String get settingsTerms;
+
+  /// No description provided for @settingsSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get settingsSupport;
+
+  /// Shown when a link tap opens nothing. A link that fails silently is exactly the defect 3.1.2(c) calls not functional, so the failure is said out loud.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link. No browser is available.'**
+  String get linkFailed;
 
   /// Settings heading for the restore action. Apple requires a visible restore, and a player who reinstalls needs one.
   ///
@@ -1393,6 +1423,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This does not change how many games you can start. You still play three a day unless you also have unlimited daily games.'**
   String get shopUnlockAllCaveat;
+
+  /// Guideline 3.1.2(c) asks the app itself for the subscription's title, length and price. This is the length, beside the name and the price.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-renewing subscription · 1 year'**
+  String get shopUnlimitedTerm;
+
+  /// The other half of the same requirement: a buyer must be able to tell at a glance which product recurs and which does not.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase'**
+  String get shopUnlockAllTerm;
+
+  /// 3.1.2(c) wants the price per unit where one applies. The price itself is formatted by the store in the player's own currency and is never built here.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} per year'**
+  String shopPricePerYear(String price);
+
+  /// Auto-renewal, said before the money rather than after. Cancelling happens in the platform's own account settings and cannot be done from inside the app.
+  ///
+  /// In en, this message translates to:
+  /// **'The subscription renews automatically until you cancel it. Manage or cancel it in your account settings.'**
+  String get shopSubscriptionNote;
 
   /// No description provided for @shopOwned.
   ///
