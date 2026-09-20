@@ -9,7 +9,7 @@ import 'package:quadrim/services/review.dart';
 import 'package:quadrim/theme.dart';
 import 'package:quadrim_engine/quadrim_engine.dart';
 
-import 'review_test.dart' show FakeReviewPlatform;
+import 'store_review_test.dart' show FakeReviewPlatform;
 
 /// D389, the half `review_test.dart` cannot reach.
 ///
