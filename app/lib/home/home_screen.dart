@@ -16,6 +16,7 @@ import '../game/game_screen.dart';
 import '../game/opponent_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../services/games.dart';
+import '../services/review.dart';
 import '../data/meter_fold.dart' as meter_fold;
 import '../shop/paywall.dart';
 import '../shop/shop.dart';
@@ -67,6 +68,7 @@ class HomeScreen extends StatefulWidget {
     required this.unlocks,
     this.shop,
     this.services,
+    this.review,
     this.random,
     this.now,
   });
@@ -83,6 +85,11 @@ class HomeScreen extends StatefulWidget {
 
   /// Handed to every [GameScreen] this screen opens. Null in a widget test.
   final GameServices? services;
+
+  /// The store review sheet, or null (D389). Threaded rather than built here:
+  /// the game screen is where a game finishes, and that is the only moment
+  /// this is ever asked about.
+  final ReviewPrompt? review;
 
   /// Read on first frame to decide whether to offer the tutorial, and written
   /// once the offer has been made. Separate from [repository] because they are
@@ -327,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
           unlocks: widget.unlocks,
           settings: widget.settings,
           services: widget.services,
+          review: widget.review,
         ),
       ),
     );

@@ -317,6 +317,8 @@ class SettingsDocument {
     this.tutorialCompleted = false,
     this.tutorialOffered = false,
     this.freeMonthStartedAt,
+    this.reviewPromptedAt,
+    this.reviewPromptCount = 0,
     this.schemaVersion = kSchemaVersion,
   });
 
@@ -339,6 +341,27 @@ class SettingsDocument {
   /// Null until first launch stamps it. Null means *unmetered*, never expired:
   /// a missing record must fail towards letting the player play.
   final DateTime? freeMonthStartedAt;
+
+  /// When the store review sheet was last asked for (D389).
+  ///
+  /// **Asked for, not shown, and certainly not answered.** Neither platform
+  /// reports whether the sheet appeared or what the player did with it, and
+  /// both silently drop the request when over quota. So this records the one
+  /// fact the app actually has: that it made the call. Everything the feature
+  /// decides is decided from that.
+  ///
+  /// Null until the first prompt. Stored for the same reason
+  /// [freeMonthStartedAt] is — history cannot reconstruct it.
+  final DateTime? reviewPromptedAt;
+
+  /// How many times the sheet has been asked for, capped at
+  /// [kMaxReviewPrompts].
+  ///
+  /// Separate from [reviewPromptedAt] because "when was the last one" and "how
+  /// many have there been" are different questions and one field cannot answer
+  /// both — the same reason [tutorialOffered] is not [tutorialCompleted]
+  /// (D193).
+  final int reviewPromptCount;
 
   /// `en`, `nl` or `system`.
   final String locale;
@@ -374,6 +397,8 @@ class SettingsDocument {
     bool? tutorialCompleted,
     bool? tutorialOffered,
     DateTime? freeMonthStartedAt,
+    DateTime? reviewPromptedAt,
+    int? reviewPromptCount,
   }) =>
       SettingsDocument(
         locale: locale ?? this.locale,
@@ -385,6 +410,11 @@ class SettingsDocument {
         // never begins again (§4.1), so a `copyWith` that could null it is a
         // way to hand someone a second one by passing the wrong argument.
         freeMonthStartedAt: freeMonthStartedAt ?? this.freeMonthStartedAt,
+        // Also never cleared through here, for the same reason: a `copyWith`
+        // that could null either of these is a way to hand someone the prompt
+        // again from the beginning by passing the wrong argument.
+        reviewPromptedAt: reviewPromptedAt ?? this.reviewPromptedAt,
+        reviewPromptCount: reviewPromptCount ?? this.reviewPromptCount,
       );
 
   Map<String, Object?> toJson() => {
@@ -395,6 +425,8 @@ class SettingsDocument {
         'tutorialCompleted': tutorialCompleted,
         'tutorialOffered': tutorialOffered,
         'freeMonthStartedAt': freeMonthStartedAt?.toUtc().toIso8601String(),
+        'reviewPromptedAt': reviewPromptedAt?.toUtc().toIso8601String(),
+        'reviewPromptCount': reviewPromptCount,
       };
 
   /// Null when unreadable — see [GameDocument.fromJson]. The caller falls back
@@ -428,6 +460,15 @@ class SettingsDocument {
       // field rather than as a migration.
       freeMonthStartedAt:
           DateTime.tryParse(json['freeMonthStartedAt'] as String? ?? ''),
+      // Absent in every document written before 0.2.0. Null and zero mean
+      // "never asked", which is the right reading for an existing player: they
+      // become eligible at their next win, exactly like a new one. The safe
+      // direction here is the opposite of `tutorialOffered`'s -- defaulting to
+      // *already prompted* would silently deny the prompt to the entire
+      // existing player base, who are the people most likely to rate.
+      reviewPromptedAt:
+          DateTime.tryParse(json['reviewPromptedAt'] as String? ?? ''),
+      reviewPromptCount: json['reviewPromptCount'] as int? ?? 0,
     );
   }
 }

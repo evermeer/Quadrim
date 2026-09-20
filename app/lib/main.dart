@@ -15,6 +15,7 @@ import 'home/home_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'services/achievements.dart';
 import 'services/games.dart';
+import 'services/review.dart';
 import 'shop/shop.dart';
 import 'theme.dart';
 
@@ -65,6 +66,7 @@ Future<void> main() async {
     unlocks: repository,
     shop: shop,
     services: services,
+    review: ReviewPrompt(platform: const StoreReviewPlatform()),
   ));
 }
 
@@ -78,6 +80,7 @@ class QuadrimApp extends StatefulWidget {
     this.random,
     this.shop,
     this.services,
+    this.review,
     this.now,
   });
 
@@ -99,6 +102,11 @@ class QuadrimApp extends StatefulWidget {
   /// without one, and a leaderboard that a test had to stub in order to open
   /// the board would be a leaderboard that had escaped its own layer.
   final GameServices? services;
+
+  /// The store review sheet, or null. Optional like [services] and for the
+  /// same reason: a widget test that only cares about the board should not
+  /// have to construct a platform service to get one (D389).
+  final ReviewPrompt? review;
 
   /// Injected in tests, like [random]. The meter and the streak are both
   /// day-shaped, so a test that cannot move the clock cannot reach either.
@@ -172,6 +180,7 @@ class _QuadrimAppState extends State<QuadrimApp> {
         random: widget.random,
         shop: widget.shop,
         services: widget.services,
+        review: widget.review,
         now: widget.now,
       ),
     );

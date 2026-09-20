@@ -1,292 +1,261 @@
-import 'dart:math';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quadrim/data/document_store.dart';
 import 'package:quadrim/data/documents.dart';
-import 'package:quadrim/data/local_game_repository.dart';
-import 'package:quadrim/game/board_view.dart';
-import 'package:quadrim/game/game_screen.dart';
-import 'package:quadrim/l10n/app_localizations.dart';
-import 'package:quadrim/main.dart';
-import 'package:quadrim_engine/quadrim_engine.dart';
-import 'plaques.dart';
+import 'package:quadrim/services/review.dart';
 
-void _phone(WidgetTester tester, {Size size = const Size(360, 844)}) {
-  tester.view.physicalSize = size * 3;
-  tester.view.devicePixelRatio = 3;
-  addTearDown(tester.view.reset);
-}
+/// D389: when the app asks the player to rate it.
+///
+/// **Every rule here is a rule about time or counting, and none of them can be
+/// observed on a device.** The store sheet reports nothing back — not whether
+/// it appeared, not what the player did — so there is no integration test that
+/// could stand in for these. The decision function is deliberately pure so that
+/// the rules are assertions rather than arguments.
+class FakeReviewPlatform implements ReviewPlatform {
+  FakeReviewPlatform({this.available = true, this.throws = false});
 
-/// A pass-and-play game with [moves] played, on screen.
-Future<LocalGameRepository> _game(
-  WidgetTester tester,
-  List<int> moves, {
-  Locale? locale,
-}) async {
-  final repository = await LocalGameRepository.open(MemoryDocumentStore());
-  addTearDown(repository.dispose);
-  await repository.saveSettings(const SettingsDocument(tutorialOffered: true));
-  await tester.pumpWidget(
-      QuadrimApp(
-          repository: repository,
-          settings: repository,
-          unlocks: repository,
-          locale: locale));
-  await tester.pumpAndSettle();
-  await tester.tap(plaqueLabelled(locale == null ? 'New game' : 'Nieuwe partij'));
-  await tester.pumpAndSettle();
-  await tester.tap(find.text(locale == null ? 'Pass and play' : 'Samen op één toestel'));
-  await tester.pumpAndSettle();
-  for (final move in moves) {
-    await tester.tap(find.byKey(ValueKey('cell-$move')), warnIfMissed: false);
-    await tester.pumpAndSettle();
+  final bool available;
+  final bool throws;
+  int requests = 0;
+
+  @override
+  Future<bool> isAvailable() async {
+    if (throws) throw StateError('no store here');
+    return available;
   }
-  return repository;
+
+  @override
+  Future<void> request() async {
+    if (throws) throw StateError('no store here');
+    requests++;
+  }
 }
-
-BoardView _board(WidgetTester tester) =>
-    tester.widget<BoardView>(find.byType(BoardView));
-
-Future<void> _openReview(WidgetTester tester) async {
-  await tester.tap(find.byIcon(Icons.history));
-  await tester.pumpAndSettle();
-}
-
-Future<void> _tapIcon(WidgetTester tester, IconData icon) async {
-  await tester.tap(find.byIcon(icon));
-  await tester.pumpAndSettle();
-}
-
-/// Light takes {0,1,2,3}; dark's four are scattered and form no line.
-const _winMoves = [0, 32, 1, 47, 2, 53, 3];
 
 void main() {
-  testWidgets('steps back and forward one move at a time', (tester) async {
-    _phone(tester);
-    await _game(tester, [21, 22, 26]);
-    await _openReview(tester);
+  final day0 = DateTime.utc(2026, 1, 1);
+  const fresh = SettingsDocument();
 
-    expect(find.text('Move 3 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, [21, 22, 26]);
+  SettingsDocument asked(DateTime when, {int count = 1}) =>
+      SettingsDocument(reviewPromptedAt: when, reviewPromptCount: count);
 
-    await _tapIcon(tester, Icons.chevron_left);
-    expect(find.text('Move 2 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, [21, 22]);
+  group('when to ask', () {
+    test('not before seven games, even on a win', () {
+      for (var played = 0; played < kReviewPromptMinGames; played++) {
+        expect(
+          shouldAskForReview(
+              settings: fresh, won: true, playedCount: played, now: day0),
+          isFalse,
+          reason: 'asked after only $played games',
+        );
+      }
+    });
 
-    await _tapIcon(tester, Icons.chevron_left);
-    expect(find.text('Move 1 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, [21]);
+    test('on the first win once seven are played', () {
+      expect(
+        shouldAskForReview(
+            settings: fresh,
+            won: true,
+            playedCount: kReviewPromptMinGames,
+            now: day0),
+        isTrue,
+      );
+    });
 
-    await _tapIcon(tester, Icons.chevron_right);
-    expect(find.text('Move 2 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, [21, 22]);
+    /// The half that would not fail on its own. Seven games played and a loss
+    /// is the common case, and a rating sheet is the last thing that moment
+    /// wants.
+    test('never on a loss or a draw, however many games are played', () {
+      expect(
+        shouldAskForReview(
+            settings: fresh, won: false, playedCount: 200, now: day0),
+        isFalse,
+      );
+    });
+
+    test('not again the day after', () {
+      expect(
+        shouldAskForReview(
+          settings: asked(day0),
+          won: true,
+          playedCount: 50,
+          now: day0.add(const Duration(days: 1)),
+        ),
+        isFalse,
+      );
+    });
+
+    /// The boundary, from both sides. One day short is the case a `>` instead
+    /// of a `>=` gets wrong, and it would take ninety days to notice.
+    test('again once the interval has passed, and not a day before', () {
+      final settings = asked(day0);
+      final justShort = day0.add(kReviewPromptInterval - const Duration(days: 1));
+      final exactly = day0.add(kReviewPromptInterval);
+
+      expect(
+        shouldAskForReview(
+            settings: settings, won: true, playedCount: 50, now: justShort),
+        isFalse,
+      );
+      expect(
+        shouldAskForReview(
+            settings: settings, won: true, playedCount: 50, now: exactly),
+        isTrue,
+      );
+    });
+
+    test('three times and never again', () {
+      final settings = asked(day0, count: kMaxReviewPrompts);
+      expect(
+        shouldAskForReview(
+          settings: settings,
+          won: true,
+          playedCount: 500,
+          now: day0.add(const Duration(days: 3650)),
+        ),
+        isFalse,
+        reason: 'a fourth prompt ten years later is still a fourth prompt',
+      );
+    });
+
+    /// A device whose clock was wrong and then corrected reads as "the last
+    /// prompt is in the future". The safe answer is silence: the alternative is
+    /// asking on every single win until the clock catches up.
+    test('says no when the clock has gone backwards', () {
+      expect(
+        shouldAskForReview(
+          settings: asked(day0.add(const Duration(days: 400))),
+          won: true,
+          playedCount: 50,
+          now: day0,
+        ),
+        isFalse,
+      );
+    });
   });
 
-  testWidgets('jumps to the start and to the latest move', (tester) async {
-    _phone(tester);
-    await _game(tester, [21, 22, 26]);
-    await _openReview(tester);
+  group('asking', () {
+    test('asks the platform and returns the settings to store', () async {
+      final platform = FakeReviewPlatform();
+      final updated = await ReviewPrompt(platform: platform).maybeAsk(
+        settings: fresh,
+        won: true,
+        playedCount: 10,
+        now: day0,
+      );
 
-    await _tapIcon(tester, Icons.first_page);
-    expect(find.text('Move 0 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, isEmpty, reason: 'the empty board');
+      expect(platform.requests, 1);
+      expect(updated, isNotNull);
+      expect(updated!.reviewPromptCount, 1);
+      expect(updated.reviewPromptedAt, day0);
+    });
 
-    await _tapIcon(tester, Icons.last_page);
-    expect(find.text('Move 3 of 3'), findsOneWidget);
-    expect(_board(tester).state.moves, [21, 22, 26]);
+    test('returns null and asks nothing when it is not the moment', () async {
+      final platform = FakeReviewPlatform();
+      final updated = await ReviewPrompt(platform: platform).maybeAsk(
+        settings: fresh,
+        won: false,
+        playedCount: 10,
+        now: day0,
+      );
+
+      expect(platform.requests, 0);
+      expect(updated, isNull, reason: 'nothing happened, so nothing to write');
+    });
+
+    /// **The one that stops a sideloaded build burning all three prompts.**
+    /// `isAvailable` is false off-store, and if that returned null the counter
+    /// would never move -- so every win would retry, and the day the player
+    /// installed from the store they would get three sheets in three minutes.
+    test('still records the attempt when the platform is unavailable',
+        () async {
+      final platform = FakeReviewPlatform(available: false);
+      final updated = await ReviewPrompt(platform: platform).maybeAsk(
+        settings: fresh,
+        won: true,
+        playedCount: 10,
+        now: day0,
+      );
+
+      expect(platform.requests, 0);
+      expect(updated?.reviewPromptCount, 1);
+    });
+
+    test('still records the attempt when the platform throws', () async {
+      final platform = FakeReviewPlatform(throws: true);
+      final updated = await ReviewPrompt(platform: platform).maybeAsk(
+        settings: fresh,
+        won: true,
+        playedCount: 10,
+        now: day0,
+      );
+
+      expect(updated?.reviewPromptCount, 1);
+    });
+
+    /// End to end over the rule set: three prompts ninety days apart, then
+    /// silence forever. Written as a loop over real dates because the bug this
+    /// catches -- a count that does not increment, an interval measured from
+    /// the wrong end -- only shows up on the third pass.
+    test('asks three times across a year and then stops', () async {
+      final platform = FakeReviewPlatform();
+      final prompt = ReviewPrompt(platform: platform);
+      var settings = fresh;
+      var day = day0;
+
+      for (var i = 0; i < 8; i++) {
+        final updated = await prompt.maybeAsk(
+          settings: settings,
+          won: true,
+          playedCount: 50,
+          now: day,
+        );
+        if (updated != null) settings = updated;
+        day = day.add(const Duration(days: 60));
+      }
+
+      expect(platform.requests, kMaxReviewPrompts);
+      expect(settings.reviewPromptCount, kMaxReviewPrompts);
+    });
   });
 
-  testWidgets('the ends of the history are not steppable past',
-      (tester) async {
-    _phone(tester);
-    await _game(tester, [21, 22]);
-    await _openReview(tester);
+  group('the stored fields', () {
+    test('survive a round trip', () {
+      final settings = asked(day0, count: 2);
+      final back = SettingsDocument.fromJson(settings.toJson());
 
-    IconButton button(IconData icon) =>
-        tester.widget<IconButton>(find.widgetWithIcon(IconButton, icon));
+      expect(back!.reviewPromptCount, 2);
+      expect(back.reviewPromptedAt, day0);
+    });
 
-    expect(button(Icons.chevron_right).onPressed, isNull, reason: 'at the end');
-    expect(button(Icons.last_page).onPressed, isNull);
-    expect(button(Icons.chevron_left).onPressed, isNotNull);
+    /// An existing player's settings document has neither field. They must read
+    /// as "never asked" -- the opposite default to `tutorialOffered`'s, because
+    /// defaulting to *already prompted* would silently deny the prompt to every
+    /// player who upgrades, who are the people most likely to rate it.
+    test('read as never-asked when absent', () {
+      final old = {
+        'schemaVersion': kSchemaVersion,
+        'locale': 'system',
+        'theme': 'system',
+        'tutorialCompleted': true,
+        'tutorialOffered': true,
+      };
+      final back = SettingsDocument.fromJson(old);
 
-    await _tapIcon(tester, Icons.first_page);
-    expect(button(Icons.chevron_left).onPressed, isNull, reason: 'at the start');
-    expect(button(Icons.first_page).onPressed, isNull);
-    expect(button(Icons.chevron_right).onPressed, isNotNull);
-  });
+      expect(back!.reviewPromptCount, 0);
+      expect(back.reviewPromptedAt, isNull);
+      expect(
+        shouldAskForReview(
+            settings: back, won: true, playedCount: 50, now: day0),
+        isTrue,
+      );
+    });
 
-  testWidgets('no move can be made from a past position, and the game is '
-      'unchanged by looking', (tester) async {
-    _phone(tester);
-    final repo = await _game(tester, [21, 22, 26]);
-    await _openReview(tester);
-    await _tapIcon(tester, Icons.chevron_left);
+    /// `copyWith` must not be able to hand someone the prompt again from the
+    /// beginning, the same rule `freeMonthStartedAt` follows.
+    test('copyWith cannot clear them', () {
+      final settings = asked(day0, count: 3);
+      final same = settings.copyWith(locale: 'nl');
 
-    expect(_board(tester).enabled, isFalse);
-    // Cell 5 is empty in every position here, so a tap that got through would
-    // be a fourth move appended to the stored game.
-    await tester.tap(find.byKey(const ValueKey('cell-5')), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
-    final stored = await repo.watchGame((await repo.watchActiveGames().first)
-            .single
-            .id)
-        .first;
-    expect(stored!.moves, [21, 22, 26], reason: 'reviewing stored nothing');
-    expect(find.text('Move 2 of 3'), findsOneWidget, reason: 'and moved not');
-  });
-
-  testWidgets('leaving review resumes play exactly where it was',
-      (tester) async {
-    _phone(tester);
-    final repo = await _game(tester, [21, 22, 26]);
-    await _openReview(tester);
-    await _tapIcon(tester, Icons.first_page);
-    await _tapIcon(tester, Icons.close);
-
-    // The banner is back, the live position is back, and the board is live.
-    expect(find.text('Dark to move'), findsOneWidget);
-    expect(_board(tester).state.moves, [21, 22, 26]);
-    expect(_board(tester).enabled, isTrue);
-
-    // And a move still lands, which is the part that says play resumed rather
-    // than merely that the view did.
-    await tester.tap(find.byKey(const ValueKey('cell-5')), warnIfMissed: false);
-    await tester.pumpAndSettle();
-    final game = (await repo.watchActiveGames().first).single;
-    expect(game.moves, [21, 22, 26, 5]);
-  });
-
-  testWidgets('a finished game can be replayed the same way', (tester) async {
-    _phone(tester);
-    await _game(tester, _winMoves);
-    expect(find.text('Light wins!'), findsOneWidget);
-
-    await _openReview(tester);
-    expect(find.text('Move 7 of 7'), findsOneWidget);
-    await _tapIcon(tester, Icons.chevron_left);
-    expect(_board(tester).state.moves, _winMoves.take(6));
-    // The result panel is out of the way while reviewing — its Rematch button
-    // starts a different game.
-    expect(find.text('Play again'), findsNothing);
-
-    await _tapIcon(tester, Icons.close);
-    expect(find.text('Play again'), findsOneWidget);
-    expect(find.text('Light wins!'), findsOneWidget);
-  });
-
-  testWidgets('the scrubber is reachable and the position is announced',
-      (tester) async {
-    _phone(tester);
-    final handle = tester.ensureSemantics();
-    await _game(tester, [21, 22, 26]);
-    await _openReview(tester);
-
-    // Every control names itself, as a button, in the semantics tree.
-    //
-    // Asserted on the `tooltip` field rather than `label`: Flutter puts an
-    // IconButton's tooltip in a field of its own, so `find.bySemanticsLabel`
-    // matches nothing here and a test written that way fails while the app is
-    // perfectly usable. Checked against a dump of the tree rather than guessed
-    // (D204).
-    for (final name in [
-      'Jump to the start',
-      'Previous move',
-      'Next move',
-      'Jump to the latest move',
-    ]) {
-      final node = tester.getSemantics(find.byTooltip(name));
-      expect(node.tooltip, name, reason: name);
-      expect(node.flagsCollection.isButton, isTrue, reason: name);
-    }
-
-    // The announcement carries the move, not just the counter: cell 26 is
-    // layer 2, row 3, column 3, and move 3 is light.
-    expect(find.bySemanticsLabel('Move 3 of 3. Layer 2, row 3, column 3, light piece'),
-        findsOneWidget);
-
-    await _tapIcon(tester, Icons.chevron_left);
-    expect(find.bySemanticsLabel('Move 2 of 3. Layer 2, row 2, column 3, dark piece'),
-        findsOneWidget);
-
-    await _tapIcon(tester, Icons.first_page);
-    expect(find.bySemanticsLabel('Move 0 of 3. Before the first move'),
-        findsOneWidget);
-    handle.dispose();
-  });
-
-  testWidgets('fits the shortest supported screen', (tester) async {
-    // The scrubber takes the turn banner's slot rather than adding a row,
-    // because at 360x780 the board has about 6dp of vertical slack (D204).
-    _phone(tester, size: const Size(360, 780));
-    await _game(tester, [21, 22, 26]);
-    final playing = tester.getSize(find.byKey(const ValueKey('cell-0')));
-    expect(playing.width, greaterThanOrEqualTo(kMinCellSize),
-        reason: 'the playing board still meets the touch floor');
-
-    await _openReview(tester);
-    expect(tester.takeException(), isNull);
-    expect(find.text('Move 3 of 3'), findsOneWidget);
-    // Reviewing may cost a fraction of a dp — nothing here is tappable, so the
-    // floor that applies is legibility, not reach.
-    final reviewing = tester.getSize(find.byKey(const ValueKey('cell-0')));
-    expect(reviewing.width, greaterThan(24));
-  });
-
-  testWidgets('the game carries on underneath while the player reviews',
-      (tester) async {
-    _phone(tester);
-    final repo = await LocalGameRepository.open(MemoryDocumentStore());
-    addTearDown(repo.dispose);
-    final game = await repo.createGame(
-      mode: GameMode.vsComputer,
-      opponent: botOpponent(pebble.id),
-      opponentRating: pebble.rating,
-    );
-    await repo.appendMove(game.id, 21); // the player
-    await repo.appendMove(game.id, 22); // the opponent
-    await tester.pumpWidget(MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: GameScreen(
-        repository: repo,
-        gameId: game.id,
-        random: Random(1),
-        opponentMove: chooseMoveInline,
-      ),
-    ));
-    await tester.pumpAndSettle();
-
-    await _openReview(tester);
-    await _tapIcon(tester, Icons.first_page);
-    expect(find.text('Move 0 of 2'), findsOneWidget);
-
-    // A move lands from outside this screen, handing the turn to the opponent.
-    await repo.appendMove(game.id, 40);
-    // Pumped past kBotMoveDelay explicitly: a reviewed board is static, so no
-    // frames are scheduled and pumpAndSettle alone would not advance the clock.
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
-
-    // The opponent replied — reviewing does not pause the game — and the view
-    // did not move. Yanking the player to the present would make the scrubber
-    // alter the thing it is meant to be a window onto (D204).
-    final stored = (await repo.watchGame(game.id).first)!;
-    expect(stored.moves.length, 4, reason: 'the opponent answered');
-    expect(_board(tester).state.moves, isEmpty, reason: 'still at move 0');
-    expect(find.text('Move 0 of 4'), findsOneWidget);
-  });
-
-  testWidgets('every scrubber string exists in Dutch', (tester) async {
-    _phone(tester);
-    await _game(tester, [21, 22, 26], locale: const Locale('nl'));
-    await _openReview(tester);
-
-    expect(find.text('Zet 3 van 3'), findsOneWidget);
-    expect(find.text('Move 3 of 3'), findsNothing);
-    await _tapIcon(tester, Icons.first_page);
-    expect(find.text('Zet 0 van 3'), findsOneWidget);
+      expect(same.reviewPromptCount, 3);
+      expect(same.reviewPromptedAt, day0);
+    });
   });
 }

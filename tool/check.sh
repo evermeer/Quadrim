@@ -28,12 +28,13 @@ for pkg in packages/quadrim_engine packages/quadrim_rating packages/quadrim_prog
   if [ -n "$deps" ]; then
     echo "FAIL: $pkg declares runtime dependencies:"; echo "$deps"; fail=1
   fi
-  # `package:http` and `games_services` joined the list at ticket 050. The app
+  # `package:http` and `games_services` joined the list at ticket 050, and
+  # `in_app_review` at D389 for the same reason. The app
   # layer may now talk to Play Games and Game Center; the pure packages may not,
   # and that is the half of the old offline guarantee which is still absolute
   # (D376). F13 and S1 stay reviewable because a network call during computer
   # play would have to be added to the app layer, in a diff, on purpose.
-  if grep -rnE "import [\"']dart:(io|html)[\"']|package:(flutter|firebase|http)|games_services" "$pkg/lib" 2>/dev/null; then
+  if grep -rnE "import [\"']dart:(io|html)[\"']|package:(flutter|firebase|http)|games_services|in_app_review" "$pkg/lib" 2>/dev/null; then
     echo "FAIL: $pkg imports a forbidden library (above)"; fail=1
   fi
 done

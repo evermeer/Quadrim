@@ -2911,6 +2911,75 @@ not existing in the console, which they may also not.
 branches with different network posture. It must never name a third, which is
 part of why the next build is `+12` (D387).
 
+## D389 — The review prompt counts its own asks, because nothing else can be counted
+
+**Question:** Ask the player to rate the game on their first win once seven
+games are played, and — if they did not rate — ask again every three months.
+How is "if they did not rate" implemented?
+
+**Decision:** It is not, because it cannot be. **Neither platform will tell you
+whether the player rated.** Apple's `SKStoreReviewController` and Google's
+In-App Review API both return no success signal, no callback and no way to query
+rating state; that is deliberate, so an app cannot nag or reward based on the
+answer. Both also *silently do nothing* when over quota — Apple allows roughly
+three sheets per user per 365 days, and a request past that returns normally
+having shown nothing at all.
+
+So the app records the only fact it has: **that it asked**, and when. The rule
+becomes "ask, three times, ninety days apart, then stop" (chosen from two
+options put to the developer: ask forever, or cap it).
+
+**Three, because past three the platform drops the request anyway.** A fourth
+prompt would be stored state kept to trigger something that does nothing, and a
+player who did rate — and cannot tell us so — would otherwise get a sheet every
+quarter forever.
+
+**Ninety days rather than "three months"**, because months are not a unit a
+`Duration` has and the difference is at most two days on a prompt that is
+already deliberately imprecise.
+
+### Every repeat also waits for a win, which was not asked for
+
+The request names a win for the first prompt and is silent about the later ones.
+They wait for one too. A rating sheet immediately after a loss is the worst
+moment this app has to offer, and waiting costs nothing: the interval is ninety
+days, and a player who never wins again was not going to rate it five stars.
+Pass-and-play is excluded like it is from every other total (D157) — the player
+holds both seats, so a "win" there is also a loss.
+
+### The attempt is recorded even when the sheet certainly did not appear
+
+`isAvailable()` is false on a build that did not come from a store, and the call
+can throw. In both cases the counter still moves. **The alternative is worse
+than it looks**: a sideloaded build would retry on every single win forever,
+accumulating nothing, and then fire three real prompts in three minutes on the
+day that player installed from the store. The counter is a record of asking, not
+of showing, and the name says so.
+
+### A clock that goes backwards says no
+
+A device whose time was wrong and then corrected reads as "the last prompt is in
+the future". The comparison is `!now.isBefore(last + interval)` rather than a
+subtraction, so that case answers *no*. Asking on every win until the clock
+catches up is the failure the arithmetic would otherwise produce.
+
+### Absent fields mean never-asked, which is the opposite of `tutorialOffered`
+
+An existing player's settings document has neither field. They read as zero and
+null — *never asked* — so everyone who upgrades becomes eligible at their next
+win. Defaulting the other way would silently deny the prompt to the entire
+existing player base, who are the people most likely to rate. `tutorialOffered`
+defaults the safe direction for a *dialog*; this is the safe direction for a
+*prompt nobody minds seeing once*.
+
+**Cost:** a new plugin, `in_app_review`, in `app/` only — `check.sh`'s purity
+scan now rejects it in the pure packages alongside `games_services`. And the
+feature is, by construction, unobservable: there is no test and no device run
+that can tell you the sheet appeared, let alone that anyone rated. What is
+testable is every rule about when to ask, which is why the decision is a pure
+function and why the wiring has a test of its own — verified by mutation, since
+deleting the one call would otherwise be silent.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

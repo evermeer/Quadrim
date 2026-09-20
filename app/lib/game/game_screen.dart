@@ -8,6 +8,7 @@ import 'package:quadrim_progression/quadrim_progression.dart';
 
 import '../data/documents.dart';
 import '../data/game_repository.dart';
+import '../data/home_summary.dart';
 import '../data/points_fold.dart' as points_fold;
 import '../data/rating_fold.dart';
 import '../design/forest.dart';
@@ -15,6 +16,7 @@ import '../home/quests_section.dart';
 import '../home/unlock_confirmation.dart';
 import '../l10n/app_localizations.dart';
 import '../services/games.dart';
+import '../services/review.dart';
 import '../theme.dart';
 import 'board_style_toggle.dart';
 import 'board_view.dart';
@@ -72,6 +74,7 @@ class GameScreen extends StatefulWidget {
     this.unlocks,
     this.settings,
     this.services,
+    this.review,
     this.opponentMove = chooseMoveInBackground,
   });
 
@@ -94,6 +97,11 @@ class GameScreen extends StatefulWidget {
   /// service to get one. Null means the leaderboard and the achievements are
   /// simply not reported, which is also what a signed-out player gets (D376).
   final GameServices? services;
+
+  /// The store review sheet, or null (D389). Optional like [services]: a widget
+  /// test about the board should not have to construct one, and null simply
+  /// means the player is never asked.
+  final ReviewPrompt? review;
 
   /// Injected so a test can pin what the opponent plays. Null means a fresh
   /// unseeded source, which is what the app uses.
@@ -275,6 +283,53 @@ class _GameScreenState extends State<GameScreen> {
       _achieved = achieved;
     });
     _report(completed, achieved, isLatest: index == 0);
+    unawaited(_maybeAskForReview(completed, isLatest: index == 0));
+  }
+
+  /// Asks the player to rate the game, if this is the moment (D389).
+  ///
+  /// **Separate from [_report] rather than folded into it**, because that
+  /// method returns early when there are no game services and the review sheet
+  /// has nothing to do with Play Games: a player who never signs in should
+  /// still be asked to rate.
+  ///
+  /// Not awaited by the caller. It writes a settings document, and a store
+  /// sheet is the platform's to draw — neither belongs on the path that renders
+  /// the result panel (D351).
+  Future<void> _maybeAskForReview(
+    List<GameDocument> completed, {
+    required bool isLatest,
+  }) async {
+    final review = widget.review;
+    final settingsRepo = widget.settings;
+    final game = _game;
+    // Never for a game opened out of the history list. Re-asking on an old win
+    // would spend one of the three on a moment the player has already left.
+    if (review == null || settingsRepo == null || game == null || !isLatest) {
+      return;
+    }
+    // Pass and play is excluded, as it is from every other total in the app
+    // (D157): the player holds both seats there, so a "win" is also a loss and
+    // asking them to celebrate it is asking about nothing.
+    if (game.mode != GameMode.vsComputer) return;
+
+    final result = game.result;
+    if (result == null) return;
+    final won = result.outcome != GameOutcome.draw &&
+        result.winnerSeat == game.playerSeat;
+
+    // The same fold the rating card is built from, rather than a second count
+    // that can disagree with the one on screen.
+    final played = HomeSummary.from(completed).played;
+
+    final settings = await settingsRepo.loadSettings();
+    final updated = await review.maybeAsk(
+      settings: settings,
+      won: won,
+      playedCount: played,
+      now: (widget.now ?? DateTime.now)(),
+    );
+    if (updated != null) await settingsRepo.saveSettings(updated);
   }
 
   /// Tells Play Games and Game Center what just happened, and waits for
