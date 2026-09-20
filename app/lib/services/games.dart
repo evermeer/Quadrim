@@ -180,12 +180,34 @@ class GameServices {
     for (final id in questIds) {
       final achievement = achievementForQuest(id);
       if (achievement == null) continue;
-      if (!_reported.add(achievement.key)) continue;
-      await _guard(() => _platform.unlock(
-            androidId: achievement.playGamesId,
-            iosId: achievement.gameCenterId,
-          ));
+      await _unlock(achievement);
     }
+  }
+
+  /// Reports the drawn-game achievement.
+  ///
+  /// **Separate from [reportQuests] because a draw is not a quest** (D386). It
+  /// pays no points and claims no rung, so there is no `QuestStatus` to arrive
+  /// in the diff the end-of-game panel is built from — the caller decides from
+  /// the board instead, which is the only place the fact exists.
+  ///
+  /// Idempotent within a session like everything else here, and a no-op when
+  /// signed out.
+  Future<void> reportDraw() async {
+    if (!_available || !_configured) return;
+    await _unlock(achievementByKey(kDrawAchievementKey));
+  }
+
+  /// Unlocks one achievement, at most once per session.
+  ///
+  /// The app reports a *diff*, so a repeat should not happen; [_reported] is
+  /// the guard for the case where it does.
+  Future<void> _unlock(Achievement achievement) async {
+    if (!_reported.add(achievement.key)) return;
+    await _guard(() => _platform.unlock(
+          androidId: achievement.playGamesId,
+          iosId: achievement.gameCenterId,
+        ));
   }
 
   /// Swallows everything.

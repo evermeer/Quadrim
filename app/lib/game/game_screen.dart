@@ -298,8 +298,16 @@ class _GameScreenState extends State<GameScreen> {
     if (services == null || !isLatest) return;
     // Pass and play never moves the rating (F12), so there is nothing to send
     // and nothing that would be true to send.
-    if (_game?.mode == GameMode.vsComputer) {
+    final game = _game;
+    if (game?.mode == GameMode.vsComputer) {
       unawaited(services.submitRating(computerRating(completed)));
+      // **Read from the board, not from the record** (D386). `status` says the
+      // game is over; only `outcome` says how. A resignation is complete and is
+      // not a draw — it leaves a playable position, so this asks the one
+      // question that separates them, and a resigned game answers `Ongoing`.
+      if (game != null && outcome(GameState.fromMoves(game.moves)) is Draw) {
+        unawaited(services.reportDraw());
+      }
     }
     unawaited(services.reportQuests([for (final q in achieved) q.quest.id]));
   }

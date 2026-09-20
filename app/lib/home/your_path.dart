@@ -11,6 +11,7 @@ import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
+import 'section_widgets.dart';
 
 /// Where the player is on the ladder, and who is next.
 ///
@@ -548,7 +549,7 @@ class _PathTile extends StatelessWidget {
         ? l10n.lockedWithPrice(price, balance)
         : played == 0
             ? l10n.neverPlayed
-            : '${l10n.opponentRecord(record!.wins, record!.losses, record!.draws, played)}. '
+            : '${opponentRecordLine(l10n, record!)}. '
                 '${l10n.starsLabel(starCount)}';
 
     return Semantics(
@@ -629,8 +630,7 @@ class _PlayedFooter extends StatelessWidget {
           ],
         ),
         Text(
-          l10n.opponentRecord(
-              record!.wins, record!.losses, record!.draws, record!.played),
+          opponentRecordLine(l10n, record!),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,

@@ -161,6 +161,11 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String recordLineNoDraws(int wins, int losses) {
+    return '$wins gewonnen · $losses verloren';
+  }
+
+  @override
   String get recordEmpty => 'Nog geen voltooide partijen tegen de computer.';
 
   @override
@@ -169,6 +174,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String opponentRecord(int wins, int losses, int draws, int played) {
     return '$wins–$losses–$draws uit $played partijen';
+  }
+
+  @override
+  String opponentRecordNoDraws(int wins, int losses, int played) {
+    return '$wins–$losses uit $played partijen';
   }
 
   @override

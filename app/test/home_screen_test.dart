@@ -351,7 +351,8 @@ void main() {
     // The same screen instance, never rebuilt from scratch.
     expect(find.text('In progress'), findsNothing);
     expect(find.text('Finished games'), findsOneWidget);
-    expect(find.text('1 won · 0 lost · 0 drawn'), findsOneWidget);
+    // No "0 drawn": the draw count is dropped when it is zero (D385).
+    expect(find.text('1 won · 0 lost'), findsOneWidget);
     expect(find.text('Won'), findsOneWidget);
   });
 
@@ -491,10 +492,14 @@ void main() {
 
     // The rating card reads as one labelled fact, and since the record moved
     // inside it (D192) that announcement has to carry the record too — or the
-    // won-lost-drawn line would be spoken by nothing.
+    // won-lost line would be spoken by nothing.
+    //
+    // No `drawn` in the pattern: this fixture has no draws, and since D385 a
+    // record with none does not mention them. The spoken line and the drawn
+    // one are built from the same string, which is what keeps that true.
     expect(
       find.bySemanticsLabel(
-          RegExp(r'Against the computer: \d+\. .*won.*lost.*drawn')),
+          RegExp(r'Against the computer: \d+\. .*won.*lost')),
       findsOneWidget,
     );
     // Sections are headers, so a screen reader can jump between them rather
@@ -535,7 +540,7 @@ void main() {
     // semantics tree. It still has to be there, and in Dutch.
     expect(find.bySemanticsLabel('Jouw pad'), findsOneWidget);
     expect(find.text('Voltooide partijen'), findsOneWidget);
-    expect(find.text('1 gewonnen · 0 verloren · 0 remise'), findsOneWidget);
+    expect(find.text('1 gewonnen · 0 verloren'), findsOneWidget);
     // Bot names are proper nouns and stay as they are, in either language.
     expect(find.text('Pebble'), findsWidgets);
   });
@@ -576,7 +581,7 @@ void main() {
     }
     await _pumpHome(tester, repo);
 
-    expect(find.text('60 won · 0 lost · 0 drawn'), findsOneWidget);
+    expect(find.text('60 won · 0 lost'), findsOneWidget);
     expect(find.text('Won'), findsWidgets);
     expect(tester.widgetList(find.text('Won')).length, lessThan(60),
         reason: 'off-screen rows must not be built');

@@ -61,8 +61,9 @@ class FakeGameServices implements GameServicesPlatform {
 
 void main() {
   group('the catalogue', () {
-    test('is forty-five: one per opponent, five volume rungs, nine streak', () {
-      expect(achievementCatalogue, hasLength(45));
+    test('is forty-six: one per opponent, five volume, nine streak, one draw',
+        () {
+      expect(achievementCatalogue, hasLength(46));
       expect(
         achievementCatalogue.where((a) => a.key.startsWith('beat:')),
         hasLength(opponentCatalogue.length),
@@ -75,18 +76,44 @@ void main() {
         achievementCatalogue.where((a) => a.key.startsWith('days_in_row:')),
         hasLength(9),
       );
+      // The forty-sixth, and the only one with no quest behind it (D386).
+      expect(
+        achievementCatalogue.where((a) => a.key == kDrawAchievementKey),
+        hasLength(1),
+      );
     });
 
     /// AC 5, and it is asserted in **both** directions on purpose. A table that
     /// names a quest which no longer exists reports an achievement nobody can
     /// earn; a quest family that quietly grows leaves achievements unmapped.
     /// Only one of those is visible without this test.
-    test('every entry names a quest that exists', () {
+    test('every entry that names a quest names one that exists', () {
       final questIds = questCatalogue.map((q) => q.id).toSet();
       for (final a in achievementCatalogue) {
+        if (a.questId == null) continue;
         expect(questIds, contains(a.questId),
             reason: '${a.key} maps to a quest that is not in the catalogue');
       }
+    });
+
+    /// **Exactly one**, and the assertion is on the count rather than on the
+    /// draw entry alone. A null `questId` is an achievement nothing in the
+    /// quest machinery will ever fire, so it has to be reported by hand from
+    /// the place that knows -- and a second one appearing here without a
+    /// caller would be an achievement that silently never unlocks (D386).
+    test('exactly one achievement has no quest behind it', () {
+      final questless =
+          achievementCatalogue.where((a) => a.questId == null).toList();
+      expect(questless, hasLength(1));
+      expect(questless.single.key, kDrawAchievementKey);
+    });
+
+    /// The id was published before the code existed, and an achievement id is
+    /// as permanent as a product id (D213, D365). This is what stops anyone
+    /// renaming it to match the `draw` the rest of the code says.
+    test('the draw achievement keeps the published tie id', () {
+      expect(achievementByKey(kDrawAchievementKey).gameCenterId,
+          'nl.evict.quadrim2.tie');
     });
 
     test('every quest except first_win_second maps to an achievement', () {
@@ -106,10 +133,10 @@ void main() {
     });
 
     test('keys and store ids are unique', () {
-      expect(achievementCatalogue.map((a) => a.key).toSet(), hasLength(45));
+      expect(achievementCatalogue.map((a) => a.key).toSet(), hasLength(46));
       expect(
         achievementCatalogue.map((a) => a.gameCenterId).toSet(),
-        hasLength(45),
+        hasLength(46),
       );
     });
 
@@ -201,6 +228,49 @@ void main() {
         'nl.evict.quadrim2.beat.pebble',
         'nl.evict.quadrim2.games_in_day.5',
         'nl.evict.quadrim2.days_in_row.5',
+      ]);
+    });
+
+    /// A draw reaches the store through its own call because it is not a
+    /// quest (D386): it pays no points and claims no rung, so it never appears
+    /// in the `newlyAchieved` diff `reportQuests` is given.
+    test('a draw reports the tie achievement', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.reportDraw();
+      expect(fake.unlockedIos, ['nl.evict.quadrim2.tie']);
+    });
+
+    test('a draw reported twice unlocks once', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.reportDraw();
+      await services.reportDraw();
+      expect(fake.unlockedIos, hasLength(1));
+    });
+
+    test('a draw reports nothing when signed out', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.reportDraw();
+      expect(fake.unlockedIos, isEmpty);
+    });
+
+    /// Reporting a quest must not consume the draw's slot in `_reported`, nor
+    /// the other way round. They share one set, so a key collision would show
+    /// up as an achievement that silently never unlocks.
+    test('a draw and a quest in the same session both unlock', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.reportQuests(['first_win:pebble']);
+      await services.reportDraw();
+      expect(fake.unlockedIos, [
+        'nl.evict.quadrim2.beat.pebble',
+        'nl.evict.quadrim2.tie',
       ]);
     });
 

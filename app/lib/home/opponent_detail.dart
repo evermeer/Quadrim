@@ -9,6 +9,7 @@ import '../design/art.dart';
 import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import 'section_widgets.dart';
 
 /// One opponent, in full (spec §8.15).
 ///
@@ -134,15 +135,14 @@ class OpponentDetail extends StatelessWidget {
             else
               Semantics(
                 container: true,
-                label: '${l10n.opponentRecord(record!.wins, record!.losses, record!.draws, played)}. '
+                label: '${opponentRecordLine(l10n, record!)}. '
                     '${l10n.starsLabel(starCount)}',
                 child: ExcludeSemantics(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.opponentRecord(record!.wins, record!.losses,
-                            record!.draws, played),
+                        opponentRecordLine(l10n, record!),
                         style: theme.textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 4),

@@ -119,6 +119,61 @@ void main() {
     );
   });
 
+  /// A real drawn game: sixty-four moves, every cell filled, no line for
+  /// either side. Lifted from the engine's own corpus
+  /// (`packages/quadrim_engine/test/fixtures/corpus.json`), which the linegen
+  /// suite asserts replays to the outcome it records — so this fixture is a
+  /// draw because the engine says so, not because it looks like one.
+  const drawn = [
+    14, 4, 11, 7, 58, 17, 30, 35, 16, 26, 48, 13, 51, 46, 42, 60, //
+    22, 29, 31, 50, 56, 43, 40, 1, 44, 8, 63, 57, 37, 24, 49, 0, //
+    20, 62, 2, 59, 19, 18, 32, 15, 27, 3, 12, 9, 10, 52, 21, 23, //
+    61, 38, 5, 36, 34, 53, 41, 25, 39, 47, 55, 33, 28, 6, 45, 54, //
+  ];
+
+  /// D386. The one achievement with no quest behind it, so this is the only
+  /// thing that proves it ever fires.
+  testWidgets('a drawn computer game reports the tie achievement',
+      (tester) async {
+    final fake = FakeGameServices();
+    final services = GameServices(platform: fake);
+    await services.start();
+    final repository =
+        await repositoryWith(mode: GameMode.vsComputer, moves: drawn);
+    await pumpResult(tester, repository, services);
+
+    expect(fake.unlockedIos, contains('nl.evict.quadrim2.tie'),
+        reason: 'the draw was never reported; is reportDraw wired?');
+  });
+
+  /// The other half, and the half that would not fail on its own. A game that
+  /// is *complete* is not a game that was drawn — a win is complete, and so is
+  /// a resignation, which leaves a position the board would still play. Asking
+  /// `status` instead of `outcome` would unlock this for everybody.
+  testWidgets('a won computer game reports no tie', (tester) async {
+    final fake = FakeGameServices();
+    final services = GameServices(platform: fake);
+    await services.start();
+    final repository =
+        await repositoryWith(mode: GameMode.vsComputer, moves: lightWins);
+    await pumpResult(tester, repository, services);
+
+    expect(fake.unlockedIos, isNot(contains('nl.evict.quadrim2.tie')));
+  });
+
+  /// "Against a computer opponent" is part of the achievement, and pass and
+  /// play is two people at one phone agreeing to fill the board.
+  testWidgets('a drawn pass-and-play game reports no tie', (tester) async {
+    final fake = FakeGameServices();
+    final services = GameServices(platform: fake);
+    await services.start();
+    final repository =
+        await repositoryWith(mode: GameMode.passAndPlay, moves: drawn);
+    await pumpResult(tester, repository, services);
+
+    expect(fake.unlockedIos, isEmpty);
+  });
+
   /// AC 6, at the level that matters: the panel renders and the game is
   /// playable with the platform throwing on every call.
   testWidgets('a failing platform changes nothing on screen', (tester) async {

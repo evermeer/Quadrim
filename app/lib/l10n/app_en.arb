@@ -183,6 +183,18 @@
       }
     }
   },
+  "recordLineNoDraws": "{wins} won · {losses} lost",
+  "@recordLineNoDraws": {
+    "description": "The rating card's record when the player has never drawn. A draw against a computer opponent is near-impossible, so a standing \"0 drawn\" was noise on every card (D385).",
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      }
+    }
+  },
   "recordEmpty": "No finished games against the computer yet.",
   "byOpponent": "By opponent",
   "opponentRecord": "{wins}–{losses}–{draws} in {played} games",
@@ -196,6 +208,21 @@
         "type": "int"
       },
       "draws": {
+        "type": "int"
+      },
+      "played": {
+        "type": "int"
+      }
+    }
+  },
+  "opponentRecordNoDraws": "{wins}–{losses} in {played} games",
+  "@opponentRecordNoDraws": {
+    "description": "One opponent's record when there are no draws: wins-losses (D385).",
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
         "type": "int"
       },
       "played": {

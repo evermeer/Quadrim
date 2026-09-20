@@ -31,12 +31,17 @@ class Achievement {
   /// an achievement names it by [key] and lets the platform adapter translate.
   final String key;
 
-  /// The quest whose achievement fires this, by [Quest.id].
+  /// The quest whose achievement fires this, by [Quest.id], or null if nothing
+  /// in the quest catalogue fires it.
   ///
   /// One quest, never a set: the merge in D378 works because the *harder* of
   /// the two per-opponent quests is dropped rather than or-ed in, so there is
   /// no rule here about which of several sources counts.
-  final String questId;
+  ///
+  /// **Null for [kDrawAchievementKey] alone** (D386). A drawn game is not a
+  /// quest — it pays no points and claims no rung — so there is no quest id to
+  /// name, and the end-of-game path reports it directly.
+  final String? questId;
 
   /// Ours to choose, and permanent once published. Reverse-DNS on the iOS
   /// bundle identifier, which is `nl.evict.quadrim2` and not the Android one
@@ -95,7 +100,24 @@ final List<Achievement> achievementCatalogue = [
       gameCenterId: _gc('days_in_row.$target'),
       playGamesId: kPlayGamesIdUnset,
     ),
+  // The one achievement with no quest behind it (D386).
+  Achievement(
+    key: kDrawAchievementKey,
+    questId: null,
+    gameCenterId: _gc('tie'),
+    playGamesId: kPlayGamesIdUnset,
+  ),
 ];
+
+/// Filling all sixty-four cells against a computer opponent without a line.
+///
+/// **The key says `draw` and the store id says `tie`, and neither can change.**
+/// `draw` is what the engine calls it — [Draw], `OpponentRecord.draws`,
+/// `resultDrawn` — so that is the word the code keeps. `nl.evict.quadrim2.tie`
+/// is what was published, and an achievement id is as permanent as a product id
+/// (D213, D365). Renaming either to match the other is not an option; this
+/// comment is the alternative.
+const String kDrawAchievementKey = 'draw';
 
 /// The volume rungs, as ticket 033 set them: 5, 10, 20, 50, 100 games in a day.
 ///
@@ -119,6 +141,14 @@ Achievement? achievementForQuest(String questId) {
   }
   return null;
 }
+
+/// The achievement with this [Achievement.key].
+///
+/// Throws if there is none, which is the right failure: every caller names a
+/// constant from this file, so a miss is a typo rather than a runtime
+/// condition, and a silent null would be an achievement that never unlocks.
+Achievement achievementByKey(String key) =>
+    achievementCatalogue.firstWhere((a) => a.key == key);
 
 /// Whether the Play Console's ids have been filled in.
 ///

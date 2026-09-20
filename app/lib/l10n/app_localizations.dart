@@ -344,6 +344,12 @@ abstract class AppLocalizations {
   /// **'{wins} won · {losses} lost · {draws} drawn'**
   String recordLine(int wins, int losses, int draws);
 
+  /// The rating card's record when the player has never drawn. A draw against a computer opponent is near-impossible, so a standing "0 drawn" was noise on every card (D385).
+  ///
+  /// In en, this message translates to:
+  /// **'{wins} won · {losses} lost'**
+  String recordLineNoDraws(int wins, int losses);
+
   /// No description provided for @recordEmpty.
   ///
   /// In en, this message translates to:
@@ -361,6 +367,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{wins}–{losses}–{draws} in {played} games'**
   String opponentRecord(int wins, int losses, int draws, int played);
+
+  /// One opponent's record when there are no draws: wins-losses (D385).
+  ///
+  /// In en, this message translates to:
+  /// **'{wins}–{losses} in {played} games'**
+  String opponentRecordNoDraws(int wins, int losses, int played);
 
   /// No description provided for @inProgress.
   ///

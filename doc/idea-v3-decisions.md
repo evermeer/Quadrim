@@ -2705,6 +2705,120 @@ here; the constants carry a comment saying so. The widget tests replace
 `launchExternalUrl` rather than the plugin, so what is proven is that the row
 asks for the right address, not that a browser exists.
 
+## D385 — A record with no draws in it does not say so
+
+**Question:** The rating card reads "4 won · 1 lost · 0 drawn" and every
+opponent record reads "3–2–0 in 5 games". After a couple of weeks live, the
+observation is that a draw against a computer opponent is very nearly
+impossible: it needs all sixty-four cells filled with no line for either side,
+against an opponent that is trying to make one. So the third number is not an
+edge case the layout has to survive — it is what those lines say, permanently,
+to almost every player. Keep it?
+
+**Decision:** No. Below one draw the count is dropped: "4 won · 1 lost" and
+"3–2 in 5 games". It comes back, in both places, the moment there is a draw to
+report.
+
+**A zero that is always a zero is not information, it is furniture.** The
+record line exists to say what happened, and a third of it was reserved for
+something that had not. The cost of the reservation is paid on the narrowest
+screens and at the largest font scales, where the opponent tiles are the
+tightest thing in the release (ticket 021) and where the line wraps.
+
+**Four call sites, and they are two pairs.** Your Path and the opponent detail
+page each draw the record *and* build a screen-reader label from it — so the
+conditional had to be applied four times, twice per visible string, and two of
+those four are invisible to anyone reading the screen. Four copies is four
+places for the spoken record and the drawn one to disagree, and nothing would
+fail if they did. They go through one `opponentRecordLine` helper instead.
+
+**The rating card keeps its own line, deliberately.** It has three numbers and
+no game count, so it is a genuinely different string rather than the same one
+with an argument dropped, and folding the two together would produce a function
+whose parameters are mostly unused. It is a second place to get this wrong, and
+that is what its own test is for.
+
+**Cost:** two more strings in each `.arb`, and a translator now has four
+variants of one idea to keep consistent rather than two. The alternative — an
+ICU plural on the draw count inside the existing string — was considered and is
+worse: the zero case has to remove a *separator* as well as a number, which
+plural forms express badly and which reads as a trailing "·" the first time
+somebody gets it slightly wrong.
+
+## D386 — The drawn-game achievement has no quest behind it, and reads the board rather than the record
+
+**Question:** A Game Center achievement `nl.evict.quadrim2.tie` was published
+for drawing a game against a computer opponent. Every one of the other
+forty-five achievements is derived from a quest — `achievementCatalogue` is
+built by walking the quest catalogue, and `GameServices.reportQuests` takes the
+`newlyAchieved` diff the end-of-game panel is already built from. A draw is not
+a quest: it pays no points and claims no rung. Invent one for it, or let an
+achievement exist without one?
+
+**Decision:** Let it exist without one. `Achievement.questId` becomes nullable,
+the draw entry is the only null, and the end-of-game path reports it directly
+through `GameServices.reportDraw()`.
+
+**Inventing a quest was the tidier-looking option and the wrong one.** A quest
+is a user-facing object: it appears as a tile on the main screen, it pays
+points, and it enters the progression fold that `quadrim_progression` owns. A
+draw does none of those things, so a quest for it would have to be marked
+invisible and zero-paying everywhere that handles quests — a special case in
+the progression package, pushed there to avoid a special case here. The
+special case is real either way; this puts it in the one file that already
+knows what a store id is.
+
+**What the guard tests is the board, not the record.** `GameStatus.complete`
+says the game is over; only `outcome()` says how. A resignation is complete
+too, and it leaves a position the board would still play — so
+`outcome(...) is Draw` is the question that separates them, and a resigned game
+answers `Ongoing`. Asking `status` instead would have unlocked the achievement
+for everyone who ever resigned, which is the opposite of the achievement's
+meaning. **Verified by making the mutation**: swapping the check for
+`status == GameStatus.complete` turns "a won computer game reports no tie" red,
+which is the whole reason that test is written alongside the positive one.
+
+**The key says `draw` and the store id says `tie`.** `draw` is the word the
+engine uses — `Draw`, `OpponentRecord.draws`, `resultDrawn` — so it is the word
+the code keeps. `nl.evict.quadrim2.tie` is what was published, and an
+achievement id is as permanent as a product id (D213, D365). Neither can move
+to meet the other; a comment and a test hold the seam.
+
+**Cost:** an achievement that no quest fires is an achievement nothing in the
+quest machinery will ever check, so it is reported by hand from exactly one
+place and there is no mechanism that would notice if that call were deleted.
+The wiring test is what notices. A test asserts there is exactly *one* such
+entry, so a second questless achievement added without a caller — which would
+silently never unlock — fails rather than ships.
+
+**And it raises the count against Game Center's cap.** Forty-six of the hundred
+an app may declare, so the headroom D378 left is now fourteen rather than
+fifteen. A roster past about forty-five opponents breaks it.
+
+**The points were re-priced rather than squeezed, and the console did it
+first.** The other forty-five totalled 980 of Game Center's 1000, which left
+the draw a maximum of 20 -- ranking the rarest thing in the game beside a
+ten-games-in-a-day rung. The opponent column was instead re-priced to **1, 2,
+3 ... 31, weakest first**: a flat step of one per rung, which is both a cleaner
+rule than the five-to-a-hundred spread it replaced and worth exactly 496 rather
+than 510. The fourteen points that freed went to the draw, which is now **34** --
+above every opponent except none, and the largest single award after the
+1440-day streak's 100.
+
+**The set is now exactly at the cap**, deliberately, and two tests hold it
+there: one asserts the opponent column is exactly `1..31` rather than merely
+ascending, and one asserts the draw is 34 and the total is 1000. An opponent
+added to the roster shifts every rung above it and breaks the total, which is
+the failure those two exist to make loud. Anything added later has to come from
+somewhere, and that is the point of writing the number down rather than
+recomputing it.
+
+**The console is the authority for these numbers, not this repository.** The
+JSON is the hand-authored half of the catalogue and the code half holds no
+points at all, so what is here mirrors what was set in App Store Connect rather
+than generating it. The tests check internal consistency; they cannot check
+that the console agrees.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

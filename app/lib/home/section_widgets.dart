@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/documents.dart';
+import '../data/home_summary.dart';
 import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
 import '../theme.dart';
@@ -93,3 +94,17 @@ class RatingPill extends StatelessWidget {
     );
   }
 }
+
+/// One opponent's record, with the draws left out when there are none (D385).
+///
+/// Shared rather than written at each of the four call sites — two in Your
+/// Path, two in the opponent detail page, each pair a visible string and the
+/// screen-reader label that must say the same thing. Four copies of a
+/// conditional is four places for the spoken record and the drawn one to
+/// disagree, and nothing would fail if they did.
+String opponentRecordLine(AppLocalizations l10n, OpponentRecord record) =>
+    record.draws == 0
+        ? l10n.opponentRecordNoDraws(
+            record.wins, record.losses, record.played)
+        : l10n.opponentRecord(
+            record.wins, record.losses, record.draws, record.played);

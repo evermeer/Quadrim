@@ -47,9 +47,15 @@ class RatingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    // **The draws are dropped when there are none** (D385). A drawn game against
+    // a computer opponent is near-impossible, so "0 drawn" is what almost every
+    // card would carry forever — a third of the line spent saying nothing
+    // happened. It comes back the moment it is true.
     final record = summary.played == 0
         ? l10n.recordEmpty
-        : l10n.recordLine(summary.wins, summary.losses, summary.draws);
+        : summary.draws == 0
+            ? l10n.recordLineNoDraws(summary.wins, summary.losses)
+            : l10n.recordLine(summary.wins, summary.losses, summary.draws);
     final points = l10n.pointsValue(balance);
     final days = l10n.streakValue(streak);
     final trend = TrendGraph.worthDrawing(series)

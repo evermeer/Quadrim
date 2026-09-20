@@ -145,6 +145,28 @@ void main() {
       }
     });
 
+    /// **The opponent column is exactly 1 to 31, weakest first** (D386). Not
+    /// merely ascending: it is a flat step of one per rung, set in the console
+    /// and mirrored here, and the fourteen points that re-pricing freed are
+    /// what the draw is paid with. An opponent inserted into the roster without
+    /// re-pricing would shift every rung above it by one and silently break the
+    /// total, so this asserts the shape rather than the direction.
+    test('beating an opponent pays its position in the roster', () {
+      final beat = items.where((m) => key(m).startsWith('beat:')).toList();
+      expect(beat.map(points).toList(),
+          List.generate(beat.length, (i) => i + 1),
+          reason: 'the opponent column is no longer 1..${beat.length}');
+    });
+
+    /// The draw is paid out of what that re-pricing freed, and the set is at
+    /// the cap. Written down because the number is not arbitrary: it is
+    /// 1000 minus everything else, and anything added later has to come from
+    /// somewhere.
+    test('the draw carries what the re-pricing freed', () {
+      expect(points(items.firstWhere((m) => key(m) == 'draw')), 34);
+      expect(items.fold<int>(0, (a, m) => a + points(m)), 1000);
+    });
+
     /// Within a family the reward must not go backwards: a longer streak paying
     /// less than a shorter one is the kind of thing nobody notices until a
     /// player does.

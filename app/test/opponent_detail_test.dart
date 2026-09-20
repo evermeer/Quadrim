@@ -178,7 +178,8 @@ void main() {
 
       expect(find.byType(OpponentDetail), findsOneWidget);
       expect(find.text('900 · Novice'), findsOneWidget);
-      expect(find.text('1–1–0 in 2 games'), findsOneWidget);
+      // No trailing zero: a record with no draws does not mention them (D385).
+      expect(find.text('1–1 in 2 games'), findsOneWidget);
       // Clover is roster index 4, so a win pays eight (D335's ladder).
       expect(find.text('A win pays 8 points'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Start a game'), findsOneWidget);
