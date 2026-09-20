@@ -197,7 +197,7 @@
   },
   "recordEmpty": "No finished games against the computer yet.",
   "byOpponent": "By opponent",
-  "opponentRecord": "{wins}–{losses}–{draws} in {played} games",
+  "opponentRecord": "{wins}–{losses}–{draws} in {played, plural, =1{1 game} other{{played} games}}",
   "@opponentRecord": {
     "description": "One opponent's record: wins-losses-draws.",
     "placeholders": {
@@ -215,7 +215,7 @@
       }
     }
   },
-  "opponentRecordNoDraws": "{wins}–{losses} in {played} games",
+  "opponentRecordNoDraws": "{wins}–{losses} in {played, plural, =1{1 game} other{{played} games}}",
   "@opponentRecordNoDraws": {
     "description": "One opponent's record when there are no draws: wins-losses (D385).",
     "placeholders": {

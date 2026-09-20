@@ -2738,6 +2738,13 @@ with an argument dropped, and folding the two together would produce a function
 whose parameters are mostly unused. It is a second place to get this wrong, and
 that is what its own test is for.
 
+**It also exposed a plural bug that had been there all along.** The game count
+had no plural form, so a first loss read **"0-1 in 1 games"** -- and that is the
+most common record a new player has. It was equally wrong before, at
+"0-1-0 in 1 games", and simply less conspicuous with a third number in front of
+it. Both strings now take an ICU plural in both languages, and the singular is
+the case the tests assert, because it is the one that was broken.
+
 **Cost:** two more strings in each `.arb`, and a translator now has four
 variants of one idea to keep consistent rather than two. The alternative — an
 ICU plural on the draw count inside the existing string — was considered and is

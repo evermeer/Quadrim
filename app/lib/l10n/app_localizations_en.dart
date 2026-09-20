@@ -172,12 +172,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String opponentRecord(int wins, int losses, int draws, int played) {
-    return '$wins–$losses–$draws in $played games';
+    String _temp0 = intl.Intl.pluralLogic(
+      played,
+      locale: localeName,
+      other: '$played games',
+      one: '1 game',
+    );
+    return '$wins–$losses–$draws in $_temp0';
   }
 
   @override
   String opponentRecordNoDraws(int wins, int losses, int played) {
-    return '$wins–$losses in $played games';
+    String _temp0 = intl.Intl.pluralLogic(
+      played,
+      locale: localeName,
+      other: '$played games',
+      one: '1 game',
+    );
+    return '$wins–$losses in $_temp0';
   }
 
   @override

@@ -365,13 +365,13 @@ abstract class AppLocalizations {
   /// One opponent's record: wins-losses-draws.
   ///
   /// In en, this message translates to:
-  /// **'{wins}–{losses}–{draws} in {played} games'**
+  /// **'{wins}–{losses}–{draws} in {played, plural, =1{1 game} other{{played} games}}'**
   String opponentRecord(int wins, int losses, int draws, int played);
 
   /// One opponent's record when there are no draws: wins-losses (D385).
   ///
   /// In en, this message translates to:
-  /// **'{wins}–{losses} in {played} games'**
+  /// **'{wins}–{losses} in {played, plural, =1{1 game} other{{played} games}}'**
   String opponentRecordNoDraws(int wins, int losses, int played);
 
   /// No description provided for @inProgress.

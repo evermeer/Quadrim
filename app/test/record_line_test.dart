@@ -53,6 +53,28 @@ void main() {
             ['3', '2', '1', '6'],
             reason: 'the draw is missing from a record that has one: $line');
       });
+
+      /// **One game is "1 game", not "1 games".** The count had no plural form
+      /// until D385's change made the line short enough for the error to be the
+      /// conspicuous thing on it — it read "0–1 in 1 games" on a first loss,
+      /// which is the most common record a new player has.
+      test('says one game in the singular ($locale)', () async {
+        final l10n = await l10nFor(locale);
+        final line = opponentRecordLine(l10n, record(wins: 0, losses: 1));
+
+        expect(line, isNot(contains(locale == 'nl' ? '1 partijen' : '1 games')),
+            reason: 'the game count has no plural form: $line');
+        expect(line, contains(locale == 'nl' ? '1 partij' : '1 game'));
+      });
+
+      /// The other side of the plural, so a form that hard-codes the singular
+      /// fails too.
+      test('says several games in the plural ($locale)', () async {
+        final l10n = await l10nFor(locale);
+        final line = opponentRecordLine(l10n, record(wins: 1, losses: 1));
+
+        expect(line, contains(locale == 'nl' ? '2 partijen' : '2 games'));
+      });
     }
   });
 
