@@ -230,25 +230,42 @@ class _HomeScreenState extends State<HomeScreen> {
   /// sent — and the store does not backfill itself. Without this the first
   /// thing they would see is an empty shelf behind a fortnight of play.
   Future<void> _openGameServices(
-      Future<SignInOffer?> Function(GameServices) open) async {
+      Future<bool> Function(GameServices) open) async {
     final services = widget.services;
     if (services == null) return;
     final wasAvailable = services.available;
-    final offer = await open(services);
+    final opened = await open(services);
     if (!mounted) return;
-    // Persist the answer if the tap caused a sign-in, so the unprompted offer
-    // never arrives afterwards asking a question already answered.
-    if (offer != null) await _rememberOffer(offer);
-    if (!services.available || wasAvailable) return;
-    // Newly signed in: send everything already earned, once.
-    final today = (widget.now ?? DateTime.now)();
-    final quests = points_fold.questsFrom(_completedGames, today);
-    unawaited(services.backfill([
-      for (final q in quests)
-        if (q.achieved) q.quest.id,
-    ]));
+
+    if (opened && !wasAvailable) {
+      // Newly signed in: send everything already earned, once.
+      final today = (widget.now ?? DateTime.now)();
+      final quests = points_fold.questsFrom(_completedGames, today);
+      unawaited(services.backfill([
+        for (final q in quests)
+          if (q.achieved) q.quest.id,
+      ]));
+    }
+
+    // **Say something when nothing opened** (D391). Silence was the entire
+    // symptom the first time this shipped: the control was pressed, the
+    // platform refused, `_guard` swallowed it, and the app looked broken with
+    // no way to tell whether the tap had even registered. This does not explain
+    // the cause — the app cannot know it — but it distinguishes "refused" from
+    // "did not notice you", which is the difference the player is asking about.
+    if (!opened) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.gameCenterUnavailable)),
+      );
+    }
   }
 
+  /// Records the answer to the **unprompted dialog**, and only that.
+  ///
+  /// Never called for a tap on the leaderboard or achievements button: a
+  /// platform that refuses is not a player who declined, and storing it as one
+  /// meant a misconfiguration silently retired the offer forever (D391).
   Future<void> _rememberOffer(SignInOffer offer) async {
     final doc = _settingsDoc ?? await widget.settings.loadSettings();
     await widget.settings.saveSettings(doc.copyWith(
@@ -301,6 +318,10 @@ class _HomeScreenState extends State<HomeScreen> {
       await _rememberOffer(SignInOffer.declined);
       return;
     }
+    // Recorded as accepted because the player said yes, whatever the platform
+    // then does. If Game Center refuses, that is a fault to fix rather than an
+    // answer to store — and the buttons are still there to try again.
+    await _rememberOffer(SignInOffer.accepted);
     await _openGameServices((s) => s.openLeaderboard());
   }
 

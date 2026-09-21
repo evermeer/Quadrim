@@ -37,7 +37,13 @@ publish_to: 'none'
 # INTERNET from the merged manifest, which is why the store reads as
 # unavailable on Android (D388). So +11 names two different artefacts already
 # and must never name a third.
-version: 0.2.0+12
+#
+# **+13 because +12 reached App Store Connect.** The iOS 0.2.0 build went out
+# through TestFlight on 2026-09-20, and a build number is spent the moment it is
+# uploaded to *either* store -- one counter serves both (D359), and neither
+# minds that the other skipped a number. This is not the "it might have been
+# uploaded" case the rule above is written for; it is the certain one.
+version: 0.2.0+13
 
 environment:
   sdk: ^3.12.2

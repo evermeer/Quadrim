@@ -134,17 +134,35 @@ class RatingCard extends StatelessWidget {
                                 ),
                               ),
                               if (onLeaderboard != null)
-                                IconButton(
-                                  onPressed: onLeaderboard,
-                                  icon: const Icon(Icons.leaderboard_outlined),
-                                  color: QuadrimPalette.gold,
-                                  tooltip: l10n.gameCenterLeaderboard,
-                                  // The platform minimum, kept explicitly: the
-                                  // surrounding text shrinks at large font
-                                  // scales and a target that shrank with it
-                                  // would fall under the audited floor (D135).
-                                  constraints: const BoxConstraints(
-                                      minWidth: 48, minHeight: 48),
+                                // **A bordered button, not a bare icon**
+                                // (D391). A tinted glyph beside a number reads
+                                // as decoration -- the number already has a
+                                // cube beside it -- and nothing said it could
+                                // be pressed. An outline and a word do.
+                                //
+                                // Cream on the border and the label: this is
+                                // the dark panel, where gold on the fill is
+                                // very nearly the background (D296).
+                                Flexible(
+                                  child: OutlinedButton.icon(
+                                    onPressed: onLeaderboard,
+                                    icon: const Icon(kGameCenterIcon, size: 18),
+                                    label: Text(l10n.gameCenterLeaderboard,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: QuadrimPalette.cream,
+                                      side: const BorderSide(
+                                          color: QuadrimPalette.gold),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      // The audited floor, stated rather than
+                                      // inherited (D135).
+                                      minimumSize: const Size(0, 44),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.padded,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),

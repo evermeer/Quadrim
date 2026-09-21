@@ -59,7 +59,7 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
   Future<bool> isSignedIn() => gs.GamesServices.isSignedIn;
 
   @override
-  Future<void> signIn() => gs.GamesServices.signIn();
+  Future<void> signIn() => _orThrow(gs.GamesServices.signIn());
 
   @override
   Future<void> submitScore({
@@ -75,18 +75,31 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
         ),
       );
 
+  /// **The plugin reports failure as a returned string, not as a throw**, and
+  /// discarding it is how "the buttons do nothing" became the whole symptom:
+  /// `_guard` saw no exception and reported success while Game Center refused
+  /// to present anything (D391). Every one of these turns that string back into
+  /// an exception so there is something to catch, log and tell the player.
+  static Future<void> _orThrow(Future<String?> call) async {
+    final problem = await call;
+    if (problem != null && problem.isNotEmpty) {
+      throw GameServicesException(problem);
+    }
+  }
+
   @override
   Future<void> showLeaderboard({
     required String androidLeaderboardId,
     required String iosLeaderboardId,
   }) =>
-      gs.GamesServices.showLeaderboards(
+      _orThrow(gs.GamesServices.showLeaderboards(
         androidLeaderboardID: androidLeaderboardId,
         iOSLeaderboardID: iosLeaderboardId,
-      );
+      ));
 
   @override
-  Future<void> showAchievements() => gs.GamesServices.showAchievements();
+  Future<void> showAchievements() =>
+      _orThrow(gs.GamesServices.showAchievements());
 
   @override
   Future<void> unlock({required String androidId, required String iosId}) =>
@@ -96,6 +109,19 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
         // incremental (D378), so an achievement is true or it is absent.
         achievement: gs.Achievement(androidID: androidId, iOSID: iosId),
       );
+}
+
+/// What the platform said when it refused.
+///
+/// Carries the plugin's own message so it reaches a log rather than being
+/// reduced to "something went wrong" at the point it is thrown (D391).
+class GameServicesException implements Exception {
+  const GameServicesException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'GameServicesException: $message';
 }
 
 /// Whether sign-in has been offered, and what the player said.
@@ -270,27 +296,37 @@ class GameServices {
   ///
   /// Returns what to persist if this caused a sign-in, or null if nothing about
   /// the stored offer changed.
-  Future<SignInOffer?> openLeaderboard() =>
+  Future<bool> openLeaderboard() =>
       _openAfterSignIn(() => _platform.showLeaderboard(
             androidLeaderboardId: kRatingLeaderboardPlayGamesId,
             iosLeaderboardId: kRatingLeaderboardGameCenterId,
           ));
 
   /// Signs in if necessary, then opens the achievements shelf.
-  Future<SignInOffer?> openAchievements() =>
+  Future<bool> openAchievements() =>
       _openAfterSignIn(_platform.showAchievements);
 
-  Future<SignInOffer?> _openAfterSignIn(Future<void> Function() show) async {
-    if (!_configured) return null;
-    SignInOffer? offer;
+  /// True only if a native view actually opened.
+  ///
+  /// **Returns a fact rather than a stored answer** (D391). It used to return
+  /// the `SignInOffer` so the caller could persist it — which meant a platform
+  /// that refused for its own reasons (no Game Center entitlement, no
+  /// leaderboard in the console) was recorded as the *player* declining, and
+  /// the unprompted offer then never came back. A failure here is the app's
+  /// problem, not an answer the player gave.
+  Future<bool> _openAfterSignIn(Future<void> Function() show) async {
+    if (!_configured) return false;
     if (!_available) {
-      offer = await offerSignIn();
+      await offerSignIn();
       // Signing in is the point of the tap only incidentally; if it failed
       // there is nothing to show and a native view would open empty or throw.
-      if (!_available) return offer;
+      if (!_available) return false;
     }
-    await _guard(show);
-    return offer;
+    return await _guard(() async {
+      await show();
+      return true;
+    }) ??
+        false;
   }
 
   /// Swallows everything.

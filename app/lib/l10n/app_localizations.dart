@@ -368,6 +368,12 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get gameCenterSignInDecline;
 
+  /// No description provided for @gameCenterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Center could not be opened. Check that you are signed in.'**
+  String get gameCenterUnavailable;
+
   /// No description provided for @gameCenterOpen.
   ///
   /// In en, this message translates to:

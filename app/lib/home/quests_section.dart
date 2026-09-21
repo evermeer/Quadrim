@@ -6,6 +6,7 @@ import '../data/documents.dart';
 import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// The four quests closest to completion.
 ///
@@ -52,14 +53,23 @@ class QuestsSection extends StatelessWidget {
       heading: l10n.quests,
       trailing: onAchievements == null
           ? null
-          : IconButton(
+          : OutlinedButton.icon(
               onPressed: onAchievements,
-              icon: const Icon(Icons.emoji_events_outlined),
-              tooltip: l10n.gameCenterAchievements,
-              // The platform minimum, stated rather than inherited: this sits
-              // on the section sign, where the surrounding metrics are the
-              // banner's rather than a list tile's (D135).
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: const Icon(kGameCenterIcon, size: 18),
+              label: Text(l10n.gameCenterAchievements,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+              // **Ink, not the app-wide gold** (D391). This sits on the card,
+              // which is parchment, and the icon theme that is right on every
+              // dark panel is the one pairing this palette cannot carry --
+              // exactly the note the move scrubber already carries about its
+              // own four buttons. It read as white and was hard to see.
+              style: OutlinedButton.styleFrom(
+                foregroundColor: QuadrimPalette.ink,
+                side: const BorderSide(color: QuadrimPalette.edge),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: const Size(0, 44),
+                tapTargetSize: MaterialTapTargetSize.padded,
+              ),
             ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

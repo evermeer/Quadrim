@@ -53,6 +53,7 @@
   "gameCenterSignInBody": "Meld je aan om je rating op de ranglijst te zetten en de prestaties te verzamelen die je al hebt verdiend. Alles in het spel werkt precies hetzelfde, aangemeld of niet.",
   "gameCenterSignInAccept": "Aanmelden",
   "gameCenterSignInDecline": "Niet nu",
+  "gameCenterUnavailable": "Game Center kon niet worden geopend. Controleer of je bent aangemeld.",
   "gameCenterOpen": "Openen",
   "settings": "Instellingen",
   "computerRatingHeading": "Tegen de computer",

@@ -171,6 +171,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gameCenterSignInDecline => 'Not now';
 
   @override
+  String get gameCenterUnavailable =>
+      'Game Center could not be opened. Check that you are signed in.';
+
+  @override
   String get gameCenterOpen => 'Open';
 
   @override

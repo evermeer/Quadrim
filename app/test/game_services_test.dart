@@ -339,11 +339,11 @@ void main() {
       final services = GameServices(platform: fake);
       await services.start();
 
-      final offer = await services.openLeaderboard();
+      final opened = await services.openLeaderboard();
 
       expect(fake.leaderboardsShown, 1);
       expect(fake.signInCalls, 0, reason: 'already signed in');
-      expect(offer, isNull, reason: 'nothing about the stored offer changed');
+      expect(opened, isTrue);
     });
 
     /// **The tap is how a signed-out player signs in** (D390). Making them find
@@ -354,12 +354,11 @@ void main() {
       await services.start();
       expect(services.available, isFalse);
 
-      final offer = await services.openAchievements();
+      final opened = await services.openAchievements();
 
       expect(fake.signInCalls, 1);
       expect(fake.achievementsShown, 1);
-      expect(offer, SignInOffer.accepted,
-          reason: 'the caller has an answer to persist');
+      expect(opened, isTrue);
     });
 
     /// Nothing to show and nothing to throw. A native view opened without a
@@ -369,10 +368,12 @@ void main() {
       final services = GameServices(platform: fake);
       await services.start();
 
-      final offer = await services.openLeaderboard();
+      final opened = await services.openLeaderboard();
 
       expect(fake.leaderboardsShown, 0);
-      expect(offer, SignInOffer.declined);
+      // **Not recorded as a decline** (D391): the caller gets a fact about
+      // whether a view opened, not an answer to store on the player's behalf.
+      expect(opened, isFalse);
     });
 
     test('a throwing platform changes nothing and raises nothing', () async {
@@ -381,6 +382,31 @@ void main() {
       await services.start();
 
       await expectLater(services.openLeaderboard(), completes);
+    });
+
+    /// **The regression for "the buttons do nothing"** (D391). The caller has
+    /// to be able to tell a view that opened from one that did not, or the only
+    /// thing a refusing platform produces is silence.
+    test('says whether a view actually opened', () async {
+      final ok = GameServices(platform: FakeGameServices());
+      await ok.start();
+      expect(await ok.openLeaderboard(), isTrue);
+
+      final bad = GameServices(platform: FakeGameServices(throws: true));
+      await bad.start();
+      expect(await bad.openAchievements(), isFalse,
+          reason: 'a refusal must be reported, not swallowed into success');
+    });
+
+    test('an unconfigured Android build opens nothing and says so', () async {
+      final services = GameServices(
+        platform: FakeGameServices(),
+        isAndroid: true,
+        androidConfigured: false,
+      );
+      await services.start();
+
+      expect(await services.openLeaderboard(), isFalse);
     });
   });
 

@@ -180,6 +180,14 @@ const double _kOverhangLeft = 6;
 /// `Transform.translate` moves it without changing what it is measured as, so
 /// the column below reserves only the part that is actually inside — and the
 /// content sits that much higher up the card.
+/// The one glyph both Game Center controls use.
+///
+/// **The same icon in both places, at the developer's request** (D391). They
+/// open different views — a leaderboard and an achievements shelf — and what
+/// tells them apart is the word beside the glyph, not the glyph. Two different
+/// icons for one feature read as two unrelated features.
+const IconData kGameCenterIcon = Icons.emoji_events_outlined;
+
 class ParchmentSection extends StatelessWidget {
   const ParchmentSection({
     super.key,

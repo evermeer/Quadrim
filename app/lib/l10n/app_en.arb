@@ -186,6 +186,7 @@
   },
   "gameCenterSignInAccept": "Sign in",
   "gameCenterSignInDecline": "Not now",
+  "gameCenterUnavailable": "Game Center could not be opened. Check that you are signed in.",
   "gameCenterOpen": "Open",
   "settings": "Settings",
   "computerRatingHeading": "Against the computer",

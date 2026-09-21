@@ -66,7 +66,7 @@ void main() {
     await services.start();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Leaderboard'));
     await tester.pumpAndSettle();
 
     expect(fake.leaderboardsShown, 1);
@@ -79,7 +79,7 @@ void main() {
     await services.start();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    await tester.tap(find.byTooltip('Achievements'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Achievements'));
     await tester.pumpAndSettle();
 
     expect(fake.achievementsShown, 1);
@@ -89,8 +89,8 @@ void main() {
   testWidgets('neither button is drawn without game services', (tester) async {
     await pumpHome(tester, await repositoryWithAGame());
 
-    expect(find.byTooltip('Leaderboard'), findsNothing);
-    expect(find.byTooltip('Achievements'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Leaderboard'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Achievements'), findsNothing);
   });
 
   /// The case above is the easy one. **This is the one that was wrong**: on
@@ -107,9 +107,9 @@ void main() {
     await services.start();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    expect(find.byTooltip('Leaderboard'), findsNothing,
+    expect(find.widgetWithText(OutlinedButton, 'Leaderboard'), findsNothing,
         reason: 'a button that Play Games will refuse is worse than none');
-    expect(find.byTooltip('Achievements'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Achievements'), findsNothing);
   });
 
   testWidgets('both are drawn once Android is configured', (tester) async {
@@ -121,8 +121,8 @@ void main() {
     await services.start();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    expect(find.byTooltip('Leaderboard'), findsOneWidget);
-    expect(find.byTooltip('Achievements'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Leaderboard'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Achievements'), findsOneWidget);
   });
 
   /// The rating card is deliberately one accessibility node so its four facts
@@ -137,8 +137,11 @@ void main() {
     final handle = tester.ensureSemantics();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    final node = tester.getSemantics(find.byTooltip('Leaderboard'));
-    expect(node.tooltip, 'Leaderboard');
+    final node = tester.getSemantics(
+        find.widgetWithText(OutlinedButton, 'Leaderboard'));
+    expect(node.label, 'Leaderboard');
+    expect(node.flagsCollection.isButton, isTrue,
+        reason: 'it must announce as a button, not as text');
 
     // And the card still says its four facts in one breath rather than
     // fragmenting now that the exclusion is applied piece by piece.
@@ -174,6 +177,32 @@ void main() {
 
     expect(tester.takeException(), isNull,
         reason: 'something overflowed at 2x with the buttons present');
+  });
+
+  /// **A platform that refuses is not a player who declined** (D391). Storing
+  /// it as one is what retired the unprompted offer forever on a build whose
+  /// Game Center was simply not configured -- so the app both did nothing and
+  /// stopped asking.
+  testWidgets('a refused open does not record a decline, and says something',
+      (tester) async {
+    final services = GameServices(platform: FakeGameServices(throws: true));
+    await services.start();
+    final repository = await repositoryWithAGame(
+      settings: const SettingsDocument(
+        tutorialOffered: true,
+        gameServicesOffer: kGameServicesAccepted,
+      ),
+    );
+    await pumpHome(tester, repository, services: services);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsOneWidget,
+        reason: 'silence was the whole symptom');
+    final settings = await repository.loadSettings();
+    expect(settings.gameServicesOffer, kGameServicesAccepted,
+        reason: 'a platform failure must not be stored as the player declining');
   });
 
   group('the one-time offer', () {

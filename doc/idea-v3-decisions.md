@@ -3072,6 +3072,70 @@ caught while building an APK to look at on the emulator, before the emulator had
 even booted: the value of intending to look at the artefact, arriving before the
 looking did.
 
+## D391 — The buttons did nothing, and three separate things made that invisible
+
+**Question:** The 0.2.0 TestFlight build offered sign-in, the player signed in,
+and both Game Center controls then did nothing — including after a force-quit.
+Why, and why was there no clue?
+
+**Decision:** Four fixes, one of which is not in this repository at all.
+
+### The cause is a missing capability, on the Mac
+
+**The iOS project has no entitlements file and no Game Center capability.**
+`grep` finds no `game-center` anywhere under `app/ios/`, and no
+`CODE_SIGN_ENTITLEMENTS` in any of the three Runner build configurations.
+GameKit will show its sign-in banner without it and then refuse to present
+`GKGameCenterViewController`, which is exactly the reported symptom.
+
+**That fix belongs in Xcode, not here** — Signing & Capabilities → + Capability
+→ Game Center. Doing it through the UI creates the entitlements file *and*
+registers the capability against the App ID in the developer portal; hand-writing
+the plist here would do the first and not the second, and the build would then
+fail to sign. It is recorded rather than done for that reason, and because
+nothing on this machine can verify an iOS build.
+
+### The plugin reports failure by returning a string, and the adapter threw it away
+
+`GamesServices.showLeaderboards`, `showAchievements` and `signIn` all return
+`Future<String?>` — **a message, not a throw**. The adapter discarded it, so
+`_guard` saw a clean completion and reported success while Game Center was
+refusing. Every one of those calls now turns a non-empty string back into a
+`GameServicesException`, so there is something to catch.
+
+**This is the defect that made the other three invisible.** A best-effort layer
+that swallows exceptions is right (ticket 050 §7) and is worth nothing if the
+thing it is swallowing never throws.
+
+### A platform that refuses was stored as a player who declined
+
+`openLeaderboard` returned the `SignInOffer` and the caller persisted it. So a
+build whose Game Center was simply not configured recorded
+`gameServicesOffer = declined` — **and the unprompted offer then never came
+back**. The app both did nothing and stopped asking. The method now returns a
+plain "did a view open", and only the dialog's own yes/no is ever stored.
+
+### Silence is not an acceptable failure mode for a control
+
+Best-effort means never interrupting a *game*. It does not mean a button that
+gives no sign it was pressed. A refused open now raises a snackbar. It cannot
+name the cause — the app does not know it — but it distinguishes "refused" from
+"did not notice you", which is the question the player is actually asking.
+
+### And the controls became buttons
+
+A tinted glyph beside the rating read as decoration, next to a number that
+already has a cube beside it; the one on the quests panel inherited the app-wide
+**gold icon theme onto parchment**, which is the one pairing this palette cannot
+carry — the move scrubber carries that exact note about its own four buttons
+(D204) and this repeated the mistake one panel over. Both are now outlined
+buttons with a word in them, ink on parchment and cream on the dark panel, and
+**both use the same glyph**: they are one feature, and what tells the two apart
+is the label.
+
+**Cost:** two labelled buttons take more width than two icons, on the screen
+that is already tightest in the release. The 2x/320pt test covers them.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -3117,6 +3181,10 @@ remains:
 - **Whether the two products exist in Play Console** is still unverified and
   would produce the identical "unavailable" screen. Ticket 046's AC 1 was only
   ever met in App Store Connect.
+- **The iOS Game Center capability is not enabled** (D391), which is why the
+  leaderboard and achievements buttons do nothing on the 0.2.0 TestFlight build.
+  One click in Xcode, and it also needs the leaderboard `nl.evict.quadrim2.rating`
+  to exist in App Store Connect.
 - **The privacy policy's contact block** is still three placeholders in
   `doc/store-listing.md` while the published page must already carry real values.
   A paste, and a read of the two side by side.
