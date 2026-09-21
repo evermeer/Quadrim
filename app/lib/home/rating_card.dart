@@ -146,7 +146,7 @@ class RatingCard extends StatelessWidget {
                                 Flexible(
                                   child: OutlinedButton.icon(
                                     onPressed: onLeaderboard,
-                                    icon: const Icon(kGameCenterIcon, size: 18),
+                                    icon: const Icon(kLeaderboardIcon, size: 18),
                                     label: Text(l10n.gameCenterLeaderboard,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis),

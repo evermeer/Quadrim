@@ -55,7 +55,7 @@ class QuestsSection extends StatelessWidget {
           ? null
           : OutlinedButton.icon(
               onPressed: onAchievements,
-              icon: const Icon(kGameCenterIcon, size: 18),
+              icon: const Icon(kAchievementsIcon, size: 18),
               label: Text(l10n.gameCenterAchievements,
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               // **Ink, not the app-wide gold** (D391). This sits on the card,

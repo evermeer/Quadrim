@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quadrim/data/document_store.dart';
+import 'package:quadrim/design/forest.dart';
 import 'package:quadrim/data/documents.dart';
 import 'package:quadrim/data/local_game_repository.dart';
 import 'package:quadrim/main.dart';
@@ -203,6 +204,20 @@ void main() {
     final settings = await repository.loadSettings();
     expect(settings.gameServicesOffer, kGameServicesAccepted,
         reason: 'a platform failure must not be stored as the player declining');
+  });
+
+  /// **Two destinations, two glyphs** (D391, reversed). They were briefly the
+  /// same trophy; two controls that look identical while going to different
+  /// places is a worse kind of consistency than none, and the label should not
+  /// be carrying the distinction on its own.
+  testWidgets('the two buttons do not share an icon', (tester) async {
+    final services = GameServices(platform: FakeGameServices());
+    await services.start();
+    await pumpHome(tester, await repositoryWithAGame(), services: services);
+
+    expect(kLeaderboardIcon, isNot(kAchievementsIcon));
+    expect(find.byIcon(kLeaderboardIcon), findsOneWidget);
+    expect(find.byIcon(kAchievementsIcon), findsOneWidget);
   });
 
   group('the one-time offer', () {

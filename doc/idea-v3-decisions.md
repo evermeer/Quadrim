@@ -3129,9 +3129,17 @@ already has a cube beside it; the one on the quests panel inherited the app-wide
 **gold icon theme onto parchment**, which is the one pairing this palette cannot
 carry — the move scrubber carries that exact note about its own four buttons
 (D204) and this repeated the mistake one panel over. Both are now outlined
-buttons with a word in them, ink on parchment and cream on the dark panel, and
-**both use the same glyph**: they are one feature, and what tells the two apart
-is the label.
+buttons with a word in them, ink on parchment and cream on the dark panel.
+
+~~**And both use the same glyph**: they are one feature, and what tells the two
+apart is the label.~~ **Reversed the same day, at the developer's request, and
+the reversal is right.** The argument for one glyph was that one feature should
+look like one feature. What it missed is that these are two *destinations* — a
+leaderboard and a shelf of achievements — and two controls that look identical
+while going to different places is a worse kind of consistency than none. The
+label was carrying the whole distinction and the icon was actively working
+against it. `kLeaderboardIcon` and `kAchievementsIcon` again, named in the
+design layer so there is one place to change either.
 
 **Cost:** two labelled buttons take more width than two icons, on the screen
 that is already tightest in the release. The 2x/320pt test covers them.
