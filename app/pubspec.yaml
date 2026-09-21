@@ -43,6 +43,10 @@ publish_to: 'none'
 # uploaded to *either* store -- one counter serves both (D359), and neither
 # minds that the other skipped a number. This is not the "it might have been
 # uploaded" case the rule above is written for; it is the certain one.
+#
+# Reached independently on two machines the same morning, which is the rule
+# working rather than a collision: both sides read "+12 was uploaded" and both
+# arrived at +13.
 version: 0.2.0+13
 
 environment:
