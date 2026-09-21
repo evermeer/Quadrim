@@ -204,6 +204,106 @@ class _HomeScreenState extends State<HomeScreen> {
     _streak = points_fold.streakFrom(games, today);
   }
 
+  /// Whether the two Game Center controls are drawn at all (D390).
+  ///
+  /// False on any build the platform cannot serve — every Android build until
+  /// the Play Console ids are pasted in — because a control that does nothing
+  /// is worse than an absent one. **Asked of the service rather than of the
+  /// null check**: `services != null` is true on Android too, and gating on it
+  /// drew both buttons over a platform that would refuse them.
+  ///
+  /// **Not** gated on being signed in: tapping is how a signed-out player
+  /// signs in.
+  bool get _gameServicesReady => widget.services?.usable ?? false;
+
+  Future<void> _openLeaderboard() =>
+      _openGameServices((services) => services.openLeaderboard());
+
+  Future<void> _openAchievements() =>
+      _openGameServices((services) => services.openAchievements());
+
+  /// Opens one of the two native views, signing in first if needed, and
+  /// backfills whatever the player has already earned.
+  ///
+  /// **The backfill is the part that matters** (D390). Reporting is a diff at
+  /// the end of each game, so a player signed out until now has had nothing
+  /// sent — and the store does not backfill itself. Without this the first
+  /// thing they would see is an empty shelf behind a fortnight of play.
+  Future<void> _openGameServices(
+      Future<SignInOffer?> Function(GameServices) open) async {
+    final services = widget.services;
+    if (services == null) return;
+    final wasAvailable = services.available;
+    final offer = await open(services);
+    if (!mounted) return;
+    // Persist the answer if the tap caused a sign-in, so the unprompted offer
+    // never arrives afterwards asking a question already answered.
+    if (offer != null) await _rememberOffer(offer);
+    if (!services.available || wasAvailable) return;
+    // Newly signed in: send everything already earned, once.
+    final today = (widget.now ?? DateTime.now)();
+    final quests = points_fold.questsFrom(_completedGames, today);
+    unawaited(services.backfill([
+      for (final q in quests)
+        if (q.achieved) q.quest.id,
+    ]));
+  }
+
+  Future<void> _rememberOffer(SignInOffer offer) async {
+    final doc = _settingsDoc ?? await widget.settings.loadSettings();
+    await widget.settings.saveSettings(doc.copyWith(
+      gameServicesOffer: switch (offer) {
+        SignInOffer.accepted => kGameServicesAccepted,
+        SignInOffer.declined => kGameServicesDeclined,
+        SignInOffer.notYetOffered => kGameServicesNotOffered,
+      },
+    ));
+  }
+
+  /// The one-time unprompted offer (D390).
+  ///
+  /// **After a finished game, never at launch.** At launch there is nothing to
+  /// sync and nothing to explain, and the first-run tutorial prompt already
+  /// owns that moment (D193). Once a game is in the history there is a rating
+  /// to put on a board and possibly an achievement to keep, which is what the
+  /// dialog is about.
+  Future<void> _maybeOfferSignIn() async {
+    final services = widget.services;
+    final doc = _settingsDoc;
+    if (services == null || doc == null || !mounted) return;
+    if (doc.gameServicesOffer != kGameServicesNotOffered) return;
+    if (services.available) return;
+    if (_completedGames.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final accepted = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.gameCenterSignInTitle),
+            content: Text(l10n.gameCenterSignInBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.gameCenterSignInDecline),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(l10n.gameCenterSignInAccept),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!mounted) return;
+    if (!accepted) {
+      // **Declining is permanent**, which is the whole point of storing it: the
+      // alternative is asking again every time a game ends until they give in.
+      await _rememberOffer(SignInOffer.declined);
+      return;
+    }
+    await _openGameServices((s) => s.openLeaderboard());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -216,9 +316,14 @@ class _HomeScreenState extends State<HomeScreen> {
     // Watched rather than loaded once: the criteria ask both for a single
     // list folded four ways and for the screen to update when a game finishes,
     // and a stream gives one list per change rather than four sweeps (D158).
-    _completed = widget.repository
-        .watchCompletedGames()
-        .listen((games) => setState(() => _refold(games)));
+    _completed = widget.repository.watchCompletedGames().listen((games) {
+      setState(() => _refold(games));
+      // The moment a game lands is the moment there is something to sync, and
+      // it is the only moment the unprompted offer is ever made (D390). It
+      // returns immediately on every call after the first, because the stored
+      // answer is no longer `notYetOffered`.
+      unawaited(_maybeOfferSignIn());
+    });
     // **And again when the app comes back, because the day may have changed.**
     // Everything day-shaped here — the streak, and the progress on every "in
     // one day" quest — is folded against a `today` read at fold time, and the
@@ -554,7 +659,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => SettingsScreen(
-                    settings: widget.settings, shop: widget.shop),
+                    settings: widget.settings,
+                    shop: widget.shop,
+                    services: widget.services),
               ),
             ),
           ),
@@ -578,7 +685,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             summary: _summary,
                             balance: _balance,
                             streak: _streak,
-                            series: _series),
+                            series: _series,
+                            onLeaderboard: _gameServicesReady
+                                ? _openLeaderboard
+                                : null),
                       ],
                     ),
                   ),
@@ -618,6 +728,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (_completedGames.isNotEmpty) ...[
                           const SizedBox(height: kSectionGap),
                           QuestsSection(
+                            onAchievements: _gameServicesReady
+                                ? _openAchievements
+                                : null,
                             quests: _quests,
                             // Capped unless the free month still covers today
                             // or the subscription is owned. The entitlement

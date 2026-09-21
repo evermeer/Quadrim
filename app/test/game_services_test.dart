@@ -24,6 +24,8 @@ class FakeGameServices implements GameServicesPlatform {
   final List<String> unlockedAndroid = [];
   final List<String> unlockedIos = [];
   int signInCalls = 0;
+  int leaderboardsShown = 0;
+  int achievementsShown = 0;
 
   @override
   Future<bool> isSignedIn() async {
@@ -56,6 +58,21 @@ class FakeGameServices implements GameServicesPlatform {
     if (throws) throw StateError('unavailable');
     unlockedAndroid.add(androidId);
     unlockedIos.add(iosId);
+  }
+
+  @override
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  }) async {
+    if (throws) throw StateError('unavailable');
+    leaderboardsShown++;
+  }
+
+  @override
+  Future<void> showAchievements() async {
+    if (throws) throw StateError('unavailable');
+    achievementsShown++;
   }
 }
 
@@ -313,6 +330,100 @@ void main() {
       await services.start();
       await services.submitRating(1234);
       expect(fake.scores, [1234]);
+    });
+  });
+
+  group('opening the native views', () {
+    test('a signed-in player goes straight to the leaderboard', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      final offer = await services.openLeaderboard();
+
+      expect(fake.leaderboardsShown, 1);
+      expect(fake.signInCalls, 0, reason: 'already signed in');
+      expect(offer, isNull, reason: 'nothing about the stored offer changed');
+    });
+
+    /// **The tap is how a signed-out player signs in** (D390). Making them find
+    /// a separate control first is a worse answer than doing it for them.
+    test('a signed-out player is signed in by the tap, then shown', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+      expect(services.available, isFalse);
+
+      final offer = await services.openAchievements();
+
+      expect(fake.signInCalls, 1);
+      expect(fake.achievementsShown, 1);
+      expect(offer, SignInOffer.accepted,
+          reason: 'the caller has an answer to persist');
+    });
+
+    /// Nothing to show and nothing to throw. A native view opened without a
+    /// player is the failure this avoids.
+    test('a refused sign-in shows nothing and says so', () async {
+      final fake = FakeGameServices(signedIn: false, throws: true);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      final offer = await services.openLeaderboard();
+
+      expect(fake.leaderboardsShown, 0);
+      expect(offer, SignInOffer.declined);
+    });
+
+    test('a throwing platform changes nothing and raises nothing', () async {
+      final fake = FakeGameServices(throws: true);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await expectLater(services.openLeaderboard(), completes);
+    });
+  });
+
+  /// D390. Reporting is a diff at the end of each game, so a player signed out
+  /// until now has had nothing sent -- and neither store backfills itself.
+  /// Without this the first thing a new signed-in player sees is an empty shelf
+  /// behind a fortnight of play.
+  group('backfill', () {
+    test('reports everything already earned', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble', 'games_in_day:5']);
+
+      expect(fake.unlockedIos, [
+        'nl.evict.quadrim2.beat.pebble',
+        'nl.evict.quadrim2.games_in_day.5',
+      ]);
+    });
+
+    /// Safe to call with the whole set every time: the session guard keeps a
+    /// repeat to one unlock, and the store treats a second one as a no-op
+    /// anyway.
+    test('a second backfill in one session unlocks nothing twice', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      await services.backfill(['first_win:pebble']);
+
+      expect(fake.unlockedIos, hasLength(1));
+    });
+
+    test('quests with no achievement are skipped in silence', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win_second:pebble', 'nonsense']);
+
+      expect(fake.unlockedIos, isEmpty);
     });
   });
 

@@ -164,6 +164,29 @@
     "description": "The main screen's primary action."
   },
   "tutorial": "Tutorial",
+  "gameCenterLeaderboard": "Leaderboard",
+  "@gameCenterLeaderboard": {
+    "description": "Opens the platform leaderboard. Also the label on the icon beside the computer rating, which is the number the board ranks (D390)."
+  },
+  "gameCenterAchievements": "Achievements",
+  "@gameCenterAchievements": {
+    "description": "Opens the platform achievements shelf. Sits on the quests panel, because the achievements are derived from the quest catalogue (D378)."
+  },
+  "gameCenterSection": "Game Center",
+  "@gameCenterSection": {
+    "description": "Settings heading. The platform name is a proper noun and is not translated."
+  },
+  "gameCenterSignInTitle": "Keep your rating and achievements?",
+  "@gameCenterSignInTitle": {
+    "description": "The one-time unprompted offer (D390)."
+  },
+  "gameCenterSignInBody": "Sign in to put your rating on the leaderboard and collect the achievements you have already earned. Everything in the game works exactly the same either way.",
+  "@gameCenterSignInBody": {
+    "description": "Must not imply anything is gated behind signing in, because nothing is: a signed-out player is a first-class state (ticket 050)."
+  },
+  "gameCenterSignInAccept": "Sign in",
+  "gameCenterSignInDecline": "Not now",
+  "gameCenterOpen": "Open",
   "settings": "Settings",
   "computerRatingHeading": "Against the computer",
   "@computerRatingHeading": {

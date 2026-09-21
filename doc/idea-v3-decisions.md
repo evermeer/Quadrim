@@ -2980,6 +2980,98 @@ testable is every rule about when to ask, which is why the decision is a pure
 function and why the wiring has a test of its own — verified by mutation, since
 deleting the one call would otherwise be silent.
 
+## D390 — Game Center gets a way in, and the backfill is the part that makes it work
+
+**Question:** Ticket 050 shipped a leaderboard and forty-six achievements, and
+0.2.0 went out on TestFlight with **none of it reachable**. `offerSignIn()`
+existed with zero callers, and `GameServicesPlatform` had four methods —
+`isSignedIn`, `signIn`, `submitScore`, `unlock` — and no viewer at all. The app
+could write to Game Center and had no way to show it, and since nothing ever
+triggered authentication it almost certainly never wrote either. Where does it
+go in the interface?
+
+**Decision:** Three ways in, two of them the developer's own suggestion and
+better than they look:
+
+- **An icon beside the computer rating → the leaderboard.** The board *is* that
+  rating — one board, that figure. The control sits next to the number it ranks.
+- **A button on the quests panel → the achievements.** The forty-six are derived
+  by walking the quest catalogue (D378): same rungs, same opponents. The shelf is
+  that panel as the platform renders it.
+- **Two rows in settings**, which is where people look for account-shaped things
+  and the only route that survives a decline.
+
+**The platform draws both views.** Game Center and Play Games each have a native
+UI that already knows about boards, positions, friends and time scopes; a
+hand-drawn one would need all of that and still not be the thing players
+recognise.
+
+### Achievements do not backfill, and that decided the whole design
+
+Reporting is a *diff* at the end of each game — `newlyAchieved`. A player who was
+signed out while playing has had nothing reported, and **signing in later does
+not retroactively unlock anything**. Without a fix, the first thing a new
+signed-in player sees is an empty shelf behind a fortnight of play: it looks like
+a broken integration, and it is one.
+
+So sign-in now reports **everything already earned**, not just the diff.
+Unlocking an already-unlocked achievement is a no-op on both stores, so replaying
+the whole set is safe, and the session guard keeps it to once.
+
+**This is what made "sign in whenever you like" a real option** rather than a
+trap, and it is why the sign-in can wait for the player to ask.
+
+### The tap is how a signed-out player signs in
+
+Tapping either control signs in if needed and then opens the view. Making someone
+find a separate sign-in switch before the leaderboard button does anything is a
+worse answer than doing it for them — they have already said what they want by
+pressing it.
+
+**That holds even after a decline**, and the stored answer deliberately does not
+gate it. "Declined permanently" exists to stop the app nagging; a button the
+player presses is not the app nagging. Obeying the letter of that rule against
+its purpose would leave someone who once dismissed a dialog permanently unable to
+reach a leaderboard.
+
+### The unprompted offer waits for a finished game
+
+Not at launch: there is nothing to sync, nothing to explain, and the first-run
+tutorial prompt already owns that moment (D193). Once a game is in the history
+there is a rating to put on a board and possibly an achievement to keep, which is
+what the dialog is actually about. Declining is stored and permanent — otherwise
+it would arrive after every game until the player gave in.
+
+### The rating card stopped being one node, carefully
+
+The card wrapped its whole column in `ExcludeSemantics` so its four facts are
+announced as one stop rather than four (ticket 021). A button inside that wrapper
+would have been **invisible to a screen reader** — hiding a control from exactly
+the readers who most need it announced. The exclusion is now applied to each
+piece of text instead, leaving the button its own node: one stop for the facts,
+one for the action, which is what a control should be. Both halves are asserted.
+
+**Cost:** two more surfaces on the main screen, which is the tightest thing in
+the release — D374's font-scale sweep found three overflows there and never saw
+these controls, because it pumps the app without game services. A 2x/320pt test
+covers them now. And the feature is still largely unobservable from here: what a
+test can say is that the button exists, is reachable, is announced, and calls the
+platform. Whether Game Center then draws anything is Apple's business and a
+device's.
+
+**Still open, and unchanged by any of this:** Android shows none of it until the
+Play Console ids are pasted in, because `playGamesConfigured` is false and the
+controls are hidden rather than drawn dead.
+
+**That last sentence was false when it was first written**, which is worth
+recording rather than quietly fixing. The buttons were gated on
+`services != null` — and on Android `services` is not null, it is merely unable
+to do anything, so both controls were drawn over a platform that would refuse
+them. The check now asks the service (`usable`) rather than the null. It was
+caught while building an APK to look at on the emulator, before the emulator had
+even booted: the value of intending to look at the artefact, arriving before the
+looking did.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).

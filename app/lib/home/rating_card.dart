@@ -24,7 +24,15 @@ class RatingCard extends StatelessWidget {
     required this.balance,
     required this.streak,
     required this.series,
+    this.onLeaderboard,
   });
+
+  /// Opens the platform leaderboard, or null to draw no button at all (D390).
+  ///
+  /// Null on a build with no game services configured — which is every Android
+  /// build until the Play Console ids are pasted in — because a control that
+  /// does nothing is worse than an absent one.
+  final VoidCallback? onLeaderboard;
 
   final HomeSummary summary;
 
@@ -77,8 +85,12 @@ class RatingCard extends StatelessWidget {
               // beside it, so neither is told something the other is not.
               '${trend == null ? '' : '$trend '}'
               '${l10n.computerRatingHeading}',
-        child: ExcludeSemantics(
-          child: Column(
+        // **Not `ExcludeSemantics` over the whole column any more** (D390).
+        // The card's text is excluded piece by piece below, so that the one
+        // interactive thing in it -- the leaderboard button -- keeps a node of
+        // its own. Excluding the lot would have hidden a control from exactly
+        // the readers who most need it announced.
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
                 // The heading, the number and the record on the left; the cube
@@ -92,18 +104,58 @@ class RatingCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.computerRatingHeading,
-                              style: theme.textTheme.labelLarge
-                                  ?.copyWith(color: QuadrimPalette.creamSoft)),
-                          Text(l10n.ratingValue(summary.computerRating),
-                              style: theme.textTheme.displaySmall
-                                  ?.copyWith(color: QuadrimPalette.cream)),
+                          ExcludeSemantics(
+                            child: Text(l10n.computerRatingHeading,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                    color: QuadrimPalette.creamSoft)),
+                          ),
+                          // **The leaderboard button sits beside the number
+                          // it ranks**, because the board *is* this rating —
+                          // one board, that figure (D390).
+                          //
+                          // Outside the `ExcludeSemantics` below rather than
+                          // inside it: that wrapper exists so the card's four
+                          // facts are announced as one stop rather than four
+                          // (ticket 021), and a button is an action rather than
+                          // a fact. Excluded, it would be invisible to a screen
+                          // reader; left as its own node it is one extra stop,
+                          // which is what a control should be.
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: ExcludeSemantics(
+                                  child: Text(
+                                      l10n.ratingValue(summary.computerRating),
+                                      maxLines: 1,
+                                      style: theme.textTheme.displaySmall
+                                          ?.copyWith(
+                                              color: QuadrimPalette.cream)),
+                                ),
+                              ),
+                              if (onLeaderboard != null)
+                                IconButton(
+                                  onPressed: onLeaderboard,
+                                  icon: const Icon(Icons.leaderboard_outlined),
+                                  color: QuadrimPalette.gold,
+                                  tooltip: l10n.gameCenterLeaderboard,
+                                  // The platform minimum, kept explicitly: the
+                                  // surrounding text shrinks at large font
+                                  // scales and a target that shrank with it
+                                  // would fall under the audited floor (D135).
+                                  constraints: const BoxConstraints(
+                                      minWidth: 48, minHeight: 48),
+                                ),
+                            ],
+                          ),
                           // Explicitly cream. `bodyMedium` carries the ink
                           // colour meant for parchment, and this panel is not
                           // parchment (D296).
-                          Text(record,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(color: QuadrimPalette.cream)),
+                          ExcludeSemantics(
+                            child: Text(record,
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(color: QuadrimPalette.cream)),
+                          ),
                         ],
                       ),
                     ),
@@ -113,12 +165,18 @@ class RatingCard extends StatelessWidget {
                     // three lines and the card past the height of the screen —
                     // taking Your Path off a lazily built sliver list with it.
                     if (MediaQuery.textScalerOf(context).scale(16) <= 22)
-                      Image.asset(Art.cube,
-                          width: 96,
-                          height: 96,
-                          filterQuality: FilterQuality.medium),
+                      ExcludeSemantics(
+                        child: Image.asset(Art.cube,
+                            width: 96,
+                            height: 96,
+                            filterQuality: FilterQuality.medium),
+                      ),
                   ],
                 ),
+                ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                 if (TrendGraph.worthDrawing(series)) ...[
                   const SizedBox(height: 8),
                   Text(l10n.trendHeading,
@@ -187,9 +245,11 @@ class RatingCard extends StatelessWidget {
                 // is still said where it is actually needed — the end-of-game
                 // result, where a rating change has just happened and the
                 // question "does this go anywhere?" is live.
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
         ),
     );
   }

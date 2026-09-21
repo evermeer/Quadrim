@@ -150,6 +150,31 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tutorial => 'Uitleg';
 
   @override
+  String get gameCenterLeaderboard => 'Ranglijst';
+
+  @override
+  String get gameCenterAchievements => 'Prestaties';
+
+  @override
+  String get gameCenterSection => 'Game Center';
+
+  @override
+  String get gameCenterSignInTitle => 'Je rating en prestaties bewaren?';
+
+  @override
+  String get gameCenterSignInBody =>
+      'Meld je aan om je rating op de ranglijst te zetten en de prestaties te verzamelen die je al hebt verdiend. Alles in het spel werkt precies hetzelfde, aangemeld of niet.';
+
+  @override
+  String get gameCenterSignInAccept => 'Aanmelden';
+
+  @override
+  String get gameCenterSignInDecline => 'Niet nu';
+
+  @override
+  String get gameCenterOpen => 'Openen';
+
+  @override
   String get settings => 'Instellingen';
 
   @override

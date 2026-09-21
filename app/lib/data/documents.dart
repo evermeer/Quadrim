@@ -14,6 +14,11 @@ const int kSchemaVersion = 1;
 
 /// The four sheared grids stacked in a column — the board this app shipped
 /// with, and what an unset or unrecognised preference means.
+/// The three states of the unprompted Game Center sign-in offer (D390).
+const String kGameServicesNotOffered = 'notYetOffered';
+const String kGameServicesAccepted = 'accepted';
+const String kGameServicesDeclined = 'declined';
+
 const String kBoardStyleLayers = 'layers';
 
 /// One rotatable 4x4x4 cube of glass cells (D369).
@@ -319,6 +324,7 @@ class SettingsDocument {
     this.freeMonthStartedAt,
     this.reviewPromptedAt,
     this.reviewPromptCount = 0,
+    this.gameServicesOffer = kGameServicesNotOffered,
     this.schemaVersion = kSchemaVersion,
   });
 
@@ -363,6 +369,21 @@ class SettingsDocument {
   /// (D193).
   final int reviewPromptCount;
 
+  /// Whether Game Center / Play Games sign-in has been offered unprompted, and
+  /// what the player said: [kGameServicesNotOffered], [kGameServicesAccepted]
+  /// or [kGameServicesDeclined] (D390).
+  ///
+  /// **This governs the unprompted offer only.** Tapping the leaderboard or the
+  /// achievements button signs in on demand however this reads, including after
+  /// a decline — a player who presses a button has asked, and refusing them
+  /// because they once dismissed a dialog would be obeying the letter of
+  /// "declined permanently" against its purpose, which is not to nag.
+  ///
+  /// A string rather than an enum for the same reason [boardStyle] is one: it
+  /// is what lands in JSON, and anything unrecognised must read back as the
+  /// safe default rather than throw.
+  final String gameServicesOffer;
+
   /// `en`, `nl` or `system`.
   final String locale;
 
@@ -399,6 +420,7 @@ class SettingsDocument {
     DateTime? freeMonthStartedAt,
     DateTime? reviewPromptedAt,
     int? reviewPromptCount,
+    String? gameServicesOffer,
   }) =>
       SettingsDocument(
         locale: locale ?? this.locale,
@@ -415,6 +437,7 @@ class SettingsDocument {
         // again from the beginning by passing the wrong argument.
         reviewPromptedAt: reviewPromptedAt ?? this.reviewPromptedAt,
         reviewPromptCount: reviewPromptCount ?? this.reviewPromptCount,
+        gameServicesOffer: gameServicesOffer ?? this.gameServicesOffer,
       );
 
   Map<String, Object?> toJson() => {
@@ -427,6 +450,7 @@ class SettingsDocument {
         'freeMonthStartedAt': freeMonthStartedAt?.toUtc().toIso8601String(),
         'reviewPromptedAt': reviewPromptedAt?.toUtc().toIso8601String(),
         'reviewPromptCount': reviewPromptCount,
+        'gameServicesOffer': gameServicesOffer,
       };
 
   /// Null when unreadable — see [GameDocument.fromJson]. The caller falls back
@@ -469,6 +493,14 @@ class SettingsDocument {
       reviewPromptedAt:
           DateTime.tryParse(json['reviewPromptedAt'] as String? ?? ''),
       reviewPromptCount: json['reviewPromptCount'] as int? ?? 0,
+      // Absent in every document written before 0.2.0, and anything
+      // unrecognised is treated as absent: not-offered is the only value that
+      // cannot be wrong, because the worst it costs is one dialog.
+      gameServicesOffer: switch (json['gameServicesOffer']) {
+        kGameServicesAccepted => kGameServicesAccepted,
+        kGameServicesDeclined => kGameServicesDeclined,
+        _ => kGameServicesNotOffered,
+      },
     );
   }
 }

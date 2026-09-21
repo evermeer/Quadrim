@@ -23,7 +23,16 @@ class QuestsSection extends StatelessWidget {
     super.key,
     required this.quests,
     this.capped = false,
+    this.onAchievements,
   });
+
+  /// Opens the platform achievements shelf, or null to draw no button (D390).
+  ///
+  /// **On this panel because the achievements are these quests.** The forty-six
+  /// are derived by walking the quest catalogue (D378) -- same rungs, same
+  /// opponents -- so the shelf is this section as the platform renders it, and
+  /// the button belongs where the thing it shows already lives.
+  final VoidCallback? onAchievements;
 
   final List<QuestStatus> quests;
 
@@ -41,6 +50,17 @@ class QuestsSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return ParchmentSection(
       heading: l10n.quests,
+      trailing: onAchievements == null
+          ? null
+          : IconButton(
+              onPressed: onAchievements,
+              icon: const Icon(Icons.emoji_events_outlined),
+              tooltip: l10n.gameCenterAchievements,
+              // The platform minimum, stated rather than inherited: this sits
+              // on the section sign, where the surrounding metrics are the
+              // banner's rather than a list tile's (D135).
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

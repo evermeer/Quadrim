@@ -35,6 +35,20 @@ abstract interface class GameServicesPlatform {
     required int value,
   });
   Future<void> unlock({required String androidId, required String iosId});
+
+  /// Opens the platform's own leaderboard UI.
+  ///
+  /// **The platform draws it, not this app** (D390). Game Center and Play
+  /// Games each have a native view that already knows how to show a board, a
+  /// player's position, friends and time scopes; a hand-drawn one would have to
+  /// be given all of that and would still not be the thing players recognise.
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  });
+
+  /// Opens the platform's own achievements UI.
+  Future<void> showAchievements();
 }
 
 /// The real one. Deliberately thin — everything worth testing is above it.
@@ -60,6 +74,19 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
           value: value,
         ),
       );
+
+  @override
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  }) =>
+      gs.GamesServices.showLeaderboards(
+        androidLeaderboardID: androidLeaderboardId,
+        iOSLeaderboardID: iosLeaderboardId,
+      );
+
+  @override
+  Future<void> showAchievements() => gs.GamesServices.showAchievements();
 
   @override
   Future<void> unlock({required String androidId, required String iosId}) =>
@@ -123,6 +150,16 @@ class GameServices {
   /// On Android, not until the console ids exist. On iOS the Game Center ids
   /// are ours and are in the catalogue, so there is nothing to wait for.
   bool get _configured => !_isAndroid || _androidConfigured;
+
+  /// Whether this build can serve a leaderboard or an achievements shelf at
+  /// all — the question the interface has to ask before drawing a control.
+  ///
+  /// **Not [available]**, which is about being signed in: tapping is how a
+  /// signed-out player signs in, so hiding the buttons from them would hide the
+  /// only route to the feature. This is the narrower question of whether the
+  /// platform could do anything at all, and on Android the answer is no until
+  /// the Play Console ids exist (D390).
+  bool get usable => _configured;
 
   /// Establishes whether there is a signed-in player, without ever asking for
   /// one.
@@ -208,6 +245,52 @@ class GameServices {
           androidId: achievement.playGamesId,
           iosId: achievement.gameCenterId,
         ));
+  }
+
+  /// Reports every achievement the player has already earned.
+  ///
+  /// **Because achievements do not backfill themselves** (D390). Everything
+  /// else here reports a *diff* at the end of a game, so a player who was
+  /// signed out while playing has had nothing reported at all — and signing in
+  /// later does not retroactively unlock anything. Without this, the first
+  /// thing a new signed-in player sees is an empty shelf behind a fortnight of
+  /// play, which looks like a broken integration and is one.
+  ///
+  /// Safe to call with the whole set: unlocking an already-unlocked achievement
+  /// is a no-op on both stores, and [_reported] keeps it to once per session.
+  Future<void> backfill(Iterable<String> achievedQuestIds) =>
+      reportQuests(achievedQuestIds);
+
+  /// Signs in if necessary, then opens the leaderboard.
+  ///
+  /// **The sign-in is part of the action, not a precondition the player has to
+  /// satisfy first** (D390). Someone who taps a leaderboard button has asked to
+  /// see a leaderboard; making them find a separate sign-in control before the
+  /// button does anything is a worse answer than doing it for them.
+  ///
+  /// Returns what to persist if this caused a sign-in, or null if nothing about
+  /// the stored offer changed.
+  Future<SignInOffer?> openLeaderboard() =>
+      _openAfterSignIn(() => _platform.showLeaderboard(
+            androidLeaderboardId: kRatingLeaderboardPlayGamesId,
+            iosLeaderboardId: kRatingLeaderboardGameCenterId,
+          ));
+
+  /// Signs in if necessary, then opens the achievements shelf.
+  Future<SignInOffer?> openAchievements() =>
+      _openAfterSignIn(_platform.showAchievements);
+
+  Future<SignInOffer?> _openAfterSignIn(Future<void> Function() show) async {
+    if (!_configured) return null;
+    SignInOffer? offer;
+    if (!_available) {
+      offer = await offerSignIn();
+      // Signing in is the point of the tap only incidentally; if it failed
+      // there is nothing to show and a native view would open empty or throw.
+      if (!_available) return offer;
+    }
+    await _guard(show);
+    return offer;
   }
 
   /// Swallows everything.

@@ -326,6 +326,54 @@ abstract class AppLocalizations {
   /// **'Tutorial'**
   String get tutorial;
 
+  /// Opens the platform leaderboard. Also the label on the icon beside the computer rating, which is the number the board ranks (D390).
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard'**
+  String get gameCenterLeaderboard;
+
+  /// Opens the platform achievements shelf. Sits on the quests panel, because the achievements are derived from the quest catalogue (D378).
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get gameCenterAchievements;
+
+  /// Settings heading. The platform name is a proper noun and is not translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Game Center'**
+  String get gameCenterSection;
+
+  /// The one-time unprompted offer (D390).
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your rating and achievements?'**
+  String get gameCenterSignInTitle;
+
+  /// Must not imply anything is gated behind signing in, because nothing is: a signed-out player is a first-class state (ticket 050).
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to put your rating on the leaderboard and collect the achievements you have already earned. Everything in the game works exactly the same either way.'**
+  String get gameCenterSignInBody;
+
+  /// No description provided for @gameCenterSignInAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get gameCenterSignInAccept;
+
+  /// No description provided for @gameCenterSignInDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get gameCenterSignInDecline;
+
+  /// No description provided for @gameCenterOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get gameCenterOpen;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
