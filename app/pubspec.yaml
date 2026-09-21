@@ -37,7 +37,7 @@ publish_to: 'none'
 # INTERNET from the merged manifest, which is why the store reads as
 # unavailable on Android (D388). So +11 names two different artefacts already
 # and must never name a third.
-version: 0.2.0+12
+version: 0.2.0+13
 
 environment:
   sdk: ^3.12.2
