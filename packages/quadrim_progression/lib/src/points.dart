@@ -5,7 +5,7 @@ import 'package:quadrim_engine/quadrim_engine.dart';
 /// Everything here is keyed on the **roster index** — an opponent's ordinal
 /// position in [opponentCatalogue] — and never on its rating. Spec §7.1 is
 /// explicit that the two must not be conflated, and the Casual-tier inversion
-/// (idea-v3.md §14) is what happens when they are: three consecutive rungs
+/// (idea-v4.md §14) is what happens when they are: three consecutive rungs
 /// whose measured strength runs the opposite way to their published ratings.
 /// Prices follow the ordinal, so they stay monotonic whatever measurement says.
 
@@ -37,7 +37,7 @@ List<int> _ladder(int rungs) {
 /// divides the payout by the golden ratio, so unlocking Quadrim Prime by
 /// beating Pebble would take 4,356,618 games. That is why no anti-farming rule
 /// exists anywhere in this package — the sequence does the work
-/// (idea-v3.md §7.3).
+/// (idea-v4.md §7.3).
 ///
 /// It does the work less *steeply* than doubling did: a rung down used to cost
 /// a factor of two and now costs 1.618. Over thirty rungs that is still four

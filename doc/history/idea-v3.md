@@ -1,8 +1,12 @@
 # Quadrim — Specification, third edition
 
+> **Superseded by [doc/idea-v4.md](../idea-v4.md)**, which is this document with the
+> decision log folded into it and the incident narratives generalised into rules.
+> Kept unedited: it is the record of what was believed on the date below.
+
 What Quadrim is and what it must do, written so that someone rebuilding it from nothing has no functional question left to ask.
 
-This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D306). D258 onward were taken by reading this document back against the tickets already built, and the reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
+This is [idea-v2.md](idea-v2.md) with a progression system folded in and the offline game metered. v2 recorded what the *build* settled; v3 records what the *product* settled on top of it. The decisions that produced v2 are in [idea-v1-decisions.md](../tickets/done/idea-v1-decisions.md) (D01–D217); the ones that produced this edition are in [idea-v3-decisions.md](idea-v3-decisions.md) (D218–D306). D258 onward were taken by reading this document back against the tickets already built, and the reasoning is in [idea-v3-brainstorming.md](idea-v3-brainstorming.md).
 
 Status: 0.1 and 0.2 built — the complete offline game with its final art. 1.0 onward specified, not built.
 

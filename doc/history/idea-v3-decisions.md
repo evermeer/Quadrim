@@ -1,9 +1,15 @@
 # Quadrim — Decision Log, third edition
 
+> **Archived.** D218-D391 are folded into [doc/idea-v4.md](../idea-v4.md) and
+> [doc/idea-v4-spec.md](../idea-v4-spec.md); this file remains the record of *how*
+> each was arrived at, and every `(Dnnn)` cited there or in a source comment
+> resolves here. New decisions continue at D392 in
+> [doc/idea-v4-decisions.md](../idea-v4-decisions.md).
+
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D278**.
+Numbering continues from [idea-v1-decisions.md](../tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D278**.
 
 Date: 2026-08-14
 Status: D218–D277 agreed pre-implementation; D278 onward were taken while building.
@@ -1925,7 +1931,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Question:** The first tester to reach the tutorial read step 1 as four separate boards. The step draws all four layers and teaches `kGoalLine` — a flat row inside layer 1 — so the one picture a first-time player sees argues *against* the sentence it sits under. The owner asked how hard a real cube would be: spinning for a moment, then stretching out into the layers.
 
-**Decision:** The board opens shut, turns, and comes apart over two seconds ([kCubeIntroDuration](../app/lib/game/board_view.dart)), and step 1's text now points at the picture rather than talking past it. A second half — corner posts drawn across the gaps between layers — was built, shipped in the same commit, and removed one look later. See the reversal at the end.
+**Decision:** The board opens shut, turns, and comes apart over two seconds ([kCubeIntroDuration](../../app/lib/game/board_view.dart)), and step 1's text now points at the picture rather than talking past it. A second half — corner posts drawn across the gaps between layers — was built, shipped in the same commit, and removed one look later. See the reversal at the end.
 
 **The spin cost far less than D135 makes it sound.** D135 chose a shear over a perspective rotation because shear leaves every cell its own hit area, and that is still the rule for a board being *played on*. The tutorial's board is built with `enabled: false` and wrapped in `ExcludeSemantics` behind one `boardLabel`, so the two things that make 3D-in-Flutter expensive — hit testing through an inverted perspective matrix, and sixty-four semantics nodes moving — cost nothing here. What is rotated is a flat drawing carried through a 3D transform, not a volumetric render; the pebbles do not reproject, which is why the swing stops at 52 degrees instead of turning all the way. Past about 90 the layers would be edge-on and the board would not be there.
 
@@ -1955,7 +1961,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Decision:** Apple's standard EULA, linked from the App Description, in both languages, alongside a link to the privacy policy. The App Description is the long description on the product page — not the privacy-policy field, not the promotional text, and nothing inside the binary.
 
-**A custom EULA buys nothing this game needs.** It is a legal document to keep correct, in Dutch and English, for as long as the app ships, and its only purpose would be to vary terms — liability, warranty, permitted use — that this game has no reason to vary. It sells a board game with two purchases and holds no user data (see the privacy policy in [store-listing.md](store-listing.md)). The standard agreement already says what would have been written.
+**A custom EULA buys nothing this game needs.** It is a legal document to keep correct, in Dutch and English, for as long as the app ships, and its only purpose would be to vary terms — liability, warranty, permitted use — that this game has no reason to vary. It sells a board game with two purchases and holds no user data (see the privacy policy in [store-listing.md](../store-listing.md)). The standard agreement already says what would have been written.
 
 **The link was checked rather than assumed**, because *functional* is the word the rejection used and a dead link fails the same guideline a second time. `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` returns 200 and is titled *Licensed Application End User License Agreement*. Re-check it before each submission; it costs one request and it is the exact failure mode Apple named.
 
@@ -1965,7 +1971,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **What is still missing is in the app, not in the metadata.** The shop screen shows each product's name, "Yearly, cancel any time" and the store's localised price, which covers title, length and price; it has no Terms of Use or privacy link, and `grep -ri privacy app/lib` returns nothing at all. Reviewers commonly ask for both on the purchase screen itself, so this is the likely second round. It belongs with ticket 028's settings screen, and the strings go through l10n like every other user-facing string (D297).
 
-**Cost:** two lines of the description are boilerplate that reads like boilerplate, and someone tightening the copy later will be tempted to cut them. The note in [store-listing.md](store-listing.md) says what cutting them costs. And the privacy-policy URL is a placeholder in the description as well as in the policy itself, so the description cannot be pasted until the page is actually hosted.
+**Cost:** two lines of the description are boilerplate that reads like boilerplate, and someone tightening the copy later will be tempted to cut them. The note in [store-listing.md](../store-listing.md) says what cutting them costs. And the privacy-policy URL is a placeholder in the description as well as in the policy itself, so the description cannot be pasted until the page is actually hosted.
 
 ## D368 — The two prices, and why the description names them in euros
 

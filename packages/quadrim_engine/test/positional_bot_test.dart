@@ -85,7 +85,7 @@ void main() {
   });
 
   group('Marlin', () {
-    test('has the configuration given in idea-v3 6.4', () {
+    test('has the configuration given in idea-v4 6.4', () {
       expect(marlin.id, 'marlin');
       expect(marlin.rating, 1420);
       expect(marlin.rules.length, 4);
