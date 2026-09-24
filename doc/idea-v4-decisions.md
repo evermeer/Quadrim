@@ -19,4 +19,90 @@ The three preceding editions folded their decisions back into the brief and the 
 
 ---
 
-*(No entries yet.)*
+## D393 — The plugin returns a string on success and throws on failure, and D391 read it backwards
+
+**Question:** 0.2.0 (15) is live with the Game Center entitlement, and Game
+Center still does nothing: the leaderboard button raises the sign-in banner and
+opens no view, a win reaches no board, no achievement unlocks, and the
+achievements earned before sign-in never arrive. Three of those were supposed to
+be fixed by D390 and D391. What is actually wrong?
+
+**Decision:** Three defects, one of them introduced by the fix for the last one.
+
+### The live cause: the adapter inverts the plugin's contract
+
+`games_services` 5.3.0 signals **success by returning a non-empty string** and
+**failure by throwing**. Read out of the package rather than inferred:
+`Messages.success` is `"Success"` and is what `showLeaderboards` and
+`showAchievements` return when the view opens; `signIn` returns
+`"Player authenticated successfully"` or `"Player already authenticated"`. Every
+failure path goes through `error.flutterError(code:)`, which arrives in Dart as
+a thrown `PlatformException`.
+
+D391 concluded the opposite — *"the plugin reports failure as a returned string,
+not as a throw"* — and added `_orThrow`, raising whenever the string was
+non-empty. So every **successful** call became an exception, `_guard` swallowed
+it, and the app reported the refusal it had invented. `offerSignIn` therefore
+always left `available` false, which is why `_openAfterSignIn` never even called
+`show()`, why `submitRating` and `reportQuests` returned at their first line,
+and why the backfill — gated on a view having opened — never ran. One line, all
+four symptoms.
+
+**D391 was right about the symptom and wrong about the mechanism.** The buttons
+really did do nothing on +12, and the cause really was outside this repository:
+no Game Center entitlement, fixed in +14. The string was not evidence of
+anything; it was the success it had always been.
+
+### Why no test caught it, which is the part worth keeping
+
+`game_services_test.dart` fakes `GameServicesPlatform` — the interface this app
+owns — so it proves everything above the adapter and nothing about the adapter,
+which is the only place the plugin's contract lives. The seam that exists to
+make the store testable had quietly become the reason the store was never
+tested. `game_services_adapter_test.dart` now drives the real adapter against a
+mocked `games_services` method channel: a success string must not throw, a
+`PlatformException` must reach the caller, and the ids and the 100% completion
+must arrive as sent.
+
+### The second defect: iOS never authenticates at launch
+
+`start()` asked `isSignedIn()` and nothing else. On iOS that reads
+`GKLocalPlayer.isAuthenticated`, which stays false until something sets the
+authenticate handler — and only `signIn` does. So the answer was "no" on every
+launch however long the player had been signed in, and a win went unreported
+until they happened to tap a Game Center button in that same session. `start`
+now takes `previouslyAccepted` and authenticates when it is true.
+
+**This does not reopen D390.** Authenticating is silent for a player already
+signed in at the system level; GameKit completes the handler with no view
+controller. The banner appears only to someone *not* signed in, which is the
+case D390 refused to impose on a splash screen — hence the gate on the stored
+answer. A player who declined, or who has never been asked, is still left alone.
+The settings document is read in `main` rather than inside `GameServices`, which
+owns no storage and should not learn about documents to answer one question.
+
+### The third: the backfill fired on a transition that no longer happens
+
+It ran only when a tap moved the app from signed-out to opened. Once launch
+re-authenticates, a returning player is already available when the first tap
+arrives, so that transition never occurs and their history is never sent —
+fixing the second defect would have created this one. `backfill` now owns its
+own guard: a signed-in player, and once per session. The home screen calls it
+from the fold that already computes the quest list and from the tap, and both
+are safe.
+
+**Cost.** `main` now awaits a local file read before `runApp` that it did not
+await before; it is the settings document, already on the launch path, and the
+network half stays unawaited. The adapter tests pin *this app's reading* of a
+third-party contract rather than the contract itself, so a `games_services`
+upgrade that changes the strings will leave them passing and the app broken —
+the version is named in the test file and in the pubspec, and that pairing is
+the only thing holding it. And `_reported` plus `_backfilled` now both guard
+repeats, which is one guard more than the problem strictly needs; the second
+exists because the first does not stop forty-six no-op plugin calls after every
+finished game.
+
+**No new build was needed to find any of this.** The plugin's source is in the
+pub cache, and every claim above was read out of it rather than reasoned from
+the symptom — which is what the previous two attempts did.
+

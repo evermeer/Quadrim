@@ -202,6 +202,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _quests = closestQuests(quests);
     _completedQuests = recentlyAchieved(quests);
     _streak = points_fold.streakFrom(games, today);
+    // **Not only on the tap that signs a player in** (D393). Since `start()`
+    // re-authenticates a returning player at launch, the signed-out → signed-in
+    // transition that used to carry the backfill no longer happens for them.
+    // This runs on the same list the panel is built from, and `backfill` is a
+    // no-op unless there is a signed-in player and it has not already run.
+    _backfill(quests);
+  }
+
+  /// Sends everything already earned, at most once a session.
+  void _backfill(List<QuestStatus> quests) {
+    final services = widget.services;
+    if (services == null) return;
+    unawaited(services.backfill([
+      for (final q in quests)
+        if (q.achieved) q.quest.id,
+    ]));
   }
 
   /// Whether the two Game Center controls are drawn at all (D390).
@@ -233,19 +249,15 @@ class _HomeScreenState extends State<HomeScreen> {
       Future<bool> Function(GameServices) open) async {
     final services = widget.services;
     if (services == null) return;
-    final wasAvailable = services.available;
     final opened = await open(services);
     if (!mounted) return;
 
-    if (opened && !wasAvailable) {
-      // Newly signed in: send everything already earned, once.
-      final today = (widget.now ?? DateTime.now)();
-      final quests = points_fold.questsFrom(_completedGames, today);
-      unawaited(services.backfill([
-        for (final q in quests)
-          if (q.achieved) q.quest.id,
-      ]));
-    }
+    // Unconditional: whether this tap is what signed the player in no longer
+    // decides anything, because `backfill` itself knows whether there is a
+    // player and whether it has already run (D393). The transition test that
+    // used to live here is what left a returning player's history unsent.
+    final today = (widget.now ?? DateTime.now)();
+    _backfill(points_fold.questsFrom(_completedGames, today));
 
     // **Say something when nothing opened** (D391). Silence was the entire
     // symptom the first time this shipped: the control was pressed, the

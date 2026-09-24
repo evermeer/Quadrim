@@ -59,7 +59,7 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
   Future<bool> isSignedIn() => gs.GamesServices.isSignedIn;
 
   @override
-  Future<void> signIn() => _orThrow(gs.GamesServices.signIn());
+  Future<void> signIn() => _passThrough(gs.GamesServices.signIn());
 
   @override
   Future<void> submitScore({
@@ -75,16 +75,27 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
         ),
       );
 
-  /// **The plugin reports failure as a returned string, not as a throw**, and
-  /// discarding it is how "the buttons do nothing" became the whole symptom:
-  /// `_guard` saw no exception and reported success while Game Center refused
-  /// to present anything (D391). Every one of these turns that string back into
-  /// an exception so there is something to catch, log and tell the player.
-  static Future<void> _orThrow(Future<String?> call) async {
-    final problem = await call;
-    if (problem != null && problem.isNotEmpty) {
-      throw GameServicesException(problem);
-    }
+  /// **The plugin returns a string on success and throws on failure** — the
+  /// opposite of what D391 assumed, and the reason Game Center has never worked
+  /// in a shipped build (D393).
+  ///
+  /// Read out of `games_services` 5.3.0 rather than inferred. Every success
+  /// path returns one of three non-empty strings — `"Success"` from
+  /// `showLeaderboards` and `showAchievements`, `"Player authenticated
+  /// successfully"` or `"Player already authenticated"` from `signIn`. Every
+  /// failure path goes through `error.flutterError(code:)`, which arrives in
+  /// Dart as a thrown `PlatformException`.
+  ///
+  /// D391 inverted that, raising an exception whenever the string was
+  /// non-empty — so every *successful* sign-in and every native view that
+  /// actually opened was recorded as a refusal, swallowed by `_guard`, and
+  /// reported to the player as "Game Center is unavailable".
+  ///
+  /// So there is nothing to translate: the throw the caller needs is the one
+  /// the plugin already performs. This exists to hold that paragraph and to
+  /// drop the string, which carries no information a caller can act on.
+  static Future<void> _passThrough(Future<String?> call) async {
+    await call;
   }
 
   @override
@@ -92,14 +103,14 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
     required String androidLeaderboardId,
     required String iosLeaderboardId,
   }) =>
-      _orThrow(gs.GamesServices.showLeaderboards(
+      _passThrough(gs.GamesServices.showLeaderboards(
         androidLeaderboardID: androidLeaderboardId,
         iOSLeaderboardID: iosLeaderboardId,
       ));
 
   @override
   Future<void> showAchievements() =>
-      _orThrow(gs.GamesServices.showAchievements());
+      _passThrough(gs.GamesServices.showAchievements());
 
   @override
   Future<void> unlock({required String androidId, required String iosId}) =>
@@ -109,19 +120,6 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
         // incremental (D378), so an achievement is true or it is absent.
         achievement: gs.Achievement(androidID: androidId, iOSID: iosId),
       );
-}
-
-/// What the platform said when it refused.
-///
-/// Carries the plugin's own message so it reaches a log rather than being
-/// reduced to "something went wrong" at the point it is thrown (D391).
-class GameServicesException implements Exception {
-  const GameServicesException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => 'GameServicesException: $message';
 }
 
 /// Whether sign-in has been offered, and what the player said.
@@ -187,14 +185,30 @@ class GameServices {
   /// the Play Console ids exist (D390).
   bool get usable => _configured;
 
-  /// Establishes whether there is a signed-in player, without ever asking for
-  /// one.
+  /// Establishes whether there is a signed-in player.
   ///
-  /// Called at launch and **not awaited**. A player who has never been offered
-  /// sign-in is left alone here; offering is [offerSignIn]'s job and belongs to
-  /// a moment the player chose, not to the splash screen.
-  Future<void> start() async {
+  /// Called at launch and **not awaited**.
+  ///
+  /// **[previouslyAccepted] is what makes a returning player work at all**
+  /// (D393). On iOS `isSignedIn` reads `GKLocalPlayer.isAuthenticated`, and
+  /// that stays false until something sets the authenticate handler — which
+  /// only `signIn` does. Asking alone therefore answers "no" on every launch,
+  /// however long the player has been signed in, so a win went unreported until
+  /// they happened to tap a Game Center button in that same session.
+  ///
+  /// Authenticating is silent for a player who is already signed in at the
+  /// system level: GameKit completes the handler with no view controller and
+  /// the plugin returns "Player already authenticated". It shows a banner only
+  /// to someone who is *not* signed in, which is the case D390 refused to
+  /// impose on the splash screen — hence the gate. A player who declined, or
+  /// who has never been asked, is still left alone here.
+  Future<void> start({bool previouslyAccepted = false}) async {
     if (!_configured) return;
+    if (previouslyAccepted) {
+      // Not `offerSignIn`: this is not an offer and must not be recorded as
+      // one. It re-establishes a decision the player already made.
+      await _guard(() => _platform.signIn());
+    }
     _available = await _guard(() => _platform.isSignedIn()) ?? false;
   }
 
@@ -284,8 +298,22 @@ class GameServices {
   ///
   /// Safe to call with the whole set: unlocking an already-unlocked achievement
   /// is a no-op on both stores, and [_reported] keeps it to once per session.
-  Future<void> backfill(Iterable<String> achievedQuestIds) =>
-      reportQuests(achievedQuestIds);
+  ///
+  /// **Call it whenever there is a signed-in player and a list to send**, not
+  /// only on the tap that signed them in (D393). It used to fire only on the
+  /// signed-out → opened transition, which was the one moment it could not fire
+  /// once [start] began authenticating at launch: a returning player is already
+  /// available when the first tap arrives, so the transition never happens and
+  /// their history was never sent. The guard belongs here rather than at the
+  /// call site so that every route through it is covered by the same answer.
+  Future<void> backfill(Iterable<String> achievedQuestIds) async {
+    if (!_available || !_configured || _backfilled) return;
+    _backfilled = true;
+    await reportQuests(achievedQuestIds);
+  }
+
+  /// Whether the earned set has already been sent this session.
+  bool _backfilled = false;
 
   /// Signs in if necessary, then opens the leaderboard.
   ///

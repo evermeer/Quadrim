@@ -173,6 +173,97 @@ void main() {
     });
   });
 
+  group('launch', () {
+    /// **The defect that made a returning player invisible** (D393).
+    ///
+    /// On iOS `isSignedIn` reads `GKLocalPlayer.isAuthenticated`, which stays
+    /// false until something sets the authenticate handler — and only `signIn`
+    /// does. Asking alone therefore answered "no" on every launch however long
+    /// the player had been signed in, so their wins went unreported until they
+    /// happened to tap a Game Center button in that same session.
+    test('re-authenticates a player who already accepted', () async {
+      // Signed out from this end's point of view, exactly as GameKit reports
+      // an authenticated player before the handler is set.
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start(previouslyAccepted: true);
+
+      expect(fake.signInCalls, 1);
+      expect(services.available, isTrue);
+    });
+
+    /// D390 stands: the splash screen never asks anybody anything.
+    test('asks nothing of a player who has not accepted', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      expect(fake.signInCalls, 0,
+          reason: 'a player who declined, or was never asked, is left alone');
+      expect(services.available, isFalse);
+    });
+
+    test('a refusal at launch is silent and leaves the app signed out',
+        () async {
+      final fake = FakeGameServices(signedIn: false, throws: true);
+      final services = GameServices(platform: fake);
+      await expectLater(
+          services.start(previouslyAccepted: true), completes);
+      expect(services.available, isFalse);
+    });
+  });
+
+  group('the backfill', () {
+    /// **Not gated on the tap that signed the player in** (D393). It used to
+    /// fire only on the signed-out → opened transition, which is the one moment
+    /// it cannot fire once launch re-authenticates: a returning player is
+    /// already available when the first tap arrives, so the transition never
+    /// happens and their history was never sent.
+    test('sends what was already earned to a player signed in at launch',
+        () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start(previouslyAccepted: true);
+
+      await services.backfill(['first_win:pebble', 'first_win:twig']);
+      expect(fake.unlockedIos, hasLength(2));
+    });
+
+    test('runs once a session, however often it is called', () async {
+      // The panel refolds after every finished game and calls this each time.
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      await services.backfill(['first_win:pebble', 'first_win:twig']);
+      expect(fake.unlockedIos, hasLength(1),
+          reason: 'the second call must not send forty-six more unlocks');
+    });
+
+    test('sends nothing when there is no signed-in player', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      expect(fake.unlockedIos, isEmpty);
+    });
+
+    test('a signed-out backfill does not spend the one attempt', () async {
+      // Otherwise the call the home screen makes before `start()` has
+      // finished would burn the session's only backfill.
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.backfill(['first_win:pebble']);
+
+      await services.start(previouslyAccepted: true);
+      await services.backfill(['first_win:pebble']);
+      expect(fake.unlockedIos, hasLength(1));
+    });
+  });
+
   group('the leaderboard', () {
     test('submits the rating when signed in', () async {
       final fake = FakeGameServices();
