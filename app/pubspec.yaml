@@ -47,7 +47,7 @@ publish_to: 'none'
 # Reached independently on two machines the same morning, which is the rule
 # working rather than a collision: both sides read "+12 was uploaded" and both
 # arrived at +13.
-version: 0.2.0+13
+version: 0.2.0+15
 
 environment:
   sdk: ^3.12.2

@@ -62,8 +62,8 @@ class RatingCard extends StatelessWidget {
     final record = summary.played == 0
         ? l10n.recordEmpty
         : summary.draws == 0
-            ? l10n.recordLineNoDraws(summary.wins, summary.losses)
-            : l10n.recordLine(summary.wins, summary.losses, summary.draws);
+        ? l10n.recordLineNoDraws(summary.wins, summary.losses)
+        : l10n.recordLine(summary.wins, summary.losses, summary.draws);
     final points = l10n.pointsValue(balance);
     final days = l10n.streakValue(streak);
     final trend = TrendGraph.worthDrawing(series)
@@ -71,204 +71,299 @@ class RatingCard extends StatelessWidget {
         : null;
     return DarkPanel(
       child: Semantics(
-          container: true,
-          // One node, said once. The card shows four facts and a screen reader
-          // meets them as a single announcement rather than as four stops —
-          // and the points are in it, because a number drawn on screen that is
-          // never spoken is worse than one that is never drawn (spec §8.13).
-          label: '${l10n.computerRatingHeading}: ${summary.computerRating}. '
-              '$record. ${l10n.pointsHeading}: $points. '
-              '${l10n.streakHeading}: $days. '
-              // A line is a shape, and a shape says nothing out loud. The
-              // change in words is the only reading of the graph that works
-              // without sight — and the same number the sighted reader sees
-              // beside it, so neither is told something the other is not.
-              '${trend == null ? '' : '$trend '}'
-              '${l10n.computerRatingHeading}',
+        container: true,
+        // One node, said once. The card shows four facts and a screen reader
+        // meets them as a single announcement rather than as four stops —
+        // and the points are in it, because a number drawn on screen that is
+        // never spoken is worse than one that is never drawn (spec §8.13).
+        label:
+            '${l10n.computerRatingHeading}: ${summary.computerRating}. '
+            '$record. ${l10n.pointsHeading}: $points. '
+            '${l10n.streakHeading}: $days. '
+            // A line is a shape, and a shape says nothing out loud. The
+            // change in words is the only reading of the graph that works
+            // without sight — and the same number the sighted reader sees
+            // beside it, so neither is told something the other is not.
+            '${trend == null ? '' : '$trend '}'
+            '${l10n.computerRatingHeading}',
         // **Not `ExcludeSemantics` over the whole column any more** (D390).
         // The card's text is excluded piece by piece below, so that the one
         // interactive thing in it -- the leaderboard button -- keeps a node of
         // its own. Excluding the lot would have hidden a control from exactly
         // the readers who most need it announced.
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                // The heading, the number and the record on the left; the cube
-                // on the right, as in the mockup. The cube's edges are faded by
-                // `artgen` so it sits in the panel without a seam — it is the
-                // only picture in the app that has no border of its own.
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ExcludeSemantics(
-                            child: Text(l10n.computerRatingHeading,
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                    color: QuadrimPalette.creamSoft)),
-                          ),
-                          // **The leaderboard button sits beside the number
-                          // it ranks**, because the board *is* this rating —
-                          // one board, that figure (D390).
-                          //
-                          // Outside the `ExcludeSemantics` below rather than
-                          // inside it: that wrapper exists so the card's four
-                          // facts are announced as one stop rather than four
-                          // (ticket 021), and a button is an action rather than
-                          // a fact. Excluded, it would be invisible to a screen
-                          // reader; left as its own node it is one extra stop,
-                          // which is what a control should be.
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: ExcludeSemantics(
-                                  child: Text(
-                                      l10n.ratingValue(summary.computerRating),
-                                      maxLines: 1,
-                                      style: theme.textTheme.displaySmall
-                                          ?.copyWith(
-                                              color: QuadrimPalette.cream)),
-                                ),
-                              ),
-                              if (onLeaderboard != null)
-                                // **A bordered button, not a bare icon**
-                                // (D391). A tinted glyph beside a number reads
-                                // as decoration -- the number already has a
-                                // cube beside it -- and nothing said it could
-                                // be pressed. An outline and a word do.
-                                //
-                                // Cream on the border and the label: this is
-                                // the dark panel, where gold on the fill is
-                                // very nearly the background (D296).
-                                Flexible(
-                                  child: OutlinedButton.icon(
-                                    onPressed: onLeaderboard,
-                                    icon: const Icon(kLeaderboardIcon, size: 18),
-                                    label: Text(l10n.gameCenterLeaderboard,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: QuadrimPalette.cream,
-                                      side: const BorderSide(
-                                          color: QuadrimPalette.gold),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      // The audited floor, stated rather than
-                                      // inherited (D135).
-                                      minimumSize: const Size(0, 44),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.padded,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          // Explicitly cream. `bodyMedium` carries the ink
-                          // colour meant for parchment, and this panel is not
-                          // parchment (D296).
-                          ExcludeSemantics(
-                            child: Text(record,
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(color: QuadrimPalette.cream)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Decoration yields to text. The cube costs 96dp of width
-                    // at every font scale, and at the 200% the Android slider
-                    // reaches that is what pushes "Against the computer" onto
-                    // three lines and the card past the height of the screen —
-                    // taking Your Path off a lazily built sliver list with it.
-                    if (MediaQuery.textScalerOf(context).scale(16) <= 22)
-                      ExcludeSemantics(
-                        child: Image.asset(Art.cube,
-                            width: 96,
-                            height: 96,
-                            filterQuality: FilterQuality.medium),
-                      ),
-                  ],
-                ),
-                ExcludeSemantics(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The heading, the number and the record on the left; the cube
+            // on the right, as in the mockup. The cube's edges are faded by
+            // `artgen` so it sits in the panel without a seam — it is the
+            // only picture in the app that has no border of its own.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                if (TrendGraph.worthDrawing(series)) ...[
+                      ExcludeSemantics(
+                        child: Text(
+                          l10n.computerRatingHeading,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: QuadrimPalette.creamSoft,
+                          ),
+                        ),
+                      ),
+                      // **The leaderboard button sits beside the number
+                      // it ranks**, because the board *is* this rating —
+                      // one board, that figure (D390).
+                      //
+                      // Outside the `ExcludeSemantics` below rather than
+                      // inside it: that wrapper exists so the card's four
+                      // facts are announced as one stop rather than four
+                      // (ticket 021), and a button is an action rather than
+                      // a fact. Excluded, it would be invisible to a screen
+                      // reader; left as its own node it is one extra stop,
+                      // which is what a control should be.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // **Still `Flexible`, and it has to be** (D392). It
+                          // was briefly laid out at its intrinsic width so the
+                          // button beside it could take the remainder, and on
+                          // a 320pt phone at 2x font scale a 72pt numeral is
+                          // wider than the card -- the row overflowed by 21
+                          // pixels. What fixes the truncation is the *ratio*
+                          // below, not making this rigid.
+                          Flexible(
+                            child: ExcludeSemantics(
+                              child: Text(
+                                l10n.ratingValue(summary.computerRating),
+                                maxLines: 1,
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  color: QuadrimPalette.cream,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (onLeaderboard != null)
+                            // **A bordered button, not a bare icon**
+                            // (D391). A tinted glyph beside a number reads
+                            // as decoration -- the number already has a
+                            // cube beside it -- and nothing said it could
+                            // be pressed. An outline and a word do.
+                            //
+                            // Cream on the border and the label: this is
+                            // the dark panel, where gold on the fill is
+                            // very nearly the background (D296).
+                            //
+                            // **Two shares to the number's one** (D392), and
+                            // this is what stopped the label truncating. A
+                            // `Row` divides its free width between flexible
+                            // children by flex, so at the default flex of 1
+                            // each the button was handed half the row and
+                            // ellipsised inside it -- "Leaderbo..." -- while
+                            // four digits left most of the other half empty. A
+                            // word is simply wider than a number, and the
+                            // split should say so.
+                            //
+                            // Both stay flexible so that neither can overflow
+                            // the row: at 2x font scale on the smallest phone
+                            // there is not enough width for both, and what
+                            // gives is the label, by the ellipsis it already
+                            // carries.
+                            Flexible(
+                              flex: 2,
+                              // **20dp of air between the number and the
+                              // button** (D392). `Row` puts adjacent children
+                              // flush, and a bordered control starting one
+                              // pixel after a 36pt numeral read as attached to
+                              // it -- as though the button were part of the
+                              // rating rather than a way to rank it.
+                              //
+                              // Inside the `Flexible` rather than a `SizedBox`
+                              // beside it: a rigid gap cannot give any of
+                              // itself back, and on a 320pt phone at 2x font
+                              // scale it was the 21 pixels the row overflowed
+                              // by. Counted against the button's own share, it
+                              // costs the label a character there instead.
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: OutlinedButton.icon(
+                                  onPressed: onLeaderboard,
+                                  icon: const Icon(kLeaderboardIcon, size: 18),
+                                  label: Text(
+                                    l10n.gameCenterLeaderboard,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: QuadrimPalette.cream,
+                                    // **Darker than the panel it sits on,
+                                    // not transparent** (D392). An outline
+                                    // over the gradient left the button
+                                    // reading as a drawn rectangle rather
+                                    // than a raised thing; `canopy` is one
+                                    // step below `panelRaised` here.
+                                    backgroundColor: QuadrimPalette.canopy,
+                                    side: const BorderSide(
+                                      color: QuadrimPalette.gold,
+                                    ),
+                                    // **12sp, because the label was
+                                    // truncating** (D392). A button takes
+                                    // `labelLarge` by default -- 14sp on a
+                                    // display face with 0.8 of letter
+                                    // spacing -- and "Leaderboard" did not
+                                    // fit beside the rating at any width
+                                    // this card can offer, ellipsising to
+                                    // "Leaderbo...".
+                                    //
+                                    // The size is stated rather than taken
+                                    // from `labelSmall`: every entry in this
+                                    // app's `TextTheme` sets family, weight
+                                    // and spacing and leaves `fontSize`
+                                    // null, so handing one to `styleFrom`
+                                    // changes the spacing and leaves the
+                                    // size at the button's own default. That
+                                    // bought two characters and still
+                                    // truncated.
+                                    textStyle: theme.textTheme.labelSmall
+                                        ?.copyWith(fontSize: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    // The audited floor, stated rather than
+                                    // inherited (D135).
+                                    minimumSize: const Size(0, 44),
+                                    tapTargetSize: MaterialTapTargetSize.padded,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      // Explicitly cream. `bodyMedium` carries the ink
+                      // colour meant for parchment, and this panel is not
+                      // parchment (D296).
+                      ExcludeSemantics(
+                        child: Text(
+                          record,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: QuadrimPalette.cream,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Decoration yields to text. The cube costs 96dp of width
+                // at every font scale, and at the 200% the Android slider
+                // reaches that is what pushes "Against the computer" onto
+                // three lines and the card past the height of the screen —
+                // taking Your Path off a lazily built sliver list with it.
+                if (MediaQuery.textScalerOf(context).scale(16) <= 22)
+                  ExcludeSemantics(
+                    child: Image.asset(
+                      Art.cube,
+                      width: 96,
+                      height: 96,
+                      filterQuality: FilterQuality.medium,
+                    ),
+                  ),
+              ],
+            ),
+            ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (TrendGraph.worthDrawing(series)) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.trendHeading,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: QuadrimPalette.creamSoft,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    TrendGraph(series: series),
+                  ],
                   const SizedBox(height: 8),
-                  Text(l10n.trendHeading,
-                      style: theme.textTheme.labelLarge
-                          ?.copyWith(color: QuadrimPalette.creamSoft)),
-                  const SizedBox(height: 4),
-                  TrendGraph(series: series),
-                ],
-                const SizedBox(height: 8),
-                // Its own labelled line rather than a fourth fact on the
-                // record row: points are spendable and the rating is not, and
-                // §7.1 keeps the two apart on purpose — a rating you could
-                // spend would be a score, and a score people spend is a score
-                // people farm.
-                Row(
-                  children: [
-                    // The gap is layout, not a trailing space inside the
-                    // string. A space there would have to be translated, and
-                    // interpolating a localised value into a quoted literal
-                    // reads to the build gate's grep exactly like a hardcoded
-                    // one — correctly, since it cannot tell the two apart.
-                    Text(l10n.pointsHeading,
-                        style: theme.textTheme.labelLarge
-                            ?.copyWith(color: QuadrimPalette.creamSoft)),
-                    const SizedBox(width: 8),
-                    // Gold, not `colorScheme.primary`: primary is the deep
-                    // bronze that reads on parchment, and on this panel it is
-                    // very nearly the background.
-                    // Flexible, because the balance is now ten digits at the
-                    // top of the ladder and was six. The doubling is per rung,
-                    // so eleven new rungs multiplied it by two thousand
-                    // (D333) — and at a 2x font scale a balance the width of
-                    // this panel overflowed the row by 43 pixels rather than
-                    // shrinking. The number is the fact here, so it shrinks to
-                    // fit rather than ellipsising away its own leading digits.
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(points,
+                  // Its own labelled line rather than a fourth fact on the
+                  // record row: points are spendable and the rating is not, and
+                  // §7.1 keeps the two apart on purpose — a rating you could
+                  // spend would be a score, and a score people spend is a score
+                  // people farm.
+                  Row(
+                    children: [
+                      // The gap is layout, not a trailing space inside the
+                      // string. A space there would have to be translated, and
+                      // interpolating a localised value into a quoted literal
+                      // reads to the build gate's grep exactly like a hardcoded
+                      // one — correctly, since it cannot tell the two apart.
+                      Text(
+                        l10n.pointsHeading,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: QuadrimPalette.creamSoft,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Gold, not `colorScheme.primary`: primary is the deep
+                      // bronze that reads on parchment, and on this panel it is
+                      // very nearly the background.
+                      // Flexible, because the balance is now ten digits at the
+                      // top of the ladder and was six. The doubling is per rung,
+                      // so eleven new rungs multiplied it by two thousand
+                      // (D333) — and at a 2x font scale a balance the width of
+                      // this panel overflowed the row by 43 pixels rather than
+                      // shrinking. The number is the fact here, so it shrinks to
+                      // fit rather than ellipsising away its own leading digits.
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            points,
                             maxLines: 1,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: QuadrimPalette.gold,
                               fontWeight: FontWeight.w600,
-                            )),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                // Beside the points rather than under a heading of its own:
-                // it is a third fact about the same fold, and a card with
-                // three headings would be a list.
-                Row(
-                  children: [
-                    const Icon(Icons.local_fire_department_outlined,
-                        size: 18, color: QuadrimPalette.gold),
-                    const SizedBox(width: 8),
-                    Expanded(
-                        child: Text(days,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: QuadrimPalette.cream))),
-                  ],
-                ),
-                // The "on this device only" note is gone from this panel. It
-                // is still said where it is actually needed — the end-of-game
-                // result, where a rating change has just happened and the
-                // question "does this go anywhere?" is live.
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  // Beside the points rather than under a heading of its own:
+                  // it is a third fact about the same fold, and a card with
+                  // three headings would be a list.
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department_outlined,
+                        size: 18,
+                        color: QuadrimPalette.gold,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          days,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: QuadrimPalette.cream,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // The "on this device only" note is gone from this panel. It
+                  // is still said where it is actually needed — the end-of-game
+                  // result, where a rating change has just happened and the
+                  // question "does this go anywhere?" is live.
+                ],
+              ),
             ),
+          ],
         ),
+      ),
     );
   }
 }

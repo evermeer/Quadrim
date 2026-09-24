@@ -3150,6 +3150,54 @@ design layer so there is one place to change either.
 **Cost:** two labelled buttons take more width than two icons, on the screen
 that is already tightest in the release. The 2x/320pt test covers them.
 
+## D392 — The label was truncating for two reasons, and the font was the smaller one
+
+**Question:** The leaderboard button on the rating card read "Leaderbo..."
+rather than "Leaderboard". D391 had just given it a word precisely so it would
+not read as decoration, and the word was being cut. Why, and what fixes it?
+
+**Decision:** Two independent causes, found in that order.
+
+**The font.** A button takes `labelLarge` by default -- 14sp on a display face
+carrying 0.8 of letter spacing -- and both Game Center buttons now take 12sp.
+The size is *stated* rather than taken from `labelSmall`, which is the part
+worth recording: every entry in this app's `TextTheme` sets family, weight and
+spacing and leaves `fontSize` null. Handing one to `styleFrom` therefore
+changes the spacing and leaves the size at the button's own default. That first
+attempt bought two characters and still truncated, which is a trap the next
+person to reach for a theme entry inside `styleFrom` will fall into too.
+
+**The flex ratio, which was the real cause.** A `Row` divides its free width
+between flexible children by flex factor. The rating and the button were both
+`Flexible` at the default flex of 1, so the button was handed exactly half the
+row and ellipsised inside it, while four digits left most of the other half
+empty. The button now takes `flex: 2`. A word is wider than a number and the
+split should say so.
+
+**Why both children stay flexible.** The obvious fix is to lay the number out
+at its intrinsic width and let the button claim the remainder. It renders
+correctly on a 440pt phone and **overflows by 21 pixels on a 320pt one at 2x
+font scale**, where a 72pt numeral is wider than the card. D391's 2x/320pt test
+caught it. With both flexible neither child can overflow the row: what gives is
+the label, through the ellipsis it already carries.
+
+**The gap is padding inside the `Flexible`, not a `SizedBox` beside it.** The
+button sat flush against the number and read as part of it, so it gains 20dp of
+air on the left. A rigid gap cannot give any of itself back, and at 2x on the
+smallest phone that `SizedBox` was itself the 21 pixels the row overflowed by.
+Counted against the button's own share it costs the label a character there
+instead, which is the right thing to spend.
+
+**And the fills are no longer transparent.** An outline over a gradient read as
+a rectangle drawn on the panel rather than as a control. Each button takes the
+one step below its own ground that the palette already carries -- `canopy`
+under the leaderboard on the dark panel, `parchmentDeep` under the achievements
+on the parchment card. No new colours.
+
+**Cost:** 12sp is below the 14sp the rest of the app's buttons use, so these
+two are the smallest labels in the release. They are also the only two that
+share a row with something that has first claim on the width.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -3195,10 +3243,11 @@ remains:
 - **Whether the two products exist in Play Console** is still unverified and
   would produce the identical "unavailable" screen. Ticket 046's AC 1 was only
   ever met in App Store Connect.
-- **The iOS Game Center capability is not enabled** (D391), which is why the
-  leaderboard and achievements buttons do nothing on the 0.2.0 TestFlight build.
-  One click in Xcode, and it also needs the leaderboard `nl.evict.quadrim2.rating`
-  to exist in App Store Connect.
+- ~~The iOS Game Center capability is not enabled~~ (D391) — **done**: the
+  entitlement is committed and read back out of the signed binary, and automatic
+  signing issues a distribution profile carrying it. What is still open is the
+  other half: the leaderboard `nl.evict.quadrim2.rating` must exist in App Store
+  Connect, and until it does the button opens onto nothing.
 - **The privacy policy's contact block** is still three placeholders in
   `doc/store-listing.md` while the published page must already carry real values.
   A paste, and a read of the two side by side.
