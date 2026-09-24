@@ -106,3 +106,58 @@ finished game.
 pub cache, and every claim above was read out of it rather than reasoned from
 the symptom — which is what the previous two attempts did.
 
+## D394 — The rating and the leaderboard button stop competing for one column
+
+**Question:** At the default font scale a rating of 2400 renders as "240" and
+the button beside it reads "Leaderbo…". D392 tuned the flex ratio and then the
+button's font size to fix exactly this, and both defects survived. What is
+actually wrong?
+
+**Decision:** The button leaves the rating's row and takes a line of its own
+across the whole card, under the cube. The rating gets a `FittedBox`.
+
+**Measured before it was changed**, because the failure is invisible in the way
+that matters. A `Text` with `maxLines: 1` and no `overflow` inside a `Flexible`
+too narrow for it does not ellipsise — it clips. So 2400 does not become "240…",
+it becomes **240**: a plausible rating, confidently drawn, with nothing on
+screen admitting a digit is missing. `rating_card_fit_test.dart` compares the
+painted width against what the same string wants:
+
+| | painted | wanted |
+|---|---|---|
+| 2400 at 1.0x | 100.3dp | 144.0dp |
+| 2400 at 1.6x | 132.3dp | 230.4dp |
+
+**Two things competing for one shrinking space is a structure, not a number to
+tune.** The rating and the button shared a column the cube had already taken
+96dp from, and no division of the remainder fits both: a word is wider than a
+number at every scale, and the number is the one that must never be wrong. D392
+gave the button two shares to the rating's one and then dropped its label to
+12sp; the measurements above are from *after* both. That is D374 again — an
+overflow is fixed by removing the constant, not by choosing a better one.
+
+**So the competition is removed rather than rebalanced.** The button now sits
+below the row that holds the cube, so its line spans the full card and the label
+is drawn at the button's own size with nothing to give up; the 12sp override is
+gone with it. The rating has the left column to itself. The association D390
+wanted — the board *is* this rating — survives: same card, directly under the
+number and the record it ranks.
+
+**The `FittedBox` is belt and braces, and it is the pattern already in this
+file.** The points row uses it with the reason stated there: the number is the
+fact, so it gives up size before it gives up a digit. At 2x on a 320pt phone the
+cube is already dropped and a 72pt numeral still very nearly fills the card, so
+the rating needs the same treatment rather than the same trust.
+
+**Cost, and it was not hypothetical.** The card is one row taller wherever the
+button is drawn, which is every iOS build and every Android build once the Play
+Console ids exist. That is about 56dp, and on the 360x800 phone
+`game_center_ui_test.dart` uses it was enough to push the *quests* panel's
+Achievements button below the fold — a test that had tapped it without scrolling
+started hitting the background instead. The main screen is a scrolling list and a
+player reaches that button by scrolling, so the test now scrolls; but the height
+is real and it is the first thing to look at if the card ever runs off the
+bottom again. `accessibility_test.dart` and `main_screen_test.dart` still pass
+at 2x. The alternative was to keep the
+button beside the number and shrink the *word*, which is what had already failed
+twice.

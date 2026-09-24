@@ -80,7 +80,16 @@ void main() {
     await services.start();
     await pumpHome(tester, await repositoryWithAGame(), services: services);
 
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Achievements'));
+    // **Scrolled to first, which it did not need before D394.** Moving the
+    // leaderboard button onto a line of its own made the rating card one row
+    // taller, and on a 360x800 phone that is enough to push the quests panel's
+    // button below the fold. The main screen is a scrolling list and a player
+    // reaches it by scrolling; what this test is about is that the button goes
+    // somewhere, not where it happens to land.
+    final button = find.widgetWithText(OutlinedButton, 'Achievements');
+    await tester.ensureVisible(button);
+    await tester.pumpAndSettle();
+    await tester.tap(button);
     await tester.pumpAndSettle();
 
     expect(fake.achievementsShown, 1);

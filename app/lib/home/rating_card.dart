@@ -113,133 +113,29 @@ class RatingCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // **The leaderboard button sits beside the number
-                      // it ranks**, because the board *is* this rating —
-                      // one board, that figure (D390).
+                      // **The rating shrinks rather than losing a digit**
+                      // (D394). `maxLines: 1` with no `overflow` clips: at the
+                      // default font scale a rating of 2400 was painted 100dp
+                      // wide against the 144dp it wanted, so it rendered as
+                      // "240" — a smaller number, confidently displayed, with
+                      // nothing on screen saying it was wrong. An ellipsis
+                      // would at least admit it; a clip does not.
                       //
-                      // Outside the `ExcludeSemantics` below rather than
-                      // inside it: that wrapper exists so the card's four
-                      // facts are announced as one stop rather than four
-                      // (ticket 021), and a button is an action rather than
-                      // a fact. Excluded, it would be invisible to a screen
-                      // reader; left as its own node it is one extra stop,
-                      // which is what a control should be.
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // **Still `Flexible`, and it has to be** (D392). It
-                          // was briefly laid out at its intrinsic width so the
-                          // button beside it could take the remainder, and on
-                          // a 320pt phone at 2x font scale a 72pt numeral is
-                          // wider than the card -- the row overflowed by 21
-                          // pixels. What fixes the truncation is the *ratio*
-                          // below, not making this rigid.
-                          Flexible(
-                            child: ExcludeSemantics(
-                              child: Text(
-                                l10n.ratingValue(summary.computerRating),
-                                maxLines: 1,
-                                style: theme.textTheme.displaySmall?.copyWith(
-                                  color: QuadrimPalette.cream,
-                                ),
-                              ),
+                      // `FittedBox` is what the points row below already uses,
+                      // for the same reason stated there: the number is the
+                      // fact, so it gives up size before it gives up a digit.
+                      ExcludeSemantics(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            l10n.ratingValue(summary.computerRating),
+                            maxLines: 1,
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: QuadrimPalette.cream,
                             ),
                           ),
-                          if (onLeaderboard != null)
-                            // **A bordered button, not a bare icon**
-                            // (D391). A tinted glyph beside a number reads
-                            // as decoration -- the number already has a
-                            // cube beside it -- and nothing said it could
-                            // be pressed. An outline and a word do.
-                            //
-                            // Cream on the border and the label: this is
-                            // the dark panel, where gold on the fill is
-                            // very nearly the background (D296).
-                            //
-                            // **Two shares to the number's one** (D392), and
-                            // this is what stopped the label truncating. A
-                            // `Row` divides its free width between flexible
-                            // children by flex, so at the default flex of 1
-                            // each the button was handed half the row and
-                            // ellipsised inside it -- "Leaderbo..." -- while
-                            // four digits left most of the other half empty. A
-                            // word is simply wider than a number, and the
-                            // split should say so.
-                            //
-                            // Both stay flexible so that neither can overflow
-                            // the row: at 2x font scale on the smallest phone
-                            // there is not enough width for both, and what
-                            // gives is the label, by the ellipsis it already
-                            // carries.
-                            Flexible(
-                              flex: 2,
-                              // **20dp of air between the number and the
-                              // button** (D392). `Row` puts adjacent children
-                              // flush, and a bordered control starting one
-                              // pixel after a 36pt numeral read as attached to
-                              // it -- as though the button were part of the
-                              // rating rather than a way to rank it.
-                              //
-                              // Inside the `Flexible` rather than a `SizedBox`
-                              // beside it: a rigid gap cannot give any of
-                              // itself back, and on a 320pt phone at 2x font
-                              // scale it was the 21 pixels the row overflowed
-                              // by. Counted against the button's own share, it
-                              // costs the label a character there instead.
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 20),
-                                child: OutlinedButton.icon(
-                                  onPressed: onLeaderboard,
-                                  icon: const Icon(kLeaderboardIcon, size: 18),
-                                  label: Text(
-                                    l10n.gameCenterLeaderboard,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: QuadrimPalette.cream,
-                                    // **Darker than the panel it sits on,
-                                    // not transparent** (D392). An outline
-                                    // over the gradient left the button
-                                    // reading as a drawn rectangle rather
-                                    // than a raised thing; `canopy` is one
-                                    // step below `panelRaised` here.
-                                    backgroundColor: QuadrimPalette.canopy,
-                                    side: const BorderSide(
-                                      color: QuadrimPalette.gold,
-                                    ),
-                                    // **12sp, because the label was
-                                    // truncating** (D392). A button takes
-                                    // `labelLarge` by default -- 14sp on a
-                                    // display face with 0.8 of letter
-                                    // spacing -- and "Leaderboard" did not
-                                    // fit beside the rating at any width
-                                    // this card can offer, ellipsising to
-                                    // "Leaderbo...".
-                                    //
-                                    // The size is stated rather than taken
-                                    // from `labelSmall`: every entry in this
-                                    // app's `TextTheme` sets family, weight
-                                    // and spacing and leaves `fontSize`
-                                    // null, so handing one to `styleFrom`
-                                    // changes the spacing and leaves the
-                                    // size at the button's own default. That
-                                    // bought two characters and still
-                                    // truncated.
-                                    textStyle: theme.textTheme.labelSmall
-                                        ?.copyWith(fontSize: 12),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    // The audited floor, stated rather than
-                                    // inherited (D135).
-                                    minimumSize: const Size(0, 44),
-                                    tapTargetSize: MaterialTapTargetSize.padded,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                       // Explicitly cream. `bodyMedium` carries the ink
                       // colour meant for parchment, and this panel is not
@@ -271,6 +167,59 @@ class RatingCard extends StatelessWidget {
                   ),
               ],
             ),
+            // **A line of its own, below the cube's row rather than inside it**
+            // (D394). It used to sit beside the rating, sharing a column the
+            // cube had already taken 96dp from, and no division of what was
+            // left fitted both: D392 tried the flex ratio and then the font
+            // size, and at the default scale the number still clipped and the
+            // label still read "Leaderbo…". Two things competing for one
+            // shrinking space is a structure, not a number to tune — the fix
+            // is to stop them competing (D374).
+            //
+            // Here the row spans the whole card, under the cube, so the label
+            // is drawn at the button's own size with nothing to give up. The
+            // association with the rating survives: same card, directly under
+            // the number and the record it ranks (D390).
+            if (onLeaderboard != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                // Left, at its natural width, rather than stretched across the
+                // card. Full width would read as the card's primary action,
+                // and the primary action of a rating card is not a hyperlink
+                // to somebody else's screen.
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: onLeaderboard,
+                    icon: const Icon(kLeaderboardIcon, size: 18),
+                    // The ellipsis is a backstop that should never fire now;
+                    // it costs nothing and is the difference between a clipped
+                    // word and an overflow stripe if a translation is longer.
+                    label: Text(
+                      l10n.gameCenterLeaderboard,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: QuadrimPalette.cream,
+                      // **Darker than the panel it sits on, not transparent**
+                      // (D392). An outline over the gradient left the button
+                      // reading as a drawn rectangle rather than a raised
+                      // thing; `canopy` is one step below `panelRaised` here.
+                      backgroundColor: QuadrimPalette.canopy,
+                      side: const BorderSide(color: QuadrimPalette.gold),
+                      // **The 12sp override is gone** (D394). It existed only
+                      // to buy characters in a space too small for the word,
+                      // and it did not buy enough. With a line to itself the
+                      // button takes the theme's own button size.
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      // The audited floor, stated rather than inherited (D135).
+                      minimumSize: const Size(0, 44),
+                      tapTargetSize: MaterialTapTargetSize.padded,
+                    ),
+                  ),
+                ),
+              ),
             ExcludeSemantics(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
