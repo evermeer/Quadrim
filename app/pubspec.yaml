@@ -52,7 +52,10 @@ publish_to: 'none'
 # Connect** (D359) and cannot be resubmitted under itself. +17 stays +17: it
 # was built locally but never uploaded, so the ratchet has nothing to spend --
 # only the name needed to move.
-version: 0.2.1+18
+#
+# **And to 0.2.2, because 0.2.1 went out through TestFlight** -- the same rule
+# as the step above. +18 stays +18 for the same reason +17 did.
+version: 0.2.2+18
 
 environment:
   sdk: ^3.12.2
