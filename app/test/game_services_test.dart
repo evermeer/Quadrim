@@ -334,8 +334,8 @@ void main() {
       ]);
       expect(fake.unlockedIos, [
         'nl.evict.quadrim2.beat.pebble',
-        'nl.evict.quadrim2.games_in_day.5',
-        'nl.evict.quadrim2.days_in_row.5',
+        'nl.evict.quadrim2.beat.games_in_day.5',
+        'nl.evict.quadrim2.beat.days_in_row.5',
       ]);
     });
 
@@ -515,7 +515,7 @@ void main() {
 
       expect(fake.unlockedIos, [
         'nl.evict.quadrim2.beat.pebble',
-        'nl.evict.quadrim2.games_in_day.5',
+        'nl.evict.quadrim2.beat.games_in_day.5',
       ]);
     });
 

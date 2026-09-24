@@ -73,6 +73,21 @@ const String kRatingLeaderboardPlayGamesId = kPlayGamesIdUnset;
 
 String _gc(String suffix) => 'nl.evict.quadrim2.$suffix';
 
+/// The prefix the fourteen volume and streak ids carry, where it means nothing.
+///
+/// **`beat.` is a typo, and it is permanent** (D395). It belongs on the
+/// per-opponent ids — `beat.pebble` is a sentence — and it was typed into App
+/// Store Connect on the volume and streak ones too. A Game Center achievement
+/// id cannot be renamed, and a deleted one can never be reused (D213, D365),
+/// so correcting the console would mean destroying fourteen live achievements
+/// and burning the correct ids forever. The app matches the store because the
+/// store cannot match the app.
+///
+/// Kept beside the ids rather than folded into [_gc], so that the word is
+/// visible where it is wrong instead of hidden in a helper that makes it look
+/// deliberate everywhere.
+const String _publishedTypo = 'beat.';
+
 /// Every achievement, built from the same catalogues the quests are built from.
 ///
 /// **Derived rather than typed out**, so the roster and the rungs cannot drift
@@ -90,14 +105,14 @@ final List<Achievement> achievementCatalogue = [
     Achievement(
       key: 'games_in_day:$target',
       questId: 'games_in_day:$target',
-      gameCenterId: _gc('games_in_day.$target'),
+      gameCenterId: _gc('${_publishedTypo}games_in_day.$target'),
       playGamesId: kPlayGamesIdUnset,
     ),
   for (final target in kStreakAchievementTargets)
     Achievement(
       key: 'days_in_row:$target',
       questId: 'days_in_row:$target',
-      gameCenterId: _gc('days_in_row.$target'),
+      gameCenterId: _gc('${_publishedTypo}days_in_row.$target'),
       playGamesId: kPlayGamesIdUnset,
     ),
   // The one achievement with no quest behind it (D386).

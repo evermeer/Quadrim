@@ -161,3 +161,54 @@ bottom again. `accessibility_test.dart` and `main_screen_test.dart` still pass
 at 2x. The alternative was to keep the
 button beside the number and shrink the *word*, which is what had already failed
 twice.
+
+## D395 — The app matches the store's typo, because the store cannot be corrected
+
+**Question:** Fourteen of the forty-six Game Center achievements were created in
+App Store Connect with an extra `beat.` in their ids —
+`nl.evict.quadrim2.beat.days_in_row.5` where the app sends
+`nl.evict.quadrim2.days_in_row.5`. The volume and streak families therefore
+never unlocked, while the thirty-one per-opponent ones did, because `beat.`
+belongs on those. Which side changes?
+
+**Decision:** The app. `beat.` is now part of the fourteen ids it sends.
+
+**Because the store cannot change.** A Game Center achievement id is fixed once
+published and **a deleted id can never be reused** — the same rule as a product
+id (D213, D365). Correcting the console would mean destroying fourteen live
+achievements and permanently burning the correct names to get them back. The
+app's constant is a line of source. There is no symmetry here to weigh: one side
+is free and the other is irreversible.
+
+**The ids are invisible to players**, which is what makes this cheap rather than
+merely unavoidable. Nothing a person reads changes; `beat.days_in_row.5` renders
+as "Five days running" exactly as before.
+
+**The word is kept where it is wrong, not hidden in the helper.** Folding
+`beat.` into `_gc` would have produced the right strings and made the prefix
+look deliberate at every call site. It is a named constant, `_publishedTypo`,
+used only by the two families that carry it by mistake — so the next person to
+add an achievement sees a decision rather than a convention, and has to ask
+which of the two shapes theirs takes.
+
+**The draw achievement was entered correctly** and keeps `nl.evict.quadrim2.tie`
+— confirmed rather than assumed, because guessing would have produced exactly
+the failure being fixed, silently, in the one achievement whose id already
+disagrees with its key (D386).
+
+**`doc/store/achievements.json` is the source of truth and moved first**; the
+setup guide's tables and both CSVs are regenerated from it, so the console and
+the app are described by one file (D379). `store_catalogue_test.dart` binds that
+file to the derived catalogue and is what would have caught this had the
+comparison ever been against the real console rather than against the JSON.
+
+**Cost, and it is the interesting one.** The repository now carries a name that
+is wrong on purpose, and the only thing keeping it wrong-on-purpose rather than
+wrong is a comment. More importantly: **nothing in this project can detect this
+class of defect.** A missing or misnamed achievement fails silently by design —
+`_guard` swallows it, because a store outage must never reach a game loop — so
+fourteen achievements were dead for as long as the feature has existed and the
+only reason anyone noticed was a person looking at a shelf and counting. The
+audit in `tools/storegen/store_audit.py` exists precisely to diff the console
+against this file, and it has never been run against the live console; that is
+what would have caught it in seconds.

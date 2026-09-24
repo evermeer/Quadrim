@@ -189,51 +189,52 @@ rungs, then the nine streak rungs.
 
 | # | Quadrim key | Game Center ID | Image | Points | Name (EN) | Name (NL) |
 |---|---|---|---|---|---|---|
-| 1 | `beat:pebble` | `nl.evict.quadrim2.beat.pebble` | `pebble.png` | 5 | Pebble defeated | Pebble verslagen |
-| 2 | `beat:twig` | `nl.evict.quadrim2.beat.twig` | `twig.png` | 5 | Twig defeated | Twig verslagen |
-| 3 | `beat:mote` | `nl.evict.quadrim2.beat.mote` | `mote.png` | 5 | Mote defeated | Mote verslagen |
-| 4 | `beat:hazel` | `nl.evict.quadrim2.beat.hazel` | `hazel.png` | 5 | Hazel defeated | Hazel verslagen |
+| 1 | `beat:pebble` | `nl.evict.quadrim2.beat.pebble` | `pebble.png` | 1 | Pebble defeated | Pebble verslagen |
+| 2 | `beat:twig` | `nl.evict.quadrim2.beat.twig` | `twig.png` | 2 | Twig defeated | Twig verslagen |
+| 3 | `beat:mote` | `nl.evict.quadrim2.beat.mote` | `mote.png` | 3 | Mote defeated | Mote verslagen |
+| 4 | `beat:hazel` | `nl.evict.quadrim2.beat.hazel` | `hazel.png` | 4 | Hazel defeated | Hazel verslagen |
 | 5 | `beat:clover` | `nl.evict.quadrim2.beat.clover` | `clover.png` | 5 | Clover defeated | Clover verslagen |
-| 6 | `beat:sorrel` | `nl.evict.quadrim2.beat.sorrel` | `sorrel.png` | 5 | Sorrel defeated | Sorrel verslagen |
-| 7 | `beat:bramble` | `nl.evict.quadrim2.beat.bramble` | `bramble.png` | 10 | Bramble defeated | Bramble verslagen |
-| 8 | `beat:juniper` | `nl.evict.quadrim2.beat.juniper` | `juniper.png` | 10 | Juniper defeated | Juniper verslagen |
-| 9 | `beat:bracken` | `nl.evict.quadrim2.beat.bracken` | `bracken.png` | 10 | Bracken defeated | Bracken verslagen |
+| 6 | `beat:sorrel` | `nl.evict.quadrim2.beat.sorrel` | `sorrel.png` | 6 | Sorrel defeated | Sorrel verslagen |
+| 7 | `beat:bramble` | `nl.evict.quadrim2.beat.bramble` | `bramble.png` | 7 | Bramble defeated | Bramble verslagen |
+| 8 | `beat:juniper` | `nl.evict.quadrim2.beat.juniper` | `juniper.png` | 8 | Juniper defeated | Juniper verslagen |
+| 9 | `beat:bracken` | `nl.evict.quadrim2.beat.bracken` | `bracken.png` | 9 | Bracken defeated | Bracken verslagen |
 | 10 | `beat:willow` | `nl.evict.quadrim2.beat.willow` | `willow.png` | 10 | Willow defeated | Willow verslagen |
-| 11 | `beat:rowan` | `nl.evict.quadrim2.beat.rowan` | `rowan.png` | 10 | Rowan defeated | Rowan verslagen |
-| 12 | `beat:aspen` | `nl.evict.quadrim2.beat.aspen` | `aspen.png` | 10 | Aspen defeated | Aspen verslagen |
-| 13 | `beat:vireo` | `nl.evict.quadrim2.beat.vireo` | `vireo.png` | 15 | Vireo defeated | Vireo verslagen |
-| 14 | `beat:finch` | `nl.evict.quadrim2.beat.finch` | `finch.png` | 15 | Finch defeated | Finch verslagen |
+| 11 | `beat:rowan` | `nl.evict.quadrim2.beat.rowan` | `rowan.png` | 11 | Rowan defeated | Rowan verslagen |
+| 12 | `beat:aspen` | `nl.evict.quadrim2.beat.aspen` | `aspen.png` | 12 | Aspen defeated | Aspen verslagen |
+| 13 | `beat:vireo` | `nl.evict.quadrim2.beat.vireo` | `vireo.png` | 13 | Vireo defeated | Vireo verslagen |
+| 14 | `beat:finch` | `nl.evict.quadrim2.beat.finch` | `finch.png` | 14 | Finch defeated | Finch verslagen |
 | 15 | `beat:kestrel` | `nl.evict.quadrim2.beat.kestrel` | `kestrel.png` | 15 | Kestrel defeated | Kestrel verslagen |
-| 16 | `beat:osprey` | `nl.evict.quadrim2.beat.osprey` | `osprey.png` | 15 | Osprey defeated | Osprey verslagen |
-| 17 | `beat:heron` | `nl.evict.quadrim2.beat.heron` | `heron.png` | 15 | Heron defeated | Heron verslagen |
-| 18 | `beat:marlin` | `nl.evict.quadrim2.beat.marlin` | `marlin.png` | 15 | Marlin defeated | Marlin verslagen |
-| 19 | `beat:lynx` | `nl.evict.quadrim2.beat.lynx` | `lynx.png` | 20 | Lynx defeated | Lynx verslagen |
+| 16 | `beat:osprey` | `nl.evict.quadrim2.beat.osprey` | `osprey.png` | 16 | Osprey defeated | Osprey verslagen |
+| 17 | `beat:heron` | `nl.evict.quadrim2.beat.heron` | `heron.png` | 17 | Heron defeated | Heron verslagen |
+| 18 | `beat:marlin` | `nl.evict.quadrim2.beat.marlin` | `marlin.png` | 18 | Marlin defeated | Marlin verslagen |
+| 19 | `beat:lynx` | `nl.evict.quadrim2.beat.lynx` | `lynx.png` | 19 | Lynx defeated | Lynx verslagen |
 | 20 | `beat:sable` | `nl.evict.quadrim2.beat.sable` | `sable.png` | 20 | Sable defeated | Sable verslagen |
-| 21 | `beat:ember` | `nl.evict.quadrim2.beat.ember` | `ember.png` | 20 | Ember defeated | Ember verslagen |
-| 22 | `beat:lyra` | `nl.evict.quadrim2.beat.lyra` | `lyra.png` | 20 | Lyra defeated | Lyra verslagen |
-| 23 | `beat:onyx` | `nl.evict.quadrim2.beat.onyx` | `onyx.png` | 20 | Onyx defeated | Onyx verslagen |
-| 24 | `beat:corvus` | `nl.evict.quadrim2.beat.corvus` | `corvus.png` | 20 | Corvus defeated | Corvus verslagen |
-| 25 | `beat:basalt` | `nl.evict.quadrim2.beat.basalt` | `basalt.png` | 30 | Basalt defeated | Basalt verslagen |
-| 26 | `beat:cairn` | `nl.evict.quadrim2.beat.cairn` | `cairn.png` | 30 | Cairn defeated | Cairn verslagen |
-| 27 | `beat:flint` | `nl.evict.quadrim2.beat.flint` | `flint.png` | 30 | Flint defeated | Flint verslagen |
-| 28 | `beat:quartz` | `nl.evict.quadrim2.beat.quartz` | `quartz.png` | 30 | Quartz defeated | Quartz verslagen |
-| 29 | `beat:titan` | `nl.evict.quadrim2.beat.titan` | `titan.png` | 30 | Titan defeated | Titan verslagen |
+| 21 | `beat:ember` | `nl.evict.quadrim2.beat.ember` | `ember.png` | 21 | Ember defeated | Ember verslagen |
+| 22 | `beat:lyra` | `nl.evict.quadrim2.beat.lyra` | `lyra.png` | 22 | Lyra defeated | Lyra verslagen |
+| 23 | `beat:onyx` | `nl.evict.quadrim2.beat.onyx` | `onyx.png` | 23 | Onyx defeated | Onyx verslagen |
+| 24 | `beat:corvus` | `nl.evict.quadrim2.beat.corvus` | `corvus.png` | 24 | Corvus defeated | Corvus verslagen |
+| 25 | `beat:basalt` | `nl.evict.quadrim2.beat.basalt` | `basalt.png` | 25 | Basalt defeated | Basalt verslagen |
+| 26 | `beat:cairn` | `nl.evict.quadrim2.beat.cairn` | `cairn.png` | 26 | Cairn defeated | Cairn verslagen |
+| 27 | `beat:flint` | `nl.evict.quadrim2.beat.flint` | `flint.png` | 27 | Flint defeated | Flint verslagen |
+| 28 | `beat:quartz` | `nl.evict.quadrim2.beat.quartz` | `quartz.png` | 28 | Quartz defeated | Quartz verslagen |
+| 29 | `beat:titan` | `nl.evict.quadrim2.beat.titan` | `titan.png` | 29 | Titan defeated | Titan verslagen |
 | 30 | `beat:oracle` | `nl.evict.quadrim2.beat.oracle` | `oracle.png` | 30 | Oracle defeated | Oracle verslagen |
-| 31 | `beat:quadrim_prime` | `nl.evict.quadrim2.beat.quadrim_prime` | `quadrim_prime.png` | 30 | Quadrim Prime defeated | Quadrim Prime verslagen |
-| 32 | `games_in_day:5` | `nl.evict.quadrim2.games_in_day.5` | `games_in_day_5.png` | 5 | Five in a day | Vijf op één dag |
-| 33 | `games_in_day:10` | `nl.evict.quadrim2.games_in_day.10` | `games_in_day_10.png` | 10 | Ten in a day | Tien op één dag |
-| 34 | `games_in_day:20` | `nl.evict.quadrim2.games_in_day.20` | `games_in_day_20.png` | 15 | Twenty in a day | Twintig op één dag |
-| 35 | `games_in_day:50` | `nl.evict.quadrim2.games_in_day.50` | `games_in_day_50.png` | 25 | Fifty in a day | Vijftig op één dag |
-| 36 | `games_in_day:100` | `nl.evict.quadrim2.games_in_day.100` | `games_in_day_100.png` | 40 | A hundred in a day | Honderd op één dag |
-| 37 | `days_in_row:5` | `nl.evict.quadrim2.days_in_row.5` | `days_in_row_5.png` | 5 | Five days running | Vijf dagen op rij |
-| 38 | `days_in_row:10` | `nl.evict.quadrim2.days_in_row.10` | `days_in_row_10.png` | 10 | Ten days running | Tien dagen op rij |
-| 39 | `days_in_row:30` | `nl.evict.quadrim2.days_in_row.30` | `days_in_row_30.png` | 15 | Thirty days running | Dertig dagen op rij |
-| 40 | `days_in_row:90` | `nl.evict.quadrim2.days_in_row.90` | `days_in_row_90.png` | 20 | Ninety days running | Negentig dagen op rij |
-| 41 | `days_in_row:180` | `nl.evict.quadrim2.days_in_row.180` | `days_in_row_180.png` | 30 | Half a year | Een half jaar |
-| 42 | `days_in_row:360` | `nl.evict.quadrim2.days_in_row.360` | `days_in_row_360.png` | 45 | A full year | Een heel jaar |
-| 43 | `days_in_row:720` | `nl.evict.quadrim2.days_in_row.720` | `days_in_row_720.png` | 65 | Two years | Twee jaar |
-| 44 | `days_in_row:1080` | `nl.evict.quadrim2.days_in_row.1080` | `days_in_row_1080.png` | 85 | Three years | Drie jaar |
-| 45 | `days_in_row:1440` | `nl.evict.quadrim2.days_in_row.1440` | `days_in_row_1440.png` | 100 | Four years | Vier jaar |
+| 31 | `beat:quadrim_prime` | `nl.evict.quadrim2.beat.quadrim_prime` | `quadrim_prime.png` | 31 | Quadrim Prime defeated | Quadrim Prime verslagen |
+| 32 | `games_in_day:5` | `nl.evict.quadrim2.beat.games_in_day.5` | `games_in_day_5.png` | 5 | Five in a day | Vijf op één dag |
+| 33 | `games_in_day:10` | `nl.evict.quadrim2.beat.games_in_day.10` | `games_in_day_10.png` | 10 | Ten in a day | Tien op één dag |
+| 34 | `games_in_day:20` | `nl.evict.quadrim2.beat.games_in_day.20` | `games_in_day_20.png` | 15 | Twenty in a day | Twintig op één dag |
+| 35 | `games_in_day:50` | `nl.evict.quadrim2.beat.games_in_day.50` | `games_in_day_50.png` | 25 | Fifty in a day | Vijftig op één dag |
+| 36 | `games_in_day:100` | `nl.evict.quadrim2.beat.games_in_day.100` | `games_in_day_100.png` | 40 | A hundred in a day | Honderd op één dag |
+| 37 | `days_in_row:5` | `nl.evict.quadrim2.beat.days_in_row.5` | `days_in_row_5.png` | 5 | Five days running | Vijf dagen op rij |
+| 38 | `days_in_row:10` | `nl.evict.quadrim2.beat.days_in_row.10` | `days_in_row_10.png` | 10 | Ten days running | Tien dagen op rij |
+| 39 | `days_in_row:30` | `nl.evict.quadrim2.beat.days_in_row.30` | `days_in_row_30.png` | 15 | Thirty days running | Dertig dagen op rij |
+| 40 | `days_in_row:90` | `nl.evict.quadrim2.beat.days_in_row.90` | `days_in_row_90.png` | 20 | Ninety days running | Negentig dagen op rij |
+| 41 | `days_in_row:180` | `nl.evict.quadrim2.beat.days_in_row.180` | `days_in_row_180.png` | 30 | Half a year | Een half jaar |
+| 42 | `days_in_row:360` | `nl.evict.quadrim2.beat.days_in_row.360` | `days_in_row_360.png` | 45 | A full year | Een heel jaar |
+| 43 | `days_in_row:720` | `nl.evict.quadrim2.beat.days_in_row.720` | `days_in_row_720.png` | 65 | Two years | Twee jaar |
+| 44 | `days_in_row:1080` | `nl.evict.quadrim2.beat.days_in_row.1080` | `days_in_row_1080.png` | 85 | Three years | Drie jaar |
+| 45 | `days_in_row:1440` | `nl.evict.quadrim2.beat.days_in_row.1440` | `days_in_row_1440.png` | 100 | Four years | Vier jaar |
+| 46 | `draw` | `nl.evict.quadrim2.tie` | `tie2.png` | 34 | A drawn cube | Een volle kubus |
 
 <!-- storegen:end table -->
 
@@ -291,6 +292,7 @@ earning. Both are given so neither console needs invention.
 | `days_in_row:720` | Play on 720 consecutive days. | You played 720 days in a row. | Speel 720 dagen achter elkaar. | Je hebt 720 dagen op rij gespeeld. |
 | `days_in_row:1080` | Play on 1080 consecutive days. | You played 1080 days in a row. | Speel 1080 dagen achter elkaar. | Je hebt 1080 dagen op rij gespeeld. |
 | `days_in_row:1440` | Play on 1440 consecutive days. | You played 1440 days in a row. | Speel 1440 dagen achter elkaar. | Je hebt 1440 dagen op rij gespeeld. |
+| `draw` | Fill all sixty-four cells against a computer opponent with no line for either side. | You filled the cube with no line for either side. | Vul alle vierenzestig vakjes tegen een computertegenstander zonder dat een van beide een lijn maakt. | Je hebt de kubus gevuld zonder lijn voor een van beide. |
 
 <!-- storegen:end descriptions -->
 

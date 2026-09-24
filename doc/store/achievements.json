@@ -552,7 +552,7 @@
     },
     {
       "key": "games_in_day:5",
-      "gameCenterId": "nl.evict.quadrim2.games_in_day.5",
+      "gameCenterId": "nl.evict.quadrim2.beat.games_in_day.5",
       "playGamesId": null,
       "icon": "games_in_day_5.png",
       "points": 5,
@@ -569,7 +569,7 @@
     },
     {
       "key": "games_in_day:10",
-      "gameCenterId": "nl.evict.quadrim2.games_in_day.10",
+      "gameCenterId": "nl.evict.quadrim2.beat.games_in_day.10",
       "playGamesId": null,
       "icon": "games_in_day_10.png",
       "points": 10,
@@ -586,7 +586,7 @@
     },
     {
       "key": "games_in_day:20",
-      "gameCenterId": "nl.evict.quadrim2.games_in_day.20",
+      "gameCenterId": "nl.evict.quadrim2.beat.games_in_day.20",
       "playGamesId": null,
       "icon": "games_in_day_20.png",
       "points": 15,
@@ -603,7 +603,7 @@
     },
     {
       "key": "games_in_day:50",
-      "gameCenterId": "nl.evict.quadrim2.games_in_day.50",
+      "gameCenterId": "nl.evict.quadrim2.beat.games_in_day.50",
       "playGamesId": null,
       "icon": "games_in_day_50.png",
       "points": 25,
@@ -620,7 +620,7 @@
     },
     {
       "key": "games_in_day:100",
-      "gameCenterId": "nl.evict.quadrim2.games_in_day.100",
+      "gameCenterId": "nl.evict.quadrim2.beat.games_in_day.100",
       "playGamesId": null,
       "icon": "games_in_day_100.png",
       "points": 40,
@@ -637,7 +637,7 @@
     },
     {
       "key": "days_in_row:5",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.5",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.5",
       "playGamesId": null,
       "icon": "days_in_row_5.png",
       "points": 5,
@@ -654,7 +654,7 @@
     },
     {
       "key": "days_in_row:10",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.10",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.10",
       "playGamesId": null,
       "icon": "days_in_row_10.png",
       "points": 10,
@@ -671,7 +671,7 @@
     },
     {
       "key": "days_in_row:30",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.30",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.30",
       "playGamesId": null,
       "icon": "days_in_row_30.png",
       "points": 15,
@@ -688,7 +688,7 @@
     },
     {
       "key": "days_in_row:90",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.90",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.90",
       "playGamesId": null,
       "icon": "days_in_row_90.png",
       "points": 20,
@@ -705,7 +705,7 @@
     },
     {
       "key": "days_in_row:180",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.180",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.180",
       "playGamesId": null,
       "icon": "days_in_row_180.png",
       "points": 30,
@@ -722,7 +722,7 @@
     },
     {
       "key": "days_in_row:360",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.360",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.360",
       "playGamesId": null,
       "icon": "days_in_row_360.png",
       "points": 45,
@@ -739,7 +739,7 @@
     },
     {
       "key": "days_in_row:720",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.720",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.720",
       "playGamesId": null,
       "icon": "days_in_row_720.png",
       "points": 65,
@@ -756,7 +756,7 @@
     },
     {
       "key": "days_in_row:1080",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.1080",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.1080",
       "playGamesId": null,
       "icon": "days_in_row_1080.png",
       "points": 85,
@@ -773,7 +773,7 @@
     },
     {
       "key": "days_in_row:1440",
-      "gameCenterId": "nl.evict.quadrim2.days_in_row.1440",
+      "gameCenterId": "nl.evict.quadrim2.beat.days_in_row.1440",
       "playGamesId": null,
       "icon": "days_in_row_1440.png",
       "points": 100,
