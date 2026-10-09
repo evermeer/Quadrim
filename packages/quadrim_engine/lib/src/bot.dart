@@ -268,7 +268,7 @@ const Set<StrategicRule> _allRules = {
 };
 
 // ---------------------------------------------------------------------------
-// The catalogue. Configurations realise the personalities in idea-v3 §6.4;
+// The catalogue. Configurations realise the personalities in idea-v4 §6.4;
 // the ratings there are fixed and these parameters are what gets tuned when
 // measured strength disagrees with them (D144).
 // ---------------------------------------------------------------------------

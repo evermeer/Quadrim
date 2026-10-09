@@ -5,7 +5,7 @@ This document will show how this game was constructed using vibe coding folowing
 
 ## The documents
 
-The idea was written three times, and the versions are kept apart on purpose.
+The idea was written four times, and the versions are kept apart on purpose.
 
 | Document | What it is |
 |---|---|
@@ -14,21 +14,24 @@ The idea was written three times, and the versions are kept apart on purpose.
 | [idea-v1-brainstorming.md](doc/history/idea-v1-brainstorming.md) | v1 brainstormed with the Superpowers skill, which produced several options for each open question |
 | [idea-v1-spec.md](doc/tickets/done/idea-v1-spec.md) | v1 turned into a spec with acceptance criteria, which the tickets were cut from |
 | [idea-v1-spec-review.md](doc/history/idea-v1-spec-review.md) | v1 spec reviewed by the Agency Agents backend-architect, security-engineer, and product-manager |
-| [design.md](doc/design.md) | The design for the first run experience of the game, created with Claude Design |
-| [design-handoff.md](doc/DesignHandoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
+| [design.md](doc/history/design.md) | The design for the first run experience of the game, created with Claude Design |
+| [design-handoff.md](doc/history/DesignHandoff.md) | The design handoff for the first run experience of the game, created with Claude Design |
 | [idea-v1-decisions.md](doc/tickets/done/idea-v1-decisions.md) | D01–D217. Every non-obvious choice made along the way, each with the question it answered and what it cost |
-| [idea-v2.md](doc/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
-| [idea-v2-additions.md](doc/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
-| **[idea-v3.md](doc/idea-v3.md)** | **v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope. This is the one to start from** |
-| [idea-v3-brainstorming.md](doc/idea-v3-brainstorming.md) | v3 read back against the twenty-two tickets already built — where the spec and the code disagree, and in what order the rest gets built |
-| **[idea-v3-spec.md](doc/idea-v3-spec.md)** | **v3 turned into a spec with acceptance criteria — the successor to idea-v1-spec.md, preserving its section numbers and criterion ids** |
-| [idea-v3-decisions.md](doc/idea-v3-decisions.md) | D218–D277. The decisions that turned v2 and the additions into v3, and then v3 into a build plan |
+| [idea-v2.md](doc/history/idea-v2.md) | v1 rewritten against everything the build settled. No open functional questions |
+| [idea-v2-additions.md](doc/history/idea-v2-additions.md) | v1 additions and improvements for the next version of the game |
+| [idea-v3.md](doc/history/idea-v3.md) | v2 rewritten with the additions folded into it — progression, monetisation, and a phone-only scope |
+| [idea-v3-brainstorming.md](doc/history/idea-v3-brainstorming.md) | v3 read back against the twenty-two tickets already built — where the spec and the code disagree, and in what order the rest gets built |
+| [idea-v3-spec.md](doc/history/idea-v3-spec.md) | v3 turned into a spec with acceptance criteria — the successor to idea-v1-spec.md, preserving its section numbers and criterion ids |
+| [idea-v3-decisions.md](doc/history/idea-v3-decisions.md) | D218–D391. Every decision taken while turning v3 into a shipped game |
+| **[idea-v4.md](doc/idea-v4.md)** | **v3 with the whole decision log folded into it and the war stories generalised into rules. This is the one to start from** |
+| **[idea-v4-spec.md](doc/idea-v4-spec.md)** | **The buildable form of v4 — same section numbers and criterion ids as the v1 and v3 specs, because the source cites them** |
+| [idea-v4-decisions.md](doc/idea-v4-decisions.md) | D392 onward. The log continues here |
 
-`idea-v3.md` is the interesting one if you want to build this yourself. It folds all 277 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, because those cost more time than the right ones saved.
+`idea-v4.md` is the interesting one if you want to build this yourself. It folds all 391 decisions back into the brief, so the answers arrive with the questions instead of a year later — and it keeps the wrong turnings in, as the rules they produced rather than as the afternoons they cost.
 
 ## Starting the Vibe coding workflow
 
-This is now written as a start from doc/idea-v0.md. When restarting the workflow, you can start from doc/idea-v3.md instead. The workflow is described in the [workflow document](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
+This is now written as a start from doc/idea-v0.md. When restarting the workflow, you can start from doc/idea-v4.md instead. The workflow is described in the [workflow document](https://github.com/evermeer/CodingAgentOrchestration/blob/main/docs/part-1-why-use-an-ai-coding-agent-cli.md#your-workflow)
 
 **Prompt**
 ```
@@ -147,7 +150,7 @@ The complete strategy can be found at https://ranger.uta.edu/~weems/NOTES6319/PA
 Could that help for creating the perfect computer player? If so, can you add information about that to the specs?
 ```
 
-Now I went to https://claude.ai/design and asked for a design for the game. The result is in the [design](doc/design.md) document.
+Now I went to https://claude.ai/design and asked for a design for the game. The result is in the [design](doc/history/design.md) document.
 
 **Prompt**
 ```
@@ -216,7 +219,7 @@ Commit the code to the main branch after each ticket is completed and reviewed.
 Requested some small UI tweaks.
 
 After the UI tweaks were implemented, I reevaluated the design and flow of the first run experience.
-I got new idease and recorded them in the [idea-v2-additions.md](doc/idea-v2-additions.md) document.
+I got new idease and recorded them in the [idea-v2-additions.md](doc/history/idea-v2-additions.md) document.
 We will now brainstorm that idea first and then update the spec and tickets with the new information.
 
 **Prompt**

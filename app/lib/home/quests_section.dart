@@ -6,6 +6,7 @@ import '../data/documents.dart';
 import '../design/forest.dart';
 import '../game/opponent_name.dart';
 import '../l10n/app_localizations.dart';
+import '../theme.dart';
 
 /// The four quests closest to completion.
 ///
@@ -23,7 +24,16 @@ class QuestsSection extends StatelessWidget {
     super.key,
     required this.quests,
     this.capped = false,
+    this.onAchievements,
   });
+
+  /// Opens the platform achievements shelf, or null to draw no button (D390).
+  ///
+  /// **On this panel because the achievements are these quests.** The forty-six
+  /// are derived by walking the quest catalogue (D378) -- same rungs, same
+  /// opponents -- so the shelf is this section as the platform renders it, and
+  /// the button belongs where the thing it shows already lives.
+  final VoidCallback? onAchievements;
 
   final List<QuestStatus> quests;
 
@@ -41,6 +51,44 @@ class QuestsSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return ParchmentSection(
       heading: l10n.quests,
+      trailing: onAchievements == null
+          ? null
+          : OutlinedButton.icon(
+              onPressed: onAchievements,
+              icon: const Icon(kAchievementsIcon, size: 18),
+              label: Text(
+                l10n.gameCenterAchievements,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // **Ink, not the app-wide gold** (D391). This sits on the card,
+              // which is parchment, and the icon theme that is right on every
+              // dark panel is the one pairing this palette cannot carry --
+              // exactly the note the move scrubber already carries about its
+              // own four buttons. It read as white and was hard to see.
+              style: OutlinedButton.styleFrom(
+                foregroundColor: QuadrimPalette.ink,
+                // **Darker than the parchment it sits on, not transparent**
+                // (D392). The same change the leaderboard button takes on the
+                // dark panel, in this palette: `parchmentDeep` is the one step
+                // below `parchment` the palette already carries, so the button
+                // reads as a control rather than as an outline drawn on paper.
+                backgroundColor: QuadrimPalette.parchmentDeep,
+                side: const BorderSide(color: QuadrimPalette.edge),
+                // **12sp, because the label was truncating** (D392).
+                // "Achievements" is longer than "Leaderboard" and shares its
+                // row with a heading, so it runs out of width first. The size
+                // is stated rather than taken from `labelSmall` for the reason
+                // the rating card's button records: the entries in this app's
+                // `TextTheme` leave `fontSize` null.
+                textStyle: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontSize: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: const Size(0, 44),
+                tapTargetSize: MaterialTapTargetSize.padded,
+              ),
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -72,8 +120,7 @@ class QuestTile extends StatelessWidget {
     final name = questName(l10n, status.quest);
     // Only the volume family is unreachable under the cap. The per-opponent
     // and streak families are all completable on three games a day.
-    final unreachable =
-        capped && status.quest.family == QuestFamily.gamesInDay;
+    final unreachable = capped && status.quest.family == QuestFamily.gamesInDay;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Semantics(
@@ -82,14 +129,17 @@ class QuestTile extends StatelessWidget {
         // screen reader, so the tile says where it stands in words.
         label: unreachable
             ? '${l10n.questSemantics(name, status.current, status.quest.target)}. '
-                '${l10n.questVolumeLocked}'
+                  '${l10n.questVolumeLocked}'
             : l10n.questSemantics(name, status.current, status.quest.target),
         child: ExcludeSemantics(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(questIcon(status.quest.family),
-                  size: 20, color: theme.colorScheme.primary),
+              Icon(
+                questIcon(status.quest.family),
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -111,7 +161,9 @@ class QuestTile extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           l10n.questProgressValue(
-                              status.current, status.quest.target),
+                            status.current,
+                            status.quest.target,
+                          ),
                           style: theme.textTheme.labelSmall,
                         ),
                       ],
@@ -120,8 +172,9 @@ class QuestTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         l10n.questVolumeLocked,
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: theme.colorScheme.primary),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ],
                   ],
@@ -141,11 +194,11 @@ class QuestTile extends StatelessWidget {
 /// carries the name; what the icon has to do is make the four tiles
 /// distinguishable at a glance, and the family is what distinguishes them.
 IconData questIcon(QuestFamily family) => switch (family) {
-      QuestFamily.firstWin => Icons.emoji_events_outlined,
-      QuestFamily.firstWinSecond => Icons.shield_outlined,
-      QuestFamily.gamesInDay => Icons.today_outlined,
-      QuestFamily.consecutiveDays => Icons.local_fire_department_outlined,
-    };
+  QuestFamily.firstWin => Icons.emoji_events_outlined,
+  QuestFamily.firstWinSecond => Icons.shield_outlined,
+  QuestFamily.gamesInDay => Icons.today_outlined,
+  QuestFamily.consecutiveDays => Icons.local_fire_department_outlined,
+};
 
 /// A quest's name, through l10n like every other user-facing string.
 ///

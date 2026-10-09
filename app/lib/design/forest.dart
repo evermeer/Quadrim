@@ -180,6 +180,17 @@ const double _kOverhangLeft = 6;
 /// `Transform.translate` moves it without changing what it is measured as, so
 /// the column below reserves only the part that is actually inside — and the
 /// content sits that much higher up the card.
+/// The two Game Center glyphs.
+///
+/// **One each, not one shared** (D391, reversed). They were briefly the same
+/// trophy on the argument that one feature should look like one feature; the
+/// developer reversed it, and the reversal is right for a reason the first call
+/// missed — these are two *destinations*, and a control that looks identical to
+/// another but goes somewhere else is a worse kind of consistency than none.
+/// The label still carries the distinction; the icon no longer contradicts it.
+const IconData kLeaderboardIcon = Icons.leaderboard_outlined;
+const IconData kAchievementsIcon = Icons.emoji_events_outlined;
+
 class ParchmentSection extends StatelessWidget {
   const ParchmentSection({
     super.key,

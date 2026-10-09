@@ -191,6 +191,20 @@ void main() {
     });
   });
 
+  test('a subscriber is never refused, after the free month too (D396)', () {
+    final games = [
+      for (final day in [10, 11, 12])
+        for (final hour in [10, 12, 14]) at(2026, 8, day, hour),
+    ];
+    final state = meterState(
+        games: games,
+        now: DateTime(2026, 8, 12, 15),
+        freeMonth: expired,
+        unlimited: true);
+    expect(state.canStart, isTrue);
+    expect(state.inFreeMonth, isFalse, reason: 'the month really is over');
+  });
+
   group('remainingToday', () {
     test('is the tighter of the two limits', () {
       // Eight used this week, none today: the weekly limit leaves one, the

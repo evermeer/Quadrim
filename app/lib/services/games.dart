@@ -35,6 +35,20 @@ abstract interface class GameServicesPlatform {
     required int value,
   });
   Future<void> unlock({required String androidId, required String iosId});
+
+  /// Opens the platform's own leaderboard UI.
+  ///
+  /// **The platform draws it, not this app** (D390). Game Center and Play
+  /// Games each have a native view that already knows how to show a board, a
+  /// player's position, friends and time scopes; a hand-drawn one would have to
+  /// be given all of that and would still not be the thing players recognise.
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  });
+
+  /// Opens the platform's own achievements UI.
+  Future<void> showAchievements();
 }
 
 /// The real one. Deliberately thin — everything worth testing is above it.
@@ -45,7 +59,7 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
   Future<bool> isSignedIn() => gs.GamesServices.isSignedIn;
 
   @override
-  Future<void> signIn() => gs.GamesServices.signIn();
+  Future<void> signIn() => _passThrough(gs.GamesServices.signIn());
 
   @override
   Future<void> submitScore({
@@ -60,6 +74,43 @@ class GamesServicesPlatformAdapter implements GameServicesPlatform {
           value: value,
         ),
       );
+
+  /// **The plugin returns a string on success and throws on failure** — the
+  /// opposite of what D391 assumed, and the reason Game Center has never worked
+  /// in a shipped build (D393).
+  ///
+  /// Read out of `games_services` 5.3.0 rather than inferred. Every success
+  /// path returns one of three non-empty strings — `"Success"` from
+  /// `showLeaderboards` and `showAchievements`, `"Player authenticated
+  /// successfully"` or `"Player already authenticated"` from `signIn`. Every
+  /// failure path goes through `error.flutterError(code:)`, which arrives in
+  /// Dart as a thrown `PlatformException`.
+  ///
+  /// D391 inverted that, raising an exception whenever the string was
+  /// non-empty — so every *successful* sign-in and every native view that
+  /// actually opened was recorded as a refusal, swallowed by `_guard`, and
+  /// reported to the player as "Game Center is unavailable".
+  ///
+  /// So there is nothing to translate: the throw the caller needs is the one
+  /// the plugin already performs. This exists to hold that paragraph and to
+  /// drop the string, which carries no information a caller can act on.
+  static Future<void> _passThrough(Future<String?> call) async {
+    await call;
+  }
+
+  @override
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  }) =>
+      _passThrough(gs.GamesServices.showLeaderboards(
+        androidLeaderboardID: androidLeaderboardId,
+        iOSLeaderboardID: iosLeaderboardId,
+      ));
+
+  @override
+  Future<void> showAchievements() =>
+      _passThrough(gs.GamesServices.showAchievements());
 
   @override
   Future<void> unlock({required String androidId, required String iosId}) =>
@@ -124,14 +175,40 @@ class GameServices {
   /// are ours and are in the catalogue, so there is nothing to wait for.
   bool get _configured => !_isAndroid || _androidConfigured;
 
-  /// Establishes whether there is a signed-in player, without ever asking for
-  /// one.
+  /// Whether this build can serve a leaderboard or an achievements shelf at
+  /// all — the question the interface has to ask before drawing a control.
   ///
-  /// Called at launch and **not awaited**. A player who has never been offered
-  /// sign-in is left alone here; offering is [offerSignIn]'s job and belongs to
-  /// a moment the player chose, not to the splash screen.
-  Future<void> start() async {
+  /// **Not [available]**, which is about being signed in: tapping is how a
+  /// signed-out player signs in, so hiding the buttons from them would hide the
+  /// only route to the feature. This is the narrower question of whether the
+  /// platform could do anything at all, and on Android the answer is no until
+  /// the Play Console ids exist (D390).
+  bool get usable => _configured;
+
+  /// Establishes whether there is a signed-in player.
+  ///
+  /// Called at launch and **not awaited**.
+  ///
+  /// **[previouslyAccepted] is what makes a returning player work at all**
+  /// (D393). On iOS `isSignedIn` reads `GKLocalPlayer.isAuthenticated`, and
+  /// that stays false until something sets the authenticate handler — which
+  /// only `signIn` does. Asking alone therefore answers "no" on every launch,
+  /// however long the player has been signed in, so a win went unreported until
+  /// they happened to tap a Game Center button in that same session.
+  ///
+  /// Authenticating is silent for a player who is already signed in at the
+  /// system level: GameKit completes the handler with no view controller and
+  /// the plugin returns "Player already authenticated". It shows a banner only
+  /// to someone who is *not* signed in, which is the case D390 refused to
+  /// impose on the splash screen — hence the gate. A player who declined, or
+  /// who has never been asked, is still left alone here.
+  Future<void> start({bool previouslyAccepted = false}) async {
     if (!_configured) return;
+    if (previouslyAccepted) {
+      // Not `offerSignIn`: this is not an offer and must not be recorded as
+      // one. It re-establishes a decision the player already made.
+      await _guard(() => _platform.signIn());
+    }
     _available = await _guard(() => _platform.isSignedIn()) ?? false;
   }
 
@@ -208,6 +285,76 @@ class GameServices {
           androidId: achievement.playGamesId,
           iosId: achievement.gameCenterId,
         ));
+  }
+
+  /// Reports every achievement the player has already earned.
+  ///
+  /// **Because achievements do not backfill themselves** (D390). Everything
+  /// else here reports a *diff* at the end of a game, so a player who was
+  /// signed out while playing has had nothing reported at all — and signing in
+  /// later does not retroactively unlock anything. Without this, the first
+  /// thing a new signed-in player sees is an empty shelf behind a fortnight of
+  /// play, which looks like a broken integration and is one.
+  ///
+  /// Safe to call with the whole set: unlocking an already-unlocked achievement
+  /// is a no-op on both stores, and [_reported] keeps it to once per session.
+  ///
+  /// **Call it whenever there is a signed-in player and a list to send**, not
+  /// only on the tap that signed them in (D393). It used to fire only on the
+  /// signed-out → opened transition, which was the one moment it could not fire
+  /// once [start] began authenticating at launch: a returning player is already
+  /// available when the first tap arrives, so the transition never happens and
+  /// their history was never sent. The guard belongs here rather than at the
+  /// call site so that every route through it is covered by the same answer.
+  Future<void> backfill(Iterable<String> achievedQuestIds) async {
+    if (!_available || !_configured || _backfilled) return;
+    _backfilled = true;
+    await reportQuests(achievedQuestIds);
+  }
+
+  /// Whether the earned set has already been sent this session.
+  bool _backfilled = false;
+
+  /// Signs in if necessary, then opens the leaderboard.
+  ///
+  /// **The sign-in is part of the action, not a precondition the player has to
+  /// satisfy first** (D390). Someone who taps a leaderboard button has asked to
+  /// see a leaderboard; making them find a separate sign-in control before the
+  /// button does anything is a worse answer than doing it for them.
+  ///
+  /// Returns what to persist if this caused a sign-in, or null if nothing about
+  /// the stored offer changed.
+  Future<bool> openLeaderboard() =>
+      _openAfterSignIn(() => _platform.showLeaderboard(
+            androidLeaderboardId: kRatingLeaderboardPlayGamesId,
+            iosLeaderboardId: kRatingLeaderboardGameCenterId,
+          ));
+
+  /// Signs in if necessary, then opens the achievements shelf.
+  Future<bool> openAchievements() =>
+      _openAfterSignIn(_platform.showAchievements);
+
+  /// True only if a native view actually opened.
+  ///
+  /// **Returns a fact rather than a stored answer** (D391). It used to return
+  /// the `SignInOffer` so the caller could persist it — which meant a platform
+  /// that refused for its own reasons (no Game Center entitlement, no
+  /// leaderboard in the console) was recorded as the *player* declining, and
+  /// the unprompted offer then never came back. A failure here is the app's
+  /// problem, not an answer the player gave.
+  Future<bool> _openAfterSignIn(Future<void> Function() show) async {
+    if (!_configured) return false;
+    if (!_available) {
+      await offerSignIn();
+      // Signing in is the point of the tap only incidentally; if it failed
+      // there is nothing to show and a native view would open empty or throw.
+      if (!_available) return false;
+    }
+    return await _guard(() async {
+      await show();
+      return true;
+    }) ??
+        false;
   }
 
   /// Swallows everything.

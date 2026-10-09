@@ -37,7 +37,28 @@ publish_to: 'none'
 # INTERNET from the merged manifest, which is why the store reads as
 # unavailable on Android (D388). So +11 names two different artefacts already
 # and must never name a third.
-version: 0.2.0+12
+#
+# **+13 because +12 reached App Store Connect.** The iOS 0.2.0 build went out
+# through TestFlight on 2026-09-20, and a build number is spent the moment it is
+# uploaded to *either* store -- one counter serves both (D359), and neither
+# minds that the other skipped a number. This is not the "it might have been
+# uploaded" case the rule above is written for; it is the certain one.
+#
+# Reached independently on two machines the same morning, which is the rule
+# working rather than a collision: both sides read "+12 was uploaded" and both
+# arrived at +13.
+#
+# **And then to 0.2.1, because the name 0.2.0 already reached App Store
+# Connect** (D359) and cannot be resubmitted under itself. +17 stays +17: it
+# was built locally but never uploaded, so the ratchet has nothing to spend --
+# only the name needed to move.
+#
+# **And to 0.2.2, because 0.2.1 went out through TestFlight** -- the same rule
+# as the step above. +18 stays +18 for the same reason +17 did.
+#
+# **And to 0.2.3+19, because 0.2.2+18 is the build that went live** -- the
+# name is spent by the release and +18 by the upload (D359).
+version: 0.2.3+19
 
 environment:
   sdk: ^3.12.2

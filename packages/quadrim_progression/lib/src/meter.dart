@@ -162,10 +162,14 @@ Day weekStart(Day day) {
 /// local. Pass-and-play, the tutorial's practice game and replay are not games
 /// against the computer and never appear here — the app filters, because this
 /// package does not know what a game document is.
+///
+/// [unlimited] is the "unlimited play" subscription. It lifts both limits and
+/// leaves [MeterState.inFreeMonth] telling the truth about the month (D396).
 MeterState meterState({
   required Iterable<StartedGame> games,
   required DateTime now,
   required FreeMonth? freeMonth,
+  bool unlimited = false,
 }) {
   final today = Day.of(now);
   final thisWeek = weekOrdinal(today);
@@ -186,7 +190,7 @@ MeterState meterState({
 
   var blocked = MeterLimit.none;
   Day? availableAgain;
-  if (!free) {
+  if (!free && !unlimited) {
     // **Weekly first when both are exhausted.** A player at nine this week is
     // not helped by "come back tomorrow" — tomorrow is still in this week and
     // still refuses. Naming the limit that actually bit means naming the one

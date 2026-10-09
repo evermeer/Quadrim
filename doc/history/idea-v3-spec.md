@@ -1,10 +1,14 @@
 # Quadrim — Specification, third edition
 
+> **Superseded by [doc/idea-v4-spec.md](../idea-v4-spec.md)**, which preserves every
+> section number and criterion id here and folds the decision log into them.
+> Kept unedited: it is the record of what was believed on the date below.
+
 The buildable form of [idea-v3.md](idea-v3.md), with the findings from [idea-v3-brainstorming.md](idea-v3-brainstorming.md) folded in. Goal, scope, non-goals, exposed endpoints, data and acceptance criteria.
 
-**This is a successor to [idea-v1-spec.md](tickets/done/idea-v1-spec.md), not a replacement for it.** Section numbers and criterion ids are preserved exactly, because both are cited from source comments (`spec §8.3`, `spec E7`, `criterion S4`, `spec D2/S2`) and from twenty-two completed tickets. Criteria whose *content* changed keep their id and change their text; new criteria are appended; nothing is renumbered. Progression takes a new `P` prefix (D271, D272).
+**This is a successor to [idea-v1-spec.md](../tickets/done/idea-v1-spec.md), not a replacement for it.** Section numbers and criterion ids are preserved exactly, because both are cited from source comments (`spec §8.3`, `spec E7`, `criterion S4`, `spec D2/S2`) and from twenty-two completed tickets. Criteria whose *content* changed keep their id and change their text; new criteria are appended; nothing is renumbered. Progression takes a new `P` prefix (D271, D272).
 
-Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D306, continuing [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md) D01–D217.
+Decisions are in [idea-v3-decisions.md](idea-v3-decisions.md), D218–D306, continuing [idea-v1-decisions.md](../tickets/done/idea-v1-decisions.md) D01–D217.
 
 Date: 2026-08-16
 Status: **0.1 and 0.2 built** — the complete offline game with its final art, twenty-five tickets. 1.0 specified here and not yet built.

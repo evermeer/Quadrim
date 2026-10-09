@@ -343,7 +343,7 @@ void main() {
       expect([sable.blunderRate, ember.blunderRate, lyra.blunderRate,
         onyx.blunderRate, corvus.blunderRate],
           [0.05, 0.04, 0.035, 0.03, 0.02]);
-      // Depths are what calibration settled on, not what idea-v3 6.4's
+      // Depths are what calibration settled on, not what idea-v4 6.4's
       // prose says (D154): forcing depth is the lever that works, and past
       // three plies ordinary depth separates nothing (D156).
       expect(sable.searchDepth, 2);

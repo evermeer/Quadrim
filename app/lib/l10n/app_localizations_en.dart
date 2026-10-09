@@ -149,6 +149,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorial => 'Tutorial';
 
   @override
+  String get gameCenterLeaderboard => 'Leaderboard';
+
+  @override
+  String get gameCenterAchievements => 'Achievements';
+
+  @override
+  String get gameCenterSection => 'Game Center';
+
+  @override
+  String get gameCenterSignInTitle => 'Keep your rating and achievements?';
+
+  @override
+  String get gameCenterSignInBody =>
+      'Sign in to put your rating on the leaderboard and collect the achievements you have already earned. Everything in the game works exactly the same either way.';
+
+  @override
+  String get gameCenterSignInAccept => 'Sign in';
+
+  @override
+  String get gameCenterSignInDecline => 'Not now';
+
+  @override
+  String get gameCenterUnavailable =>
+      'Game Center could not be opened. Check that you are signed in.';
+
+  @override
+  String get gameCenterOpen => 'Open';
+
+  @override
   String get settings => 'Settings';
 
   @override

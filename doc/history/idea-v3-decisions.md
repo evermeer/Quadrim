@@ -1,9 +1,15 @@
 # Quadrim — Decision Log, third edition
 
+> **Archived.** D218-D391 are folded into [doc/idea-v4.md](../idea-v4.md) and
+> [doc/idea-v4-spec.md](../idea-v4-spec.md); this file remains the record of *how*
+> each was arrived at, and every `(Dnnn)` cited there or in a source comment
+> resolves here. New decisions continue at D392 in
+> [doc/idea-v4-decisions.md](../idea-v4-decisions.md).
+
 Every decision taken while turning [idea-v2.md](idea-v2.md) and the notes in [idea-v2-additions.md](idea-v2-additions.md) into [idea-v3.md](idea-v3.md).
 Each entry records the question, the decision, and what it costs or buys.
 
-Numbering continues from [idea-v1-decisions.md](tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D278**.
+Numbering continues from [idea-v1-decisions.md](../tickets/done/idea-v1-decisions.md), which ended at D217. Decisions here are **D218–D278**.
 
 Date: 2026-08-14
 Status: D218–D277 agreed pre-implementation; D278 onward were taken while building.
@@ -1925,7 +1931,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Question:** The first tester to reach the tutorial read step 1 as four separate boards. The step draws all four layers and teaches `kGoalLine` — a flat row inside layer 1 — so the one picture a first-time player sees argues *against* the sentence it sits under. The owner asked how hard a real cube would be: spinning for a moment, then stretching out into the layers.
 
-**Decision:** The board opens shut, turns, and comes apart over two seconds ([kCubeIntroDuration](../app/lib/game/board_view.dart)), and step 1's text now points at the picture rather than talking past it. A second half — corner posts drawn across the gaps between layers — was built, shipped in the same commit, and removed one look later. See the reversal at the end.
+**Decision:** The board opens shut, turns, and comes apart over two seconds ([kCubeIntroDuration](../../app/lib/game/board_view.dart)), and step 1's text now points at the picture rather than talking past it. A second half — corner posts drawn across the gaps between layers — was built, shipped in the same commit, and removed one look later. See the reversal at the end.
 
 **The spin cost far less than D135 makes it sound.** D135 chose a shear over a perspective rotation because shear leaves every cell its own hit area, and that is still the rule for a board being *played on*. The tutorial's board is built with `enabled: false` and wrapped in `ExcludeSemantics` behind one `boardLabel`, so the two things that make 3D-in-Flutter expensive — hit testing through an inverted perspective matrix, and sixty-four semantics nodes moving — cost nothing here. What is rotated is a flat drawing carried through a 3D transform, not a volumetric render; the pebbles do not reproject, which is why the swing stops at 52 degrees instead of turning all the way. Past about 90 the layers would be edge-on and the board would not be there.
 
@@ -1955,7 +1961,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **Decision:** Apple's standard EULA, linked from the App Description, in both languages, alongside a link to the privacy policy. The App Description is the long description on the product page — not the privacy-policy field, not the promotional text, and nothing inside the binary.
 
-**A custom EULA buys nothing this game needs.** It is a legal document to keep correct, in Dutch and English, for as long as the app ships, and its only purpose would be to vary terms — liability, warranty, permitted use — that this game has no reason to vary. It sells a board game with two purchases and holds no user data (see the privacy policy in [store-listing.md](store-listing.md)). The standard agreement already says what would have been written.
+**A custom EULA buys nothing this game needs.** It is a legal document to keep correct, in Dutch and English, for as long as the app ships, and its only purpose would be to vary terms — liability, warranty, permitted use — that this game has no reason to vary. It sells a board game with two purchases and holds no user data (see the privacy policy in [store-listing.md](../store-listing.md)). The standard agreement already says what would have been written.
 
 **The link was checked rather than assumed**, because *functional* is the word the rejection used and a dead link fails the same guideline a second time. `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/` returns 200 and is titled *Licensed Application End User License Agreement*. Re-check it before each submission; it costs one request and it is the exact failure mode Apple named.
 
@@ -1965,7 +1971,7 @@ C617.1 is the app-container reason -- the files are inside this app's
 
 **What is still missing is in the app, not in the metadata.** The shop screen shows each product's name, "Yearly, cancel any time" and the store's localised price, which covers title, length and price; it has no Terms of Use or privacy link, and `grep -ri privacy app/lib` returns nothing at all. Reviewers commonly ask for both on the purchase screen itself, so this is the likely second round. It belongs with ticket 028's settings screen, and the strings go through l10n like every other user-facing string (D297).
 
-**Cost:** two lines of the description are boilerplate that reads like boilerplate, and someone tightening the copy later will be tempted to cut them. The note in [store-listing.md](store-listing.md) says what cutting them costs. And the privacy-policy URL is a placeholder in the description as well as in the policy itself, so the description cannot be pasted until the page is actually hosted.
+**Cost:** two lines of the description are boilerplate that reads like boilerplate, and someone tightening the copy later will be tempted to cut them. The note in [store-listing.md](../store-listing.md) says what cutting them costs. And the privacy-policy URL is a placeholder in the description as well as in the policy itself, so the description cannot be pasted until the page is actually hosted.
 
 ## D368 — The two prices, and why the description names them in euros
 
@@ -2980,6 +2986,218 @@ testable is every rule about when to ask, which is why the decision is a pure
 function and why the wiring has a test of its own — verified by mutation, since
 deleting the one call would otherwise be silent.
 
+## D390 — Game Center gets a way in, and the backfill is the part that makes it work
+
+**Question:** Ticket 050 shipped a leaderboard and forty-six achievements, and
+0.2.0 went out on TestFlight with **none of it reachable**. `offerSignIn()`
+existed with zero callers, and `GameServicesPlatform` had four methods —
+`isSignedIn`, `signIn`, `submitScore`, `unlock` — and no viewer at all. The app
+could write to Game Center and had no way to show it, and since nothing ever
+triggered authentication it almost certainly never wrote either. Where does it
+go in the interface?
+
+**Decision:** Three ways in, two of them the developer's own suggestion and
+better than they look:
+
+- **An icon beside the computer rating → the leaderboard.** The board *is* that
+  rating — one board, that figure. The control sits next to the number it ranks.
+- **A button on the quests panel → the achievements.** The forty-six are derived
+  by walking the quest catalogue (D378): same rungs, same opponents. The shelf is
+  that panel as the platform renders it.
+- **Two rows in settings**, which is where people look for account-shaped things
+  and the only route that survives a decline.
+
+**The platform draws both views.** Game Center and Play Games each have a native
+UI that already knows about boards, positions, friends and time scopes; a
+hand-drawn one would need all of that and still not be the thing players
+recognise.
+
+### Achievements do not backfill, and that decided the whole design
+
+Reporting is a *diff* at the end of each game — `newlyAchieved`. A player who was
+signed out while playing has had nothing reported, and **signing in later does
+not retroactively unlock anything**. Without a fix, the first thing a new
+signed-in player sees is an empty shelf behind a fortnight of play: it looks like
+a broken integration, and it is one.
+
+So sign-in now reports **everything already earned**, not just the diff.
+Unlocking an already-unlocked achievement is a no-op on both stores, so replaying
+the whole set is safe, and the session guard keeps it to once.
+
+**This is what made "sign in whenever you like" a real option** rather than a
+trap, and it is why the sign-in can wait for the player to ask.
+
+### The tap is how a signed-out player signs in
+
+Tapping either control signs in if needed and then opens the view. Making someone
+find a separate sign-in switch before the leaderboard button does anything is a
+worse answer than doing it for them — they have already said what they want by
+pressing it.
+
+**That holds even after a decline**, and the stored answer deliberately does not
+gate it. "Declined permanently" exists to stop the app nagging; a button the
+player presses is not the app nagging. Obeying the letter of that rule against
+its purpose would leave someone who once dismissed a dialog permanently unable to
+reach a leaderboard.
+
+### The unprompted offer waits for a finished game
+
+Not at launch: there is nothing to sync, nothing to explain, and the first-run
+tutorial prompt already owns that moment (D193). Once a game is in the history
+there is a rating to put on a board and possibly an achievement to keep, which is
+what the dialog is actually about. Declining is stored and permanent — otherwise
+it would arrive after every game until the player gave in.
+
+### The rating card stopped being one node, carefully
+
+The card wrapped its whole column in `ExcludeSemantics` so its four facts are
+announced as one stop rather than four (ticket 021). A button inside that wrapper
+would have been **invisible to a screen reader** — hiding a control from exactly
+the readers who most need it announced. The exclusion is now applied to each
+piece of text instead, leaving the button its own node: one stop for the facts,
+one for the action, which is what a control should be. Both halves are asserted.
+
+**Cost:** two more surfaces on the main screen, which is the tightest thing in
+the release — D374's font-scale sweep found three overflows there and never saw
+these controls, because it pumps the app without game services. A 2x/320pt test
+covers them now. And the feature is still largely unobservable from here: what a
+test can say is that the button exists, is reachable, is announced, and calls the
+platform. Whether Game Center then draws anything is Apple's business and a
+device's.
+
+**Still open, and unchanged by any of this:** Android shows none of it until the
+Play Console ids are pasted in, because `playGamesConfigured` is false and the
+controls are hidden rather than drawn dead.
+
+**That last sentence was false when it was first written**, which is worth
+recording rather than quietly fixing. The buttons were gated on
+`services != null` — and on Android `services` is not null, it is merely unable
+to do anything, so both controls were drawn over a platform that would refuse
+them. The check now asks the service (`usable`) rather than the null. It was
+caught while building an APK to look at on the emulator, before the emulator had
+even booted: the value of intending to look at the artefact, arriving before the
+looking did.
+
+## D391 — The buttons did nothing, and three separate things made that invisible
+
+**Question:** The 0.2.0 TestFlight build offered sign-in, the player signed in,
+and both Game Center controls then did nothing — including after a force-quit.
+Why, and why was there no clue?
+
+**Decision:** Four fixes, one of which is not in this repository at all.
+
+### The cause is a missing capability, on the Mac
+
+**The iOS project has no entitlements file and no Game Center capability.**
+`grep` finds no `game-center` anywhere under `app/ios/`, and no
+`CODE_SIGN_ENTITLEMENTS` in any of the three Runner build configurations.
+GameKit will show its sign-in banner without it and then refuse to present
+`GKGameCenterViewController`, which is exactly the reported symptom.
+
+**That fix belongs in Xcode, not here** — Signing & Capabilities → + Capability
+→ Game Center. Doing it through the UI creates the entitlements file *and*
+registers the capability against the App ID in the developer portal; hand-writing
+the plist here would do the first and not the second, and the build would then
+fail to sign. It is recorded rather than done for that reason, and because
+nothing on this machine can verify an iOS build.
+
+### The plugin reports failure by returning a string, and the adapter threw it away
+
+`GamesServices.showLeaderboards`, `showAchievements` and `signIn` all return
+`Future<String?>` — **a message, not a throw**. The adapter discarded it, so
+`_guard` saw a clean completion and reported success while Game Center was
+refusing. Every one of those calls now turns a non-empty string back into a
+`GameServicesException`, so there is something to catch.
+
+**This is the defect that made the other three invisible.** A best-effort layer
+that swallows exceptions is right (ticket 050 §7) and is worth nothing if the
+thing it is swallowing never throws.
+
+### A platform that refuses was stored as a player who declined
+
+`openLeaderboard` returned the `SignInOffer` and the caller persisted it. So a
+build whose Game Center was simply not configured recorded
+`gameServicesOffer = declined` — **and the unprompted offer then never came
+back**. The app both did nothing and stopped asking. The method now returns a
+plain "did a view open", and only the dialog's own yes/no is ever stored.
+
+### Silence is not an acceptable failure mode for a control
+
+Best-effort means never interrupting a *game*. It does not mean a button that
+gives no sign it was pressed. A refused open now raises a snackbar. It cannot
+name the cause — the app does not know it — but it distinguishes "refused" from
+"did not notice you", which is the question the player is actually asking.
+
+### And the controls became buttons
+
+A tinted glyph beside the rating read as decoration, next to a number that
+already has a cube beside it; the one on the quests panel inherited the app-wide
+**gold icon theme onto parchment**, which is the one pairing this palette cannot
+carry — the move scrubber carries that exact note about its own four buttons
+(D204) and this repeated the mistake one panel over. Both are now outlined
+buttons with a word in them, ink on parchment and cream on the dark panel.
+
+~~**And both use the same glyph**: they are one feature, and what tells the two
+apart is the label.~~ **Reversed the same day, at the developer's request, and
+the reversal is right.** The argument for one glyph was that one feature should
+look like one feature. What it missed is that these are two *destinations* — a
+leaderboard and a shelf of achievements — and two controls that look identical
+while going to different places is a worse kind of consistency than none. The
+label was carrying the whole distinction and the icon was actively working
+against it. `kLeaderboardIcon` and `kAchievementsIcon` again, named in the
+design layer so there is one place to change either.
+
+**Cost:** two labelled buttons take more width than two icons, on the screen
+that is already tightest in the release. The 2x/320pt test covers them.
+
+## D392 — The label was truncating for two reasons, and the font was the smaller one
+
+**Question:** The leaderboard button on the rating card read "Leaderbo..."
+rather than "Leaderboard". D391 had just given it a word precisely so it would
+not read as decoration, and the word was being cut. Why, and what fixes it?
+
+**Decision:** Two independent causes, found in that order.
+
+**The font.** A button takes `labelLarge` by default -- 14sp on a display face
+carrying 0.8 of letter spacing -- and both Game Center buttons now take 12sp.
+The size is *stated* rather than taken from `labelSmall`, which is the part
+worth recording: every entry in this app's `TextTheme` sets family, weight and
+spacing and leaves `fontSize` null. Handing one to `styleFrom` therefore
+changes the spacing and leaves the size at the button's own default. That first
+attempt bought two characters and still truncated, which is a trap the next
+person to reach for a theme entry inside `styleFrom` will fall into too.
+
+**The flex ratio, which was the real cause.** A `Row` divides its free width
+between flexible children by flex factor. The rating and the button were both
+`Flexible` at the default flex of 1, so the button was handed exactly half the
+row and ellipsised inside it, while four digits left most of the other half
+empty. The button now takes `flex: 2`. A word is wider than a number and the
+split should say so.
+
+**Why both children stay flexible.** The obvious fix is to lay the number out
+at its intrinsic width and let the button claim the remainder. It renders
+correctly on a 440pt phone and **overflows by 21 pixels on a 320pt one at 2x
+font scale**, where a 72pt numeral is wider than the card. D391's 2x/320pt test
+caught it. With both flexible neither child can overflow the row: what gives is
+the label, through the ellipsis it already carries.
+
+**The gap is padding inside the `Flexible`, not a `SizedBox` beside it.** The
+button sat flush against the number and read as part of it, so it gains 20dp of
+air on the left. A rigid gap cannot give any of itself back, and at 2x on the
+smallest phone that `SizedBox` was itself the 21 pixels the row overflowed by.
+Counted against the button's own share it costs the label a character there
+instead, which is the right thing to spend.
+
+**And the fills are no longer transparent.** An outline over a gradient read as
+a rectangle drawn on the panel rather than as a control. Each button takes the
+one step below its own ground that the palette already carries -- `canopy`
+under the leaderboard on the dark panel, `parchmentDeep` under the achievements
+on the parchment card. No new colours.
+
+**Cost:** 12sp is below the 14sp the rest of the app's buttons use, so these
+two are the smallest labels in the release. They are also the only two that
+share a row with something that has first claim on the width.
+
 ## Open items
 
 Carried forward to [idea-v3.md](idea-v3.md) §14: ~~store price points~~ — set at €4.99 and €2.99 a year on 2026-08-27 (D368), and their tax treatment settled with ticket 015; ~~store accounts and signing~~ and ~~app-name availability~~ — both closed with ticket 015 on 2026-08-29 (D371). What is left: the reference device for the twenty-second ceiling, and the progression numbers pending measurement (D239 — and D261 changes only which rung a per-opponent quest is measured against, not the multiples).
@@ -3025,6 +3243,11 @@ remains:
 - **Whether the two products exist in Play Console** is still unverified and
   would produce the identical "unavailable" screen. Ticket 046's AC 1 was only
   ever met in App Store Connect.
+- ~~The iOS Game Center capability is not enabled~~ (D391) — **done**: the
+  entitlement is committed and read back out of the signed binary, and automatic
+  signing issues a distribution profile carrying it. What is still open is the
+  other half: the leaderboard `nl.evict.quadrim2.rating` must exist in App Store
+  Connect, and until it does the button opens onto nothing.
 - **The privacy policy's contact block** is still three placeholders in
   `doc/store-listing.md` while the published page must already carry real values.
   A paste, and a read of the two side by side.

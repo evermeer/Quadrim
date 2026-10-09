@@ -170,7 +170,7 @@ void main() {
 
     test('two opponents sharing a rating would still get distinct prices', () {
       // Not hypothetical in spirit: the Casual tier's measured strengths run
-      // the opposite way to its published ratings (idea-v3.md §14), so a price
+      // the opposite way to its published ratings (idea-v4.md §14), so a price
       // derived from the rating would be non-monotonic there. The ordinal is
       // what keeps the ladder a ladder.
       final byRating = {for (final bot in opponentCatalogue) bot.rating};

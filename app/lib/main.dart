@@ -50,15 +50,23 @@ Future<void> main() async {
   unawaited(shop.start());
 
   // **Started, not awaited** -- the same shape as `Shop.start()` above and for
-  // the same reason (D351). `start()` only asks whether a player is already
-  // signed in; it never offers sign-in, which belongs to a moment the player
-  // chose rather than to the splash screen (ticket 050 §5).
+  // the same reason (D351). It still never *offers* sign-in, which belongs to a
+  // moment the player chose rather than to the splash screen (ticket 050 §5);
+  // what it now does is re-establish an answer they already gave.
+  //
+  // The settings document is read here rather than inside `GameServices`,
+  // which owns no storage and should not learn about documents to answer one
+  // question (D393). This read is awaited because it is a local file and the
+  // answer decides what `start()` does; the network half stays unawaited.
+  final stored = await repository.loadSettings();
   final services = GameServices(
     platform: const GamesServicesPlatformAdapter(),
     isAndroid: Platform.isAndroid,
     androidConfigured: playGamesConfigured,
   );
-  unawaited(services.start());
+  unawaited(services.start(
+      previouslyAccepted:
+          stored.gameServicesOffer == kGameServicesAccepted));
 
   runApp(QuadrimApp(
     repository: repository,

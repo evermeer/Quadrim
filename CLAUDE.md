@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quadrim — four in a row in a 4×4×4 cube (the game is publicly known as Qubic). Flutter 3.44.9 / Dart 3.12.2, Android-only for release 0.1. Built ticket by ticket from `doc/tickets/`, driven by a spec (`doc/idea-v1-spec.md`) and a numbered decision log (`doc/idea-v1-decisions.md`). `doc/idea-v2.md` is the brief rewritten to include everything those two settled — the document to hand someone rebuilding this from scratch.
+Quadrim — four in a row in a 4×4×4 cube (the game is publicly known as Qubic). Flutter 3.44.9 / Dart 3.12.2, Android and iOS. Built ticket by ticket from `doc/tickets/`, driven by a spec (`doc/idea-v4-spec.md`) and a numbered decision log (`doc/idea-v4-decisions.md`, continuing D01–D391 in the archived editions). **`doc/idea-v4.md` is the brief with all 391 of those decisions folded into it — the document to hand someone rebuilding this from scratch, and the one to read before changing anything non-obvious.**
 
 ## Commands
 
@@ -99,10 +99,14 @@ tools/linegen/              Build-time generator for the 76 winning lines.
 tools/artgen/               Art and font pipeline: doc/designs/ -> app/assets/ (D290).
 doc/designs/                Source art. Large, and what makes artgen re-runnable.
 third_party/patashnik/      Vendored strategy dictionary + NOTICE.md.
-doc/tickets/                The 7 tickets still open; the unit of work and of commits.
-doc/tickets/done/           The 22 finished ones. A ticket moves here once it is
+doc/tickets/                The tickets still open; the unit of work and of commits.
+doc/tickets/done/           The finished ones. A ticket moves here once it is
                             committed AND its review section is in codereview-main.md.
-doc/idea-v1-decisions.md    D01–D217. Every non-obvious choice, with its cost.
+doc/idea-v4.md              The brief: what the game is and must do, decisions folded in.
+doc/idea-v4-spec.md         The buildable form: endpoints, data, acceptance criteria.
+doc/idea-v4-decisions.md    D392 onward. Every non-obvious choice, with its cost.
+doc/history/                Earlier editions, including D218–D391. Never edited.
+doc/tickets/done/idea-v1-*  The first edition, including D01–D217.
 ```
 
 ## Architecture
@@ -153,10 +157,10 @@ These are not style preferences. Several are enforced by `check.sh`; all of them
 
 The standing instruction for this repo:
 
-> Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-v1-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
+> Continue implementing the game according to the tickets in `./doc/tickets`. Ask clarifying questions if anything is unclear and add the decisions to `doc/idea-v4-decisions.md`. After each ticket run the skill `code-review-expert`. Commit to `main` after each ticket is completed and reviewed.
 
 - One ticket per commit, subject `Ticket NNN: <what it did>`.
-- Every non-obvious choice gets a numbered `D` entry in `doc/idea-v1-decisions.md` recording the question, the decision, and what it costs. Currently at D217.
+- Every non-obvious choice gets a numbered `D` entry in `doc/idea-v4-decisions.md` recording the question, the decision, and what it costs. **Numbering continues across editions and is never restarted: D01–D217, D218–D391, then D392 onward.** Take the next number free on `main`, not on a release branch, or two branches collide on merge. Earlier entries are never rewritten — a reversal adds a superseded line to the old entry and a new entry beside it.
 - Review findings are appended to `codereview-main.md`; earlier ticket sections are never rewritten.
 - Comments here carry reasoning, not restatement — they explain why a thing is the way it is, and often cite the D-number. Match that when editing.
 - `ponytail:` marks a deliberate simplification and names its ceiling.
@@ -170,5 +174,5 @@ The standing instruction for this repo:
   - **The defect D356 caught was the permission arriving *unnoticed*.** Play Billing pulls in `transport-backend-cct`, a telemetry transport that declares `INTERNET`, and a bundle shipped with it while a source-manifest grep passed. That library is now free to use the network it always wanted.
   - **The check is therefore a declaration check, not a ban.** It fails if the main manifest stops declaring `INTERNET`, and it fails if the removal directive comes back — so a diff that changes the app's network posture has to touch a line with D376 written beside it.
   - **The engine half is still absolute.** `check.sh` rejects `dart:io`, `dart:html`, `package:http`, Flutter, Firebase and `games_services` in `quadrim_engine`, `quadrim_rating` and `quadrim_progression`. That is what keeps F13 and S1 reviewable: a network call during computer play would have to be added to the app layer, deliberately.
-- **Game services live in `app/lib/services/`** and are ticket 050's. `GameServicesPlatform` is an interface this app owns over the `games_services` plugin, for the same reason `PurchasePlatform` exists — the part that talks to a store must be testable without one. Everything there is best-effort and silent (§7): nothing may be awaited on a path that renders, and a store outage must be invisible. The 44 achievement ids and the leaderboard id are **permanent once published**, like a product id (D213, D365), and the **Play Console ids are unset until the developer pastes them in** — `playGamesConfigured` is what keeps Android quiet until then.
+- **Game services live in `app/lib/services/`** and are ticket 050's. `GameServicesPlatform` is an interface this app owns over the `games_services` plugin, for the same reason `PurchasePlatform` exists — the part that talks to a store must be testable without one. Everything there is best-effort and silent (§7): nothing may be awaited on a path that renders, and a store outage must be invisible. The 46 achievement ids and the leaderboard id are **permanent once published**, like a product id (D213, D365), and the **Play Console ids are unset until the developer pastes them in** — `usable` is what keeps Android quiet until then, and it is the service that must be asked rather than the null (D390).
 - Tickets that need the user's Google account or decisions and cannot be done by an agent: 015, 016, 024, parts of 022.

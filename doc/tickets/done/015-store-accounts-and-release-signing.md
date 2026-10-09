@@ -16,7 +16,7 @@ the halves around; it came back on 2026-08-21, so both now run at once:
   the app created in the console on 2026-08-21, so the Android upload is live
   work rather than parked work. Both halves now run in parallel.
 
-**Android release signing was recorded as done and was not** ([D355](../idea-v3-decisions.md)).
+**Android release signing was recorded as done and was not** ([D355](../../history/idea-v3-decisions.md)).
 `build.gradle.kts` still held the Flutter template's `signingConfig =
 signingConfigs.getByName("debug")` with its TODO intact, and no keystore
 existed anywhere. Whatever ran on a device for 0.1 and 0.2 was debug-signed,

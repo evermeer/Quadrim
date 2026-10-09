@@ -6,6 +6,7 @@ import '../data/documents.dart';
 import '../data/game_repository.dart';
 import '../design/forest.dart';
 import '../l10n/app_localizations.dart';
+import '../services/games.dart';
 import '../links.dart';
 import '../shop/shop.dart';
 import '../shop/shop_screen.dart';
@@ -30,7 +31,20 @@ import '../shop/shop_screen.dart';
 /// fails if it renders nowhere (D174). This screen inherited it from the
 /// placeholder it replaced.
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key, required this.settings, this.shop});
+  const SettingsScreen({
+    super.key,
+    required this.settings,
+    this.shop,
+    this.services,
+  });
+
+  /// Game Center / Play Games, or null (D390).
+  ///
+  /// **The third way in, and the only one that survives a decline.** The
+  /// leaderboard and achievements buttons on the main screen are the everyday
+  /// route; this is where a player looks for account-shaped things, and where
+  /// someone who dismissed the one-time offer can still change their mind.
+  final GameServices? services;
 
   final SettingsRepository settings;
 
@@ -100,6 +114,20 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     _RestoreRow(shop: shop!),
+                  ],
+                  if (services != null) ...[
+                    const Divider(),
+                    _Heading(l10n.gameCenterSection),
+                    ListTile(
+                      leading: const Icon(Icons.leaderboard_outlined),
+                      title: Text(l10n.gameCenterLeaderboard),
+                      onTap: () => services!.openLeaderboard(),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.emoji_events_outlined),
+                      title: Text(l10n.gameCenterAchievements),
+                      onTap: () => services!.openAchievements(),
+                    ),
                   ],
                   const Divider(),
                   // **Not gated on `shop`.** The links are required whenever

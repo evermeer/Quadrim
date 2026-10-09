@@ -24,6 +24,8 @@ class FakeGameServices implements GameServicesPlatform {
   final List<String> unlockedAndroid = [];
   final List<String> unlockedIos = [];
   int signInCalls = 0;
+  int leaderboardsShown = 0;
+  int achievementsShown = 0;
 
   @override
   Future<bool> isSignedIn() async {
@@ -56,6 +58,21 @@ class FakeGameServices implements GameServicesPlatform {
     if (throws) throw StateError('unavailable');
     unlockedAndroid.add(androidId);
     unlockedIos.add(iosId);
+  }
+
+  @override
+  Future<void> showLeaderboard({
+    required String androidLeaderboardId,
+    required String iosLeaderboardId,
+  }) async {
+    if (throws) throw StateError('unavailable');
+    leaderboardsShown++;
+  }
+
+  @override
+  Future<void> showAchievements() async {
+    if (throws) throw StateError('unavailable');
+    achievementsShown++;
   }
 }
 
@@ -156,6 +173,97 @@ void main() {
     });
   });
 
+  group('launch', () {
+    /// **The defect that made a returning player invisible** (D393).
+    ///
+    /// On iOS `isSignedIn` reads `GKLocalPlayer.isAuthenticated`, which stays
+    /// false until something sets the authenticate handler — and only `signIn`
+    /// does. Asking alone therefore answered "no" on every launch however long
+    /// the player had been signed in, so their wins went unreported until they
+    /// happened to tap a Game Center button in that same session.
+    test('re-authenticates a player who already accepted', () async {
+      // Signed out from this end's point of view, exactly as GameKit reports
+      // an authenticated player before the handler is set.
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start(previouslyAccepted: true);
+
+      expect(fake.signInCalls, 1);
+      expect(services.available, isTrue);
+    });
+
+    /// D390 stands: the splash screen never asks anybody anything.
+    test('asks nothing of a player who has not accepted', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      expect(fake.signInCalls, 0,
+          reason: 'a player who declined, or was never asked, is left alone');
+      expect(services.available, isFalse);
+    });
+
+    test('a refusal at launch is silent and leaves the app signed out',
+        () async {
+      final fake = FakeGameServices(signedIn: false, throws: true);
+      final services = GameServices(platform: fake);
+      await expectLater(
+          services.start(previouslyAccepted: true), completes);
+      expect(services.available, isFalse);
+    });
+  });
+
+  group('the backfill', () {
+    /// **Not gated on the tap that signed the player in** (D393). It used to
+    /// fire only on the signed-out → opened transition, which is the one moment
+    /// it cannot fire once launch re-authenticates: a returning player is
+    /// already available when the first tap arrives, so the transition never
+    /// happens and their history was never sent.
+    test('sends what was already earned to a player signed in at launch',
+        () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start(previouslyAccepted: true);
+
+      await services.backfill(['first_win:pebble', 'first_win:twig']);
+      expect(fake.unlockedIos, hasLength(2));
+    });
+
+    test('runs once a session, however often it is called', () async {
+      // The panel refolds after every finished game and calls this each time.
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      await services.backfill(['first_win:pebble', 'first_win:twig']);
+      expect(fake.unlockedIos, hasLength(1),
+          reason: 'the second call must not send forty-six more unlocks');
+    });
+
+    test('sends nothing when there is no signed-in player', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      expect(fake.unlockedIos, isEmpty);
+    });
+
+    test('a signed-out backfill does not spend the one attempt', () async {
+      // Otherwise the call the home screen makes before `start()` has
+      // finished would burn the session's only backfill.
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+      await services.backfill(['first_win:pebble']);
+
+      await services.start(previouslyAccepted: true);
+      await services.backfill(['first_win:pebble']);
+      expect(fake.unlockedIos, hasLength(1));
+    });
+  });
+
   group('the leaderboard', () {
     test('submits the rating when signed in', () async {
       final fake = FakeGameServices();
@@ -226,8 +334,8 @@ void main() {
       ]);
       expect(fake.unlockedIos, [
         'nl.evict.quadrim2.beat.pebble',
-        'nl.evict.quadrim2.games_in_day.5',
-        'nl.evict.quadrim2.days_in_row.5',
+        'nl.evict.quadrim2.beat.games_in_day.5',
+        'nl.evict.quadrim2.beat.days_in_row.5',
       ]);
     });
 
@@ -313,6 +421,126 @@ void main() {
       await services.start();
       await services.submitRating(1234);
       expect(fake.scores, [1234]);
+    });
+  });
+
+  group('opening the native views', () {
+    test('a signed-in player goes straight to the leaderboard', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      final opened = await services.openLeaderboard();
+
+      expect(fake.leaderboardsShown, 1);
+      expect(fake.signInCalls, 0, reason: 'already signed in');
+      expect(opened, isTrue);
+    });
+
+    /// **The tap is how a signed-out player signs in** (D390). Making them find
+    /// a separate control first is a worse answer than doing it for them.
+    test('a signed-out player is signed in by the tap, then shown', () async {
+      final fake = FakeGameServices(signedIn: false);
+      final services = GameServices(platform: fake);
+      await services.start();
+      expect(services.available, isFalse);
+
+      final opened = await services.openAchievements();
+
+      expect(fake.signInCalls, 1);
+      expect(fake.achievementsShown, 1);
+      expect(opened, isTrue);
+    });
+
+    /// Nothing to show and nothing to throw. A native view opened without a
+    /// player is the failure this avoids.
+    test('a refused sign-in shows nothing and says so', () async {
+      final fake = FakeGameServices(signedIn: false, throws: true);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      final opened = await services.openLeaderboard();
+
+      expect(fake.leaderboardsShown, 0);
+      // **Not recorded as a decline** (D391): the caller gets a fact about
+      // whether a view opened, not an answer to store on the player's behalf.
+      expect(opened, isFalse);
+    });
+
+    test('a throwing platform changes nothing and raises nothing', () async {
+      final fake = FakeGameServices(throws: true);
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await expectLater(services.openLeaderboard(), completes);
+    });
+
+    /// **The regression for "the buttons do nothing"** (D391). The caller has
+    /// to be able to tell a view that opened from one that did not, or the only
+    /// thing a refusing platform produces is silence.
+    test('says whether a view actually opened', () async {
+      final ok = GameServices(platform: FakeGameServices());
+      await ok.start();
+      expect(await ok.openLeaderboard(), isTrue);
+
+      final bad = GameServices(platform: FakeGameServices(throws: true));
+      await bad.start();
+      expect(await bad.openAchievements(), isFalse,
+          reason: 'a refusal must be reported, not swallowed into success');
+    });
+
+    test('an unconfigured Android build opens nothing and says so', () async {
+      final services = GameServices(
+        platform: FakeGameServices(),
+        isAndroid: true,
+        androidConfigured: false,
+      );
+      await services.start();
+
+      expect(await services.openLeaderboard(), isFalse);
+    });
+  });
+
+  /// D390. Reporting is a diff at the end of each game, so a player signed out
+  /// until now has had nothing sent -- and neither store backfills itself.
+  /// Without this the first thing a new signed-in player sees is an empty shelf
+  /// behind a fortnight of play.
+  group('backfill', () {
+    test('reports everything already earned', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble', 'games_in_day:5']);
+
+      expect(fake.unlockedIos, [
+        'nl.evict.quadrim2.beat.pebble',
+        'nl.evict.quadrim2.beat.games_in_day.5',
+      ]);
+    });
+
+    /// Safe to call with the whole set every time: the session guard keeps a
+    /// repeat to one unlock, and the store treats a second one as a no-op
+    /// anyway.
+    test('a second backfill in one session unlocks nothing twice', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win:pebble']);
+      await services.backfill(['first_win:pebble']);
+
+      expect(fake.unlockedIos, hasLength(1));
+    });
+
+    test('quests with no achievement are skipped in silence', () async {
+      final fake = FakeGameServices();
+      final services = GameServices(platform: fake);
+      await services.start();
+
+      await services.backfill(['first_win_second:pebble', 'nonsense']);
+
+      expect(fake.unlockedIos, isEmpty);
     });
   });
 
