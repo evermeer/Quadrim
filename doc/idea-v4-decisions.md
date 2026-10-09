@@ -212,3 +212,23 @@ only reason anyone noticed was a person looking at a shelf and counting. The
 audit in `tools/storegen/store_audit.py` exists precisely to diff the console
 against this file, and it has never been run against the live console; that is
 what would have caught it in seconds.
+
+## D396 — The subscription lifts the meter, which it never did
+
+**Question:** A player who bought "unlimited play" was still refused a tenth
+game in the week. `Shop` set `entitlement.unlimited`, and the only thing that
+read it was the quests panel's `capped` flag. `meterState` knew about the free
+month and nothing else, and both gates in `HomeScreen` ask only `meterState`.
+Where does the subscription enter?
+
+**Decision:** `meterState` takes `unlimited` and blocks nothing when it is set.
+`HomeScreen._meter` passes the shop's entitlement as it stands at the tap.
+
+**Because both gates already route through that one function**, and it is pure,
+so the rule is a test in `meter_test.dart` rather than two guards at two call
+sites. `inFreeMonth` is left alone: it is a statement about the month, and the
+quests panel already reads the subscription separately.
+
+**What it costs:** the entitlement still fills in only after the store answers
+at launch (D349). A subscriber who taps "new game" in the first seconds, before
+the restore arrives, can still meet the paywall once.

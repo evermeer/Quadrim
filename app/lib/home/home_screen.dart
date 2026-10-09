@@ -147,6 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
         freeMonth: _settingsDoc == null
             ? null
             : meter_fold.freeMonthFrom(_settingsDoc!),
+        // Read at the moment of asking, so a subscription the store confirms
+        // after launch (D349) counts from the next tap (D396).
+        unlimited: widget.shop?.entitlement.value.unlimited ?? false,
       );
   List<UnlockDocument> _unlockList = const [];
 
