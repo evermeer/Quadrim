@@ -37,3 +37,12 @@ __pycache__/
 # derived in seconds from doc/designs/ by a committed script, and are 20 MB of
 # binary that would churn on every regeneration.
 doc/store/icons/
+
+# Credentials that must never reach the repository, which is public. Keystores
+# and key.properties are covered in app/android/.gitignore; these are the ones
+# nothing creates yet: Firebase config arrives with 0.3a, App Store Connect API
+# keys with any upload automation.
+google-services.json
+GoogleService-Info.plist
+AuthKey_*.p8
+.env
