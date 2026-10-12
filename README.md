@@ -87,4 +87,8 @@ See [CLAUDE.md](CLAUDE.md) for how to build and test it (`bash tool/check.sh` is
 
 ## License
 
-[MIT](LICENSE). The vendored strategy dictionary in [`third_party/patashnik/`](third_party/patashnik/NOTICE.md) keeps its own terms.
+The code and the documentation are [MIT](LICENSE): learn from them, change them and reuse them in your own projects.
+
+**Two exceptions, listed in [NOTICE.md](NOTICE.md):** the artwork (opponent avatars, background, logo, icons, signs and screenshots) and the name "Quadrim" are *not* covered by the MIT license — all rights reserved. If you publish a game built on this code, give it your own art and your own name.
+
+Third-party parts keep their own terms: the fonts in `app/assets/fonts/` are under the SIL Open Font License, and the strategy dictionary has its terms in [`third_party/patashnik/`](third_party/patashnik/NOTICE.md).
