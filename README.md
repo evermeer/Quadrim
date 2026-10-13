@@ -7,7 +7,7 @@
 Quadrim is four in a row played in a 4×4×4 cube, the game also known as Qubic. Sixteen squares become sixty-four cells, and lines run across each layer, straight up through the layers and along the diagonals of the cube — seventy-six ways to win, most of them hard to see until someone has used one on you. You climb a ladder of thirty-one computer opponents, from one that barely notices a threat to one that plays the solved game perfectly, or hand the phone across and play a friend.
 
 > [!NOTE]
-> **This whole game was vibe coded.** Apart from some later tweaks and additions, it was built in 4 weeks (8 working days) with an AI coding agent, following the workflow described in [CodingAgentOrchestration](https://github.com/evermeer/CodingAgentOrchestration). Every step and every prompt that was used is in [workflow.md](workflow.md), so you can follow along or build it again yourself.
+> **This whole game was vibe coded.** Apart from some later tweaks and additions, it was built in 4 weeks (8 working days) with [Claude Code](https://claude.com/claude-code) on the €15-a-month Pro plan, following the workflow described in [CodingAgentOrchestration](https://github.com/evermeer/CodingAgentOrchestration). Every step and every prompt that was used is in [workflow.md](workflow.md), so you can follow along or build it again yourself.
 
 <p align="center">
   <a href="https://apps.apple.com/app/quadrim/id6804034367"><img src="https://img.shields.io/badge/App_Store-Download-0D96F6?style=for-the-badge&logo=appstore&logoColor=white" alt="Download on the App Store" height="50"></a>
@@ -49,7 +49,9 @@ Quadrim is four in a row played in a 4×4×4 cube, the game also known as Qubic.
 
 ## How it was made
 
-A person wrote the idea, answered the agent's questions and made the decisions; an AI coding agent wrote the code, one ticket at a time.
+A person wrote the idea, answered the agent's questions and made the decisions; Claude Code, on the €15-a-month Pro plan, wrote the code one ticket at a time.
+
+The art went through its own pipeline: the design was made in Claude Design, Microsoft Copilot turned screenshots of it into four completely different visual takes, and for the one chosen Copilot wrote the prompts for every image, which were then generated with ChatGPT. Those prompts are in [doc/avatars-overview.md](doc/avatars-overview.md).
 
 ```mermaid
 flowchart LR
