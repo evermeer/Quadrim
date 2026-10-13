@@ -49,7 +49,7 @@ Quadrim is four in a row played in a 4×4×4 cube, the game also known as Qubic.
 
 ## How it was made
 
-A person wrote the idea, answered the agent's questions and made the decisions; Claude Code, on the €15-a-month Pro plan, wrote the code one ticket at a time.
+I wrote the idea, answered the agent's questions and made the decisions; Claude Code, on the €15-a-month Pro plan, wrote the code one ticket at a time.
 
 The art went through its own pipeline: the design was made in Claude Design, Microsoft Copilot turned screenshots of it into four completely different visual takes, and for the one chosen Copilot wrote the prompts for every image, which were then generated with ChatGPT. Those prompts are in [doc/avatars-overview.md](doc/avatars-overview.md).
 
